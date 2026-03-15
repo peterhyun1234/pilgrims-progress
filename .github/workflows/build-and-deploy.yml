@@ -1,0 +1,103 @@
+# =============================================================================
+# Build & Deploy to itch.io
+# =============================================================================
+# Unity 프로젝트를 WebGL로 빌드하고 itch.io에 자동 배포하는 워크플로우입니다.
+#
+# 필요한 GitHub Secrets:
+#   - UNITY_LICENSE : Unity 라이선스 파일(.ulf)의 전체 내용
+#                     (unity-activate.yml 워크플로우로 생성 가능)
+#   - BUTLER_CREDENTIALS : itch.io API 키
+#                          (https://itch.io/user/settings/api-keys 에서 발급)
+#   - ITCH_GAME : itch.io 게임 경로 (예: "username/game-name")
+# =============================================================================
+
+name: Build & Deploy to itch.io
+
+on:
+  # main 브랜치에 Unity 프로젝트 파일이 변경될 때 자동 실행
+  push:
+    branches: [main]
+    paths:
+      - 'pilgrims-progress-unity/**'
+
+  # 수동 실행도 가능
+  workflow_dispatch:
+
+# 동시에 여러 빌드가 실행되지 않도록 제한
+concurrency:
+  group: build-and-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ===========================================================================
+  # 빌드 작업: Unity WebGL 빌드
+  # ===========================================================================
+  build-webgl:
+    name: WebGL 빌드
+    runs-on: ubuntu-latest
+
+    steps:
+      # 저장소 코드 체크아웃 (LFS 포함)
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      # Unity Library 폴더 캐싱
+      # Library 폴더를 캐싱하면 에셋 임포트 시간을 크게 줄일 수 있습니다.
+      - name: Library 폴더 캐시
+        uses: actions/cache@v4
+        with:
+          path: pilgrims-progress-unity/Library
+          key: library-webgl-${{ hashFiles('pilgrims-progress-unity/Assets/**', 'pilgrims-progress-unity/Packages/manifest.json', 'pilgrims-progress-unity/ProjectSettings/**') }}
+          restore-keys: |
+            library-webgl-
+
+      # GameCI unity-builder를 사용하여 WebGL로 빌드
+      - name: Unity WebGL 빌드
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          projectPath: pilgrims-progress-unity
+          targetPlatform: WebGL
+          unityVersion: 6000.3.11f1
+
+      # 빌드 결과물을 아티팩트로 업로드 (deploy 작업에서 사용)
+      - name: 빌드 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-webgl
+          path: build/WebGL/WebGL
+          retention-days: 3
+
+  # ===========================================================================
+  # 배포 작업: itch.io에 업로드
+  # ===========================================================================
+  deploy-itch:
+    name: itch.io 배포
+    needs: build-webgl
+    runs-on: ubuntu-latest
+
+    steps:
+      # 빌드 아티팩트 다운로드
+      - name: 빌드 아티팩트 다운로드
+        uses: actions/download-artifact@v4
+        with:
+          name: build-webgl
+          path: build/WebGL/WebGL
+
+      # Butler 설치 (itch.io 배포 도구)
+      - name: Butler 설치
+        run: |
+          curl -L -o butler.zip https://broth.itch.zone/butler/linux-amd64/LATEST/archive/default
+          unzip butler.zip
+          chmod +x butler
+          ./butler -V
+
+      # itch.io에 WebGL 빌드 업로드
+      - name: itch.io에 배포
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
+        run: |
+          ./butler push build/WebGL/WebGL ${{ secrets.ITCH_GAME }}:webgl
