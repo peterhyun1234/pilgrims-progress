@@ -4,8 +4,9 @@
 # Unity 프로젝트를 WebGL로 빌드하고 itch.io에 자동 배포하는 워크플로우입니다.
 #
 # 필요한 GitHub Secrets:
-#   - UNITY_LICENSE : Unity 라이선스 파일(.ulf)의 전체 내용
-#                     (unity-activate.yml 워크플로우로 생성 가능)
+#   - UNITY_LICENSE  : Unity 라이선스 파일(.ulf)의 전체 내용
+#   - UNITY_EMAIL    : Unity 계정 이메일
+#   - UNITY_PASSWORD : Unity 계정 비밀번호
 #   - BUTLER_CREDENTIALS : itch.io API 키
 #                          (https://itch.io/user/settings/api-keys 에서 발급)
 #   - ITCH_GAME : itch.io 게임 경로 (예: "username/game-name")
@@ -58,6 +59,8 @@ jobs:
         uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           projectPath: pilgrims-progress-unity
           targetPlatform: WebGL
