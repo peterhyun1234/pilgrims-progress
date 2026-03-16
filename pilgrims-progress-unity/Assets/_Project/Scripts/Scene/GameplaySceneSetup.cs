@@ -35,6 +35,8 @@ namespace PilgrimsProgress.Scene
             BuildTilemap();
             var player = BuildPlayer();
             SetupCamera(player.transform);
+            SpawnNPCs();
+            SpawnEnvironment();
             BuildDialogueUI();
             BuildExplorationHUD();
             LoadInkStory();
@@ -101,6 +103,64 @@ namespace PilgrimsProgress.Scene
             topDown.SetBounds(new Vector2(-15, -10), new Vector2(15, 10));
         }
 
+        private void SpawnNPCs()
+        {
+            SpawnNPC("Evangelist", "evangelist", "ch01_evangelist", new Vector3(5, 0, 0));
+            SpawnNPC("Obstinate", "obstinate", "ch01_obstinate", new Vector3(-5, 3, 0));
+            SpawnNPC("Pliable", "pliable", "ch01_pliable", new Vector3(-3, 3, 0));
+            SpawnNPC("Help", "help", "ch02_help", new Vector3(8, -3, 0));
+            SpawnNPC("Interpreter", "interpreter", "ch03_interpreter", new Vector3(-10, 6, 0));
+        }
+
+        private void SpawnNPC(string name, string npcId, string inkKnot, Vector3 position)
+        {
+            var npcGo = new GameObject($"NPC_{name}");
+            npcGo.transform.position = position;
+            npcGo.layer = LayerMask.NameToLayer("Default");
+
+            var sr = npcGo.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = 10;
+
+            var setup = npcGo.AddComponent<Interaction.PlaceholderNPCSetup>();
+            setup.SetNpcId(npcId);
+
+            var interactable = npcGo.AddComponent<Interaction.NPCInteractable>();
+            SetField(interactable, "_npcId", npcId);
+            SetField(interactable, "_inkKnotName", inkKnot);
+            SetField(interactable, "_displayNameKey", $"npc_{npcId}");
+            SetField(interactable, "_spriteRenderer", sr);
+        }
+
+        private void SpawnEnvironment()
+        {
+            var treeSprite = Visuals.ProceduralAssets.CreateTreeSprite();
+            var signSprite = Visuals.ProceduralAssets.CreateSignpostSprite();
+
+            Vector3[] treePositions =
+            {
+                new Vector3(-7, 7, 0), new Vector3(-4, 8, 0), new Vector3(3, 7, 0),
+                new Vector3(6, 8, 0), new Vector3(10, 7, 0), new Vector3(-6, -7, 0),
+                new Vector3(-3, -8, 0), new Vector3(5, -7, 0), new Vector3(11, -6, 0),
+                new Vector3(-11, -3, 0), new Vector3(13, 2, 0)
+            };
+
+            foreach (var pos in treePositions)
+            {
+                var treeGo = new GameObject("Tree");
+                treeGo.transform.position = pos;
+                var sr = treeGo.AddComponent<SpriteRenderer>();
+                sr.sprite = treeSprite;
+                sr.sortingOrder = 5;
+            }
+
+            // Signpost near spawn
+            var signGo = new GameObject("Signpost");
+            signGo.transform.position = new Vector3(2, 0, 0);
+            var signSr = signGo.AddComponent<SpriteRenderer>();
+            signSr.sprite = signSprite;
+            signSr.sortingOrder = 5;
+        }
+
         private void BuildDialogueUI()
         {
             var canvasGo = new GameObject("DialogueCanvas");
@@ -113,30 +173,34 @@ namespace PilgrimsProgress.Scene
             scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
-            // Dialogue Panel (bottom of screen)
+            // Dialogue panel with themed background
+            var panelSprite = Visuals.ProceduralAssets.CreatePanelSprite();
+
             var panelGo = new GameObject("DialoguePanel");
             panelGo.transform.SetParent(canvasGo.transform, false);
             var panelImg = panelGo.AddComponent<Image>();
-            panelImg.color = new Color(0.05f, 0.05f, 0.10f, 0.90f);
+            panelImg.sprite = panelSprite;
+            panelImg.type = Image.Type.Sliced;
+            panelImg.color = Color.white;
             var panelRt = panelImg.rectTransform;
-            panelRt.anchorMin = new Vector2(0.05f, 0.02f);
-            panelRt.anchorMax = new Vector2(0.95f, 0.30f);
+            panelRt.anchorMin = new Vector2(0.04f, 0.02f);
+            panelRt.anchorMax = new Vector2(0.96f, 0.30f);
             panelRt.sizeDelta = Vector2.zero;
             panelRt.anchoredPosition = Vector2.zero;
 
-            // Speaker plate
+            // Speaker name plate
             var speakerPlate = new GameObject("SpeakerPlate");
             speakerPlate.transform.SetParent(panelGo.transform, false);
             var plateImg = speakerPlate.AddComponent<Image>();
-            plateImg.color = new Color(0.15f, 0.12f, 0.20f);
+            plateImg.color = new Color(0.12f, 0.10f, 0.18f, 0.95f);
             var plateRt = plateImg.rectTransform;
-            plateRt.anchorMin = new Vector2(0.02f, 0.82f);
-            plateRt.anchorMax = new Vector2(0.30f, 1.05f);
+            plateRt.anchorMin = new Vector2(0.02f, 0.84f);
+            plateRt.anchorMax = new Vector2(0.28f, 1.06f);
             plateRt.sizeDelta = Vector2.zero;
             plateRt.anchoredPosition = Vector2.zero;
 
             var speakerName = CreateTMP(speakerPlate.transform, "SpeakerName", 20,
-                new Color(0.9f, 0.82f, 0.6f), Vector2.zero, Vector2.one, "");
+                new Color(0.90f, 0.78f, 0.45f), Vector2.zero, Vector2.one, "");
             speakerName.fontStyle = FontStyles.Bold;
 
             // Dialogue text
@@ -186,8 +250,9 @@ namespace PilgrimsProgress.Scene
                 float cy = 1f - (i * 0.26f);
                 var cBtn = CreateButton(choiceContainer.transform, $"Choice{i}",
                     new Vector2(0, cy - 0.22f), new Vector2(1, cy),
-                    new Color(0.15f, 0.20f, 0.35f), out var cLabel);
+                    new Color(0.10f, 0.12f, 0.22f, 0.90f), out var cLabel);
                 cLabel.fontSize = 20;
+                cLabel.color = new Color(0.90f, 0.85f, 0.70f);
                 cLabel.alignment = TextAlignmentOptions.MidlineLeft;
                 choiceButtons[i] = cBtn;
                 choiceTexts[i] = cLabel;

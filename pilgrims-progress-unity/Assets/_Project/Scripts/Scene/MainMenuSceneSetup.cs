@@ -175,105 +175,21 @@ namespace PilgrimsProgress.Scene
 
         private void BuildBackground(Transform parent)
         {
-            // Multi-layer gradient background
-            var tex = CreateGradientTexture(512, 512);
-            var sprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+            var bgTex = Visuals.ProceduralAssets.CreateMenuBackground(480, 270);
+            var bgSprite = Sprite.Create(bgTex, new Rect(0, 0, bgTex.width, bgTex.height),
                 new Vector2(0.5f, 0.5f));
 
             var bgGo = new GameObject("Background");
             bgGo.transform.SetParent(parent, false);
             var bgImg = bgGo.AddComponent<Image>();
-            bgImg.sprite = sprite;
+            bgImg.sprite = bgSprite;
             bgImg.type = Image.Type.Simple;
             bgImg.preserveAspect = false;
+            bgImg.raycastTarget = false;
             var bgRt = bgImg.rectTransform;
             bgRt.anchorMin = Vector2.zero;
             bgRt.anchorMax = Vector2.one;
             bgRt.sizeDelta = Vector2.zero;
-
-            // Vignette overlay
-            var vigTex = CreateVignetteTexture(256, 256);
-            var vigSprite = Sprite.Create(vigTex, new Rect(0, 0, vigTex.width, vigTex.height),
-                new Vector2(0.5f, 0.5f));
-
-            var vigGo = new GameObject("Vignette");
-            vigGo.transform.SetParent(parent, false);
-            var vigImg = vigGo.AddComponent<Image>();
-            vigImg.sprite = vigSprite;
-            vigImg.type = Image.Type.Simple;
-            vigImg.preserveAspect = false;
-            vigImg.raycastTarget = false;
-            var vigRt = vigImg.rectTransform;
-            vigRt.anchorMin = Vector2.zero;
-            vigRt.anchorMax = Vector2.one;
-            vigRt.sizeDelta = Vector2.zero;
-
-            // Subtle light ray from top-right
-            var lightGo = new GameObject("LightRay");
-            lightGo.transform.SetParent(parent, false);
-            var lightImg = lightGo.AddComponent<Image>();
-            lightImg.color = new Color(0.95f, 0.85f, 0.55f, 0.04f);
-            lightImg.raycastTarget = false;
-            var lightRt = lightImg.rectTransform;
-            lightRt.anchorMin = new Vector2(0.4f, 0.3f);
-            lightRt.anchorMax = new Vector2(1.0f, 1.0f);
-            lightRt.sizeDelta = Vector2.zero;
-            lightRt.localRotation = Quaternion.Euler(0, 0, -15f);
-        }
-
-        private Texture2D CreateGradientTexture(int w, int h)
-        {
-            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            var topColor = new Color(0.06f, 0.04f, 0.12f);
-            var midColor = new Color(0.10f, 0.07f, 0.18f);
-            var botColor = new Color(0.03f, 0.02f, 0.06f);
-
-            // Golden accent in upper-right
-            var accentColor = new Color(0.18f, 0.12f, 0.06f);
-
-            for (int y = 0; y < h; y++)
-            {
-                float t = (float)y / h;
-                Color baseColor;
-                if (t < 0.4f)
-                    baseColor = Color.Lerp(botColor, midColor, t / 0.4f);
-                else
-                    baseColor = Color.Lerp(midColor, topColor, (t - 0.4f) / 0.6f);
-
-                for (int x = 0; x < w; x++)
-                {
-                    float u = (float)x / w;
-                    // Subtle radial accent in upper-right
-                    float dx = u - 0.85f;
-                    float dy = t - 0.75f;
-                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
-                    float accentStrength = Mathf.Max(0, 1f - dist * 2.5f) * 0.3f;
-
-                    Color c = Color.Lerp(baseColor, accentColor, accentStrength);
-                    c.a = 1f;
-                    tex.SetPixel(x, y, c);
-                }
-            }
-            tex.Apply();
-            return tex;
-        }
-
-        private Texture2D CreateVignetteTexture(int w, int h)
-        {
-            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
-            for (int y = 0; y < h; y++)
-            {
-                for (int x = 0; x < w; x++)
-                {
-                    float u = (float)x / w * 2f - 1f;
-                    float v = (float)y / h * 2f - 1f;
-                    float dist = Mathf.Sqrt(u * u + v * v);
-                    float alpha = Mathf.Clamp01((dist - 0.5f) * 1.2f) * 0.7f;
-                    tex.SetPixel(x, y, new Color(0, 0, 0, alpha));
-                }
-            }
-            tex.Apply();
-            return tex;
         }
 
         private GameObject CreatePanel(Transform parent, string name)
