@@ -88,6 +88,16 @@ namespace PilgrimsProgress.UI
         {
             var loc = ServiceLocator.TryGet<Localization.LocalizationManager>(out var lm) ? lm : null;
             var stats = ServiceLocator.TryGet<StatsManager>(out var sm) ? sm : null;
+            var custManager = ServiceLocator.TryGet<Player.PlayerCustomizationManager>(out var cm) ? cm : null;
+            string playerName = custManager != null ? custManager.GetPlayerName() : "Christian";
+
+            if (_summaryTitle != null)
+            {
+                bool isKo = loc != null && loc.CurrentLanguage == "ko";
+                _summaryTitle.text = isKo
+                    ? $"{playerName}의 순례 여정"
+                    : $"{playerName}'s Pilgrimage";
+            }
 
             if (stats != null)
             {

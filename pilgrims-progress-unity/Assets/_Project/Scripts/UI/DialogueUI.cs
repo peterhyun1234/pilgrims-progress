@@ -245,7 +245,8 @@ namespace PilgrimsProgress.UI
             switch (speakerId)
             {
                 case "Christian":
-                    return lang == "ko" ? "크리스천" : "Christian";
+                    var custManager = ServiceLocator.TryGet<Player.PlayerCustomizationManager>(out var cm) ? cm : null;
+                    return custManager != null ? custManager.GetPlayerName() : (lang == "ko" ? "크리스천" : "Christian");
                 case "Evangelist":
                     return lang == "ko" ? "전도자" : "Evangelist";
                 case "Obstinate":

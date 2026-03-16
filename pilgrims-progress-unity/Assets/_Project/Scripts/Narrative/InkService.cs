@@ -53,6 +53,7 @@ namespace PilgrimsProgress.Narrative
             _currentInkJson = inkJson;
             _story = new Story(inkJson.text);
             SetLanguageVariable();
+            SetPlayerNameVariable();
         }
 
         public void SetLanguageVariable()
@@ -63,6 +64,16 @@ namespace PilgrimsProgress.Narrative
             {
                 _story.variablesState["lang"] = lang;
             }
+        }
+
+        public void SetPlayerNameVariable()
+        {
+            if (_story == null) return;
+            if (!_story.variablesState.GlobalVariableExistsWithName("player_name")) return;
+
+            var custManager = ServiceLocator.TryGet<Player.PlayerCustomizationManager>(out var cm) ? cm : null;
+            string name = custManager != null ? custManager.GetPlayerName() : "Christian";
+            _story.variablesState["player_name"] = name;
         }
 
         public void Continue()
