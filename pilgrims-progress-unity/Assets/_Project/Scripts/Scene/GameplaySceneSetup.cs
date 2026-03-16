@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.Tilemaps;
 using TMPro;
 using PilgrimsProgress.Core;
@@ -14,7 +16,17 @@ namespace PilgrimsProgress.Scene
         private void Start()
         {
             if (FindFirstObjectByType<PlayerController>() != null) return;
+            EnsureEventSystem();
             BuildGameplayScene();
+        }
+
+        private void EnsureEventSystem()
+        {
+            if (FindFirstObjectByType<EventSystem>() != null) return;
+
+            var go = new GameObject("EventSystem");
+            go.AddComponent<EventSystem>();
+            go.AddComponent<InputSystemUIInputModule>();
         }
 
         private void BuildGameplayScene()
