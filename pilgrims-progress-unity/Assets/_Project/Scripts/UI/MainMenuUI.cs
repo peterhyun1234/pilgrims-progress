@@ -31,6 +31,7 @@ namespace PilgrimsProgress.UI
         [SerializeField] private GameObject _languageSelectPanel;
         [SerializeField] private GameObject _settingsPanel;
         [SerializeField] private GameObject _mainButtonsPanel;
+        [SerializeField] private GameObject _prologuePanel;
 
         [Header("Language Select")]
         [SerializeField] private Button _koreanButton;
@@ -43,12 +44,16 @@ namespace PilgrimsProgress.UI
         [SerializeField] private TextMeshProUGUI _guestLabel;
         [SerializeField] private Button _createAccountButton;
 
+        private bool _isFirstRunFlow;
+
         private void Start()
         {
             SetupButtonListeners();
 
             var gm = GameManager.Instance;
-            if (gm != null && gm.CurrentState == GameState.LanguageSelect)
+            _isFirstRunFlow = gm != null && gm.IsFirstRun;
+
+            if (_isFirstRunFlow || (gm != null && gm.CurrentState == GameState.LanguageSelect))
             {
                 ShowLanguageSelect();
             }
@@ -73,43 +78,72 @@ namespace PilgrimsProgress.UI
             if (_englishButton != null) _englishButton.onClick.AddListener(() => SelectLanguage("en"));
 
             if (_createAccountButton != null)
-            {
                 _createAccountButton.interactable = false;
-            }
 
-            bool hasSave = PlayerPrefs.HasKey("SaveSlot_Auto");
+            bool hasSave = GameManager.Instance != null && GameManager.Instance.HasSaveData();
             if (_continueButton != null) _continueButton.interactable = hasSave;
+        }
+
+        private void HideAllPanels()
+        {
+            if (_languageSelectPanel != null) _languageSelectPanel.SetActive(false);
+            if (_mainButtonsPanel != null) _mainButtonsPanel.SetActive(false);
+            if (_settingsPanel != null) _settingsPanel.SetActive(false);
+            if (_prologuePanel != null) _prologuePanel.SetActive(false);
         }
 
         private void ShowLanguageSelect()
         {
+            HideAllPanels();
             if (_languageSelectPanel != null) _languageSelectPanel.SetActive(true);
-            if (_mainButtonsPanel != null) _mainButtonsPanel.SetActive(false);
-            if (_settingsPanel != null) _settingsPanel.SetActive(false);
         }
 
         private void ShowMainMenu()
         {
-            if (_languageSelectPanel != null) _languageSelectPanel.SetActive(false);
+            HideAllPanels();
             if (_mainButtonsPanel != null) _mainButtonsPanel.SetActive(true);
-            if (_settingsPanel != null) _settingsPanel.SetActive(false);
         }
 
         private void SelectLanguage(string langCode)
         {
             var loc = ServiceLocator.TryGet<Localization.LocalizationManager>(out var lm) ? lm : null;
             if (loc != null)
-            {
                 loc.SetLanguage(langCode);
-            }
 
             if (GameManager.Instance != null)
+                GameManager.Instance.SetLanguage(langCode);
+
+            if (_isFirstRunFlow)
             {
-                GameManager.Instance.SetState(GameState.MainMenu);
+                ShowCharacterCreation();
+            }
+            else
+            {
+                if (GameManager.Instance != null)
+                    GameManager.Instance.SetState(GameState.MainMenu);
+                ShowMainMenu();
             }
 
-            ShowMainMenu();
             UpdateLocalization();
+        }
+
+        private void ShowCharacterCreation()
+        {
+            HideAllPanels();
+
+            if (_characterCreationUI == null)
+            {
+                var go = new GameObject("CharacterCreationUI");
+                go.transform.SetParent(transform, false);
+                _characterCreationUI = go.AddComponent<CharacterCreationUI>();
+            }
+
+            _characterCreationUI.OnConfirmed -= OnCharacterConfirmed;
+            _characterCreationUI.OnConfirmed += OnCharacterConfirmed;
+            _characterCreationUI.OnBack -= OnCharacterCreationBack;
+            _characterCreationUI.OnBack += OnCharacterCreationBack;
+
+            _characterCreationUI.Show();
         }
 
         private void UpdateLocalization()
@@ -130,38 +164,69 @@ namespace PilgrimsProgress.UI
 
         private void OnNewGame()
         {
-            if (_characterCreationUI == null)
-            {
-                var go = new GameObject("CharacterCreationUI");
-                go.transform.SetParent(transform, false);
-                _characterCreationUI = go.AddComponent<CharacterCreationUI>();
-            }
-
-            _characterCreationUI.OnConfirmed -= OnCharacterConfirmed;
-            _characterCreationUI.OnConfirmed += OnCharacterConfirmed;
-            _characterCreationUI.OnBack -= OnCharacterCreationBack;
-            _characterCreationUI.OnBack += OnCharacterCreationBack;
-
-            if (_mainButtonsPanel != null) _mainButtonsPanel.SetActive(false);
-            _characterCreationUI.Show();
+            ShowCharacterCreation();
         }
 
         private void OnCharacterConfirmed()
         {
-            if (GameManager.Instance != null)
+            if (_isFirstRunFlow)
             {
-                GameManager.Instance.SetState(GameState.Prologue);
+                if (GameManager.Instance != null)
+                    GameManager.Instance.CompleteFirstRun();
             }
 
-            var sceneLoader = ServiceLocator.TryGet<Scene.SceneLoader>(out var sl) ? sl : null;
-            if (sceneLoader != null)
+            ShowPrologue();
+        }
+
+        private void ShowPrologue()
+        {
+            HideAllPanels();
+
+            if (_characterCreationUI != null)
+                _characterCreationUI.Hide();
+
+            if (_prologuePanel != null)
             {
-                sceneLoader.LoadScene("Gameplay");
+                _prologuePanel.SetActive(true);
             }
             else
             {
-                UnityEngine.SceneManagement.SceneManager.LoadScene("Gameplay");
+                BuildProloguePanel();
             }
+        }
+
+        private void BuildProloguePanel()
+        {
+            var canvas = GetComponent<Canvas>() != null ? transform
+                       : transform.parent;
+
+            var panel = new GameObject("ProloguePanel");
+            panel.transform.SetParent(canvas, false);
+            var rt = panel.AddComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.sizeDelta = Vector2.zero;
+
+            var bg = panel.AddComponent<Image>();
+            bg.color = new Color(0.02f, 0.01f, 0.05f, 0.95f);
+            bg.raycastTarget = true;
+
+            _prologuePanel = panel;
+
+            var prologueUI = panel.AddComponent<PrologueUI>();
+            prologueUI.OnPrologueComplete += OnPrologueComplete;
+        }
+
+        private void OnPrologueComplete()
+        {
+            if (GameManager.Instance != null)
+                GameManager.Instance.SetState(GameState.Gameplay);
+
+            var sceneLoader = ServiceLocator.TryGet<Scene.SceneLoader>(out var sl) ? sl : null;
+            if (sceneLoader != null)
+                sceneLoader.LoadScene("Gameplay");
+            else
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Gameplay");
         }
 
         private void OnCharacterCreationBack()
@@ -169,12 +234,22 @@ namespace PilgrimsProgress.UI
             if (_characterCreationUI != null)
                 _characterCreationUI.Hide();
 
-            ShowMainMenu();
+            if (_isFirstRunFlow)
+                ShowLanguageSelect();
+            else
+                ShowMainMenu();
         }
 
         private void OnContinue()
         {
-            Debug.Log("[MainMenu] Continue - Load save");
+            if (GameManager.Instance != null)
+                GameManager.Instance.SetState(GameState.Gameplay);
+
+            var sceneLoader = ServiceLocator.TryGet<Scene.SceneLoader>(out var sl) ? sl : null;
+            if (sceneLoader != null)
+                sceneLoader.LoadScene("Gameplay");
+            else
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Gameplay");
         }
 
         private void OnCollection()
@@ -187,7 +262,8 @@ namespace PilgrimsProgress.UI
             if (_settingsPanel != null)
             {
                 _settingsPanel.SetActive(true);
-                _mainButtonsPanel.SetActive(false);
+                if (_mainButtonsPanel != null)
+                    _mainButtonsPanel.SetActive(false);
             }
         }
 
