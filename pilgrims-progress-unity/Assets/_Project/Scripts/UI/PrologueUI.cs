@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using TMPro;
 using PilgrimsProgress.Core;
 using PilgrimsProgress.Localization;
@@ -36,10 +37,18 @@ namespace PilgrimsProgress.UI
 
         private void Update()
         {
-            if (_waitingForInput && (Input.anyKeyDown || Input.GetMouseButtonDown(0)))
-            {
+            if (!_waitingForInput) return;
+
+            var kb = Keyboard.current;
+            var mouse = Mouse.current;
+            var touch = Touchscreen.current;
+
+            bool pressed = (kb != null && kb.anyKey.wasPressedThisFrame)
+                        || (mouse != null && mouse.leftButton.wasPressedThisFrame)
+                        || (touch != null && touch.primaryTouch.press.wasPressedThisFrame);
+
+            if (pressed)
                 _waitingForInput = false;
-            }
         }
 
         private void BuildUI()

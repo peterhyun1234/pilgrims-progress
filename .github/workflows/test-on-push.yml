@@ -18,6 +18,10 @@ concurrency:
   group: test-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   editmode-tests:
     name: EditMode 단위 테스트
