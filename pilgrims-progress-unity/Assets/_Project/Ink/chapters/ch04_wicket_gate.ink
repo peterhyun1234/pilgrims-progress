@@ -7,9 +7,9 @@
 
 # SPEAKER:
 {lang == "ko":
-    크리스천은 좁은 문을 향해 걸었다. 전도자가 말한 빛이 그를 인도하였다.
+    {player_name}은 좁은 문을 향해 걸었다. 전도자가 말한 빛이 그를 인도하였다.
 - else:
-    Christian walked toward the wicket-gate. The light that Evangelist had spoken of guided him.
+    {player_name} walked toward the wicket-gate. The light that Evangelist had spoken of guided him.
 }
 
 # SPEAKER:
@@ -38,9 +38,9 @@
 # SPEAKER: Christian
 # EMOTION: earnest
 {lang == "ko":
-    크리스천은 문을 두드렸다.
+    {player_name}은 문을 두드렸다.
 - else:
-    Christian knocked upon the gate.
+    {player_name} knocked upon the gate.
 }
 
 # WAIT: 1.0
@@ -62,9 +62,9 @@
 
 # SPEAKER:
 {lang == "ko":
-    벨세붑이 성 위에서 화살을 쏘고 있었다. 그러나 문 안에서 한 손이 뻗어 나와 크리스천을 잡아당겼다.
+    벨세붑이 성 위에서 화살을 쏘고 있었다. 그러나 문 안에서 한 손이 뻗어 나와 {player_name}을 잡아당겼다.
 - else:
-    Beelzebub shot from the castle above. But a hand reached out from within the gate and pulled Christian through.
+    Beelzebub shot from the castle above. But a hand reached out from within the gate and pulled {player_name} through.
 }
 
 # TRANSITION: fade_white
@@ -201,9 +201,9 @@
 # TRANSITION: fade_black
 
 {lang == "ko":
-    크리스천은 해석자의 집을 향해 좁은 길을 걸었다.
+    {player_name}은 해석자의 집을 향해 좁은 길을 걸었다.
 - else:
-    Christian took the narrow way toward the Interpreter's House.
+    {player_name} took the narrow way toward the Interpreter's House.
 }
 
 {lang == "ko":

@@ -8,9 +8,9 @@
 
 # SPEAKER:
 {lang == "ko":
-    크리스천과 유연은 절망의 늪을 향해 걸어갔다. 길은 좁고 흐릿했으며, 그들은 조심스럽게 발을 내딛었다.
+    {player_name}과 유연은 절망의 늪을 향해 걸어갔다. 길은 좁고 흐릿했으며, 그들은 조심스럽게 발을 내딛었다.
 - else:
-    Christian and Pliable walked toward the Slough of Despond. The path was narrow and dim, and they trod carefully.
+    {player_name} and Pliable walked toward the Slough of Despond. The path was narrow and dim, and they trod carefully.
 }
 
 # SPEAKER: Christian
@@ -108,9 +108,9 @@
 # BGM: slough_struggle
 
 {lang == "ko":
-    크리스천은 홀로 남았다. 등에 진 짐이 그를 깊은 곳으로 끌어당겼다.
+    {player_name}은 홀로 남았다. 등에 진 짐이 그를 깊은 곳으로 끌어당겼다.
 - else:
-    Christian was left alone. The burden upon his back drew him toward the deeper part.
+    {player_name} was left alone. The burden upon his back drew him toward the deeper part.
 }
 
 # SPEAKER: Christian
@@ -167,9 +167,9 @@
 # WAIT: 1.0
 
 {lang == "ko":
-    도움이 크리스천의 손을 잡아당겼다. 크리스천은 진흙 속에서 끌어올려져 단단한 땅 위에 서게 되었다.
+    도움이 {player_name}의 손을 잡아당겼다. {player_name}은 진흙 속에서 끌어올려져 단단한 땅 위에 서게 되었다.
 - else:
-    Help took Christian by the hand and drew him out. Christian stood upon firm ground once more.
+    Help took {player_name} by the hand and drew him out. {player_name} stood upon firm ground once more.
 }
 
 # SPEAKER: Christian
@@ -225,9 +225,9 @@
 # SPEAKER: Christian
 # EMOTION: determined
 {lang == "ko":
-    크리스천은 고개를 숙여 감사하고, 다시 길을 걸었다.
+    {player_name}은 고개를 숙여 감사하고, 다시 길을 걸었다.
 - else:
-    Christian bowed his head in thanks and took to the path once more.
+    {player_name} bowed his head in thanks and took to the path once more.
 }
 
 # TRANSITION: fade_black

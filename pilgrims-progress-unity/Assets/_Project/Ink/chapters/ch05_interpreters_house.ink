@@ -7,9 +7,9 @@
 
 # SPEAKER:
 {lang == "ko":
-    크리스천은 해석자의 집에 이르렀다. 그 집은 고요하고 따뜻한 빛으로 가득하였다.
+    {player_name}은 해석자의 집에 이르렀다. 그 집은 고요하고 따뜻한 빛으로 가득하였다.
 - else:
-    Christian came to the Interpreter's House. It was filled with a quiet, warm light.
+    {player_name} came to the Interpreter's House. It was filled with a quiet, warm light.
 }
 
 -> ch05_arrival
@@ -101,9 +101,9 @@
 # SPEAKER: Christian
 # EMOTION: contemplative
 {lang == "ko":
-    크리스천은 초상화 앞에 잠시 머물며 그 의미를 마음에 새겼다.
+    {player_name}은 초상화 앞에 잠시 머물며 그 의미를 마음에 새겼다.
 - else:
-    Christian tarried before the portrait, imprinting its meaning upon his heart.
+    {player_name} tarried before the portrait, imprinting its meaning upon his heart.
 }
 
 # SPEAKER: Christian

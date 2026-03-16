@@ -7,9 +7,9 @@
 
 # SPEAKER:
 {lang == "ko":
-    크리스천은 절망의 늪을 벗어나 좁은 문을 향해 걸었다. 등에 짐이 무거웠지만, 희망이 그를 이끌었다.
+    {player_name}은 절망의 늪을 벗어나 좁은 문을 향해 걸었다. 등에 짐이 무거웠지만, 희망이 그를 이끌었다.
 - else:
-    Christian had escaped the Slough and walked toward the wicket-gate. Though his burden was heavy, hope led him on.
+    {player_name} had escaped the Slough and walked toward the wicket-gate. Though his burden was heavy, hope led him on.
 }
 
 # SPEAKER:
@@ -95,9 +95,9 @@
 # TRANSITION: fade_black
 
 {lang == "ko":
-    크리스천은 유혹에 넘어가 길을 벗어나 시내산 근처로 향했다.
+    {player_name}은 유혹에 넘어가 길을 벗어나 시내산 근처로 향했다.
 - else:
-    Christian, overcome by the temptation, turned aside from the path and made toward Mount Sinai.
+    {player_name}, overcome by the temptation, turned aside from the path and made toward Mount Sinai.
 }
 
 -> ch03_mount_sinai
@@ -152,9 +152,9 @@
 # EMOTION: stern
 
 {lang == "ko":
-    "크리스천아, 여기서 무엇을 하느냐?"
+    "{player_name}아, 여기서 무엇을 하느냐?"
 - else:
-    "Christian, what are you doing here?"
+    "{player_name}, what are you doing here?"
 }
 
 # SPEAKER: Christian
@@ -206,9 +206,9 @@
 # BGM: repentance_theme
 
 {lang == "ko":
-    크리스천은 무릎을 꿇고 통회하였다.
+    {player_name}은 무릎을 꿇고 통회하였다.
 - else:
-    Christian fell upon his knees and wept in repentance.
+    {player_name} fell upon his knees and wept in repentance.
 }
 
 # SPEAKER: Christian
@@ -228,9 +228,9 @@
 }
 
 {lang == "ko":
-    크리스천은 일어나 다시 좁은 문을 향한 길로 돌아섰다.
+    {player_name}은 일어나 다시 좁은 문을 향한 길로 돌아섰다.
 - else:
-    Christian rose and turned back to the path that led to the wicket-gate.
+    {player_name} rose and turned back to the path that led to the wicket-gate.
 }
 
 + {lang == "ko"} ["절망 속에서 응답하라." (courage+3)]

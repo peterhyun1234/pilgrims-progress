@@ -1,5 +1,6 @@
 // === Global Variables ===
 VAR lang = "ko"
+VAR player_name = "Christian"
 
 // Character Stats
 VAR faith = 30

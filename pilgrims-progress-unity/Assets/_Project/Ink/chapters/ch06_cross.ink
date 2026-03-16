@@ -7,9 +7,9 @@
 
 # SPEAKER:
 {lang == "ko":
-    크리스천은 해석자의 집을 떠나 십자가가 있는 언덕을 향해 걸었다.
+    {player_name}은 해석자의 집을 떠나 십자가가 있는 언덕을 향해 걸었다.
 - else:
-    Christian left the Interpreter's House and walked toward the hill where the Cross stood.
+    {player_name} left the Interpreter's House and walked toward the hill where the Cross stood.
 }
 
 # SPEAKER:
@@ -44,9 +44,9 @@
 # WAIT: 1.0
 
 {lang == "ko":
-    크리스천은 짐을 지고 언덕을 오르기 시작하였다.
+    {player_name}은 짐을 지고 언덕을 오르기 시작하였다.
 - else:
-    Christian began to climb the hill, burden upon his back.
+    {player_name} began to climb the hill, burden upon his back.
 }
 
 # SFX: footsteps_climb
@@ -140,9 +140,9 @@
 # SFX: garment_change
 
 {lang == "ko":
-    그가 크리스천에게 새 옷을 입혔다.
+    그가 {player_name}에게 새 옷을 입혔다.
 - else:
-    He clothed Christian in raiment new.
+    He clothed {player_name} in raiment new.
 }
 
 # SPEAKER: Second Shining One
@@ -182,9 +182,9 @@
 
 # SPEAKER:
 {lang == "ko":
-    크리스천은 새 옷을 입고, 이마에 표를 받고, 두루마리를 품에 넣었다.
+    {player_name}은 새 옷을 입고, 이마에 표를 받고, 두루마리를 품에 넣었다.
 - else:
-    Christian stood clothed in new raiment, marked upon his brow, the roll held close.
+    {player_name} stood clothed in new raiment, marked upon his brow, the roll held close.
 }
 
 # SPEAKER: Christian

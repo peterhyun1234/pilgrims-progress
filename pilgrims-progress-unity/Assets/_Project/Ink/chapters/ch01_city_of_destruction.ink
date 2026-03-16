@@ -59,7 +59,7 @@
 }
 
 {lang == "ko":
-    밤이 되자 크리스천은 잠 대신 한숨과 눈물로 밤을 보냈다. 아침이 되자 가족들이 안부를 물었고, 그는 "더 나빠졌소"라고 답했다.
+    밤이 되자 {player_name}은 잠 대신 한숨과 눈물로 밤을 보냈다. 아침이 되자 가족들이 안부를 물었고, 그는 "더 나빠졌소"라고 답했다.
 - else:
     The night brought only sighs and tears. When morning came and they asked how he fared, he answered: "Worse and worse."
 }
@@ -71,7 +71,7 @@
 === ch01_fields ===
 # SPEAKER: 
 {lang == "ko":
-    크리스천은 홀로 들에 나가 때로는 읽고 때로는 기도하며 날들을 보냈다.
+    {player_name}은 홀로 들에 나가 때로는 읽고 때로는 기도하며 날들을 보냈다.
 - else:
     He retreated to his chamber to pray, and walked solitary in the fields, sometimes reading, and sometimes praying.
 }
@@ -163,9 +163,9 @@
 # SPEAKER: Christian
 # EMOTION: confused
 {lang == "ko":
-    크리스천은 눈을 가늘게 뜨고 먼 곳을 바라보았다.
+    {player_name}은 눈을 가늘게 뜨고 먼 곳을 바라보았다.
 - else:
-    Christian squinted and looked far into the distance.
+    {player_name} squinted and looked far into the distance.
 }
 
 + {lang == "ko"} ["잘 모르겠습니다... 하지만 빛은 보이는 것 같습니다."]
@@ -213,9 +213,9 @@
 # SPEAKER: 
 # TRANSITION: fade_black
 {lang == "ko":
-    크리스천은 두루마리를 읽고 뛰기 시작했다. 등에 진 짐이 무거웠지만, 뒤를 돌아보지 않았다.
+    {player_name}은 두루마리를 읽고 뛰기 시작했다. 등에 진 짐이 무거웠지만, 뒤를 돌아보지 않았다.
 - else:
-    Christian read the parchment and began to run. Though the burden on his back was heavy, he looked not behind him.
+    {player_name} read the parchment and began to run. Though the burden on his back was heavy, he looked not behind him.
 }
 
 # SPEAKER: Christian
@@ -313,7 +313,7 @@
 {lang == "ko":
     "욕하지 마시오. 그가 추구하는 것이 우리 것보다 나으니, 내 마음은 이웃과 함께 가는 쪽으로 기울어지오."
 - else:
-    "Don't revile. If what Christian says is true, the things he looks after are better than ours. My heart inclines to go with my neighbour."
+    "Don't revile. If what {player_name} says is true, the things he looks after are better than ours. My heart inclines to go with my neighbour."
 }
 -> ch01_together
 
@@ -337,9 +337,9 @@
 === ch01_together ===
 # SPEAKER: 
 {lang == "ko":
-    크리스천과 유연은 함께 걸었다. 크리스천은 천성의 영광에 대해 이야기했다.
+    {player_name}과 유연은 함께 걸었다. {player_name}은 천성의 영광에 대해 이야기했다.
 - else:
-    Christian and Pliable walked on together. Christian spoke of the heavenly glories.
+    {player_name} and Pliable walked on together. {player_name} spoke of the heavenly glories.
 }
 
 # SPEAKER: Christian
