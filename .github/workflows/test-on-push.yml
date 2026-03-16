@@ -1,0 +1,64 @@
+# =============================================================================
+# Test on Push
+# =============================================================================
+# push 시 EditMode 단위 테스트만 실행하는 경량 워크플로우.
+# 빌드 없이 테스트만 실행하므로 ~5분, 비용이 매우 적습니다.
+# =============================================================================
+
+name: Tests
+
+on:
+  push:
+    paths:
+      - 'pilgrims-progress-unity/Assets/**'
+      - 'pilgrims-progress-unity/Packages/**'
+      - 'pilgrims-progress-unity/ProjectSettings/**'
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  editmode-tests:
+    name: EditMode 단위 테스트
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 디스크 공간 확보
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
+
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Library 폴더 캐시
+        uses: actions/cache@v4
+        with:
+          path: pilgrims-progress-unity/Library
+          key: library-test-${{ hashFiles('pilgrims-progress-unity/Assets/**', 'pilgrims-progress-unity/Packages/manifest.json', 'pilgrims-progress-unity/ProjectSettings/**') }}
+          restore-keys: |
+            library-test-
+
+      - name: EditMode 테스트 실행
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: pilgrims-progress-unity
+          testMode: EditMode
+          unityVersion: 6000.3.10f1
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 테스트 결과 업로드
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: artifacts
+          retention-days: 3
