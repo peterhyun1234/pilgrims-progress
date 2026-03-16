@@ -1,4 +1,5 @@
 using UnityEngine;
+using PilgrimsProgress.Core;
 
 namespace PilgrimsProgress.Player
 {
@@ -30,6 +31,23 @@ namespace PilgrimsProgress.Player
         {
             _sr = GetComponent<SpriteRenderer>();
             _controller = GetComponent<PlayerController>();
+            TryBuildCustomizationSprites();
+        }
+
+        private void TryBuildCustomizationSprites()
+        {
+            if (_idleDown != null) return;
+
+            var custManager = ServiceLocator.TryGet<PlayerCustomizationManager>(out var cm) ? cm : null;
+            if (custManager == null || custManager.Presets == null) return;
+
+            var data = custManager.CurrentCustomization;
+            var presets = custManager.Presets;
+
+            _idleDown = CharacterSpriteBuilder.Build(data, presets, showBurden: true);
+            _idleUp = _idleDown;
+            _idleLeft = _idleDown;
+            _idleRight = _idleDown;
         }
 
         private void Update()
