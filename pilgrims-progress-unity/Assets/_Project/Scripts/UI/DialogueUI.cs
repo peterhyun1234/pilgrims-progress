@@ -39,9 +39,12 @@ namespace PilgrimsProgress.UI
         private Coroutine _typewriterCoroutine;
         private string _currentFullText;
 
+        private GameModeManager _modeManager;
+
         private void Start()
         {
             _inkService = ServiceLocator.Get<InkService>();
+            _modeManager = ServiceLocator.Get<GameModeManager>();
 
             if (_inkService != null)
             {
@@ -50,13 +53,17 @@ namespace PilgrimsProgress.UI
                 _inkService.OnStoryEnd += HandleStoryEnd;
             }
 
+            if (_modeManager != null)
+            {
+                _modeManager.OnModeChanged += HandleModeChanged;
+            }
+
             if (_continueButton != null)
             {
                 _continueButton.onClick.AddListener(OnContinueClicked);
             }
 
-            HideChoices();
-            if (_continueIndicator != null) _continueIndicator.SetActive(false);
+            HideDialogue();
         }
 
         private void OnDestroy()
@@ -67,6 +74,26 @@ namespace PilgrimsProgress.UI
                 _inkService.OnChoicesPresented -= HandleChoices;
                 _inkService.OnStoryEnd -= HandleStoryEnd;
             }
+
+            if (_modeManager != null)
+            {
+                _modeManager.OnModeChanged -= HandleModeChanged;
+            }
+        }
+
+        private void HandleModeChanged(GameMode previous, GameMode current)
+        {
+            if (current != GameMode.Dialogue && previous == GameMode.Dialogue)
+            {
+                HideDialogue();
+            }
+        }
+
+        private void HideDialogue()
+        {
+            if (_dialoguePanel != null) _dialoguePanel.SetActive(false);
+            HideChoices();
+            if (_continueIndicator != null) _continueIndicator.SetActive(false);
         }
 
         private void HandleDialogueLine(DialogueLine line)
