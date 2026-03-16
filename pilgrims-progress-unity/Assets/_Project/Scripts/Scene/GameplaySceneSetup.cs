@@ -13,10 +13,20 @@ namespace PilgrimsProgress.Scene
 {
     public class GameplaySceneSetup : MonoBehaviour
     {
+        private ChapterData _chapterData;
+
         private void Start()
         {
             if (FindFirstObjectByType<PlayerController>() != null) return;
             EnsureEventSystem();
+
+            var chapterMgr = ChapterManager.Instance;
+            if (chapterMgr == null && ServiceLocator.TryGet<ChapterManager>(out var cm))
+                chapterMgr = cm;
+
+            int chapter = chapterMgr != null ? chapterMgr.CurrentChapter : 1;
+            _chapterData = ChapterDatabase.Get(chapter);
+
             BuildGameplayScene();
             KoreanFontSetup.ApplyToAll();
         }
@@ -37,6 +47,7 @@ namespace PilgrimsProgress.Scene
             SetupCamera(player.transform);
             SpawnNPCs();
             SpawnEnvironment();
+            SpawnChapterExit();
             BuildDialogueUI();
             BuildExplorationHUD();
             LoadInkStory();
@@ -65,14 +76,15 @@ namespace PilgrimsProgress.Scene
             var tileGen = gridGo.AddComponent<PlaceholderTileGenerator>();
             SetField(tileGen, "_groundTilemap", groundMap);
             SetField(tileGen, "_wallTilemap", wallMap);
-            SetField(tileGen, "_width", 30);
-            SetField(tileGen, "_height", 20);
+            SetField(tileGen, "_width", _chapterData.MapWidth);
+            SetField(tileGen, "_height", _chapterData.MapHeight);
+            SetField(tileGen, "_theme", _chapterData.Theme);
         }
 
         private GameObject BuildPlayer()
         {
             var playerGo = new GameObject("Player");
-            playerGo.transform.position = new Vector3(0, -2, 0);
+            playerGo.transform.position = _chapterData.PlayerSpawn;
             playerGo.layer = LayerMask.NameToLayer("Default");
 
             var sr = playerGo.AddComponent<SpriteRenderer>();
@@ -82,6 +94,9 @@ namespace PilgrimsProgress.Scene
             rb.gravityScale = 0f;
             rb.freezeRotation = true;
             rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+            var col = playerGo.AddComponent<BoxCollider2D>();
+            col.size = new Vector2(0.8f, 0.8f);
 
             playerGo.AddComponent<PlaceholderPlayerSetup>();
             playerGo.AddComponent<PlayerAnimator>();
@@ -100,16 +115,19 @@ namespace PilgrimsProgress.Scene
                 topDown = cam.gameObject.AddComponent<TopDownCamera>();
 
             topDown.SetTarget(playerTransform);
-            topDown.SetBounds(new Vector2(-15, -10), new Vector2(15, 10));
+            float halfW = _chapterData.MapWidth / 2f;
+            float halfH = _chapterData.MapHeight / 2f;
+            topDown.SetBounds(new Vector2(-halfW, -halfH), new Vector2(halfW, halfH));
         }
 
         private void SpawnNPCs()
         {
-            SpawnNPC("Evangelist", "evangelist", "ch01_evangelist", new Vector3(5, 0, 0));
-            SpawnNPC("Obstinate", "obstinate", "ch01_obstinate", new Vector3(-5, 3, 0));
-            SpawnNPC("Pliable", "pliable", "ch01_pliable", new Vector3(-3, 3, 0));
-            SpawnNPC("Help", "help", "ch02_help", new Vector3(8, -3, 0));
-            SpawnNPC("Interpreter", "interpreter", "ch03_interpreter", new Vector3(-10, 6, 0));
+            if (_chapterData.NPCs == null) return;
+
+            foreach (var npc in _chapterData.NPCs)
+            {
+                SpawnNPC(npc.Name, npc.NpcId, npc.InkKnot, npc.Position);
+            }
         }
 
         private void SpawnNPC(string name, string npcId, string inkKnot, Vector3 position)
@@ -134,31 +152,54 @@ namespace PilgrimsProgress.Scene
         private void SpawnEnvironment()
         {
             var treeSprite = Visuals.ProceduralAssets.CreateTreeSprite();
-            var signSprite = Visuals.ProceduralAssets.CreateSignpostSprite();
+            var rng = new System.Random(_chapterData.ChapterNumber * 42);
 
-            Vector3[] treePositions =
-            {
-                new Vector3(-7, 7, 0), new Vector3(-4, 8, 0), new Vector3(3, 7, 0),
-                new Vector3(6, 8, 0), new Vector3(10, 7, 0), new Vector3(-6, -7, 0),
-                new Vector3(-3, -8, 0), new Vector3(5, -7, 0), new Vector3(11, -6, 0),
-                new Vector3(-11, -3, 0), new Vector3(13, 2, 0)
-            };
+            int halfW = _chapterData.MapWidth / 2 - 3;
+            int halfH = _chapterData.MapHeight / 2 - 3;
+            int treeCount = Mathf.Clamp(_chapterData.MapWidth / 4, 4, 15);
 
-            foreach (var pos in treePositions)
+            for (int i = 0; i < treeCount; i++)
             {
+                float x = rng.Next(-halfW, halfW);
+                float y = rng.Next(-halfH, halfH);
+
+                bool tooCloseToSpawn = Vector2.Distance(
+                    new Vector2(x, y),
+                    (Vector2)_chapterData.PlayerSpawn) < 3f;
+                bool tooCloseToExit = Vector2.Distance(
+                    new Vector2(x, y),
+                    (Vector2)_chapterData.ExitPosition) < 3f;
+
+                if (tooCloseToSpawn || tooCloseToExit) continue;
+
                 var treeGo = new GameObject("Tree");
-                treeGo.transform.position = pos;
+                treeGo.transform.position = new Vector3(x, y, 0);
                 var sr = treeGo.AddComponent<SpriteRenderer>();
                 sr.sprite = treeSprite;
                 sr.sortingOrder = 5;
             }
 
-            // Signpost near spawn
+            var signSprite = Visuals.ProceduralAssets.CreateSignpostSprite();
             var signGo = new GameObject("Signpost");
-            signGo.transform.position = new Vector3(2, 0, 0);
+            signGo.transform.position = _chapterData.PlayerSpawn + new Vector3(2, 1, 0);
             var signSr = signGo.AddComponent<SpriteRenderer>();
             signSr.sprite = signSprite;
             signSr.sortingOrder = 5;
+        }
+
+        private void SpawnChapterExit()
+        {
+            if (_chapterData.ChapterNumber >= ChapterManager.TotalChapters) return;
+
+            var exitGo = new GameObject("ChapterExit");
+            exitGo.transform.position = _chapterData.ExitPosition;
+
+            var sr = exitGo.AddComponent<SpriteRenderer>();
+            sr.sprite = Visuals.ProceduralAssets.CreateSignpostSprite();
+            sr.sortingOrder = 6;
+            sr.color = new Color(0.9f, 0.78f, 0.45f);
+
+            exitGo.AddComponent<Interaction.ChapterExitInteractable>();
         }
 
         private void BuildDialogueUI()
@@ -173,7 +214,6 @@ namespace PilgrimsProgress.Scene
             scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
-            // Dialogue panel with themed background
             var panelSprite = Visuals.ProceduralAssets.CreatePanelSprite();
 
             var panelGo = new GameObject("DialoguePanel");
@@ -188,7 +228,6 @@ namespace PilgrimsProgress.Scene
             panelRt.sizeDelta = Vector2.zero;
             panelRt.anchoredPosition = Vector2.zero;
 
-            // Speaker name plate
             var speakerPlate = new GameObject("SpeakerPlate");
             speakerPlate.transform.SetParent(panelGo.transform, false);
             var plateImg = speakerPlate.AddComponent<Image>();
@@ -203,16 +242,14 @@ namespace PilgrimsProgress.Scene
                 new Color(0.90f, 0.78f, 0.45f), Vector2.zero, Vector2.one, "");
             speakerName.fontStyle = FontStyles.Bold;
 
-            // Dialogue text
             var dialogueText = CreateTMP(panelGo.transform, "DialogueText", 22,
                 Color.white, new Vector2(0.04f, 0.10f), new Vector2(0.96f, 0.78f), "");
             dialogueText.alignment = TextAlignmentOptions.TopLeft;
 
-            // Continue indicator
             var continueGo = new GameObject("ContinueIndicator");
             continueGo.transform.SetParent(panelGo.transform, false);
             var contTmp = continueGo.AddComponent<TextMeshProUGUI>();
-            contTmp.text = "▼";
+            contTmp.text = "\u25BC";
             contTmp.fontSize = 18;
             contTmp.color = new Color(1, 1, 1, 0.5f);
             contTmp.alignment = TextAlignmentOptions.BottomRight;
@@ -222,7 +259,6 @@ namespace PilgrimsProgress.Scene
             contRt.sizeDelta = Vector2.zero;
             contRt.anchoredPosition = Vector2.zero;
 
-            // Continue button (invisible full-panel click area)
             var continueBtnGo = new GameObject("ContinueButton");
             continueBtnGo.transform.SetParent(panelGo.transform, false);
             var cbImg = continueBtnGo.AddComponent<Image>();
@@ -234,7 +270,6 @@ namespace PilgrimsProgress.Scene
             cbRt.anchoredPosition = Vector2.zero;
             var continueBtn = continueBtnGo.AddComponent<Button>();
 
-            // Choice container
             var choiceContainer = new GameObject("ChoiceContainer");
             choiceContainer.transform.SetParent(canvasGo.transform, false);
             var choiceRt = choiceContainer.AddComponent<RectTransform>();
@@ -259,12 +294,10 @@ namespace PilgrimsProgress.Scene
             }
             choiceContainer.SetActive(false);
 
-            // Location text
             var locText = CreateTMP(canvasGo.transform, "LocationText", 16,
                 new Color(0.7f, 0.65f, 0.55f),
                 new Vector2(0.35f, 0.92f), new Vector2(0.65f, 0.98f), "");
 
-            // Wire up DialogueUI
             var dialogueUI = canvasGo.AddComponent<DialogueUI>();
             SetField(dialogueUI, "_dialoguePanel", panelGo);
             SetField(dialogueUI, "_speakerNameText", speakerName);
@@ -293,7 +326,6 @@ namespace PilgrimsProgress.Scene
 
             var cg = canvasGo.AddComponent<CanvasGroup>();
 
-            // Stats area (top-left)
             float barW = 0.12f;
             float barH = 0.012f;
             float startY = 0.95f;
@@ -340,18 +372,18 @@ namespace PilgrimsProgress.Scene
             wisdomBar.type = Image.Type.Filled;
             wisdomBar.fillMethod = Image.FillMethod.Horizontal;
 
-            // Burden (top-right)
             var burdenText = CreateTMP(canvasGo.transform, "BurdenText", 16,
                 new Color(0.8f, 0.6f, 0.3f),
                 new Vector2(0.88f, 0.93f), new Vector2(0.98f, 0.97f), "80");
             burdenText.alignment = TextAlignmentOptions.MidlineRight;
 
-            // Location name (top-center)
+            string locationDisplay = _chapterData != null
+                ? $"Ch.{_chapterData.ChapterNumber} {_chapterData.NameKR}"
+                : "";
             var locationName = CreateTMP(canvasGo.transform, "LocationName", 18,
                 Color.white,
-                new Vector2(0.30f, 0.93f), new Vector2(0.70f, 0.98f), "");
+                new Vector2(0.30f, 0.93f), new Vector2(0.70f, 0.98f), locationDisplay);
 
-            // Wire ExplorationHUD
             var hud = canvasGo.AddComponent<ExplorationHUD>();
             SetField(hud, "_faithBar", faithBar);
             SetField(hud, "_courageBar", courageBar);
@@ -369,8 +401,7 @@ namespace PilgrimsProgress.Scene
             var inkJson = Resources.Load<TextAsset>("InkStory");
             if (inkJson == null)
             {
-                Debug.LogWarning("[GameplaySetup] InkStory not found in Resources. " +
-                    "Copy your main.json to Assets/_Project/Resources/InkStory.json");
+                Debug.LogWarning("[GameplaySetup] InkStory not found in Resources.");
             }
 
             if (inkJson != null)
