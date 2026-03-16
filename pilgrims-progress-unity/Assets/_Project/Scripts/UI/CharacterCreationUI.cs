@@ -79,6 +79,7 @@ namespace PilgrimsProgress.UI
             {
                 GenerateUI();
                 _uiGenerated = true;
+                KoreanFontSetup.ApplyToAll();
             }
 
             SetupListeners();

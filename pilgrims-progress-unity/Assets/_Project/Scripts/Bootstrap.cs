@@ -18,6 +18,7 @@ namespace PilgrimsProgress.Core
 
         private void Awake()
         {
+            UI.KoreanFontSetup.Initialize();
             SceneManager.sceneLoaded += OnSceneLoaded;
             StartCoroutine(InitializeServices());
         }

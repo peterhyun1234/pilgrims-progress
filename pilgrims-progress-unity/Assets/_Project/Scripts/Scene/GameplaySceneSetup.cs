@@ -18,6 +18,7 @@ namespace PilgrimsProgress.Scene
             if (FindFirstObjectByType<PlayerController>() != null) return;
             EnsureEventSystem();
             BuildGameplayScene();
+            KoreanFontSetup.ApplyToAll();
         }
 
         private void EnsureEventSystem()

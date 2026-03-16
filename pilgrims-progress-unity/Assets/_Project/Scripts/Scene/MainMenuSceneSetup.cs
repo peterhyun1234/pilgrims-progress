@@ -15,6 +15,7 @@ namespace PilgrimsProgress.Scene
             if (FindFirstObjectByType<MainMenuUI>() != null) return;
             EnsureEventSystem();
             BuildMainMenuUI();
+            KoreanFontSetup.ApplyToAll();
         }
 
         private void EnsureEventSystem()
