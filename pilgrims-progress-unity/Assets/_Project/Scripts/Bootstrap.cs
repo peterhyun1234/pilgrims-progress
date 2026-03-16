@@ -18,7 +18,34 @@ namespace PilgrimsProgress.Core
 
         private void Awake()
         {
+            SceneManager.sceneLoaded += OnSceneLoaded;
             StartCoroutine(InitializeServices());
+        }
+
+        private void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private static void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, LoadSceneMode mode)
+        {
+            switch (scene.name)
+            {
+                case "MainMenu":
+                    if (Object.FindFirstObjectByType<Scene.MainMenuSceneSetup>() == null)
+                    {
+                        var go = new GameObject("[MainMenuSetup]");
+                        go.AddComponent<Scene.MainMenuSceneSetup>();
+                    }
+                    break;
+                case "Gameplay":
+                    if (Object.FindFirstObjectByType<Scene.GameplaySceneSetup>() == null)
+                    {
+                        var go = new GameObject("[GameplaySetup]");
+                        go.AddComponent<Scene.GameplaySceneSetup>();
+                    }
+                    break;
+            }
         }
 
         private IEnumerator InitializeServices()
@@ -47,7 +74,16 @@ namespace PilgrimsProgress.Core
             var gm = GameManager.Instance;
             string activeScene = SceneManager.GetActiveScene().name;
 
-            if (activeScene == "MainMenu" || activeScene == "Gameplay")
+            if (activeScene == "MainMenu")
+            {
+                if (!gm.HasLanguageBeenSelected)
+                    gm.SetState(GameState.LanguageSelect);
+                else
+                    gm.SetState(GameState.MainMenu);
+                yield break;
+            }
+
+            if (activeScene == "Gameplay")
             {
                 yield break;
             }

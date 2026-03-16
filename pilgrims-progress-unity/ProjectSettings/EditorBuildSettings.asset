@@ -7,13 +7,13 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/_Project/Scenes/Bootstrap.unity
-    guid: 
+    guid: 6555b2ec0e6d440d2aea3f0a2da4b4ab
   - enabled: 1
     path: Assets/_Project/Scenes/MainMenu.unity
-    guid: 
+    guid: c230bc6e8b2e74943a18fab541a8c57c
   - enabled: 1
     path: Assets/_Project/Scenes/Gameplay.unity
-    guid: 
+    guid: 0bf695059e0584160bc381f00f792d39
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0
