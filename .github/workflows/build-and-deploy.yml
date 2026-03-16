@@ -38,6 +38,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Unity 6 Docker 이미지가 ~7.4GB로 매우 크므로 디스크 공간 확보 필요
+      - name: 디스크 공간 확보
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
+
       # 저장소 코드 체크아웃 (LFS 포함)
       - name: 저장소 체크아웃
         uses: actions/checkout@v4
