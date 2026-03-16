@@ -64,7 +64,7 @@ jobs:
         with:
           projectPath: pilgrims-progress-unity
           targetPlatform: WebGL
-          unityVersion: 6000.3.11f1
+          unityVersion: 6000.3.10f1
 
       # 빌드 결과물을 아티팩트로 업로드 (deploy 작업에서 사용)
       - name: 빌드 아티팩트 업로드
