@@ -159,7 +159,7 @@
 {lang == "ko":
     "네 손을 내게 주라."
 - else:
-    "Give me thy hand."
+    "Give me your hand."
 }
 
 # SFX: pull_rescue
@@ -183,7 +183,7 @@
 # SPEAKER: Help
 # EMOTION: solemn
 {lang == "ko":
-    "이 늪은 죄에 대한 확신이 마음에 쌓일 때 생기는 것이라. 두려움과 의심, 절망의 습기가 모여 이 진흙탕을 만들었느니라."
+    "이 늪은 죄에 대한 확신이 마음에 쌓일 때 생기는 것이다. 두려움과 의심, 절망의 습기가 모여 이 진흙탕을 만들었다."
 - else:
     "This slough is the conviction of sin that settles in the heart. The fears and doubts and despairing thoughts gather here and make this mire."
 }
@@ -191,9 +191,9 @@
 # SPEAKER: Help
 # EMOTION: hopeful
 {lang == "ko":
-    "그러나 왕께서는 이 길을 고치시려고 돌을 주셨다. 아직 많은 구멍이 남아 있지만, 믿음으로 건너가는 자는 넘어지지 않느니라."
+    "그러나 왕께서는 이 길을 고치시려고 돌을 주셨다. 아직 많은 구멍이 남아 있지만, 믿음으로 건너가는 사람은 넘어지지 않는다."
 - else:
-    "Yet the King hath given stones to mend this way. Though many gaps remain, those who cross in faith shall not fall."
+    "Yet the King has given stones to mend this way. Though many gaps remain, those who cross in faith will not fall."
 }
 
 + {lang == "ko"} ["감사합니다." (faith+5)]
@@ -217,9 +217,9 @@
 # SPEAKER: Help
 # EMOTION: encouraging
 {lang == "ko":
-    "앞으로 나아가라. 좁은 문이 너를 기다리느니라."
+    "앞으로 나아가라. 좁은 문이 너를 기다리고 있다."
 - else:
-    "Press onward. The wicket-gate awaits thee."
+    "Press onward. The wicket-gate awaits you."
 }
 
 # SPEAKER: Christian

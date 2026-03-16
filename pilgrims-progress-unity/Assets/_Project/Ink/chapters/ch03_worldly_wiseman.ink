@@ -29,7 +29,7 @@
 {lang == "ko":
     "어찌하여 그렇게 무거운 짐을 지고 가는가? 어디로 향하는가?"
 - else:
-    "How now, good fellow! Whither away after this burdened manner?"
+    "Well now, good fellow! Where are you going with such a heavy burden?"
 }
 
 # SPEAKER: Christian
@@ -45,7 +45,7 @@
 {lang == "ko":
     "누가 그런 말을 하였느냐?"
 - else:
-    "Who bid thee go that way?"
+    "Who told you to go that way?"
 }
 
 # SPEAKER: Christian
@@ -65,15 +65,15 @@
 {lang == "ko":
     "그가 한 말은 헛된 것이니, 그 길은 위험하고 고통이 많다. 네가 겪은 절망의 늪이 그 증거가 아니냐?"
 - else:
-    "Evangelist hath given thee wrong counsel. That way is dangerous and full of trouble. The Slough thou hast passed is proof of it."
+    "Evangelist has given you bad advice. That way is dangerous and full of trouble. The Slough you passed through is proof of it."
 }
 
 # SPEAKER: Worldly Wiseman
 # EMOTION: persuasive
 {lang == "ko":
-    "내가 더 나은 길을 알려 주리라. 도덕 마을에 가서 법률씨를 만나라. 그가 네 짐을 쉽게 벗겨 줄 수 있느니라."
+    "내가 더 나은 길을 알려 주겠다. 도덕 마을에 가서 법률씨를 만나라. 그가 네 짐을 쉽게 벗겨 줄 수 있다."
 - else:
-    "I will show thee a better way. Go to the Village of Morality. There dwells one Mr. Legality, who can ease thy burden with far less travail."
+    "I will show you a better way. Go to the Village of Morality. There lives one Mr. Legality, who can ease your burden with far less trouble."
 }
 
 # SPEAKER: Christian
@@ -81,15 +81,15 @@
 {lang == "ko":
     "정말 그런가요? 이 짐을 빨리 벗고 싶소."
 - else:
-    "Is it true? I would fain be rid of this burden."
+    "Is it true? I would love to be rid of this burden."
 }
 
 # SPEAKER: Worldly Wiseman
 # EMOTION: confident
 {lang == "ko":
-    "그 마을은 가깝고, 그곳에서 네가 원하는 안식과 명예를 얻을 수 있느니라."
+    "그 마을은 가깝고, 그곳에서 네가 원하는 안식과 명예를 얻을 수 있다."
 - else:
-    "The village is near, and there thou shalt find rest and honour."
+    "The village is near, and there you will find rest and honor."
 }
 
 # TRANSITION: fade_black
@@ -154,7 +154,7 @@
 {lang == "ko":
     "크리스천아, 여기서 무엇을 하느냐?"
 - else:
-    "Christian, what dost thou here?"
+    "Christian, what are you doing here?"
 }
 
 # SPEAKER: Christian
@@ -168,9 +168,9 @@
 # SPEAKER: Evangelist
 # EMOTION: grave
 {lang == "ko":
-    "네가 세 가지 죄를 범하였느니라. 첫째, 빛을 버리고 어둠을 택하였고, 둘째, 고난의 길을 피하고 쉬운 길을 구하였으며, 셋째, 전도자의 말을 거역하고 세상 사람의 말을 들었느니라."
+    "네가 세 가지 죄를 범했다. 첫째, 빛을 버리고 어둠을 택했고, 둘째, 고난의 길을 피하고 쉬운 길을 구했으며, 셋째, 전도자의 말을 거역하고 세상 사람의 말을 들었다."
 - else:
-    "Thou hast sinned in three things. First, thou didst forsake the light and choose the way of darkness. Second, thou didst flee from the way of suffering and seek the easy path. Third, thou didst reject the words of Evangelist and hearken to a man of this world."
+    "You have sinned in three ways. First, you forsook the light and chose the way of darkness. Second, you fled from the way of suffering and sought the easy path. Third, you rejected the words of Evangelist and listened to a man of this world."
 }
 
 # SPEAKER: Christian
@@ -184,10 +184,20 @@
 # SPEAKER: Evangelist
 # EMOTION: compassionate
 {lang == "ko":
-    "이제 돌아서라. 빛이 있던 곳으로 돌아가라. 그리하면 네 죄가 사하여지리라."
+    "이제 돌아서라. 빛이 있던 곳으로 돌아가라. 그러면 네 죄가 용서받을 것이다."
 - else:
-    "Turn again. Return to the place where the light shone. There thy sin shall be forgiven."
+    "Turn again. Return to the place where the light shone. There your sin will be forgiven."
 }
+
+# SPEAKER: Evangelist
+# EMOTION: solemn
+{lang == "ko":
+    "율법의 행위에 의존하는 사람은 누구나 저주 아래에 놓여 있다." (갈라디아서 3:10, 새번역)
+- else:
+    "For all who rely on the works of the law are under a curse." (Galatians 3:10, NIV)
+}
+~ bible_card_gal_3_10 = true
+# BIBLE_CARD: gal_3_10
 
 -> ch03_repentance
 
@@ -256,7 +266,7 @@
 {lang == "ko":
     "주님의 은혜가 저를 붙드시리라 믿나이다."
 - else:
-    "I believe Thy grace shall uphold me."
+    "I believe Your grace will uphold me."
 }
 -> ch03_end
 
@@ -266,7 +276,7 @@
 {lang == "ko":
     "좁은 문을 두드리라. 문이 열리리라."
 - else:
-    "Knock at the wicket-gate. It shall be opened unto thee."
+    "Knock at the wicket-gate. It will be opened to you."
 }
 
 # TRANSITION: fade_black

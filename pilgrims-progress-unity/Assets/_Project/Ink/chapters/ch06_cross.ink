@@ -108,7 +108,7 @@
 {lang == "ko":
     "벗었나이다! 벗었나이다! 주께서 나의 짐을 벗기셨나이다!"
 - else:
-    "It is gone! It is gone! He hath taken my burden from me!"
+    "It is gone! It is gone! He has taken my burden from me!"
 }
 
 # SFX: joy_cry
@@ -132,9 +132,9 @@
 # SPEAKER: First Shining One
 # EMOTION: glorious
 {lang == "ko":
-    첫째가 말하였다. "네 죄가 사하여졌느니라."
+    첫째가 말하였다. "네 죄가 용서받았다." (마가복음 2:5, 새번역)
 - else:
-    The first said, "Thy sins be forgiven thee."
+    The first said, "Your sins are forgiven." (Mark 2:5, NIV)
 }
 
 # SFX: garment_change
@@ -148,17 +148,17 @@
 # SPEAKER: Second Shining One
 # EMOTION: glorious
 {lang == "ko":
-    둘째가 그의 이마에 표를 새기며 말하였다. "이제 네가 그분의 것이니라."
+    둘째가 그의 이마에 표를 새기며 말하였다. "이제 너는 그분의 것이다."
 - else:
-    The second set a mark upon his forehead and said, "Thou art now His."
+    The second set a mark upon his forehead and said, "You are now His."
 }
 
 # SPEAKER: Third Shining One
 # EMOTION: glorious
 {lang == "ko":
-    셋째가 봉인된 두루마리를 주며 말하였다. "이것을 읽고 천성에 이르거라."
+    셋째가 봉인된 두루마리를 주며 말하였다. "이것을 읽고 천성에 이르라."
 - else:
-    The third gave him a sealed roll and said, "Read this, and thou shalt come to the Celestial City."
+    The third gave him a sealed roll and said, "Read this as you journey to the Celestial City."
 }
 
 ~ faith += 20
@@ -190,9 +190,9 @@
 # SPEAKER: Christian
 # EMOTION: joyful
 {lang == "ko":
-    "하나님이 세상을 이처럼 사랑하사 독생자를 주셨으니..."
+    "하나님이 세상을 이처럼 사랑하셔서, 외아들을 주셨으니..." (요한복음 3:16, 새번역)
 - else:
-    "For God so loved the world, that he gave his only begotten Son..."
+    "For God so loved the world that he gave his one and only Son..." (John 3:16, NIV)
 }
 
 # WAIT: 2.0

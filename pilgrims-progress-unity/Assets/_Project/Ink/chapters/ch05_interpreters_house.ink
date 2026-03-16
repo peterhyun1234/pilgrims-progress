@@ -29,9 +29,9 @@
 # SPEAKER: Interpreter
 # EMOTION: kind
 {lang == "ko":
-    "들어오라. 내가 네게 보여줄 것들이 있느니라."
+    "들어오라. 내가 네게 보여줄 것들이 있다."
 - else:
-    "Come in. I have things to show thee."
+    "Come in. I have things to show you."
 }
 
 # SPEAKER: Christian
@@ -45,9 +45,9 @@
 # SPEAKER: Interpreter
 # EMOTION: solemn
 {lang == "ko":
-    "네가 앞으로 갈 길에 필요한 것들이니라."
+    "네가 앞으로 갈 길에 필요한 것들이다."
 - else:
-    "Things needful for the way that lies before thee."
+    "Things you will need for the way ahead."
 }
 
 -> ch05_portrait_room
@@ -67,7 +67,7 @@
 # SPEAKER: Interpreter
 # EMOTION: solemn
 {lang == "ko":
-    "이 사람은 참된 목자라. 그의 눈은 하늘을 향하고, 그의 손에는 진리의 책이 있으며, 그의 입에는 정의가 새겨져 있느니라."
+    "이 사람은 참된 목자다. 그의 눈은 하늘을 향하고, 그의 손에는 진리의 책이 있으며, 그의 입에는 정의가 새겨져 있다."
 - else:
     "This man is the true pastor. His eyes are lifted to heaven, the book of truth is in his hand, and the law of truth is written upon his lips."
 }
@@ -75,9 +75,9 @@
 # SPEAKER: Interpreter
 # EMOTION: earnest
 {lang == "ko":
-    "그는 영혼을 구원하기 위해 자기 생명을 내어놓는 자니라."
+    "그는 영혼을 구원하기 위해 자기 생명을 내어놓는 사람이다."
 - else:
-    "He giveth his life for the salvation of souls."
+    "He gives his life for the salvation of souls."
 }
 
 + {lang == "ko"} ["의미를 깊이 묵상하다." (wisdom+5)]
@@ -142,7 +142,7 @@
 # SPEAKER: Interpreter
 # EMOTION: instructive
 {lang == "ko":
-    "한 사람은 인내라 하고, 다른 사람은 정욕이라 하느니라. 인내는 기다리며 면류관을 받으리라. 정욕은 서두르다가 모든 것을 잃으리라."
+    "한 사람은 인내라 하고, 다른 사람은 정욕이라 한다. 인내는 기다리며 면류관을 받을 것이다. 정욕은 서두르다가 모든 것을 잃을 것이다."
 - else:
     "One is called Patience, the other Passion. Patience shall wait and receive a crown. Passion hastens and shall lose all."
 }
@@ -150,9 +150,9 @@
 # SPEAKER: Interpreter
 # EMOTION: grave
 {lang == "ko":
-    "세상의 모든 것이 지나가리라. 오직 인내하는 자만이 끝까지 견디리라."
+    "세상의 모든 것은 지나간다. 오직 끝까지 인내하는 사람만이 구원받는다."
 - else:
-    "All things of this world pass away. Only he who endureth to the end shall be saved."
+    "All things of this world pass away. Only the one who endures to the end will be saved."
 }
 
 + {lang == "ko"} ["의미를 깊이 묵상하다." (wisdom+5)]
@@ -210,7 +210,7 @@
 # SPEAKER: Interpreter
 # EMOTION: reverent
 {lang == "ko":
-    "벽난로 옆에 한 사람이 서 있느니라. 그는 은혜의 물을 부어 불을 꺼우려는 자의 시도를 막고 있느니라."
+    "벽난로 옆에 한 사람이 서 있다. 그는 은혜의 물을 부어 불을 끄려는 자의 시도를 막고 있다."
 - else:
     "Beside the fire stands one who pours water of grace, resisting those who would quench it."
 }
@@ -218,9 +218,9 @@
 # SPEAKER: Interpreter
 # EMOTION: grave
 {lang == "ko":
-    "사탄은 네 믿음의 불을 끄려 할 것이나, 그리스도의 은혜가 그것을 지키리라."
+    "사탄은 네 믿음의 불을 끄려 할 것이다. 그러나 그리스도의 은혜가 그것을 지킨다."
 - else:
-    "Satan would quench the fire of thy faith, but the grace of Christ shall preserve it."
+    "Satan would quench the fire of your faith, but the grace of Christ will preserve it."
 }
 
 # SFX: water_pour
@@ -273,7 +273,7 @@
 {lang == "ko":
     "이제 가라. 네가 본 것을 마음에 품고, 십자가가 있는 언덕을 향해 나아가라."
 - else:
-    "Now go. Keep what thou hast seen in thy heart, and press toward the hill where stands the Cross."
+    "Now go. Keep what you have seen in your heart, and press toward the hill where the Cross stands."
 }
 
 # SPEAKER: Christian
@@ -281,7 +281,7 @@
 {lang == "ko":
     "감사합니다. 이제 갈 준비가 되었나이다."
 - else:
-    "I thank thee. I am ready to go."
+    "Thank you. I am ready to go."
 }
 
 # TRANSITION: fade_black

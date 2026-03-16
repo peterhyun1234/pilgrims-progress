@@ -110,7 +110,7 @@
 {lang == "ko":
     "어찌하여 울고 있느냐?"
 - else:
-    "Wherefore dost thou cry?"
+    "Why are you weeping?"
 }
 
 # SPEAKER: Christian
@@ -126,7 +126,7 @@
 {lang == "ko":
     "이 등 위의 짐이 그토록 두렵다면 어찌 가만히 서 있느냐?"
 - else:
-    "If this be thy condition, why standest thou still?"
+    "If this is your condition, why do you stand still?"
 }
 
 # SPEAKER: Christian
@@ -134,15 +134,15 @@
 {lang == "ko":
     "어디로 가야 할지 모르기 때문입니다."
 - else:
-    "Because I know not whither to go."
+    "Because I do not know where to go."
 }
 
 # SPEAKER: Evangelist
 # EMOTION: hopeful
 {lang == "ko":
-    전도자가 그에게 양피지 두루마리를 주었는데, 그 안에는 이렇게 기록되어 있었다: "다가올 진노에서 도망하라."
+    전도자가 그에게 양피지 두루마리를 주었는데, 그 안에는 이렇게 기록되어 있었다: "다가올 진노를 피하여라." (마태복음 3:7, 새번역)
 - else:
-    Then Evangelist gave him a parchment roll, and there was written within: "Flee from the wrath to come."
+    Then Evangelist gave him a parchment roll, and there was written within: "Flee from the coming wrath!" (Matthew 3:7, NIV)
 }
 ~ has_parchment = true
 ~ bible_card_matt_3_7 = true
@@ -195,7 +195,7 @@
 {lang == "ko":
     "그렇소! 그 빛을 눈에서 놓지 말고 곧바로 그리로 가시오. 그러면 그 문에 이르게 될 것이오. 문을 두드리면 어찌해야 할지 알게 될 것이오."
 - else:
-    "Keep that light in your eye, and go up directly thereto: so shalt thou see the gate; at which, when thou knockest, it shall be told thee what thou shalt do."
+    "Keep that light in your eye and go straight toward it. You will see the gate, and when you knock, you will be told what to do."
 }
 -> ch01_departure
 
@@ -205,7 +205,7 @@
 {lang == "ko":
     "괜찮소. 문은 아직 보이지 않더라도, 빛을 따라가시오. 빛이 당신을 인도할 것이오."
 - else:
-    "Fear not. Though the gate is yet unseen, follow the light. The light shall guide thee."
+    "Do not fear. Though the gate is not yet visible, follow the light. The light will guide you."
 }
 -> ch01_departure
 

@@ -107,8 +107,8 @@ namespace PilgrimsProgress.UI
             if (_bibleVerseText != null)
             {
                 string verse = loc != null && loc.CurrentLanguage == "ko"
-                    ? "\"하나님이 세상을 이처럼 사랑하사 독생자를 주셨으니\n이는 그를 믿는 자마다 멸망하지 않고\n영생을 얻게 하려 하심이라.\"\n— 요한복음 3:16"
-                    : "\"For God so loved the world,\nthat he gave his only begotten Son,\nthat whosoever believeth in him\nshould not perish,\nbut have everlasting life.\"\n— John 3:16";
+                    ? "\"하나님이 세상을 이처럼 사랑하셔서,\n외아들을 주셨으니,\n그를 믿는 사람마다 멸망하지 않고,\n영원한 생명을 얻게 하려는 것이다.\"\n— 요한복음 3:16 (새번역)"
+                    : "\"For God so loved the world\nthat he gave his one and only Son,\nthat whoever believes in him\nshall not perish\nbut have eternal life.\"\n— John 3:16 (NIV)";
                 _bibleVerseText.text = verse;
             }
 

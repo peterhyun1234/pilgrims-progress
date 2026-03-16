@@ -73,17 +73,27 @@
 # SPEAKER: Good-will
 # EMOTION: welcoming
 {lang == "ko":
-    "내가 온 마음으로 기꺼이 받아들이리라. 우리는 아무에게도 이의를 제기하지 않느니라."
+    "기꺼이 받아들이겠다. 우리는 아무도 거절하지 않는다."
 - else:
     "I am willing with all my heart. We make no objections against any."
 }
+
+# SPEAKER: Good-will
+# EMOTION: gentle
+{lang == "ko":
+    "내게로 오는 사람은 내가 결코 내쫓지 않겠다." (요한복음 6:37, 새번역)
+- else:
+    "Whoever comes to me I will never drive away." (John 6:37, NIV)
+}
+~ bible_card_john_6_37 = true
+# BIBLE_CARD: john_6_37
 
 # SPEAKER: Christian
 # EMOTION: relieved
 {lang == "ko":
     "감사합니다. 저는... 저는 길을 잃었었습니다."
 - else:
-    "I thank thee. I... I had lost my way."
+    "Thank you. I... I had lost my way."
 }
 
 -> ch04_confession
@@ -94,7 +104,7 @@
 {lang == "ko":
     "무슨 일이 있었느냐?"
 - else:
-    "What hath befallen thee?"
+    "What has happened to you?"
 }
 
 # SPEAKER: Christian
@@ -108,9 +118,9 @@
 # SPEAKER: Good-will
 # EMOTION: understanding
 {lang == "ko":
-    "그가 네게 한 일이 옳았느니라. 시내산은 네 짐을 벗기지 못하리라. 오직 앞으로 가야 할 곳에서만 벗을 수 있느니라."
+    "전도자가 한 말이 옳았다. 시내산은 네 짐을 벗기지 못한다. 오직 앞에 있는 곳에서만 벗을 수 있다."
 - else:
-    "He did well. Mount Sinai cannot ease thy burden. Only at the place ahead shalt thou be delivered."
+    "Evangelist did well. Mount Sinai cannot ease your burden. Only at the place ahead will you be delivered."
 }
 
 -> ch04_narrow_way
@@ -119,9 +129,9 @@
 # SPEAKER: Good-will
 # EMOTION: solemn
 {lang == "ko":
-    "이 앞에는 좁은 길이 있느니라. 곧게 나아가라. 이 문에서 짐을 벗을 수는 없느니라. 해방의 장소까지 짐을 지고 가야 하느니라."
+    "이 앞에는 좁은 길이 있다. 곧게 나아가라. 이 문에서 짐을 벗을 수는 없다. 해방의 장소까지 짐을 지고 가야 한다."
 - else:
-    "Before thee lies the narrow way. Go straight on. Thy burden cannot be removed at this gate. Bear it until thou comest to the place of deliverance."
+    "Before you lies the narrow way. Go straight on. Your burden cannot be removed at this gate. Bear it until you come to the place of deliverance."
 }
 
 # SPEAKER: Christian
@@ -161,9 +171,9 @@
 # SPEAKER: Good-will
 # EMOTION: patient
 {lang == "ko":
-    "해방의 언덕에 이르면 알게 되리라. 그곳에서 짐이 스스로 떨어지리라."
+    "해방의 언덕에 이르면 알게 될 것이다. 그곳에서 짐이 저절로 떨어질 것이다."
 - else:
-    "Thou shalt know when thou reachest the hill of deliverance. There it shall fall from thee of itself."
+    "You will know when you reach the hill of deliverance. There it will fall from you of itself."
 }
 
 -> ch04_end
@@ -182,7 +192,7 @@
 {lang == "ko":
     "하나님이 너와 함께 하시기를."
 - else:
-    "God go with thee."
+    "God go with you."
 }
 
 -> ch04_end
