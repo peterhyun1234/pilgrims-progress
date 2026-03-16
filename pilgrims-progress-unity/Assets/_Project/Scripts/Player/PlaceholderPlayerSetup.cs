@@ -1,6 +1,7 @@
 using UnityEngine;
 using PilgrimsProgress.Core;
 using PilgrimsProgress.Interaction;
+using PilgrimsProgress.Visuals;
 
 namespace PilgrimsProgress.Player
 {
@@ -21,15 +22,26 @@ namespace PilgrimsProgress.Player
             var sr = GetComponent<SpriteRenderer>();
             if (sr == null) sr = gameObject.AddComponent<SpriteRenderer>();
 
-            var custManager = ServiceLocator.TryGet<PlayerCustomizationManager>(out var cm) ? cm : null;
+            var chapterMgr = ChapterManager.Instance;
+            int chapter = chapterMgr != null ? chapterMgr.CurrentChapter : 1;
+            string spriteId = chapter >= 6 ? "christian_free" : "christian";
 
+            var sprite = SpriteSheetLoader.GetIdleSprite(spriteId);
+            if (sprite != null)
+            {
+                sr.sprite = sprite;
+                sr.sortingOrder = 10;
+                return;
+            }
+
+            var custManager = ServiceLocator.TryGet<PlayerCustomizationManager>(out var cm) ? cm : null;
             if (custManager != null && custManager.Presets != null)
             {
-                var sprite = CharacterSpriteBuilder.Build(
+                var builtSprite = CharacterSpriteBuilder.Build(
                     custManager.CurrentCustomization, custManager.Presets);
-                if (sprite != null)
+                if (builtSprite != null)
                 {
-                    sr.sprite = sprite;
+                    sr.sprite = builtSprite;
                     sr.sortingOrder = 10;
                     return;
                 }

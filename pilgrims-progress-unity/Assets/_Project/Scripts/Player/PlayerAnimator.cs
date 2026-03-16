@@ -1,53 +1,72 @@
 using UnityEngine;
 using PilgrimsProgress.Core;
+using PilgrimsProgress.Visuals;
 
 namespace PilgrimsProgress.Player
 {
     [RequireComponent(typeof(SpriteRenderer))]
     public class PlayerAnimator : MonoBehaviour
     {
-        [Header("Sprite Sheets")]
-        [SerializeField] private Sprite[] _walkDown;
-        [SerializeField] private Sprite[] _walkUp;
-        [SerializeField] private Sprite[] _walkLeft;
-        [SerializeField] private Sprite[] _walkRight;
-        [SerializeField] private Sprite _idleDown;
-        [SerializeField] private Sprite _idleUp;
-        [SerializeField] private Sprite _idleLeft;
-        [SerializeField] private Sprite _idleRight;
-
         [Header("Animation")]
-        [SerializeField] private float _frameRate = 8f;
+        [SerializeField] private float _frameRate = 6f;
 
         private SpriteRenderer _sr;
         private PlayerController _controller;
+        private Sprite[] _sprites;
         private float _frameTimer;
-        private int _currentFrame;
-        private Direction _currentDir = Direction.Down;
+        private int _currentWalkFrame;
+        private SpriteSheetLoader.Direction _currentDir = SpriteSheetLoader.Direction.Down;
+        private bool _useSpriteSheet;
 
-        private enum Direction { Down, Up, Left, Right }
+        private Sprite _fallbackSprite;
 
         private void Awake()
         {
             _sr = GetComponent<SpriteRenderer>();
             _controller = GetComponent<PlayerController>();
-            TryBuildCustomizationSprites();
         }
 
-        private void TryBuildCustomizationSprites()
+        private void Start()
         {
-            if (_idleDown != null) return;
+            LoadSprites();
+        }
 
-            var custManager = ServiceLocator.TryGet<PlayerCustomizationManager>(out var cm) ? cm : null;
-            if (custManager == null || custManager.Presets == null) return;
+        private void LoadSprites()
+        {
+            string npcId = GetPlayerSpriteId();
+            _sprites = SpriteSheetLoader.Load(npcId);
+            _useSpriteSheet = _sprites != null;
 
-            var data = custManager.CurrentCustomization;
-            var presets = custManager.Presets;
+            if (_useSpriteSheet)
+            {
+                _sr.sprite = _sprites[0]; // idle down
+            }
+            else
+            {
+                BuildFallbackSprite();
+            }
+        }
 
-            _idleDown = CharacterSpriteBuilder.Build(data, presets, showBurden: true);
-            _idleUp = _idleDown;
-            _idleLeft = _idleDown;
-            _idleRight = _idleDown;
+        private string GetPlayerSpriteId()
+        {
+            var chapterMgr = ChapterManager.Instance;
+            int chapter = chapterMgr != null ? chapterMgr.CurrentChapter : 1;
+            return chapter >= 6 ? "christian_free" : "christian";
+        }
+
+        private void BuildFallbackSprite()
+        {
+            var custManager = PlayerCustomizationManager.Instance;
+            if (custManager == null)
+                ServiceLocator.TryGet<PlayerCustomizationManager>(out custManager);
+
+            if (custManager != null && custManager.Presets != null)
+            {
+                _fallbackSprite = CharacterSpriteBuilder.Build(
+                    custManager.CurrentCustomization, custManager.Presets, showBurden: true);
+                if (_fallbackSprite != null)
+                    _sr.sprite = _fallbackSprite;
+            }
         }
 
         private void Update()
@@ -57,34 +76,25 @@ namespace PilgrimsProgress.Player
             UpdateDirection();
 
             if (_controller.IsMoving)
-            {
                 AnimateWalk();
-            }
             else
-            {
                 ShowIdle();
-            }
         }
 
         private void UpdateDirection()
         {
             var dir = _controller.FacingDirection;
             if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
-            {
-                _currentDir = dir.x > 0 ? Direction.Right : Direction.Left;
-            }
+                _currentDir = dir.x > 0 ? SpriteSheetLoader.Direction.Right : SpriteSheetLoader.Direction.Left;
             else if (dir.sqrMagnitude > 0.01f)
-            {
-                _currentDir = dir.y > 0 ? Direction.Up : Direction.Down;
-            }
+                _currentDir = dir.y > 0 ? SpriteSheetLoader.Direction.Up : SpriteSheetLoader.Direction.Down;
         }
 
         private void AnimateWalk()
         {
-            var frames = GetWalkFrames();
-            if (frames == null || frames.Length == 0)
+            if (!_useSpriteSheet)
             {
-                ShowIdle();
+                if (_fallbackSprite != null) _sr.sprite = _fallbackSprite;
                 return;
             }
 
@@ -92,38 +102,32 @@ namespace PilgrimsProgress.Player
             if (_frameTimer >= 1f / _frameRate)
             {
                 _frameTimer -= 1f / _frameRate;
-                _currentFrame = (_currentFrame + 1) % frames.Length;
+                _currentWalkFrame = (_currentWalkFrame % 2) + 1; // Alternate between frame 1 and 2
             }
 
-            _sr.sprite = frames[_currentFrame];
+            var sprite = SpriteSheetLoader.GetSprite("christian", _currentDir, _currentWalkFrame);
+            if (sprite == null)
+            {
+                string id = GetPlayerSpriteId();
+                sprite = SpriteSheetLoader.GetSprite(id, _currentDir, _currentWalkFrame);
+            }
+            if (sprite != null) _sr.sprite = sprite;
         }
 
         private void ShowIdle()
         {
             _frameTimer = 0f;
-            _currentFrame = 0;
+            _currentWalkFrame = 0;
 
-            Sprite idle = _currentDir switch
+            if (!_useSpriteSheet)
             {
-                Direction.Up => _idleUp,
-                Direction.Left => _idleLeft,
-                Direction.Right => _idleRight,
-                _ => _idleDown
-            };
+                if (_fallbackSprite != null) _sr.sprite = _fallbackSprite;
+                return;
+            }
 
-            if (idle != null)
-                _sr.sprite = idle;
-        }
-
-        private Sprite[] GetWalkFrames()
-        {
-            return _currentDir switch
-            {
-                Direction.Up => _walkUp,
-                Direction.Left => _walkLeft,
-                Direction.Right => _walkRight,
-                _ => _walkDown
-            };
+            string id = GetPlayerSpriteId();
+            var sprite = SpriteSheetLoader.GetSprite(id, _currentDir, 0);
+            if (sprite != null) _sr.sprite = sprite;
         }
     }
 }

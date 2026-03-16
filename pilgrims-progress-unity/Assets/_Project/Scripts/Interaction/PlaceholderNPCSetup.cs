@@ -8,6 +8,12 @@ namespace PilgrimsProgress.Interaction
         [SerializeField] private string _npcId = "";
         [SerializeField] private Color _promptColor = new Color(1f, 0.9f, 0.4f);
 
+        private SpriteRenderer _sr;
+        private Sprite[] _sprites;
+        private float _idleTimer;
+        private int _idleFrame;
+        private bool _useSpriteSheet;
+
         private void Awake()
         {
             SetupSprite();
@@ -17,11 +23,36 @@ namespace PilgrimsProgress.Interaction
 
         private void SetupSprite()
         {
-            var sr = GetComponent<SpriteRenderer>();
-            if (sr == null) sr = gameObject.AddComponent<SpriteRenderer>();
+            _sr = GetComponent<SpriteRenderer>();
+            if (_sr == null) _sr = gameObject.AddComponent<SpriteRenderer>();
 
-            sr.sprite = ProceduralAssets.CreateNPCSprite(_npcId);
-            sr.sortingOrder = 10;
+            _sprites = SpriteSheetLoader.Load(_npcId);
+            if (_sprites != null)
+            {
+                _sr.sprite = _sprites[0]; // idle down
+                _sr.sortingOrder = 10;
+                _useSpriteSheet = true;
+                return;
+            }
+
+            _sr.sprite = ProceduralAssets.CreateNPCSprite(_npcId);
+            _sr.sortingOrder = 10;
+        }
+
+        private void Update()
+        {
+            if (!_useSpriteSheet || _sprites == null) return;
+
+            // Gentle idle animation: occasionally shift between frames
+            _idleTimer += Time.deltaTime;
+            if (_idleTimer > 2f)
+            {
+                _idleTimer = 0f;
+                _idleFrame = (_idleFrame + 1) % 2;
+                int frame = _idleFrame == 0 ? 0 : 1;
+                var sprite = SpriteSheetLoader.GetSprite(_npcId, SpriteSheetLoader.Direction.Down, frame);
+                if (sprite != null) _sr.sprite = sprite;
+            }
         }
 
         private void SetupCollider()

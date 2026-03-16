@@ -1,0 +1,624 @@
+fileFormatVersion: 2
+guid: 952bfa12ebae04085bae7a0b8a820c21
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7152789734555833771
+    second: apollyon_spritesheet_0
+  - first:
+      213: 6319170318939512469
+    second: apollyon_spritesheet_1
+  - first:
+      213: 6835641649867518904
+    second: apollyon_spritesheet_2
+  - first:
+      213: 1568450595645302748
+    second: apollyon_spritesheet_3
+  - first:
+      213: 7945361578831964988
+    second: apollyon_spritesheet_4
+  - first:
+      213: -2013232456100831861
+    second: apollyon_spritesheet_5
+  - first:
+      213: 1871156054606591821
+    second: apollyon_spritesheet_6
+  - first:
+      213: 3532660512272425516
+    second: apollyon_spritesheet_7
+  - first:
+      213: -7979024260343534196
+    second: apollyon_spritesheet_8
+  - first:
+      213: -7985399937775664553
+    second: apollyon_spritesheet_9
+  - first:
+      213: 9144993539868699667
+    second: apollyon_spritesheet_10
+  - first:
+      213: 8944346908611459120
+    second: apollyon_spritesheet_11
+  - first:
+      213: -1435573521307997921
+    second: apollyon_spritesheet_12
+  - first:
+      213: 1273299626404204581
+    second: apollyon_spritesheet_13
+  - first:
+      213: -7781850165589084019
+    second: apollyon_spritesheet_14
+  - first:
+      213: -7611325089024310291
+    second: apollyon_spritesheet_15
+  - first:
+      213: 6615497892635093561
+    second: apollyon_spritesheet_16
+  - first:
+      213: 170777056852553181
+    second: apollyon_spritesheet_17
+  - first:
+      213: -4952123573734548473
+    second: apollyon_spritesheet_18
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 16
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 256
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: apollyon_spritesheet_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 101
+        width: 8
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ba5d241dd50d34360800000000000000
+      internalID: 7152789734555833771
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_1
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 0
+        width: 22
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59ed497bce332b750800000000000000
+      internalID: 6319170318939512469
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_2
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 101
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8b3f7302dd31dde50800000000000000
+      internalID: 6835641649867518904
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 37
+        y: 0
+        width: 22
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd72039b18144c510800000000000000
+      internalID: 1568450595645302748
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 101
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c3be0567248934e60800000000000000
+      internalID: 7945361578831964988
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 69
+        y: 0
+        width: 22
+        height: 128
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b8d92db6fbf8f04e0800000000000000
+      internalID: -2013232456100831861
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 88
+        y: 101
+        width: 8
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d47b522948ea7f910800000000000000
+      internalID: 1871156054606591821
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 69
+        width: 8
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c222c02e408860130800000000000000
+      internalID: 3532660512272425516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 69
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c8deffbb5bfc44190800000000000000
+      internalID: -7979024260343534196
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 69
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7528477a0192e2190800000000000000
+      internalID: -7985399937775664553
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 88
+        y: 69
+        width: 8
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 31cad191c2b89ee70800000000000000
+      internalID: 9144993539868699667
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 37
+        width: 8
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 03836abcf14b02c70800000000000000
+      internalID: 8944346908611459120
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_12
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 37
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f19ea750d71d31ce0800000000000000
+      internalID: -1435573521307997921
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_13
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 37
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 520d574934baba110800000000000000
+      internalID: 1273299626404204581
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_14
+      rect:
+        serializedVersion: 2
+        x: 88
+        y: 37
+        width: 8
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d887fb02180510490800000000000000
+      internalID: -7781850165589084019
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_15
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 5
+        width: 8
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de300b678242f5690800000000000000
+      internalID: -7611325089024310291
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_16
+      rect:
+        serializedVersion: 2
+        x: 24
+        y: 5
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 93a2cde6848fecb50800000000000000
+      internalID: 6615497892635093561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_17
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 5
+        width: 16
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dddab7114d8be5200800000000000000
+      internalID: 170777056852553181
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: apollyon_spritesheet_18
+      rect:
+        serializedVersion: 2
+        x: 88
+        y: 5
+        width: 8
+        height: 18
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 70cd6bfd8d5864bb0800000000000000
+      internalID: -4952123573734548473
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      apollyon_spritesheet_0: 7152789734555833771
+      apollyon_spritesheet_1: 6319170318939512469
+      apollyon_spritesheet_10: 9144993539868699667
+      apollyon_spritesheet_11: 8944346908611459120
+      apollyon_spritesheet_12: -1435573521307997921
+      apollyon_spritesheet_13: 1273299626404204581
+      apollyon_spritesheet_14: -7781850165589084019
+      apollyon_spritesheet_15: -7611325089024310291
+      apollyon_spritesheet_16: 6615497892635093561
+      apollyon_spritesheet_17: 170777056852553181
+      apollyon_spritesheet_18: -4952123573734548473
+      apollyon_spritesheet_2: 6835641649867518904
+      apollyon_spritesheet_3: 1568450595645302748
+      apollyon_spritesheet_4: 7945361578831964988
+      apollyon_spritesheet_5: -2013232456100831861
+      apollyon_spritesheet_6: 1871156054606591821
+      apollyon_spritesheet_7: 3532660512272425516
+      apollyon_spritesheet_8: -7979024260343534196
+      apollyon_spritesheet_9: -7985399937775664553
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
