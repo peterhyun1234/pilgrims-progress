@@ -90,6 +90,7 @@ namespace PilgrimsProgress.UI
             if (_mainButtonsPanel != null) _mainButtonsPanel.SetActive(false);
             if (_settingsPanel != null) _settingsPanel.SetActive(false);
             if (_prologuePanel != null) _prologuePanel.SetActive(false);
+            if (_characterCreationUI != null) _characterCreationUI.Hide();
         }
 
         private void ShowLanguageSelect()
@@ -133,8 +134,15 @@ namespace PilgrimsProgress.UI
 
             if (_characterCreationUI == null)
             {
+                var canvas = GetComponentInParent<Canvas>();
+                var parent = canvas != null ? canvas.transform : transform;
+
                 var go = new GameObject("CharacterCreationUI");
-                go.transform.SetParent(transform, false);
+                go.transform.SetParent(parent, false);
+                var rt = go.AddComponent<RectTransform>();
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.sizeDelta = Vector2.zero;
                 _characterCreationUI = go.AddComponent<CharacterCreationUI>();
             }
 
@@ -182,9 +190,6 @@ namespace PilgrimsProgress.UI
         {
             HideAllPanels();
 
-            if (_characterCreationUI != null)
-                _characterCreationUI.Hide();
-
             if (_prologuePanel != null)
             {
                 _prologuePanel.SetActive(true);
@@ -197,18 +202,19 @@ namespace PilgrimsProgress.UI
 
         private void BuildProloguePanel()
         {
-            var canvas = GetComponent<Canvas>() != null ? transform
-                       : transform.parent;
+            var rootCanvas = GetComponentInParent<Canvas>();
+            var parentTransform = rootCanvas != null ? rootCanvas.transform : transform;
 
             var panel = new GameObject("ProloguePanel");
-            panel.transform.SetParent(canvas, false);
+            panel.transform.SetParent(parentTransform, false);
             var rt = panel.AddComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.sizeDelta = Vector2.zero;
+            panel.transform.SetAsLastSibling();
 
             var bg = panel.AddComponent<Image>();
-            bg.color = new Color(0.02f, 0.01f, 0.05f, 0.95f);
+            bg.color = new Color(0.02f, 0.01f, 0.05f, 0.98f);
             bg.raycastTarget = true;
 
             _prologuePanel = panel;

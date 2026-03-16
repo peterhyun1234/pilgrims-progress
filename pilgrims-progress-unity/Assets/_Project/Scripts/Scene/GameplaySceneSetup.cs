@@ -108,7 +108,16 @@ namespace PilgrimsProgress.Scene
         private void SetupCamera(Transform playerTransform)
         {
             var cam = Camera.main;
-            if (cam == null) return;
+            if (cam == null)
+            {
+                var camGo = new GameObject("MainCamera");
+                camGo.tag = "MainCamera";
+                cam = camGo.AddComponent<Camera>();
+                cam.orthographic = true;
+                cam.orthographicSize = 5f;
+                cam.backgroundColor = new Color(0.05f, 0.05f, 0.1f);
+                camGo.AddComponent<AudioListener>();
+            }
 
             var topDown = cam.gameObject.GetComponent<TopDownCamera>();
             if (topDown == null)

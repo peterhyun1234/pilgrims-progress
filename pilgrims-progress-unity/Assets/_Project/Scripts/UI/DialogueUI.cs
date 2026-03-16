@@ -204,6 +204,7 @@ namespace PilgrimsProgress.UI
             if (_continueIndicator != null) _continueIndicator.SetActive(false);
             if (_continueButton != null) _continueButton.gameObject.SetActive(true);
 
+            if (_dialogueText == null) { _isTyping = false; yield break; }
             _dialogueText.text = "";
 
             for (int i = 0; i < text.Length; i++)
@@ -261,6 +262,28 @@ namespace PilgrimsProgress.UI
                     return lang == "ko" ? "선의" : "Good-will";
                 case "Interpreter":
                     return lang == "ko" ? "해석자" : "Interpreter";
+                case "Prudence":
+                    return lang == "ko" ? "신중" : "Prudence";
+                case "Piety":
+                    return lang == "ko" ? "경건" : "Piety";
+                case "Charity":
+                    return lang == "ko" ? "사랑" : "Charity";
+                case "Apollyon":
+                    return lang == "ko" ? "아폴리온" : "Apollyon";
+                case "Faithful":
+                    return lang == "ko" ? "신실" : "Faithful";
+                case "Hopeful":
+                    return lang == "ko" ? "소망" : "Hopeful";
+                case "Giant Despair":
+                    return lang == "ko" ? "절망 거인" : "Giant Despair";
+                case "Shepherd":
+                    return lang == "ko" ? "목자" : "Shepherd";
+                case "Ignorance":
+                    return lang == "ko" ? "무지" : "Ignorance";
+                case "By-ends":
+                    return lang == "ko" ? "사리사욕" : "By-ends";
+                case "Shining One":
+                    return lang == "ko" ? "빛나는 자" : "Shining One";
                 default:
                     return speakerId;
             }

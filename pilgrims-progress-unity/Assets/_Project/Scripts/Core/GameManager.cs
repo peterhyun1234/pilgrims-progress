@@ -55,6 +55,22 @@ namespace PilgrimsProgress.Core
             Instance = this;
             DontDestroyOnLoad(gameObject);
             ServiceLocator.Register(this);
+            MigrateOldPlayerPrefs();
+        }
+
+        private void MigrateOldPlayerPrefs()
+        {
+            if (PlayerPrefs.HasKey("Language") && !PlayerPrefs.HasKey("pp_language"))
+            {
+                PlayerPrefs.SetString("pp_language", PlayerPrefs.GetString("Language"));
+                PlayerPrefs.DeleteKey("Language");
+            }
+            if (PlayerPrefs.HasKey("LanguageSelected") && !PlayerPrefs.HasKey("pp_language_selected"))
+            {
+                PlayerPrefs.SetInt("pp_language_selected", PlayerPrefs.GetInt("LanguageSelected"));
+                PlayerPrefs.DeleteKey("LanguageSelected");
+            }
+            PlayerPrefs.Save();
         }
 
         public void SetState(GameState newState)

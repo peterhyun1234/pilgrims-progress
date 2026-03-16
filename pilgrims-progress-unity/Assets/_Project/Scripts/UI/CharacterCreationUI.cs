@@ -71,7 +71,9 @@ namespace PilgrimsProgress.UI
 
         public void Show()
         {
-            _manager = ServiceLocator.Get<PlayerCustomizationManager>();
+            _manager = PlayerCustomizationManager.Instance;
+            if (_manager == null)
+                ServiceLocator.TryGet<PlayerCustomizationManager>(out _manager);
             _presets = _manager != null ? _manager.Presets : CustomizationPresets.CreateDefault();
             _editing = new PlayerCustomization();
 
@@ -89,7 +91,10 @@ namespace PilgrimsProgress.UI
             ValidateConfirm();
 
             if (_panel != null)
+            {
                 _panel.SetActive(true);
+                _panel.transform.SetAsLastSibling();
+            }
         }
 
         public void Hide()
@@ -273,22 +278,22 @@ namespace PilgrimsProgress.UI
             var gold = new Color(0.90f, 0.78f, 0.45f);
             var goldDim = new Color(0.65f, 0.55f, 0.30f);
 
-            var canvasGo = _panel != null ? _panel : gameObject;
-
             if (_panel == null)
             {
+                // Find the root canvas to parent this panel to
+                var rootCanvas = GetComponentInParent<Canvas>();
+                var parentTransform = rootCanvas != null ? rootCanvas.transform : transform;
+
                 _panel = new GameObject("CharacterCreationPanel");
-                _panel.transform.SetParent(transform, false);
-                var canvas = _panel.AddComponent<Canvas>();
-                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-                canvas.sortingOrder = 50;
-                var scaler = _panel.AddComponent<CanvasScaler>();
-                scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-                scaler.referenceResolution = new Vector2(1920, 1080);
-                scaler.matchWidthOrHeight = 0.5f;
-                _panel.AddComponent<GraphicRaycaster>();
-                canvasGo = _panel;
+                _panel.transform.SetParent(parentTransform, false);
+                var rt = _panel.AddComponent<RectTransform>();
+                rt.anchorMin = Vector2.zero;
+                rt.anchorMax = Vector2.one;
+                rt.sizeDelta = Vector2.zero;
+                rt.anchoredPosition = Vector2.zero;
             }
+
+            var canvasGo = _panel;
 
             var bg = CreateImage(canvasGo.transform, "Background",
                 Vector2.zero, Vector2.one, new Color(0.05f, 0.04f, 0.10f, 0.97f));
