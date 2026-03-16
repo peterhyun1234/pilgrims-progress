@@ -3,7 +3,9 @@
     "rootNamespace": "PilgrimsProgress",
     "references": [
         "Unity.TextMeshPro",
-        "Ink-Libraries"
+        "Ink-Libraries",
+        "Unity.InputSystem",
+        "Unity.Cinemachine"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

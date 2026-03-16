@@ -31,6 +31,7 @@ namespace PilgrimsProgress.Core
             CreateManager<Save.SaveManager>("[SaveManager]");
             CreateManager<Auth.AuthManager>("[AuthManager]");
             CreateManager<Scene.SceneLoader>("[SceneLoader]");
+            CreateManager<GameModeManager>("[GameModeManager]");
 
             var transitionGo = new GameObject("[TransitionController]");
             DontDestroyOnLoad(transitionGo);

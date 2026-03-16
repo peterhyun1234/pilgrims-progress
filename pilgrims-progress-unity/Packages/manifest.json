@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.unity.cinemachine": "3.1.3",
     "com.unity.2d.animation": "13.0.4",
     "com.inkle.ink-unity-integration": "https://github.com/inkle/ink-unity-integration.git#upm",
     "com.unity.localization": "1.5.3",
