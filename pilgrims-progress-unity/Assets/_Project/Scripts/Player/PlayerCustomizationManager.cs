@@ -25,6 +25,7 @@ namespace PilgrimsProgress.Player
             ServiceLocator.Register(this);
 
             EnsurePresets();
+            LoadSavedCustomization();
         }
 
         private void EnsurePresets()
@@ -42,6 +43,35 @@ namespace PilgrimsProgress.Player
                 _presets.HairColors.Length,
                 _presets.OutfitColors.Length
             );
+            SaveCustomization();
+        }
+
+        public void SaveCustomization()
+        {
+            var json = JsonUtility.ToJson(CurrentCustomization);
+            PlayerPrefs.SetString("pp_customization", json);
+            if (GameManager.Instance != null)
+                GameManager.Instance.PlayerName = CurrentCustomization.GetTrimmedName();
+            PlayerPrefs.Save();
+        }
+
+        public void LoadSavedCustomization()
+        {
+            var json = PlayerPrefs.GetString("pp_customization", "");
+            if (!string.IsNullOrEmpty(json))
+            {
+                var loaded = JsonUtility.FromJson<PlayerCustomization>(json);
+                if (loaded != null)
+                {
+                    EnsurePresets();
+                    loaded.ClampIndices(
+                        _presets.SkinTones.Length,
+                        _presets.HairStyles.Length,
+                        _presets.HairColors.Length,
+                        _presets.OutfitColors.Length);
+                    CurrentCustomization = loaded;
+                }
+            }
         }
 
         public string GetPlayerName()

@@ -136,6 +136,16 @@ namespace PilgrimsProgress.Localization
                 {"prologue_line3", "한 사람이 누더기를 입고 서 있었으니"},
                 {"prologue_line4", "그의 등에는 무거운 짐이 지워져 있었고"},
                 {"prologue_line5", "그의 손에는 한 권의 책이 들려 있었다."},
+                {"prologue_city", "당신은 멸망의 도시에 살고 있습니다."},
+                {"prologue_judgment", "이 도시는 곧 심판의 불로 멸망할 것입니다."},
+                {"prologue_burden", "등에 진 짐은 당신의 죄의 무게입니다."},
+                {"prologue_only_place", "이 짐은 오직 한 곳에서만 벗을 수 있습니다."},
+                {"prologue_goal_title", "순례의 목표"},
+                {"prologue_goal1", "멸망의 도시에서 천상의 도시까지 순례하라"},
+                {"prologue_goal2", "짐을 지고 걸으며 믿음, 용기, 지혜를 키워라"},
+                {"prologue_goal3", "십자가에서 짐을 벗고, 끝까지 인내하라"},
+                {"prologue_start", "순례를 시작하다"},
+                {"prologue_tap", "화면을 터치하여 계속"},
 
                 // Epilogue
                 {"epilogue_burden_falls", "짐이 풀려 떨어졌다!"},
@@ -206,6 +216,16 @@ namespace PilgrimsProgress.Localization
                 {"prologue_line3", "A man stood clothed in rags"},
                 {"prologue_line4", "A heavy burden upon his back"},
                 {"prologue_line5", "And a book in his hand."},
+                {"prologue_city", "You live in the City of Destruction."},
+                {"prologue_judgment", "This city will soon be consumed by the fire of judgment."},
+                {"prologue_burden", "The burden on your back is the weight of your sin."},
+                {"prologue_only_place", "This burden can only be removed at one place."},
+                {"prologue_goal_title", "The Pilgrim's Goal"},
+                {"prologue_goal1", "Journey from the City of Destruction to the Celestial City"},
+                {"prologue_goal2", "Walk with the burden, growing in Faith, Courage, and Wisdom"},
+                {"prologue_goal3", "Lay down your burden at the Cross, and endure to the end"},
+                {"prologue_start", "Begin the Pilgrimage"},
+                {"prologue_tap", "Tap to continue"},
 
                 // Epilogue
                 {"epilogue_burden_falls", "The burden fell from his back!"},

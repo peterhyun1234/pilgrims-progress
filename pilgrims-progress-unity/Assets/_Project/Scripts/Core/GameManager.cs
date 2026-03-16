@@ -21,14 +21,28 @@ namespace PilgrimsProgress.Core
 
         public string CurrentLanguage
         {
-            get => PlayerPrefs.GetString("Language", "ko");
-            set => PlayerPrefs.SetString("Language", value);
+            get => PlayerPrefs.GetString("pp_language", "ko");
+            set => PlayerPrefs.SetString("pp_language", value);
         }
 
         public bool HasLanguageBeenSelected
         {
-            get => PlayerPrefs.GetInt("LanguageSelected", 0) == 1;
-            set => PlayerPrefs.SetInt("LanguageSelected", value ? 1 : 0);
+            get => PlayerPrefs.GetInt("pp_language_selected", 0) == 1;
+            set => PlayerPrefs.SetInt("pp_language_selected", value ? 1 : 0);
+        }
+
+        public bool IsFirstRun => PlayerPrefs.GetInt("pp_first_run_done", 0) == 0;
+
+        public string PlayerName
+        {
+            get => PlayerPrefs.GetString("pp_player_name", "Christian");
+            set { PlayerPrefs.SetString("pp_player_name", value); PlayerPrefs.Save(); }
+        }
+
+        public int CurrentChapter
+        {
+            get => PlayerPrefs.GetInt("pp_current_chapter", 0);
+            set { PlayerPrefs.SetInt("pp_current_chapter", value); PlayerPrefs.Save(); }
         }
 
         private void Awake()
@@ -55,6 +69,17 @@ namespace PilgrimsProgress.Core
             CurrentLanguage = langCode;
             HasLanguageBeenSelected = true;
             PlayerPrefs.Save();
+        }
+
+        public void CompleteFirstRun()
+        {
+            PlayerPrefs.SetInt("pp_first_run_done", 1);
+            PlayerPrefs.Save();
+        }
+
+        public bool HasSaveData()
+        {
+            return PlayerPrefs.HasKey("SaveSlot_Auto");
         }
     }
 }
