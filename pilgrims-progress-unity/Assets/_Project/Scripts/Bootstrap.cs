@@ -33,6 +33,7 @@ namespace PilgrimsProgress.Core
             CreateManager<Scene.SceneLoader>("[SceneLoader]");
             CreateManager<GameModeManager>("[GameModeManager]");
             CreateManager<Challenge.QTEManager>("[QTEManager]");
+            CreateManager<Player.PlayerCustomizationManager>("[PlayerCustomizationManager]");
 
             var transitionGo = new GameObject("[TransitionController]");
             DontDestroyOnLoad(transitionGo);
