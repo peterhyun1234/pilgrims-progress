@@ -1,4 +1,6 @@
 using NUnit.Framework;
+using UnityEngine;
+using UnityEngine.TestTools;
 using PilgrimsProgress.Core;
 
 namespace PilgrimsProgress.Tests
@@ -36,6 +38,7 @@ namespace PilgrimsProgress.Tests
         [Test]
         public void Get_Unregistered_Service_Returns_Null()
         {
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Service not found"));
             var result = ServiceLocator.Get<ITestService>();
 
             Assert.IsNull(result);
@@ -83,6 +86,7 @@ namespace PilgrimsProgress.Tests
 
             ServiceLocator.Reset();
 
+            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Service not found"));
             Assert.IsNull(ServiceLocator.Get<ITestService>());
         }
 
