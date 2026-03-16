@@ -1,5 +1,6 @@
 using System;
 using PilgrimsProgress.Narrative;
+using PilgrimsProgress.Player;
 
 namespace PilgrimsProgress.Save
 {
@@ -20,12 +21,15 @@ namespace PilgrimsProgress.Save
         public bool[] BibleCardsUnlocked;
         public string[] CollectionEntries;
 
+        public PlayerCustomization Customization;
+
         public SaveData()
         {
             SaveDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             Stats = new CharacterStats();
             BibleCardsUnlocked = new bool[20];
             CollectionEntries = Array.Empty<string>();
+            Customization = new PlayerCustomization();
         }
     }
 

@@ -136,6 +136,12 @@ namespace PilgrimsProgress.Save
                 data.GuestSessionId = auth.GuestId;
             }
 
+            var custManager = ServiceLocator.TryGet<Player.PlayerCustomizationManager>(out var cm) ? cm : null;
+            if (custManager != null)
+            {
+                data.Customization = new Player.PlayerCustomization(custManager.CurrentCustomization);
+            }
+
             return data;
         }
 
@@ -160,6 +166,13 @@ namespace PilgrimsProgress.Save
             if (inkService != null && !string.IsNullOrEmpty(data.InkStoryState))
             {
                 inkService.LoadStoryState(data.InkStoryState);
+            }
+
+            var custManager = ServiceLocator.TryGet<Player.PlayerCustomizationManager>(out var cm) ? cm : null;
+            if (custManager != null && data.Customization != null)
+            {
+                custManager.SetCustomization(data.Customization);
+                if (inkService != null) custManager.ApplyToInk(inkService);
             }
         }
 
