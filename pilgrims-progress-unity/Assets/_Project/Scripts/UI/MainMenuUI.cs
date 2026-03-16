@@ -36,6 +36,9 @@ namespace PilgrimsProgress.UI
         [SerializeField] private Button _koreanButton;
         [SerializeField] private Button _englishButton;
 
+        [Header("Character Creation")]
+        [SerializeField] private CharacterCreationUI _characterCreationUI;
+
         [Header("Guest Mode")]
         [SerializeField] private TextMeshProUGUI _guestLabel;
         [SerializeField] private Button _createAccountButton;
@@ -127,6 +130,24 @@ namespace PilgrimsProgress.UI
 
         private void OnNewGame()
         {
+            if (_characterCreationUI == null)
+            {
+                var go = new GameObject("CharacterCreationUI");
+                go.transform.SetParent(transform);
+                _characterCreationUI = go.AddComponent<CharacterCreationUI>();
+            }
+
+            _characterCreationUI.OnConfirmed -= OnCharacterConfirmed;
+            _characterCreationUI.OnConfirmed += OnCharacterConfirmed;
+            _characterCreationUI.OnBack -= OnCharacterCreationBack;
+            _characterCreationUI.OnBack += OnCharacterCreationBack;
+
+            if (_mainButtonsPanel != null) _mainButtonsPanel.SetActive(false);
+            _characterCreationUI.Show();
+        }
+
+        private void OnCharacterConfirmed()
+        {
             if (GameManager.Instance != null)
             {
                 GameManager.Instance.SetState(GameState.Prologue);
@@ -141,6 +162,14 @@ namespace PilgrimsProgress.UI
             {
                 UnityEngine.SceneManagement.SceneManager.LoadScene("Gameplay");
             }
+        }
+
+        private void OnCharacterCreationBack()
+        {
+            if (_characterCreationUI != null)
+                _characterCreationUI.Hide();
+
+            ShowMainMenu();
         }
 
         private void OnContinue()
