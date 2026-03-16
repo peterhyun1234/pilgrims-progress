@@ -133,7 +133,7 @@ namespace PilgrimsProgress.UI
             if (_characterCreationUI == null)
             {
                 var go = new GameObject("CharacterCreationUI");
-                go.transform.SetParent(transform);
+                go.transform.SetParent(transform, false);
                 _characterCreationUI = go.AddComponent<CharacterCreationUI>();
             }
 

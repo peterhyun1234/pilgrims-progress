@@ -270,96 +270,107 @@ namespace PilgrimsProgress.UI
 
         private void GenerateUI()
         {
+            var gold = new Color(0.90f, 0.78f, 0.45f);
+            var goldDim = new Color(0.65f, 0.55f, 0.30f);
+
             var canvasGo = _panel != null ? _panel : gameObject;
 
             if (_panel == null)
             {
                 _panel = new GameObject("CharacterCreationPanel");
-                _panel.transform.SetParent(transform);
+                _panel.transform.SetParent(transform, false);
                 var canvas = _panel.AddComponent<Canvas>();
                 canvas.renderMode = RenderMode.ScreenSpaceOverlay;
                 canvas.sortingOrder = 50;
                 var scaler = _panel.AddComponent<CanvasScaler>();
                 scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
                 scaler.referenceResolution = new Vector2(1920, 1080);
+                scaler.matchWidthOrHeight = 0.5f;
                 _panel.AddComponent<GraphicRaycaster>();
                 canvasGo = _panel;
             }
 
             var bg = CreateImage(canvasGo.transform, "Background",
-                Vector2.zero, Vector2.one, new Color(0.08f, 0.06f, 0.12f, 0.95f));
-            bg.rectTransform.anchoredPosition = Vector2.zero;
-            bg.rectTransform.sizeDelta = Vector2.zero;
+                Vector2.zero, Vector2.one, new Color(0.05f, 0.04f, 0.10f, 0.97f));
 
-            _titleText = CreateTMP(canvasGo.transform, "Title", 36, Color.white,
-                new Vector2(0, 0.88f), new Vector2(1, 0.97f));
+            // Title with golden text
+            _titleText = CreateTMP(canvasGo.transform, "Title", 40, gold,
+                new Vector2(0.05f, 0.89f), new Vector2(0.95f, 0.97f));
             _titleText.fontStyle = FontStyles.Bold;
 
-            // Preview area
+            // Decorative line under title
+            var decoLine = CreateImage(canvasGo.transform, "TitleDeco",
+                new Vector2(0.30f, 0.885f), new Vector2(0.70f, 0.888f), goldDim);
+            decoLine.raycastTarget = false;
+
+            // Preview area with border
+            var previewBorder = CreateImage(canvasGo.transform, "PreviewBorder",
+                new Vector2(0.06f, 0.20f), new Vector2(0.40f, 0.87f),
+                new Color(0.20f, 0.16f, 0.28f, 0.6f));
+            previewBorder.raycastTarget = false;
+
             var previewBg = CreateImage(canvasGo.transform, "PreviewBg",
-                new Vector2(0.08f, 0.25f), new Vector2(0.38f, 0.85f),
-                new Color(0.15f, 0.12f, 0.20f));
+                new Vector2(0.07f, 0.21f), new Vector2(0.39f, 0.86f),
+                new Color(0.10f, 0.08f, 0.16f));
 
             var previewGo = new GameObject("Preview");
-            previewGo.transform.SetParent(previewBg.transform);
+            previewGo.transform.SetParent(previewBg.transform, false);
             _previewImage = previewGo.AddComponent<Image>();
             _previewImage.preserveAspect = true;
             var pRect = _previewImage.rectTransform;
-            pRect.anchorMin = new Vector2(0.15f, 0.15f);
-            pRect.anchorMax = new Vector2(0.85f, 0.85f);
+            pRect.anchorMin = new Vector2(0.10f, 0.10f);
+            pRect.anchorMax = new Vector2(0.90f, 0.90f);
             pRect.sizeDelta = Vector2.zero;
             pRect.anchoredPosition = Vector2.zero;
-            pRect.localScale = Vector3.one;
 
-            // Options panel
-            float optY = 0.80f;
-            float optStep = 0.12f;
+            // Options panel (right side)
+            float optY = 0.82f;
+            float optStep = 0.115f;
             float optLeft = 0.42f;
-            float optRight = 0.92f;
+            float optRight = 0.94f;
 
-            // Name
-            _nameLabel = CreateTMP(canvasGo.transform, "NameLabel", 20, Color.white,
+            // Name row
+            _nameLabel = CreateTMP(canvasGo.transform, "NameLabel", 20, gold,
                 new Vector2(optLeft, optY - 0.03f), new Vector2(optLeft + 0.10f, optY + 0.03f));
             _nameLabel.alignment = TextAlignmentOptions.MidlineRight;
 
             var inputGo = new GameObject("NameInput");
-            inputGo.transform.SetParent(canvasGo.transform);
+            inputGo.transform.SetParent(canvasGo.transform, false);
             var inputBg = inputGo.AddComponent<Image>();
-            inputBg.color = new Color(0.2f, 0.18f, 0.25f);
+            inputBg.color = new Color(0.14f, 0.12f, 0.20f);
             var inputRect = inputBg.rectTransform;
-            inputRect.anchorMin = new Vector2(optLeft + 0.12f, optY - 0.03f);
-            inputRect.anchorMax = new Vector2(optRight, optY + 0.03f);
+            inputRect.anchorMin = new Vector2(optLeft + 0.12f, optY - 0.028f);
+            inputRect.anchorMax = new Vector2(optRight, optY + 0.028f);
             inputRect.sizeDelta = Vector2.zero;
             inputRect.anchoredPosition = Vector2.zero;
-            inputRect.localScale = Vector3.one;
 
             var textArea = new GameObject("Text Area");
-            textArea.transform.SetParent(inputGo.transform);
+            textArea.transform.SetParent(inputGo.transform, false);
             var taRect = textArea.AddComponent<RectTransform>();
-            taRect.anchorMin = new Vector2(0.05f, 0);
-            taRect.anchorMax = new Vector2(0.95f, 1);
+            taRect.anchorMin = new Vector2(0.04f, 0.05f);
+            taRect.anchorMax = new Vector2(0.96f, 0.95f);
             taRect.sizeDelta = Vector2.zero;
             taRect.anchoredPosition = Vector2.zero;
-            taRect.localScale = Vector3.one;
 
             var inputTextGo = new GameObject("Text");
-            inputTextGo.transform.SetParent(textArea.transform);
+            inputTextGo.transform.SetParent(textArea.transform, false);
             var inputTMP = inputTextGo.AddComponent<TextMeshProUGUI>();
-            inputTMP.fontSize = 18;
+            inputTMP.fontSize = 20;
             inputTMP.color = Color.white;
             var itRect = inputTMP.rectTransform;
             itRect.anchorMin = Vector2.zero;
             itRect.anchorMax = Vector2.one;
             itRect.sizeDelta = Vector2.zero;
             itRect.anchoredPosition = Vector2.zero;
-            itRect.localScale = Vector3.one;
 
             _nameInput = inputGo.AddComponent<TMP_InputField>();
             _nameInput.textComponent = inputTMP;
             _nameInput.textViewport = taRect;
 
-            _nameHint = CreateTMP(canvasGo.transform, "NameHint", 14, new Color(1, 1, 1, 0.4f),
-                new Vector2(optRight - 0.08f, optY - 0.06f), new Vector2(optRight, optY - 0.03f));
+            _nameHint = CreateTMP(canvasGo.transform, "NameHint", 13,
+                new Color(0.6f, 0.55f, 0.5f),
+                new Vector2(optRight - 0.10f, optY - 0.055f),
+                new Vector2(optRight, optY - 0.03f));
             _nameHint.alignment = TextAlignmentOptions.TopRight;
 
             optY -= optStep;
@@ -371,17 +382,20 @@ namespace PilgrimsProgress.UI
             optY -= optStep;
 
             // Hair Style
-            _hairStyleLabel = CreateTMP(canvasGo.transform, "HairStyleLabel", 20, Color.white,
+            _hairStyleLabel = CreateTMP(canvasGo.transform, "HairStyleLabel", 20, gold,
                 new Vector2(optLeft, optY - 0.03f), new Vector2(optLeft + 0.12f, optY + 0.03f));
             _hairStyleLabel.alignment = TextAlignmentOptions.MidlineRight;
 
             _hairStyleLeftButton = CreateArrowButton(canvasGo.transform, "HairStyleLeft",
-                new Vector2(optLeft + 0.14f, optY - 0.025f), new Vector2(optLeft + 0.18f, optY + 0.025f), "<");
+                new Vector2(optLeft + 0.14f, optY - 0.025f),
+                new Vector2(optLeft + 0.19f, optY + 0.025f), "<");
             _hairStyleRightButton = CreateArrowButton(canvasGo.transform, "HairStyleRight",
-                new Vector2(optRight - 0.06f, optY - 0.025f), new Vector2(optRight - 0.02f, optY + 0.025f), ">");
+                new Vector2(optRight - 0.07f, optY - 0.025f),
+                new Vector2(optRight - 0.02f, optY + 0.025f), ">");
 
             _hairStyleName = CreateTMP(canvasGo.transform, "HairStyleName", 18, Color.white,
-                new Vector2(optLeft + 0.20f, optY - 0.025f), new Vector2(optRight - 0.08f, optY + 0.025f));
+                new Vector2(optLeft + 0.21f, optY - 0.025f),
+                new Vector2(optRight - 0.09f, optY + 0.025f));
 
             optY -= optStep;
 
@@ -395,52 +409,54 @@ namespace PilgrimsProgress.UI
             CreateOptionRow(canvasGo.transform, "Outfit", ref _outfitLabel, ref _outfitLeftButton,
                 ref _outfitRightButton, optLeft, optRight, optY, out _outfitDots, _presets.OutfitColors.Length);
 
-            // Confirm button
+            // Confirm button (green, centered bottom)
             var confirmGo = new GameObject("ConfirmBtn");
-            confirmGo.transform.SetParent(canvasGo.transform);
+            confirmGo.transform.SetParent(canvasGo.transform, false);
             var confirmImg = confirmGo.AddComponent<Image>();
-            confirmImg.color = new Color(0.25f, 0.50f, 0.35f);
+            confirmImg.color = new Color(0.18f, 0.40f, 0.25f);
             var cRect = confirmImg.rectTransform;
-            cRect.anchorMin = new Vector2(0.30f, 0.05f);
-            cRect.anchorMax = new Vector2(0.70f, 0.13f);
+            cRect.anchorMin = new Vector2(0.30f, 0.06f);
+            cRect.anchorMax = new Vector2(0.70f, 0.14f);
             cRect.sizeDelta = Vector2.zero;
             cRect.anchoredPosition = Vector2.zero;
-            cRect.localScale = Vector3.one;
             _confirmButton = confirmGo.AddComponent<Button>();
+            _confirmButton.targetGraphic = confirmImg;
 
-            _confirmLabel = CreateTMP(confirmGo.transform, "ConfirmLabel", 22, Color.white,
+            _confirmLabel = CreateTMP(confirmGo.transform, "ConfirmLabel", 24, Color.white,
                 Vector2.zero, Vector2.one);
             _confirmLabel.fontStyle = FontStyles.Bold;
 
-            // Back button
+            // Back button (top-left)
             var backGo = new GameObject("BackBtn");
-            backGo.transform.SetParent(canvasGo.transform);
+            backGo.transform.SetParent(canvasGo.transform, false);
             var backImg = backGo.AddComponent<Image>();
-            backImg.color = new Color(0.3f, 0.25f, 0.25f);
+            backImg.color = new Color(0.22f, 0.18f, 0.18f, 0.8f);
             var bRect = backImg.rectTransform;
-            bRect.anchorMin = new Vector2(0.02f, 0.02f);
-            bRect.anchorMax = new Vector2(0.12f, 0.08f);
+            bRect.anchorMin = new Vector2(0.02f, 0.92f);
+            bRect.anchorMax = new Vector2(0.10f, 0.98f);
             bRect.sizeDelta = Vector2.zero;
             bRect.anchoredPosition = Vector2.zero;
-            bRect.localScale = Vector3.one;
             _backButton = backGo.AddComponent<Button>();
+            _backButton.targetGraphic = backImg;
 
-            CreateTMP(backGo.transform, "BackLabel", 16, Color.white,
-                Vector2.zero, Vector2.one).text = "< Back";
+            var backLabel = CreateTMP(backGo.transform, "BackLabel", 18, new Color(0.8f, 0.7f, 0.6f),
+                Vector2.zero, Vector2.one);
+            backLabel.text = "\u25C0";
         }
 
         private void CreateOptionRow(Transform parent, string name,
             ref TextMeshProUGUI label, ref Button leftBtn, ref Button rightBtn,
             float left, float right, float y, out Image[] dots, int dotCount)
         {
-            label = CreateTMP(parent, $"{name}Label", 20, Color.white,
+            var gold = new Color(0.90f, 0.78f, 0.45f);
+            label = CreateTMP(parent, $"{name}Label", 20, gold,
                 new Vector2(left, y - 0.03f), new Vector2(left + 0.12f, y + 0.03f));
             label.alignment = TextAlignmentOptions.MidlineRight;
 
             leftBtn = CreateArrowButton(parent, $"{name}Left",
-                new Vector2(left + 0.14f, y - 0.025f), new Vector2(left + 0.18f, y + 0.025f), "<");
+                new Vector2(left + 0.14f, y - 0.025f), new Vector2(left + 0.19f, y + 0.025f), "<");
             rightBtn = CreateArrowButton(parent, $"{name}Right",
-                new Vector2(right - 0.06f, y - 0.025f), new Vector2(right - 0.02f, y + 0.025f), ">");
+                new Vector2(right - 0.07f, y - 0.025f), new Vector2(right - 0.02f, y + 0.025f), ">");
 
             dots = new Image[dotCount];
             float dotSpan = (right - 0.08f) - (left + 0.20f);
@@ -450,7 +466,7 @@ namespace PilgrimsProgress.UI
             {
                 float dx = left + 0.20f + i * dotStep;
                 var dotGo = new GameObject($"{name}Dot{i}");
-                dotGo.transform.SetParent(parent);
+                dotGo.transform.SetParent(parent, false);
                 dots[i] = dotGo.AddComponent<Image>();
                 var dr = dots[i].rectTransform;
                 dr.anchorMin = new Vector2(dx - 0.012f, y - 0.015f);
@@ -465,27 +481,30 @@ namespace PilgrimsProgress.UI
             Vector2 anchorMin, Vector2 anchorMax, string arrow)
         {
             var go = new GameObject(name);
-            go.transform.SetParent(parent);
+            go.transform.SetParent(parent, false);
             var img = go.AddComponent<Image>();
-            img.color = new Color(0.3f, 0.28f, 0.35f);
+            img.color = new Color(0.18f, 0.15f, 0.25f, 0.9f);
             var rt = img.rectTransform;
             rt.anchorMin = anchorMin;
             rt.anchorMax = anchorMax;
             rt.sizeDelta = Vector2.zero;
             rt.anchoredPosition = Vector2.zero;
-            rt.localScale = Vector3.one;
 
-            var tmp = CreateTMP(go.transform, "Arrow", 20, Color.white, Vector2.zero, Vector2.one);
+            var tmp = CreateTMP(go.transform, "Arrow", 22,
+                new Color(0.85f, 0.75f, 0.50f), Vector2.zero, Vector2.one);
             tmp.text = arrow;
+            tmp.fontStyle = FontStyles.Bold;
 
-            return go.AddComponent<Button>();
+            var btn = go.AddComponent<Button>();
+            btn.targetGraphic = img;
+            return btn;
         }
 
         private Image CreateImage(Transform parent, string name,
             Vector2 anchorMin, Vector2 anchorMax, Color color)
         {
             var go = new GameObject(name);
-            go.transform.SetParent(parent);
+            go.transform.SetParent(parent, false);
             var img = go.AddComponent<Image>();
             img.color = color;
             var rt = img.rectTransform;
@@ -493,7 +512,6 @@ namespace PilgrimsProgress.UI
             rt.anchorMax = anchorMax;
             rt.sizeDelta = Vector2.zero;
             rt.anchoredPosition = Vector2.zero;
-            rt.localScale = Vector3.one;
             return img;
         }
 
@@ -501,17 +519,18 @@ namespace PilgrimsProgress.UI
             Color color, Vector2 anchorMin, Vector2 anchorMax)
         {
             var go = new GameObject(name);
-            go.transform.SetParent(parent);
+            go.transform.SetParent(parent, false);
             var tmp = go.AddComponent<TextMeshProUGUI>();
             tmp.fontSize = size;
             tmp.color = color;
             tmp.alignment = TextAlignmentOptions.Center;
+            tmp.enableWordWrapping = true;
+            tmp.overflowMode = TextOverflowModes.Ellipsis;
             var rt = tmp.rectTransform;
             rt.anchorMin = anchorMin;
             rt.anchorMax = anchorMax;
             rt.sizeDelta = Vector2.zero;
             rt.anchoredPosition = Vector2.zero;
-            rt.localScale = Vector3.one;
             return tmp;
         }
     }
