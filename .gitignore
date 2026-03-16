@@ -12,5 +12,8 @@
 # Node (PPT generation scripts)
 node_modules/
 
+# Playwright MCP logs
+.playwright-mcp/
+
 # Build artifacts
 *.pptx.tmp
