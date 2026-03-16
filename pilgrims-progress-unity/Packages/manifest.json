@@ -1,6 +1,9 @@
 {
   "dependencies": {
     "com.unity.2d.animation": "13.0.4",
+    "com.inkle.ink-unity-integration": "https://github.com/inkle/ink-unity-integration.git#upm",
+    "com.unity.localization": "1.5.3",
+    "com.unity.textmeshpro": "3.2.0-pre.12",
     "com.unity.2d.aseprite": "3.0.1",
     "com.unity.2d.psdimporter": "12.0.1",
     "com.unity.2d.sprite": "1.0.0",
