@@ -435,6 +435,81 @@ namespace PilgrimsProgress.Visuals
                         HairColor = new Color(0.20f, 0.10f, 0.08f),
                         HairHeight = 4, IsAngry = true, HasHorns = true
                     };
+                case "prudence":
+                    return new NPCVisualConfig
+                    {
+                        SkinColor = new Color(0.85f, 0.72f, 0.60f),
+                        RobeColor = new Color(0.55f, 0.45f, 0.65f),
+                        AccentColor = new Color(0.70f, 0.60f, 0.80f),
+                        HairColor = new Color(0.30f, 0.22f, 0.18f),
+                        HairHeight = 4
+                    };
+                case "piety":
+                    return new NPCVisualConfig
+                    {
+                        SkinColor = new Color(0.82f, 0.70f, 0.58f),
+                        RobeColor = new Color(0.40f, 0.25f, 0.55f),
+                        AccentColor = new Color(0.55f, 0.35f, 0.70f),
+                        HairColor = new Color(0.25f, 0.18f, 0.12f),
+                        HairHeight = 4
+                    };
+                case "charity":
+                    return new NPCVisualConfig
+                    {
+                        SkinColor = new Color(0.85f, 0.72f, 0.60f),
+                        RobeColor = new Color(0.65f, 0.25f, 0.25f),
+                        AccentColor = new Color(0.80f, 0.35f, 0.35f),
+                        HairColor = new Color(0.35f, 0.20f, 0.15f),
+                        HairHeight = 4
+                    };
+                case "giant_despair":
+                    return new NPCVisualConfig
+                    {
+                        SkinColor = new Color(0.40f, 0.35f, 0.30f),
+                        RobeColor = new Color(0.25f, 0.20f, 0.18f),
+                        AccentColor = new Color(0.35f, 0.28f, 0.22f),
+                        HairColor = new Color(0.20f, 0.15f, 0.10f),
+                        HairHeight = 3, IsAngry = true
+                    };
+                case "shepherd1":
+                case "shepherd2":
+                    return new NPCVisualConfig
+                    {
+                        SkinColor = new Color(0.82f, 0.70f, 0.58f),
+                        RobeColor = new Color(0.85f, 0.82f, 0.78f),
+                        AccentColor = new Color(0.75f, 0.70f, 0.60f),
+                        HairColor = new Color(0.50f, 0.42f, 0.32f),
+                        HairHeight = 2
+                    };
+                case "ignorance":
+                    return new NPCVisualConfig
+                    {
+                        SkinColor = new Color(0.85f, 0.75f, 0.62f),
+                        RobeColor = new Color(0.60f, 0.55f, 0.45f),
+                        AccentColor = new Color(0.70f, 0.65f, 0.50f),
+                        HairColor = new Color(0.60f, 0.50f, 0.35f),
+                        HairHeight = 2
+                    };
+                case "byends":
+                    return new NPCVisualConfig
+                    {
+                        SkinColor = new Color(0.82f, 0.70f, 0.58f),
+                        RobeColor = new Color(0.55f, 0.45f, 0.20f),
+                        AccentColor = new Color(0.75f, 0.65f, 0.30f),
+                        HairColor = new Color(0.35f, 0.28f, 0.18f),
+                        HairHeight = 2
+                    };
+                case "shining1":
+                case "shining2":
+                case "shining3":
+                    return new NPCVisualConfig
+                    {
+                        SkinColor = new Color(0.95f, 0.92f, 0.85f),
+                        RobeColor = new Color(0.95f, 0.95f, 0.90f),
+                        AccentColor = new Color(0.90f, 0.85f, 0.55f),
+                        HairColor = new Color(0.90f, 0.85f, 0.70f),
+                        HairHeight = 2
+                    };
                 default:
                     return new NPCVisualConfig
                     {
