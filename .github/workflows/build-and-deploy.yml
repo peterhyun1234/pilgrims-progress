@@ -15,13 +15,8 @@
 name: Build & Deploy to itch.io
 
 on:
-  # main 브랜치에 Unity 프로젝트 파일이 변경될 때 자동 실행
-  push:
-    branches: [main]
-    paths:
-      - 'pilgrims-progress-unity/**'
-
-  # 수동 실행도 가능
+  # 비용 최적화: 수동 실행만 허용 (Private 레포 월 2,000분 제한)
+  # 빌드 1회 ~30분 소요 → 자동 트리거 시 월 한도 빠르게 소진
   workflow_dispatch:
 
 # 동시에 여러 빌드가 실행되지 않도록 제한
