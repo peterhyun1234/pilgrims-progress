@@ -26,7 +26,7 @@ namespace PilgrimsProgress.Visuals
         private float _wanderTimer;
         private float _nextWanderTime;
         private float _lookTimer;
-        private Sprite[] _sprites;
+        private SpriteSheetLoader.SheetData _sheetData;
         private bool _useSpriteSheet;
         private string _npcId;
 
@@ -52,8 +52,8 @@ namespace PilgrimsProgress.Visuals
             if (_animFx == null)
                 _animFx = gameObject.AddComponent<CharacterAnimationFX>();
 
-            _sprites = SpriteSheetLoader.Load(npcId);
-            _useSpriteSheet = _sprites != null;
+            _sheetData = SpriteSheetLoader.Load(npcId);
+            _useSpriteSheet = _sheetData != null;
 
             SetWanderParams();
         }
@@ -109,11 +109,14 @@ namespace PilgrimsProgress.Visuals
             if (_playerTransform == null || _sr == null) return;
 
             float dist = Vector2.Distance(transform.position, _playerTransform.position);
-            if (dist > 5f) return;
+            if (dist > 4f) return;
 
             Vector2 dir = _playerTransform.position - transform.position;
             UpdateFacingFromDirection(dir);
             UpdateSpriteForDirection();
+
+            if (dist < 2.5f && _animFx != null)
+                _animFx.IdleBreath();
         }
 
         private void Wander()

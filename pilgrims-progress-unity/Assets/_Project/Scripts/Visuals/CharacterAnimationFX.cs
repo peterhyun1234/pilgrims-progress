@@ -48,7 +48,7 @@ namespace PilgrimsProgress.Visuals
             IdleBreath();
         }
 
-        private void IdleBreath()
+        public void IdleBreath()
         {
             _idleBreathTimer += Time.deltaTime;
             float breath = Mathf.Sin(_idleBreathTimer * 1.8f) * 0.015f;

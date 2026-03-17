@@ -1,5 +1,7 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 using PilgrimsProgress.Core;
 
@@ -45,10 +47,12 @@ namespace PilgrimsProgress.UI
         [SerializeField] private Button _createAccountButton;
 
         private bool _isFirstRunFlow;
+        private Coroutine _panelTransition;
 
         private void Start()
         {
             SetupButtonListeners();
+            AddHoverEffects();
 
             var gm = GameManager.Instance;
             _isFirstRunFlow = gm != null && gm.IsFirstRun;
@@ -84,6 +88,25 @@ namespace PilgrimsProgress.UI
             if (_continueButton != null) _continueButton.interactable = hasSave;
         }
 
+        private void AddHoverEffects()
+        {
+            AddHoverScale(_newGameButton);
+            AddHoverScale(_continueButton);
+            AddHoverScale(_collectionButton);
+            AddHoverScale(_settingsButton);
+            AddHoverScale(_languageButton);
+            AddHoverScale(_quitButton);
+            AddHoverScale(_koreanButton);
+            AddHoverScale(_englishButton);
+        }
+
+        private static void AddHoverScale(Button btn)
+        {
+            if (btn == null) return;
+            var hover = btn.gameObject.AddComponent<ButtonHoverEffect>();
+            hover.Initialize(btn);
+        }
+
         private void HideAllPanels()
         {
             if (_languageSelectPanel != null) _languageSelectPanel.SetActive(false);
@@ -95,14 +118,52 @@ namespace PilgrimsProgress.UI
 
         private void ShowLanguageSelect()
         {
-            HideAllPanels();
-            if (_languageSelectPanel != null) _languageSelectPanel.SetActive(true);
+            TransitionToPanel(_languageSelectPanel);
         }
 
         private void ShowMainMenu()
         {
+            TransitionToPanel(_mainButtonsPanel);
+        }
+
+        private void TransitionToPanel(GameObject target)
+        {
+            if (_panelTransition != null)
+                StopCoroutine(_panelTransition);
+            _panelTransition = StartCoroutine(PanelFadeTransition(target));
+        }
+
+        private IEnumerator PanelFadeTransition(GameObject target)
+        {
+            var cg = EnsureCanvasGroup(target);
+
             HideAllPanels();
-            if (_mainButtonsPanel != null) _mainButtonsPanel.SetActive(true);
+
+            if (target != null)
+            {
+                target.SetActive(true);
+                cg.alpha = 0f;
+
+                float elapsed = 0f;
+                const float duration = 0.3f;
+                while (elapsed < duration)
+                {
+                    elapsed += Time.deltaTime;
+                    cg.alpha = Mathf.Clamp01(elapsed / duration);
+                    yield return null;
+                }
+                cg.alpha = 1f;
+            }
+
+            _panelTransition = null;
+        }
+
+        private static CanvasGroup EnsureCanvasGroup(GameObject go)
+        {
+            if (go == null) return null;
+            var cg = go.GetComponent<CanvasGroup>();
+            if (cg == null) cg = go.AddComponent<CanvasGroup>();
+            return cg;
         }
 
         private void SelectLanguage(string langCode)
@@ -116,7 +177,7 @@ namespace PilgrimsProgress.UI
 
             if (_isFirstRunFlow)
             {
-                ShowCharacterCreation();
+                StartCoroutine(FadeToCharacterCreation());
             }
             else
             {
@@ -126,6 +187,14 @@ namespace PilgrimsProgress.UI
             }
 
             UpdateLocalization();
+        }
+
+        private IEnumerator FadeToCharacterCreation()
+        {
+            var tc = GetTransitionController();
+            if (tc != null) yield return tc.FadeOut(0.4f);
+            ShowCharacterCreation();
+            if (tc != null) yield return tc.FadeIn(0.4f);
         }
 
         private void ShowCharacterCreation()
@@ -152,6 +221,11 @@ namespace PilgrimsProgress.UI
             _characterCreationUI.OnBack += OnCharacterCreationBack;
 
             _characterCreationUI.Show();
+        }
+
+        private static Scene.TransitionController GetTransitionController()
+        {
+            return ServiceLocator.TryGet<Scene.TransitionController>(out var tc) ? tc : null;
         }
 
         private void UpdateLocalization()
@@ -183,21 +257,21 @@ namespace PilgrimsProgress.UI
                     GameManager.Instance.CompleteFirstRun();
             }
 
-            ShowPrologue();
+            StartCoroutine(FadeToPrologue());
         }
 
-        private void ShowPrologue()
+        private IEnumerator FadeToPrologue()
         {
-            HideAllPanels();
+            var tc = GetTransitionController();
+            if (tc != null) yield return tc.FadeOut(0.5f);
 
+            HideAllPanels();
             if (_prologuePanel != null)
-            {
                 _prologuePanel.SetActive(true);
-            }
             else
-            {
                 BuildProloguePanel();
-            }
+
+            if (tc != null) yield return tc.FadeIn(0.5f);
         }
 
         private void BuildProloguePanel()
@@ -225,6 +299,14 @@ namespace PilgrimsProgress.UI
 
         private void OnPrologueComplete()
         {
+            StartCoroutine(FadeToGameplay());
+        }
+
+        private IEnumerator FadeToGameplay()
+        {
+            var tc = GetTransitionController();
+            if (tc != null) yield return tc.FadeOut(0.6f);
+
             if (GameManager.Instance != null)
                 GameManager.Instance.SetState(GameState.Gameplay);
 
@@ -248,14 +330,7 @@ namespace PilgrimsProgress.UI
 
         private void OnContinue()
         {
-            if (GameManager.Instance != null)
-                GameManager.Instance.SetState(GameState.Gameplay);
-
-            var sceneLoader = ServiceLocator.TryGet<Scene.SceneLoader>(out var sl) ? sl : null;
-            if (sceneLoader != null)
-                sceneLoader.LoadScene("Gameplay");
-            else
-                UnityEngine.SceneManagement.SceneManager.LoadScene("Gameplay");
+            StartCoroutine(FadeToGameplay());
         }
 
         private void OnCollection()
@@ -285,6 +360,52 @@ namespace PilgrimsProgress.UI
 #else
             Application.Quit();
 #endif
+        }
+    }
+
+    public class ButtonHoverEffect : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+    {
+        private Button _button;
+        private Vector3 _originalScale;
+        private Coroutine _scaleRoutine;
+
+        public void Initialize(Button button)
+        {
+            _button = button;
+            _originalScale = transform.localScale;
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (_button != null && !_button.interactable) return;
+            AnimateTo(_originalScale * 1.06f);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            AnimateTo(_originalScale);
+        }
+
+        private void AnimateTo(Vector3 target)
+        {
+            if (_scaleRoutine != null) StopCoroutine(_scaleRoutine);
+            _scaleRoutine = StartCoroutine(ScaleTo(target));
+        }
+
+        private System.Collections.IEnumerator ScaleTo(Vector3 target)
+        {
+            float elapsed = 0f;
+            const float duration = 0.12f;
+            var start = transform.localScale;
+            while (elapsed < duration)
+            {
+                elapsed += Time.unscaledDeltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                t = t * t * (3f - 2f * t);
+                transform.localScale = Vector3.Lerp(start, target, t);
+                yield return null;
+            }
+            transform.localScale = target;
         }
     }
 }

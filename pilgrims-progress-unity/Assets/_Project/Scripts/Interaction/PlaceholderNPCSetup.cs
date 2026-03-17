@@ -13,11 +13,12 @@ namespace PilgrimsProgress.Interaction
         [SerializeField] private Color _promptColor = new Color(1f, 0.9f, 0.4f);
 
         private SpriteRenderer _sr;
-        private Sprite[] _sprites;
+        private SpriteSheetLoader.SheetData _sheetData;
         private float _idleTimer;
         private int _idleFrame;
         private bool _useSpriteSheet;
         private GameObject _nameLabel;
+        private SpriteSheetLoader.Direction _facingDir = SpriteSheetLoader.Direction.Down;
 
         private void Awake()
         {
@@ -32,10 +33,10 @@ namespace PilgrimsProgress.Interaction
             _sr = GetComponent<SpriteRenderer>();
             if (_sr == null) _sr = gameObject.AddComponent<SpriteRenderer>();
 
-            _sprites = SpriteSheetLoader.Load(_npcId);
-            if (_sprites != null)
+            _sheetData = SpriteSheetLoader.Load(_npcId);
+            if (_sheetData != null)
             {
-                _sr.sprite = _sprites[0]; // idle down
+                _sr.sprite = _sheetData.Sprites[0];
                 _sr.sortingOrder = 10;
                 _useSpriteSheet = true;
                 return;
@@ -47,18 +48,34 @@ namespace PilgrimsProgress.Interaction
 
         private void Update()
         {
-            if (!_useSpriteSheet || _sprites == null) return;
+            if (!_useSpriteSheet || _sheetData == null) return;
 
-            // Gentle idle animation: occasionally shift between frames
+            FaceNearbyPlayer();
+
             _idleTimer += Time.deltaTime;
             if (_idleTimer > 2f)
             {
                 _idleTimer = 0f;
                 _idleFrame = (_idleFrame + 1) % 2;
                 int frame = _idleFrame == 0 ? 0 : 1;
-                var sprite = SpriteSheetLoader.GetSprite(_npcId, SpriteSheetLoader.Direction.Down, frame);
+                var sprite = SpriteSheetLoader.GetSprite(_npcId, _facingDir, frame);
                 if (sprite != null) _sr.sprite = sprite;
             }
+        }
+
+        private void FaceNearbyPlayer()
+        {
+            var pc = ServiceLocator.TryGet<PilgrimsProgress.Player.PlayerController>(out var p) ? p : null;
+            if (pc == null) return;
+
+            float dist = Vector2.Distance(transform.position, pc.transform.position);
+            if (dist > 4f) return;
+
+            Vector2 dir = pc.transform.position - transform.position;
+            if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+                _facingDir = dir.x > 0 ? SpriteSheetLoader.Direction.Right : SpriteSheetLoader.Direction.Left;
+            else
+                _facingDir = dir.y > 0 ? SpriteSheetLoader.Direction.Up : SpriteSheetLoader.Direction.Down;
         }
 
         private void SetupCollider()

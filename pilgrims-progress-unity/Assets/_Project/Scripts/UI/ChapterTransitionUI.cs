@@ -218,15 +218,41 @@ namespace PilgrimsProgress.UI
             }
             _canvasGroup.alpha = 1;
 
-            yield return new WaitForSecondsRealtime(0.5f);
+            yield return new WaitForSecondsRealtime(0.3f);
+
+            if (_journeyDots != null)
+            {
+                for (int i = 0; i < _journeyDots.Length; i++)
+                {
+                    if (_journeyDots[i] == null) continue;
+                    var dot = _journeyDots[i];
+                    var origScale = dot.rectTransform.localScale;
+                    dot.rectTransform.localScale = Vector3.zero;
+
+                    float elapsed = 0f;
+                    while (elapsed < 0.12f)
+                    {
+                        elapsed += Time.unscaledDeltaTime;
+                        float progress = Mathf.Clamp01(elapsed / 0.12f);
+                        float eased = 1f + 0.2f * Mathf.Sin(progress * Mathf.PI);
+                        dot.rectTransform.localScale = origScale * eased * progress;
+                        yield return null;
+                    }
+                    dot.rectTransform.localScale = origScale;
+                }
+            }
+
+            yield return new WaitForSecondsRealtime(0.3f);
 
             bool waiting = true;
             while (waiting)
             {
                 var kb = UnityEngine.InputSystem.Keyboard.current;
                 var mouse = UnityEngine.InputSystem.Mouse.current;
+                var touch = UnityEngine.InputSystem.Touchscreen.current;
                 if ((kb != null && kb.anyKey.wasPressedThisFrame) ||
-                    (mouse != null && mouse.leftButton.wasPressedThisFrame))
+                    (mouse != null && mouse.leftButton.wasPressedThisFrame) ||
+                    (touch != null && touch.primaryTouch.press.wasPressedThisFrame))
                     waiting = false;
                 yield return null;
             }

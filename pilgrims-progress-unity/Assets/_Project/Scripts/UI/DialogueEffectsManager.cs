@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Rendering.Universal;
 using TMPro;
 using PilgrimsProgress.Core;
 using PilgrimsProgress.Narrative;
@@ -55,6 +56,8 @@ namespace PilgrimsProgress.UI
                 _dialogueCtrl.OnStatChanged += HandleStatChange;
                 _dialogueCtrl.OnBurdenChanged += HandleBurdenChange;
                 _dialogueCtrl.OnBibleCardUnlocked += HandleBibleCard;
+                _dialogueCtrl.OnLocationChanged += HandleLocationChanged;
+                _dialogueCtrl.OnBgmChanged += HandleBgmChanged;
             }
 
             if (_modeManager != null)
@@ -78,6 +81,8 @@ namespace PilgrimsProgress.UI
                 _dialogueCtrl.OnStatChanged -= HandleStatChange;
                 _dialogueCtrl.OnBurdenChanged -= HandleBurdenChange;
                 _dialogueCtrl.OnBibleCardUnlocked -= HandleBibleCard;
+                _dialogueCtrl.OnLocationChanged -= HandleLocationChanged;
+                _dialogueCtrl.OnBgmChanged -= HandleBgmChanged;
             }
             if (_modeManager != null)
                 _modeManager.OnModeChanged -= HandleModeChanged;
@@ -229,7 +234,20 @@ namespace PilgrimsProgress.UI
                 case "sad":
                 case "sorrowful":
                     FadeVignette(new Color(0.05f, 0.05f, 0.1f, 0.25f), 0.5f);
+                    TransitionLighting(new Color(0.5f, 0.5f, 0.65f), 0.5f, 1f);
+                    SpawnWeatherParticles("rain", 30, 3f);
                     break;
+            }
+
+            if (emotion.ToLower() == "joyful" || emotion.ToLower() == "blessed")
+            {
+                SpawnWeatherParticles("sparkle", 15, 2f);
+                TransitionLighting(new Color(1f, 0.95f, 0.8f), 1.1f, 0.8f);
+            }
+            else if (emotion.ToLower() == "rage" || emotion.ToLower() == "angry")
+            {
+                SpawnWeatherParticles("embers", 10, 2f);
+                TransitionLighting(new Color(0.8f, 0.4f, 0.3f), 0.6f, 0.5f);
             }
 
             // Trigger NPC animation
@@ -402,11 +420,151 @@ namespace PilgrimsProgress.UI
             Destroy(go);
         }
 
+        private void HandleLocationChanged(string location)
+        {
+            if (string.IsNullOrEmpty(location)) return;
+
+            string loc = location.ToLower();
+            if (loc.Contains("dark") || loc.Contains("valley") || loc.Contains("shadow"))
+                TransitionLighting(new Color(0.3f, 0.25f, 0.45f), 0.3f, 1.5f);
+            else if (loc.Contains("celestial") || loc.Contains("heaven") || loc.Contains("paradise"))
+                TransitionLighting(new Color(1f, 0.95f, 0.78f), 1.2f, 1.5f);
+            else if (loc.Contains("city") || loc.Contains("vanity") || loc.Contains("market"))
+                TransitionLighting(new Color(0.9f, 0.85f, 0.7f), 0.7f, 1f);
+        }
+
+        private void HandleBgmChanged(string bgm)
+        {
+            Debug.Log($"[DialogueFX] BGM change requested: {bgm} (audio system placeholder)");
+        }
+
         private void HandleBibleCard(string cardId)
         {
             ScreenFlash.Instance?.Flash(new Color(1f, 0.92f, 0.55f, 0.35f), 1.0f);
             TopDownCamera.Instance?.ImpactZoom(0.5f, 0.4f);
             ShowEmotionBubble("\u2727", new Color(1f, 0.90f, 0.50f));
+            TransitionLighting(new Color(1f, 0.95f, 0.7f), 1.3f, 1.5f);
+        }
+
+        #endregion
+
+        #region Dynamic Lighting & Weather
+
+        private Coroutine _lightingCoroutine;
+        private Coroutine _weatherCoroutine;
+        private Light2D _globalLight;
+
+        private Light2D FindGlobalLight()
+        {
+            if (_globalLight != null) return _globalLight;
+            foreach (var light in Object.FindObjectsByType<Light2D>(FindObjectsSortMode.None))
+            {
+                if (light.lightType == Light2D.LightType.Global)
+                {
+                    _globalLight = light;
+                    return light;
+                }
+            }
+            return null;
+        }
+
+        public void TransitionLighting(Color targetColor, float targetIntensity, float duration)
+        {
+            var light = FindGlobalLight();
+            if (light == null) return;
+            if (_lightingCoroutine != null) StopCoroutine(_lightingCoroutine);
+            _lightingCoroutine = StartCoroutine(LightingTransitionRoutine(light, targetColor, targetIntensity, duration));
+        }
+
+        private IEnumerator LightingTransitionRoutine(Light2D light, Color targetColor, float targetIntensity, float duration)
+        {
+            Color startColor = light.color;
+            float startIntensity = light.intensity;
+            float t = 0;
+            while (t < duration)
+            {
+                t += Time.deltaTime;
+                float p = Mathf.SmoothStep(0, 1, t / duration);
+                light.color = Color.Lerp(startColor, targetColor, p);
+                light.intensity = Mathf.Lerp(startIntensity, targetIntensity, p);
+                yield return null;
+            }
+            light.color = targetColor;
+            light.intensity = targetIntensity;
+        }
+
+        private void SpawnWeatherParticles(string type, int count, float duration)
+        {
+            if (_weatherCoroutine != null) StopCoroutine(_weatherCoroutine);
+            _weatherCoroutine = StartCoroutine(WeatherParticleRoutine(type, count, duration));
+        }
+
+        private IEnumerator WeatherParticleRoutine(string type, int count, float duration)
+        {
+            var cam = Camera.main;
+            if (cam == null) yield break;
+
+            float elapsed = 0;
+            float interval = duration / count;
+
+            Color particleColor;
+            float speed;
+            switch (type)
+            {
+                case "rain":
+                    particleColor = new Color(0.5f, 0.6f, 0.8f, 0.6f);
+                    speed = 4f;
+                    break;
+                case "sparkle":
+                    particleColor = new Color(1f, 0.95f, 0.7f, 0.8f);
+                    speed = 1f;
+                    break;
+                case "embers":
+                    particleColor = new Color(1f, 0.5f, 0.2f, 0.7f);
+                    speed = 1.5f;
+                    break;
+                default:
+                    particleColor = Color.white;
+                    speed = 1f;
+                    break;
+            }
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                if (elapsed % interval < Time.deltaTime)
+                {
+                    Vector3 spawnPos = cam.transform.position +
+                        new Vector3(Random.Range(-6f, 6f), Random.Range(3f, 5f), 10f);
+                    SpawnSingleWeatherParticle(spawnPos, particleColor, speed, type);
+                }
+                yield return null;
+            }
+        }
+
+        private void SpawnSingleWeatherParticle(Vector3 pos, Color color, float speed, string type)
+        {
+            var go = new GameObject("WeatherParticle");
+            go.transform.position = pos;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = 85;
+
+            int ps = type == "rain" ? 2 : 4;
+            var tex = new Texture2D(ps, ps);
+            for (int y = 0; y < ps; y++)
+                for (int x = 0; x < ps; x++)
+                {
+                    float d = Vector2.Distance(new Vector2(x, y), new Vector2(ps / 2f, ps / 2f));
+                    tex.SetPixel(x, y, d < ps / 2f ? color : Color.clear);
+                }
+            tex.Apply();
+            tex.filterMode = FilterMode.Point;
+            sr.sprite = Sprite.Create(tex, new Rect(0, 0, ps, ps), Vector2.one * 0.5f, 16);
+
+            Vector2 vel = type == "rain"
+                ? new Vector2(Random.Range(-0.3f, 0.3f), -speed)
+                : new Vector2(Random.Range(-0.5f, 0.5f), Random.Range(0.5f, speed));
+            go.AddComponent<ParticleMover>().Initialize(vel, Random.Range(1f, 2f));
         }
 
         #endregion

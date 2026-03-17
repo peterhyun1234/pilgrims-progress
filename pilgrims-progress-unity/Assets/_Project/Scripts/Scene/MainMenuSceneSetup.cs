@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
@@ -29,6 +30,12 @@ namespace PilgrimsProgress.Scene
             EnsureEventSystem();
             BuildMainMenuUI();
             KoreanFontSetup.ApplyToAll();
+
+            foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            {
+                if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+                    SafeAreaHandler.EnsureOnCanvas(canvas);
+            }
         }
 
         private void EnsureEventSystem()
@@ -51,7 +58,7 @@ namespace PilgrimsProgress.Scene
             scaler.matchWidthOrHeight = 0.5f;
             canvasGo.AddComponent<GraphicRaycaster>();
 
-            BuildBackground(canvasGo.transform);
+            var bgImage = BuildBackground(canvasGo.transform);
 
             // --- Language Select Panel ---
             var langPanel = CreatePanel(canvasGo.transform, "LanguageSelectPanel");
@@ -62,12 +69,12 @@ namespace PilgrimsProgress.Scene
 
             CreateTMP(langPanel.transform, "LangTitle", 42, Gold,
                 new Vector2(0.15f, 0.62f), new Vector2(0.85f, 0.78f),
-                "Select Language / 언어를 선택하세요").fontStyle = FontStyles.Bold;
+                "Select Language / \uC5B8\uC5B4\uB97C \uC120\uD0DD\uD558\uC138\uC694").fontStyle = FontStyles.Bold;
 
             var koBtn = CreateStyledButton(langPanel.transform, "KoreanButton",
                 new Vector2(0.28f, 0.42f), new Vector2(0.48f, 0.56f),
                 LangBtn, LangBtnHi, out var koLabel);
-            koLabel.text = "한국어";
+            koLabel.text = "\uD55C\uAD6D\uC5B4";
             koLabel.fontSize = 30;
             koLabel.fontStyle = FontStyles.Bold;
 
@@ -82,7 +89,6 @@ namespace PilgrimsProgress.Scene
             var mainPanel = CreatePanel(canvasGo.transform, "MainButtonsPanel");
             mainPanel.SetActive(false);
 
-            // Decorative line above title
             var decoTop = CreateImage(mainPanel.transform, "DecoTop",
                 new Vector2(0.30f, 0.91f), new Vector2(0.70f, 0.912f), Gold);
             decoTop.color = new Color(Gold.r, Gold.g, Gold.b, 0.5f);
@@ -95,7 +101,6 @@ namespace PilgrimsProgress.Scene
                 new Vector2(0.15f, 0.72f), new Vector2(0.85f, 0.78f), "");
             subtitleText.fontStyle = FontStyles.Italic;
 
-            // Decorative line below subtitle
             var decoBot = CreateImage(mainPanel.transform, "DecoBot",
                 new Vector2(0.35f, 0.715f), new Vector2(0.65f, 0.717f), Gold);
             decoBot.color = new Color(Gold.r, Gold.g, Gold.b, 0.3f);
@@ -145,7 +150,12 @@ namespace PilgrimsProgress.Scene
             var guestLabel = CreateTMP(mainPanel.transform, "GuestLabel", 15,
                 TextMuted, new Vector2(0.25f, 0.06f), new Vector2(0.75f, 0.11f), "");
 
-            // Settings panel (hidden)
+            var versionText = CreateTMP(canvasGo.transform, "VersionText", 12,
+                new Color(0.4f, 0.38f, 0.35f, 0.6f),
+                new Vector2(0.78f, 0.01f), new Vector2(0.99f, 0.04f),
+                "v0.9.0");
+            versionText.alignment = TextAlignmentOptions.BottomRight;
+
             var settingsPanel = CreatePanel(canvasGo.transform, "SettingsPanel");
             settingsPanel.SetActive(false);
 
@@ -171,9 +181,20 @@ namespace PilgrimsProgress.Scene
             SetPrivateField(menuUI, "_koreanButton", koBtn);
             SetPrivateField(menuUI, "_englishButton", enBtn);
             SetPrivateField(menuUI, "_guestLabel", guestLabel);
+
+            // --- Title Screen Animator ---
+            var animator = canvasGo.AddComponent<TitleScreenAnimator>();
+            var buttons = new List<Button>
+            {
+                newGameBtn, continueBtn, collectionBtn,
+                settingsBtn, langBtn, quitBtn
+            };
+            animator.Initialize(
+                canvasGo.GetComponent<RectTransform>(),
+                titleText, subtitleText, buttons, bgImage);
         }
 
-        private void BuildBackground(Transform parent)
+        private Image BuildBackground(Transform parent)
         {
             var bgTex = Visuals.ProceduralAssets.CreateMenuBackground(480, 270);
             var bgSprite = Sprite.Create(bgTex, new Rect(0, 0, bgTex.width, bgTex.height),
@@ -189,7 +210,44 @@ namespace PilgrimsProgress.Scene
             var bgRt = bgImg.rectTransform;
             bgRt.anchorMin = Vector2.zero;
             bgRt.anchorMax = Vector2.one;
-            bgRt.sizeDelta = Vector2.zero;
+            bgRt.sizeDelta = new Vector2(30f, 20f);
+
+            BuildVignette(parent);
+
+            return bgImg;
+        }
+
+        private void BuildVignette(Transform parent)
+        {
+            var vigGo = new GameObject("Vignette");
+            vigGo.transform.SetParent(parent, false);
+            var vigImg = vigGo.AddComponent<Image>();
+            vigImg.raycastTarget = false;
+
+            int size = 64;
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            float cx = size / 2f, cy = size / 2f;
+            float maxDist = Mathf.Sqrt(cx * cx + cy * cy);
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = x - cx, dy = y - cy;
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy) / maxDist;
+                    float alpha = Mathf.Clamp01(dist * dist * 0.8f);
+                    tex.SetPixel(x, y, new Color(0f, 0f, 0f, alpha));
+                }
+            }
+            tex.Apply();
+            tex.filterMode = FilterMode.Bilinear;
+            vigImg.sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f));
+            vigImg.type = Image.Type.Simple;
+            vigImg.preserveAspect = false;
+
+            var rt = vigImg.rectTransform;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.sizeDelta = Vector2.zero;
         }
 
         private GameObject CreatePanel(Transform parent, string name)

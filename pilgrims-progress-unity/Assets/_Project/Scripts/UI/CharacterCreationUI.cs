@@ -55,10 +55,14 @@ namespace PilgrimsProgress.UI
         [Header("Back")]
         [SerializeField] private Button _backButton;
 
+        [Header("Randomize")]
+        [SerializeField] private Button _randomizeButton;
+
         private PlayerCustomization _editing = new PlayerCustomization();
         private PlayerCustomizationManager _manager;
         private CustomizationPresets _presets;
         private bool _uiGenerated;
+        private float _previewPulseTimer;
 
         public event System.Action OnConfirmed;
         public event System.Action OnBack;
@@ -133,6 +137,32 @@ namespace PilgrimsProgress.UI
                 _backButton.onClick.RemoveAllListeners();
                 _backButton.onClick.AddListener(() => OnBack?.Invoke());
             }
+
+            if (_randomizeButton != null)
+            {
+                _randomizeButton.onClick.RemoveAllListeners();
+                _randomizeButton.onClick.AddListener(OnRandomize);
+            }
+        }
+
+        private void Update()
+        {
+            if (_panel == null || !_panel.activeSelf) return;
+            if (_previewImage == null) return;
+
+            _previewPulseTimer += Time.unscaledDeltaTime;
+            float pulse = 1f + Mathf.Sin(_previewPulseTimer * 1.5f) * 0.02f;
+            _previewImage.transform.localScale = new Vector3(pulse, pulse, 1f);
+        }
+
+        private void OnRandomize()
+        {
+            _editing.SkinToneIndex = Random.Range(0, _presets.SkinTones.Length);
+            _editing.HairStyleIndex = Random.Range(0, _presets.HairStyles.Length);
+            _editing.HairColorIndex = Random.Range(0, _presets.HairColors.Length);
+            _editing.OutfitColorIndex = Random.Range(0, _presets.OutfitColors.Length);
+            UpdatePreview();
+            UpdateAllSelectors();
         }
 
         private void SetupCycleButtons(Button left, Button right,
@@ -430,6 +460,25 @@ namespace PilgrimsProgress.UI
             _confirmLabel = CreateTMP(confirmGo.transform, "ConfirmLabel", 24, Color.white,
                 Vector2.zero, Vector2.one);
             _confirmLabel.fontStyle = FontStyles.Bold;
+
+            // Randomize button
+            var randGo = new GameObject("RandomizeBtn");
+            randGo.transform.SetParent(canvasGo.transform, false);
+            var randImg = randGo.AddComponent<Image>();
+            randImg.color = new Color(0.25f, 0.22f, 0.38f);
+            var rRect = randImg.rectTransform;
+            rRect.anchorMin = new Vector2(0.12f, 0.06f);
+            rRect.anchorMax = new Vector2(0.28f, 0.14f);
+            rRect.sizeDelta = Vector2.zero;
+            rRect.anchoredPosition = Vector2.zero;
+            _randomizeButton = randGo.AddComponent<Button>();
+            _randomizeButton.targetGraphic = randImg;
+
+            var loc2 = ServiceLocator.TryGet<Localization.LocalizationManager>(out var lm2) ? lm2 : null;
+            bool isKo2 = loc2 != null && loc2.CurrentLanguage == "ko";
+            var randLabel = CreateTMP(randGo.transform, "RandLabel", 18, new Color(0.8f, 0.75f, 0.90f),
+                Vector2.zero, Vector2.one);
+            randLabel.text = isKo2 ? "\u2684 랜덤" : "\u2684 Random";
 
             // Back button (top-left)
             var backGo = new GameObject("BackBtn");

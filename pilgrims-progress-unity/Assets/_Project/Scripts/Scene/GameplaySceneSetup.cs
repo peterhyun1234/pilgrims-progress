@@ -3,11 +3,13 @@ using UnityEngine.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.Tilemaps;
+using UnityEngine.Rendering.Universal;
 using TMPro;
 using PilgrimsProgress.Core;
 using PilgrimsProgress.Player;
 using PilgrimsProgress.Narrative;
 using PilgrimsProgress.UI;
+using PilgrimsProgress.Visuals;
 
 namespace PilgrimsProgress.Scene
 {
@@ -58,6 +60,17 @@ namespace PilgrimsProgress.Scene
             BuildToastUI();
             BuildPauseMenu();
             BuildJourneyMap();
+
+            ThemeLighting.ApplyLitMaterialToAll();
+            ApplySafeAreaToCanvases();
+
+            var envAnimGo = new GameObject("EnvironmentAnimator");
+            var envAnim = envAnimGo.AddComponent<Visuals.EnvironmentAnimator>();
+            envAnim.Initialize(_chapterData.Theme);
+
+            var parallaxGo = new GameObject("ParallaxBackground");
+            var parallax = parallaxGo.AddComponent<Visuals.ParallaxBackground>();
+            parallax.Initialize(_chapterData.Theme);
 
             var gm = GameManager.Instance;
             if (gm != null && gm.CurrentState != GameState.Gameplay)
@@ -144,6 +157,7 @@ namespace PilgrimsProgress.Scene
             playerGo.AddComponent<PlaceholderPlayerSetup>();
             playerGo.AddComponent<PlayerAnimator>();
             playerGo.AddComponent<PlayerStatVisuals>();
+            playerGo.AddComponent<PlayerInputHandler>();
             playerGo.AddComponent<PlayerController>();
 
             return playerGo;
@@ -401,6 +415,19 @@ namespace PilgrimsProgress.Scene
             var cam = Camera.main;
             if (cam == null) return;
 
+            var profile = ThemeLighting.GetProfile(theme);
+            cam.backgroundColor = profile.CameraBackground;
+
+            var lightingRoot = new GameObject("Lighting");
+            ThemeLighting.CreateGlobalLight(lightingRoot.transform, profile);
+
+            if (profile.PlayerTorch)
+            {
+                var player = FindFirstObjectByType<PlayerController>();
+                if (player != null)
+                    ThemeLighting.CreatePlayerTorch(player.transform, profile);
+            }
+
             if (theme == MapTheme.DarkValley)
             {
                 var fogGo = new GameObject("FogOverlay");
@@ -409,11 +436,9 @@ namespace PilgrimsProgress.Scene
                 var sr = fogGo.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateFogSprite();
                 sr.sortingOrder = 90;
-                sr.color = new Color(0.15f, 0.12f, 0.18f, 0.25f);
+                sr.color = new Color(0.15f, 0.12f, 0.18f, 0.15f);
                 sr.transform.localScale = new Vector3(20, 12, 1);
                 sr.material = new Material(Shader.Find("Sprites/Default"));
-
-                cam.backgroundColor = new Color(0.03f, 0.03f, 0.05f);
             }
             else if (theme == MapTheme.Celestial)
             {
@@ -423,14 +448,19 @@ namespace PilgrimsProgress.Scene
                 var sr = glowGo.AddComponent<SpriteRenderer>();
                 sr.sprite = CreateGlowSprite();
                 sr.sortingOrder = 90;
-                sr.color = new Color(1f, 0.95f, 0.75f, 0.08f);
+                sr.color = new Color(1f, 0.95f, 0.75f, 0.06f);
                 sr.transform.localScale = new Vector3(20, 12, 1);
-
-                cam.backgroundColor = new Color(0.08f, 0.10f, 0.15f);
             }
-            else
+
+            AddLightsToProps(theme);
+        }
+
+        private void AddLightsToProps(MapTheme theme)
+        {
+            foreach (var lantern in GameObject.FindObjectsByType<SpriteRenderer>(FindObjectsSortMode.None))
             {
-                cam.backgroundColor = new Color(0.05f, 0.05f, 0.08f);
+                if (lantern.gameObject.name.StartsWith("Lantern"))
+                    ThemeLighting.CreateLanternLight(lantern.transform);
             }
         }
 
@@ -492,11 +522,13 @@ namespace PilgrimsProgress.Scene
             var sr = exitGo.AddComponent<SpriteRenderer>();
             bool isFinal = _chapterData.ChapterNumber >= ChapterManager.TotalChapters;
             sr.sprite = isFinal
-                ? Visuals.ProceduralAssets.CreateGateSprite(MapTheme.Celestial)
-                : Visuals.ProceduralAssets.CreateGateSprite(_chapterData.Theme);
+                ? ProceduralAssets.CreateGateSprite(MapTheme.Celestial)
+                : ProceduralAssets.CreateGateSprite(_chapterData.Theme);
             sr.sortingOrder = 6;
 
             exitGo.AddComponent<Interaction.ChapterExitInteractable>();
+
+            ThemeLighting.CreateExitGlow(exitGo.transform, _chapterData.Theme);
         }
 
         private void BuildDialogueUI()
@@ -855,6 +887,15 @@ namespace PilgrimsProgress.Scene
                 Vector2.zero, Vector2.one, "");
 
             return go.AddComponent<Button>();
+        }
+
+        private void ApplySafeAreaToCanvases()
+        {
+            foreach (var canvas in FindObjectsByType<Canvas>(FindObjectsSortMode.None))
+            {
+                if (canvas.renderMode == RenderMode.ScreenSpaceOverlay)
+                    UI.SafeAreaHandler.EnsureOnCanvas(canvas);
+            }
         }
 
         private static void SetField(object target, string fieldName, object value)

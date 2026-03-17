@@ -30,6 +30,10 @@ namespace PilgrimsProgress.UI
         [Header("Location")]
         [SerializeField] private TextMeshProUGUI _locationText;
 
+        [Header("Portrait")]
+        [SerializeField] private Image _portraitImage;
+        [SerializeField] private GameObject _portraitContainer;
+
         [Header("Typewriter Settings")]
         [SerializeField] private float _typeSpeed = 0.03f;
         [SerializeField] private float _fastTypeSpeed = 0.005f;
@@ -45,6 +49,8 @@ namespace PilgrimsProgress.UI
         private Button _closeButton;
         private TextMeshProUGUI _tapHintText;
         private bool _dialogueActive;
+        private string _lastPortraitSpeaker;
+        private Coroutine _portraitSlideCoroutine;
 
         private void Start()
         {
@@ -210,7 +216,8 @@ namespace PilgrimsProgress.UI
                 }
             }
 
-            // Dialogue text color based on speaker type
+            UpdatePortrait(speaker, emotion);
+
             if (_dialogueText != null)
             {
                 if (isNarration)
@@ -404,9 +411,7 @@ namespace PilgrimsProgress.UI
         private void StartTypewriter(string text)
         {
             if (_typewriterCoroutine != null)
-            {
                 StopCoroutine(_typewriterCoroutine);
-            }
             _currentFullText = text;
             _typewriterCoroutine = StartCoroutine(TypewriterEffect(text));
         }
@@ -420,6 +425,8 @@ namespace PilgrimsProgress.UI
 
             if (_dialogueText == null) { _isTyping = false; yield break; }
             _dialogueText.text = "";
+
+            int consecutiveDots = 0;
 
             for (int i = 0; i < text.Length; i++)
             {
@@ -442,7 +449,12 @@ namespace PilgrimsProgress.UI
                     }
                 }
 
-                float speed = _skipRequested ? _fastTypeSpeed : GetCharDelay(text[i]);
+                if (text[i] == '.')
+                    consecutiveDots++;
+                else
+                    consecutiveDots = 0;
+
+                float speed = _skipRequested ? _fastTypeSpeed : GetCharDelay(text[i], consecutiveDots);
                 yield return new WaitForSecondsRealtime(speed);
             }
 
@@ -450,24 +462,29 @@ namespace PilgrimsProgress.UI
             if (_continueIndicator != null) _continueIndicator.SetActive(true);
         }
 
-        private float GetCharDelay(char c)
+        private float GetCharDelay(char c, int consecutiveDots = 0)
         {
+            if (consecutiveDots >= 3)
+                return _typeSpeed * 10f;
+
             switch (c)
             {
                 case '.':
-                case '\u3002': // Korean period
+                case '\u3002':
                     return _typeSpeed * 6f;
                 case '!':
                 case '?':
                     return _typeSpeed * 5f;
                 case ',':
-                case '\uFF0C': // fullwidth comma
+                case '\uFF0C':
                     return _typeSpeed * 3f;
                 case ':':
                 case ';':
                     return _typeSpeed * 3f;
-                case '\u2026': // ellipsis
-                    return _typeSpeed * 4f;
+                case '\u2026':
+                    return _typeSpeed * 8f;
+                case '-':
+                    return _typeSpeed * 2f;
                 default:
                     return _typeSpeed;
             }
@@ -541,5 +558,156 @@ namespace PilgrimsProgress.UI
             string lang = loc != null ? loc.CurrentLanguage : "en";
             return GetLocalizedName(speakerId, lang);
         }
+
+        #region Portrait System
+
+        private void UpdatePortrait(string speaker, string emotion)
+        {
+            if (_portraitContainer == null) BuildPortraitUI();
+            if (_portraitImage == null) return;
+
+            bool isNarration = string.IsNullOrEmpty(speaker);
+            if (isNarration)
+            {
+                if (_portraitContainer != null)
+                    _portraitContainer.SetActive(false);
+                _lastPortraitSpeaker = null;
+                return;
+            }
+
+            _portraitContainer.SetActive(true);
+
+            string speakerKey = speaker.ToLower().Replace(" ", "_").Replace("-", "");
+            var portraitSprite = LoadPortrait(speakerKey);
+
+            if (portraitSprite == null)
+                portraitSprite = GeneratePortraitFromSpriteSheet(speakerKey);
+
+            if (portraitSprite != null)
+                _portraitImage.sprite = portraitSprite;
+
+            _portraitImage.color = GetPortraitTint(emotion);
+
+            if (speaker != _lastPortraitSpeaker)
+            {
+                if (_portraitSlideCoroutine != null) StopCoroutine(_portraitSlideCoroutine);
+                _portraitSlideCoroutine = StartCoroutine(SlideInPortrait());
+                _lastPortraitSpeaker = speaker;
+            }
+        }
+
+        private void BuildPortraitUI()
+        {
+            if (_dialoguePanel == null) return;
+
+            _portraitContainer = new GameObject("PortraitContainer");
+            _portraitContainer.transform.SetParent(_dialoguePanel.transform, false);
+
+            var containerImg = _portraitContainer.AddComponent<Image>();
+            containerImg.color = new Color(0.08f, 0.06f, 0.12f, 0.85f);
+            containerImg.raycastTarget = false;
+            var crt = containerImg.rectTransform;
+            crt.anchorMin = new Vector2(-0.01f, 0.1f);
+            crt.anchorMax = new Vector2(0.18f, 1.05f);
+            crt.sizeDelta = Vector2.zero;
+
+            var portraitGo = new GameObject("Portrait");
+            portraitGo.transform.SetParent(_portraitContainer.transform, false);
+            _portraitImage = portraitGo.AddComponent<Image>();
+            _portraitImage.preserveAspect = true;
+            _portraitImage.raycastTarget = false;
+            var prt = _portraitImage.rectTransform;
+            prt.anchorMin = new Vector2(0.05f, 0.05f);
+            prt.anchorMax = new Vector2(0.95f, 0.95f);
+            prt.sizeDelta = Vector2.zero;
+        }
+
+        private static Sprite LoadPortrait(string speakerKey)
+        {
+            var tex = Resources.Load<Texture2D>($"Sprites/{speakerKey}_portrait");
+            if (tex == null) return null;
+            return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height),
+                new Vector2(0.5f, 0.5f), 16f);
+        }
+
+        private static Sprite GeneratePortraitFromSpriteSheet(string speakerKey)
+        {
+            var idleSprite = Visuals.SpriteSheetLoader.GetIdleSprite(speakerKey);
+            if (idleSprite == null) return null;
+
+            int size = 48;
+            var srcTex = idleSprite.texture;
+            var srcRect = idleSprite.textureRect;
+
+            var portrait = new Texture2D(size, size, TextureFormat.RGBA32, false);
+            portrait.filterMode = FilterMode.Point;
+
+            var bgColor = new Color(0.1f, 0.08f, 0.14f, 0f);
+            var pixels = new Color[size * size];
+            for (int i = 0; i < pixels.Length; i++) pixels[i] = bgColor;
+
+            int srcW = (int)srcRect.width;
+            int srcH = (int)srcRect.height;
+            int scale = size / Mathf.Max(srcW, srcH);
+            if (scale < 1) scale = 1;
+
+            int offsetX = (size - srcW * scale) / 2;
+            int offsetY = (size - srcH * scale) / 2;
+
+            for (int sy = 0; sy < srcH; sy++)
+            {
+                for (int sx = 0; sx < srcW; sx++)
+                {
+                    var srcPixel = srcTex.GetPixel((int)srcRect.x + sx, (int)srcRect.y + sy);
+                    if (srcPixel.a < 0.1f) continue;
+                    for (int dy = 0; dy < scale; dy++)
+                        for (int dx = 0; dx < scale; dx++)
+                        {
+                            int px = offsetX + sx * scale + dx;
+                            int py = offsetY + sy * scale + dy;
+                            if (px >= 0 && px < size && py >= 0 && py < size)
+                                pixels[py * size + px] = srcPixel;
+                        }
+                }
+            }
+
+            portrait.SetPixels(pixels);
+            portrait.Apply();
+            return Sprite.Create(portrait, new Rect(0, 0, size, size), Vector2.one * 0.5f, 16f);
+        }
+
+        private static Color GetPortraitTint(string emotion)
+        {
+            if (string.IsNullOrEmpty(emotion)) return Color.white;
+            switch (emotion.ToLower())
+            {
+                case "angry": case "rage": return new Color(1.1f, 0.85f, 0.85f);
+                case "sad": case "sorrowful": return new Color(0.85f, 0.85f, 1.0f);
+                case "joyful": case "happy": return new Color(1.0f, 1.0f, 0.9f);
+                case "scared": case "fearful": return new Color(0.9f, 0.88f, 1.0f);
+                default: return Color.white;
+            }
+        }
+
+        private IEnumerator SlideInPortrait()
+        {
+            if (_portraitContainer == null) yield break;
+            var rt = _portraitContainer.GetComponent<RectTransform>();
+            if (rt == null) yield break;
+
+            float t = 0;
+            float dur = 0.25f;
+            while (t < dur)
+            {
+                t += Time.unscaledDeltaTime;
+                float p = Mathf.SmoothStep(0, 1, t / dur);
+                float xOff = Mathf.Lerp(-30f, 0, p);
+                rt.anchoredPosition = new Vector2(xOff, 0);
+                yield return null;
+            }
+            rt.anchoredPosition = Vector2.zero;
+        }
+
+        #endregion
     }
 }
