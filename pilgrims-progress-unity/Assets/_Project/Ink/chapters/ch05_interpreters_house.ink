@@ -295,3 +295,48 @@
     [ End of Chapter 5 — Interpreter's House ]
 }
 -> ch06_opening
+
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch05_interpreter ===
+# SPEAKER: Interpreter
+# EMOTION: wise
+{lang == "ko":
+    어서 오시오, 순례자여. 나는 해석자라 하오. 이 집에서 여정에 도움이 될 것들을 보여주리다.
+- else:
+    Welcome, pilgrim. I am the Interpreter. In this house I will show you things that will help on your journey.
+}
+# SPEAKER: Christian
+# EMOTION: curious
+{lang == "ko":
+    감사합니다, 해석자님. 무엇을 보여주시렵니까?
+- else:
+    Thank you, Interpreter. What will you show me?
+}
+# SPEAKER: Interpreter
+# EMOTION: teaching
+{lang == "ko":
+    세 가지 방을 보여주리다. 첫째, 참된 목자의 초상화. 이 사람만이 네 영혼을 인도할 수 있소.
+- else:
+    I will show you three rooms. First, a portrait of the true Shepherd. Only such a person can guide your soul.
+}
+{lang == "ko":
+    둘째, 인내와 열정의 방. 영원한 보상을 위해 기다리는 것이 얼마나 귀한지 보게 될 것이오.
+- else:
+    Second, the room of Patience and Passion. You will see how precious it is to wait for eternal rewards.
+}
+{lang == "ko":
+    셋째, 꺼지지 않는 불의 방. 은혜의 기름이 불을 계속 타오르게 하는 것을 보리라.
+- else:
+    Third, the room of the undying fire. You will see how the oil of grace keeps the flame burning.
+}
+# STAT: wisdom +5
+# STAT: faith +3
+# SPEAKER: Interpreter
+# EMOTION: encouraging
+{lang == "ko":
+    이것들을 마음에 새기시오. 앞으로의 여정에서 큰 힘이 될 것이오.
+- else:
+    Keep these things in your heart. They will be a great strength in the journey ahead.
+}
+-> DONE

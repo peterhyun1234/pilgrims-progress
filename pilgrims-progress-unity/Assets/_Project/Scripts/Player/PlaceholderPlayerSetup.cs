@@ -12,79 +12,17 @@ namespace PilgrimsProgress.Player
 
         private void Awake()
         {
-            SetupSprite();
             SetupCollider();
             SetupInteractionDetector();
         }
 
-        private void SetupSprite()
-        {
-            var sr = GetComponent<SpriteRenderer>();
-            if (sr == null) sr = gameObject.AddComponent<SpriteRenderer>();
-
-            var chapterMgr = ChapterManager.Instance;
-            int chapter = chapterMgr != null ? chapterMgr.CurrentChapter : 1;
-            string spriteId = chapter >= 6 ? "christian_free" : "christian";
-
-            var sprite = SpriteSheetLoader.GetIdleSprite(spriteId);
-            if (sprite != null)
-            {
-                sr.sprite = sprite;
-                sr.sortingOrder = 10;
-                return;
-            }
-
-            var custManager = ServiceLocator.TryGet<PlayerCustomizationManager>(out var cm) ? cm : null;
-            if (custManager != null && custManager.Presets != null)
-            {
-                var builtSprite = CharacterSpriteBuilder.Build(
-                    custManager.CurrentCustomization, custManager.Presets);
-                if (builtSprite != null)
-                {
-                    sr.sprite = builtSprite;
-                    sr.sortingOrder = 10;
-                    return;
-                }
-            }
-
-            BuildFallbackSprite(sr);
-        }
-
-        private void BuildFallbackSprite(SpriteRenderer sr)
-        {
-            int s = _spriteSize;
-            var tex = new Texture2D(s, s);
-            var pixels = new Color[s * s];
-            var playerColor = new Color(0.3f, 0.5f, 0.9f);
-            var burdenColor = new Color(0.5f, 0.35f, 0.2f);
-
-            for (int x = 0; x < s; x++)
-            {
-                for (int y = 0; y < s; y++)
-                {
-                    int i = y * s + x;
-                    bool isBody = x >= 4 && x < 12 && y >= 0 && y < 12;
-                    bool isHead = x >= 5 && x < 11 && y >= 9 && y < 15;
-                    bool isBurden = x >= 6 && x < 13 && y >= 11 && y < 16;
-
-                    if (isBurden) pixels[i] = burdenColor;
-                    else if (isHead) pixels[i] = playerColor;
-                    else if (isBody) pixels[i] = playerColor * 0.8f;
-                    else pixels[i] = Color.clear;
-                }
-            }
-
-            tex.SetPixels(pixels);
-            tex.Apply();
-            tex.filterMode = FilterMode.Point;
-
-            sr.sprite = Sprite.Create(tex, new Rect(0, 0, s, s), new Vector2(0.5f, 0.25f), s);
-            sr.sortingOrder = 10;
-        }
-
         public void RefreshSprite()
         {
-            SetupSprite();
+            var animator = GetComponent<PlayerAnimator>();
+            if (animator != null)
+            {
+                animator.RefreshCustomization();
+            }
         }
 
         private void SetupCollider()

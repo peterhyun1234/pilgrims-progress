@@ -26,7 +26,10 @@
     "No! If we sleep here, we shall never wake again. Let us talk as we walk."
 }
 
-* {lang == "ko": [소망에게 회심 이야기를 물어본다] -> ch12_hopeful_story} {lang != "ko": [Ask Hopeful about his conversion] -> ch12_hopeful_story}
++ {lang == "ko"} [소망에게 회심 이야기를 물어본다]
+    -> ch12_hopeful_story
++ {lang != "ko"} [Ask Hopeful about his conversion]
+    -> ch12_hopeful_story
 
 === ch12_hopeful_story ===
 ~ wisdom += 5
@@ -69,8 +72,14 @@
     "I too will enter the Celestial City. I am a good person. Isn't a good heart enough?"
 }
 
-* {lang == "ko": [경고한다] "좁은 문으로 들어가야 합니다." -> ch12_warn_ignorance} {lang != "ko": [Warn him] "You must enter through the narrow gate." -> ch12_warn_ignorance}
-* {lang == "ko": [대화를 이어간다] "그 마음은 어디에서 오는 것입니까?" -> ch12_discuss_ignorance} {lang != "ko": [Continue the conversation] "Where does that confidence come from?" -> ch12_discuss_ignorance}
++ {lang == "ko"} [경고한다] "좁은 문으로 들어가야 합니다."
+    -> ch12_warn_ignorance
++ {lang != "ko"} [Warn him] "You must enter through the narrow gate."
+    -> ch12_warn_ignorance
++ {lang == "ko"} [대화를 이어간다] "그 마음은 어디에서 오는 것입니까?"
+    -> ch12_discuss_ignorance
++ {lang != "ko"} [Continue the conversation] "Where does that confidence come from?"
+    -> ch12_discuss_ignorance
 
 === ch12_warn_ignorance ===
 ~ wisdom += 5
@@ -169,7 +178,10 @@
 ~ bible_card_isa_43_2 = true
 # BIBLE_CARD: isa_43_2
 
-* {lang == "ko": [용기를 내어 강에 들어간다] -> ch12_crossing} {lang != "ko": [Enter the river with courage] -> ch12_crossing}
++ {lang == "ko"} [용기를 내어 강에 들어간다]
+    -> ch12_crossing
++ {lang != "ko"} [Enter the river with courage]
+    -> ch12_crossing
 
 === ch12_crossing ===
 # SFX: water_splash
@@ -316,3 +328,36 @@
 }
 
 -> epilogue_start
+
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch12_hopeful_companion ===
+# SPEAKER: Hopeful
+# EMOTION: warm
+{lang == "ko":
+    크리스천, 마지막 여정이오. 우리가 함께 왔으니, 함께 끝까지 가세.
+- else:
+    Christian, this is the final stretch. We've come this far together; let us finish together.
+}
+# SPEAKER: Christian
+# EMOTION: grateful
+{lang == "ko":
+    소망이여, 당신이 함께여서 정말 감사합니다. 혼자였다면 의심의 성에서 벗어나지 못했을 겁니다.
+- else:
+    Hopeful, I am so grateful you're with me. I could not have escaped Doubting Castle alone.
+}
+# SPEAKER: Hopeful
+# EMOTION: encouraging
+{lang == "ko":
+    두려워 마시오. 저 앞에 강이 있을 것이나, 그 너머에 천상의 도시가 기다리고 있소.
+- else:
+    Do not fear. There will be a river ahead, but beyond it the Celestial City awaits.
+}
+{lang == "ko":
+    "내가 사망의 음침한 골짜기로 다닐지라도 해를 두려워하지 않을 것은 주께서 나와 함께 하심이라." (시편 23:4)
+- else:
+    "Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me." (Psalm 23:4)
+}
+# STAT: courage +5
+# STAT: faith +5
+-> DONE

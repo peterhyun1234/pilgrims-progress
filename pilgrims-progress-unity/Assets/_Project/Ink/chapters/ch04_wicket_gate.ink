@@ -212,3 +212,50 @@
     [ End of Chapter 4 — The Wicket Gate ]
 }
 -> ch05_opening
+
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch04_goodwill ===
+# SPEAKER: Good-will
+# EMOTION: welcoming
+{lang == "ko":
+    누가 거기 있소? 문을 두드리는 자여!
+- else:
+    Who is there? You who knock at the gate!
+}
+# SPEAKER: Christian
+# EMOTION: desperate
+{lang == "ko":
+    저는 멸망의 도시에서 온 불쌍한 순례자입니다. 이 짐을 지고 더는 견딜 수 없습니다. 들여보내 주십시오!
+- else:
+    I am a poor pilgrim from the City of Destruction. I can bear this burden no longer. Please let me in!
+}
+# SFX: door_open
+# SPEAKER: Good-will
+# EMOTION: kind
+{lang == "ko":
+    기꺼이! 이리 오시오.
+- else:
+    Gladly! Come in, come in.
+}
+{lang == "ko":
+    이 문은 좁지만, 진심으로 구하는 자에게는 항상 열려 있소. "두드리라, 그러면 열릴 것이요." (마태복음 7:7)
+- else:
+    This gate is narrow, but it is always open to those who truly seek. "Knock, and it shall be opened to you." (Matthew 7:7)
+}
+# STAT: faith +4
+# STAT: courage +2
++ {lang == "ko"} 감사합니다. 이 짐은 어떻게 벗을 수 있습니까?
+    # SPEAKER: Good-will
+    {lang == "ko":
+        이 길을 따라가면 십자가에 이르게 되오. 그곳에서 짐이 풀리리라. 먼저 해석자의 집에 들르시오.
+    - else:
+        Follow this path and you will reach the Cross. There your burden will fall away. But first, visit the Interpreter's House.
+    }
+    # STAT: wisdom +2
+    -> DONE
++ {lang != "ko"} Thank you. How can I be rid of this burden?
+    # SPEAKER: Good-will
+    Follow this path and you will reach the Cross. There your burden will fall away. But first, visit the Interpreter's House.
+    # STAT: wisdom +2
+    -> DONE

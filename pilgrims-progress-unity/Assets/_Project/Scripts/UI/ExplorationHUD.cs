@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.InputSystem;
 using TMPro;
 using PilgrimsProgress.Core;
 using PilgrimsProgress.Narrative;
@@ -47,7 +48,9 @@ namespace PilgrimsProgress.UI
             {
                 _statsManager.OnStatChanged += HandleStatChanged;
                 _statsManager.OnBurdenChanged += HandleBurdenChanged;
+                _statsManager.OnTierChanged += HandleTierChanged;
                 UpdateAllBars();
+                UpdateLabelsWithTiers();
             }
 
             if (_modeManager != null)
@@ -66,6 +69,7 @@ namespace PilgrimsProgress.UI
             {
                 _statsManager.OnStatChanged -= HandleStatChanged;
                 _statsManager.OnBurdenChanged -= HandleBurdenChanged;
+                _statsManager.OnTierChanged -= HandleTierChanged;
             }
 
             if (_modeManager != null)
@@ -88,6 +92,19 @@ namespace PilgrimsProgress.UI
                 _interactText.text = text;
         }
 
+        private void Update()
+        {
+            var kb = Keyboard.current;
+            if (kb == null) return;
+
+            if (kb.tabKey.wasPressedThisFrame)
+            {
+                var modeManager = GameModeManager.Instance;
+                if (modeManager != null && modeManager.CurrentMode == GameMode.Exploration)
+                    JourneyMapUI.Instance?.Show();
+            }
+        }
+
         private void HandleStatChanged(string statName, int oldVal, int newVal)
         {
             float normalized = newVal / (float)CharacterStats.MaxStatValue;
@@ -96,14 +113,81 @@ namespace PilgrimsProgress.UI
             {
                 case "faith":
                     if (_faithBar != null) _faithBar.fillAmount = normalized;
+                    UpdateBarColor(_faithBar, statName, newVal);
                     break;
                 case "courage":
                     if (_courageBar != null) _courageBar.fillAmount = normalized;
+                    UpdateBarColor(_courageBar, statName, newVal);
                     break;
                 case "wisdom":
                     if (_wisdomBar != null) _wisdomBar.fillAmount = normalized;
+                    UpdateBarColor(_wisdomBar, statName, newVal);
                     break;
             }
+            UpdateLabelsWithTiers();
+        }
+
+        private void HandleTierChanged(string stat, StatTier oldTier, StatTier newTier)
+        {
+            UpdateLabelsWithTiers();
+        }
+
+        private void UpdateLabelsWithTiers()
+        {
+            if (_statsManager == null) return;
+
+            var lm = ServiceLocator.TryGet<Localization.LocalizationManager>(out var l) ? l : null;
+            bool isKo = lm != null && lm.CurrentLanguage == "ko";
+
+            if (_faithLabel != null)
+            {
+                string tier = GetTierSymbol(_statsManager.GetFaithTier());
+                _faithLabel.text = isKo ? $"믿음 {tier}" : $"Faith {tier}";
+            }
+            if (_courageLabel != null)
+            {
+                string tier = GetTierSymbol(_statsManager.GetCourageTier());
+                _courageLabel.text = isKo ? $"용기 {tier}" : $"Courage {tier}";
+            }
+            if (_wisdomLabel != null)
+            {
+                string tier = GetTierSymbol(_statsManager.GetWisdomTier());
+                _wisdomLabel.text = isKo ? $"지혜 {tier}" : $"Wisdom {tier}";
+            }
+        }
+
+        private static string GetTierSymbol(StatTier tier)
+        {
+            switch (tier)
+            {
+                case StatTier.Mastered: return "\u2605";  // filled star
+                case StatTier.High: return "\u2606";       // empty star
+                case StatTier.Medium: return "\u25C6";     // diamond
+                case StatTier.Low: return "\u25CB";         // circle
+                default: return "\u25CB";
+            }
+        }
+
+        private void UpdateBarColor(Image bar, string stat, int value)
+        {
+            if (bar == null) return;
+            var tier = StatsManager.GetTier(value);
+
+            Color baseColor;
+            switch (stat.ToLower())
+            {
+                case "faith": baseColor = new Color(0.9f, 0.8f, 0.3f); break;
+                case "courage": baseColor = new Color(0.3f, 0.6f, 0.9f); break;
+                case "wisdom": baseColor = new Color(0.4f, 0.8f, 0.4f); break;
+                default: baseColor = Color.white; break;
+            }
+
+            if (tier == StatTier.Mastered)
+                bar.color = Color.Lerp(baseColor, Color.white, 0.3f);
+            else if (tier == StatTier.Depleted)
+                bar.color = Color.Lerp(baseColor, new Color(0.5f, 0.3f, 0.3f), 0.5f);
+            else
+                bar.color = baseColor;
         }
 
         private void HandleBurdenChanged(int oldVal, int newVal)

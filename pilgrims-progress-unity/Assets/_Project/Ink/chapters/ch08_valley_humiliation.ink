@@ -53,8 +53,14 @@
     "You are my subject! The City of Destruction belongs to me. Return, and I will reward you."
 }
 
-* {lang == "ko": [단호히 거절한다] "결코 돌아가지 않겠소!" -> ch08_refuse} {lang != "ko": [Refuse firmly] "I will never go back!" -> ch08_refuse}
-* {faith >= 50} {lang == "ko": [성경 말씀으로 대답한다] "기록되었으되..." -> ch08_scripture_reply} {lang != "ko": [Reply with Scripture] "It is written..." -> ch08_scripture_reply}
++ {lang == "ko"} [단호히 거절한다] "결코 돌아가지 않겠소!"
+    -> ch08_refuse
++ {lang != "ko"} [Refuse firmly] "I will never go back!"
+    -> ch08_refuse
++ {faith >= 50} {lang == "ko"} [성경 말씀으로 대답한다] "기록되었으되..."
+    -> ch08_scripture_reply
++ {faith >= 50} {lang != "ko"} [Reply with Scripture] "It is written..."
+    -> ch08_scripture_reply
 
 === ch08_refuse ===
 ~ courage += 5
@@ -113,7 +119,10 @@
     {player_name} was wounded but did not fall. At last, the sword of the Spirit was drawn.
 }
 
-* {lang == "ko": [검을 휘두른다] "야곱의 하나님께 감사하리라!" -> ch08_victory} {lang != "ko": [Strike with the sword] "Thanks be to the God of Jacob!" -> ch08_victory}
++ {lang == "ko"} [검을 휘두른다] "야곱의 하나님께 감사하리라!"
+    -> ch08_victory
++ {lang != "ko"} [Strike with the sword] "Thanks be to the God of Jacob!"
+    -> ch08_victory
 
 === ch08_victory ===
 # SFX: sword_strike
@@ -160,3 +169,58 @@
 }
 
 -> ch09_opening
+
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch08_apollyon_battle ===
+# SPEAKER: Apollyon
+# EMOTION: threatening
+{lang == "ko":
+    멈춰라! 나는 아폴리온, 이 골짜기의 왕이다. 네가 어디서 왔고 어디로 가는지 알고 있다.
+- else:
+    Stop! I am Apollyon, prince of this valley. I know where you came from and where you're going.
+}
+# SPEAKER: Christian
+# EMOTION: scared
+{lang == "ko":
+    나는... 나는 천상의 도시를 향해 가는 순례자입니다.
+- else:
+    I am... I am a pilgrim bound for the Celestial City.
+}
+# SPEAKER: Apollyon
+# EMOTION: rage
+{lang == "ko":
+    너는 한때 내 백성이었다! 멸망의 도시는 내 영토다. 돌아가라! 아니면 여기서 끝장내주마!
+- else:
+    You were once my subject! The City of Destruction is my territory. Turn back, or I will destroy you here!
+}
++ {lang == "ko"} 나는 만왕의 왕을 섬기기로 했습니다. 물러서시오!
+    # SPEAKER: Apollyon
+    # EMOTION: rage
+    {lang == "ko":
+        그렇다면 쓰러뜨려주마!
+    - else:
+        Then I will strike you down!
+    }
+    # SHAKE: strong
+    # SPEAKER: Christian
+    # EMOTION: prayerful
+    {lang == "ko":
+        "너는 칼과 창으로 오지만, 나는 만군의 여호와의 이름으로 나아간다!" (사무엘상 17:45)
+    - else:
+        "You come with sword and spear, but I come in the name of the Lord of Hosts!" (1 Samuel 17:45)
+    }
+    # STAT: courage +8
+    # STAT: faith +5
+    -> DONE
++ {lang != "ko"} I serve the King of kings now. Stand aside!
+    # SPEAKER: Apollyon
+    # EMOTION: rage
+    Then I will strike you down!
+    # SHAKE: strong
+    # SPEAKER: Christian
+    # EMOTION: prayerful
+    "You come with sword and spear, but I come in the name of the Lord of Hosts!" (1 Samuel 17:45)
+    # STAT: courage +8
+    # STAT: faith +5
+    -> DONE

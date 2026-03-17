@@ -1,5 +1,9 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 using PilgrimsProgress.Visuals;
+using PilgrimsProgress.Core;
+using PilgrimsProgress.UI;
 
 namespace PilgrimsProgress.Interaction
 {
@@ -13,12 +17,14 @@ namespace PilgrimsProgress.Interaction
         private float _idleTimer;
         private int _idleFrame;
         private bool _useSpriteSheet;
+        private GameObject _nameLabel;
 
         private void Awake()
         {
             SetupSprite();
             SetupCollider();
             SetupPromptIcon();
+            SetupNameLabel();
         }
 
         private void SetupSprite()
@@ -104,6 +110,70 @@ namespace PilgrimsProgress.Interaction
         {
             _npcId = id;
             SetupSprite();
+            SetupNameLabel();
+        }
+
+        private void SetupNameLabel()
+        {
+            if (string.IsNullOrEmpty(_npcId)) return;
+            if (_nameLabel != null) Destroy(_nameLabel);
+
+            var lm = ServiceLocator.TryGet<Localization.LocalizationManager>(out var l) ? l : null;
+            string lang = lm != null ? lm.CurrentLanguage : "en";
+            string speakerId = GetSpeakerIdFromNpcId(_npcId);
+            string displayName = DialogueUI.GetLocalizedName(speakerId, lang);
+
+            _nameLabel = new GameObject("NameCanvas");
+            _nameLabel.transform.SetParent(transform);
+            _nameLabel.transform.localPosition = new Vector3(0, -0.7f, 0);
+            _nameLabel.transform.localScale = new Vector3(0.012f, 0.012f, 1f);
+
+            var canvas = _nameLabel.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.WorldSpace;
+            canvas.sortingOrder = 21;
+            var rt = canvas.GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(200, 30);
+
+            var textGo = new GameObject("NameText");
+            textGo.transform.SetParent(_nameLabel.transform, false);
+            var tmp = textGo.AddComponent<TextMeshProUGUI>();
+            tmp.text = displayName;
+            tmp.fontSize = 22;
+            tmp.color = new Color(0.95f, 0.88f, 0.6f, 0.9f);
+            tmp.alignment = TextAlignmentOptions.Center;
+            tmp.enableWordWrapping = false;
+            var trt = tmp.rectTransform;
+            trt.anchorMin = Vector2.zero;
+            trt.anchorMax = Vector2.one;
+            trt.sizeDelta = Vector2.zero;
+
+            KoreanFontSetup.ApplyToAll();
+        }
+
+        private static string GetSpeakerIdFromNpcId(string npcId)
+        {
+            switch (npcId)
+            {
+                case "evangelist": return "Evangelist";
+                case "obstinate": return "Obstinate";
+                case "pliable": return "Pliable";
+                case "help": return "Help";
+                case "worldly_wiseman": return "Worldly Wiseman";
+                case "goodwill": return "Good-will";
+                case "interpreter": return "Interpreter";
+                case "shining1": case "shining2": case "shining3": return "Shining One";
+                case "prudence": return "Prudence";
+                case "piety": return "Piety";
+                case "charity": return "Charity";
+                case "apollyon": return "Apollyon";
+                case "faithful": return "Faithful";
+                case "hopeful": return "Hopeful";
+                case "byends": return "By-ends";
+                case "giant_despair": return "Giant Despair";
+                case "shepherd1": case "shepherd2": return "Shepherd";
+                case "ignorance": return "Ignorance";
+                default: return npcId;
+            }
         }
     }
 }

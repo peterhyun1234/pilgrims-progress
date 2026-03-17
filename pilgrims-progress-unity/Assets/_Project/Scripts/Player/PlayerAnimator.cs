@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using PilgrimsProgress.Core;
 using PilgrimsProgress.Visuals;
@@ -12,6 +13,7 @@ namespace PilgrimsProgress.Player
 
         private SpriteRenderer _sr;
         private PlayerController _controller;
+        private CharacterAnimationFX _animFx;
         private Sprite[] _sprites;
         private float _frameTimer;
         private int _currentWalkFrame;
@@ -20,15 +22,26 @@ namespace PilgrimsProgress.Player
 
         private Sprite _fallbackSprite;
 
+        public CharacterAnimationFX AnimFX => _animFx;
+
         private void Awake()
         {
             _sr = GetComponent<SpriteRenderer>();
             _controller = GetComponent<PlayerController>();
+            _animFx = GetComponent<CharacterAnimationFX>();
+            if (_animFx == null)
+                _animFx = gameObject.AddComponent<CharacterAnimationFX>();
         }
 
         private void Start()
         {
             LoadSprites();
+            ApplyCustomizationTint();
+        }
+
+        public void PlayAction(AnimAction action, Action onComplete = null)
+        {
+            _animFx?.Play(action, onComplete);
         }
 
         private void LoadSprites()
@@ -39,7 +52,7 @@ namespace PilgrimsProgress.Player
 
             if (_useSpriteSheet)
             {
-                _sr.sprite = _sprites[0]; // idle down
+                _sr.sprite = _sprites[0];
             }
             else
             {
@@ -52,6 +65,21 @@ namespace PilgrimsProgress.Player
             var chapterMgr = ChapterManager.Instance;
             int chapter = chapterMgr != null ? chapterMgr.CurrentChapter : 1;
             return chapter >= 6 ? "christian_free" : "christian";
+        }
+
+        private void ApplyCustomizationTint()
+        {
+            var custManager = PlayerCustomizationManager.Instance;
+            if (custManager == null)
+                ServiceLocator.TryGet<PlayerCustomizationManager>(out custManager);
+
+            if (custManager == null || custManager.Presets == null) return;
+
+            Color outfitColor = custManager.GetOutfitColor();
+            float h, s, v;
+            Color.RGBToHSV(outfitColor, out h, out s, out v);
+
+            _sr.color = Color.HSVToRGB(h, s * 0.6f, Mathf.Clamp(v * 1.1f, 0, 1));
         }
 
         private void BuildFallbackSprite()
@@ -69,16 +97,32 @@ namespace PilgrimsProgress.Player
             }
         }
 
+        public void RefreshCustomization()
+        {
+            ApplyCustomizationTint();
+            if (!_useSpriteSheet)
+            {
+                BuildFallbackSprite();
+            }
+        }
+
         private void Update()
         {
             if (_controller == null) return;
+            if (_animFx != null && _animFx.IsPlaying) return;
 
             UpdateDirection();
 
             if (_controller.IsMoving)
+            {
                 AnimateWalk();
+                _animFx?.WalkBob(true);
+            }
             else
+            {
                 ShowIdle();
+                _animFx?.WalkBob(false);
+            }
         }
 
         private void UpdateDirection()
@@ -102,15 +146,11 @@ namespace PilgrimsProgress.Player
             if (_frameTimer >= 1f / _frameRate)
             {
                 _frameTimer -= 1f / _frameRate;
-                _currentWalkFrame = (_currentWalkFrame % 2) + 1; // Alternate between frame 1 and 2
+                _currentWalkFrame = (_currentWalkFrame % 2) + 1;
             }
 
-            var sprite = SpriteSheetLoader.GetSprite("christian", _currentDir, _currentWalkFrame);
-            if (sprite == null)
-            {
-                string id = GetPlayerSpriteId();
-                sprite = SpriteSheetLoader.GetSprite(id, _currentDir, _currentWalkFrame);
-            }
+            string id = GetPlayerSpriteId();
+            var sprite = SpriteSheetLoader.GetSprite(id, _currentDir, _currentWalkFrame);
             if (sprite != null) _sr.sprite = sprite;
         }
 

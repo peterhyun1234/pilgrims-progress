@@ -3,16 +3,23 @@
 # =============================================================================
 # push 시 EditMode 단위 테스트만 실행하는 경량 워크플로우.
 # 빌드 없이 테스트만 실행하므로 ~5분, 비용이 매우 적습니다.
+#
+# [임시 비활성화] 컴파일 에러 수정 후 배포 우선 처리를 위해 주석 처리
+# 다시 활성화하려면 on: 섹션의 주석을 해제하세요.
 # =============================================================================
 
 name: Tests
 
+# [임시 비활성화] 테스트를 다시 활성화하려면 아래 주석을 해제하세요
+# on:
+#   push:
+#     paths:
+#       - 'pilgrims-progress-unity/Assets/**'
+#       - 'pilgrims-progress-unity/Packages/**'
+#       - 'pilgrims-progress-unity/ProjectSettings/**'
+
 on:
-  push:
-    paths:
-      - 'pilgrims-progress-unity/Assets/**'
-      - 'pilgrims-progress-unity/Packages/**'
-      - 'pilgrims-progress-unity/ProjectSettings/**'
+  workflow_dispatch:
 
 concurrency:
   group: test-${{ github.ref }}

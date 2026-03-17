@@ -121,12 +121,24 @@ namespace PilgrimsProgress.Player
 
         private float CalculateSpeed()
         {
-            int burden = 0;
-            if (StatsManager.Instance != null)
-                burden = StatsManager.Instance.Stats.Burden;
+            var stats = StatsManager.Instance;
+            if (stats == null)
+                return _baseSpeed;
 
-            float burdenMod = 1f - (burden * _burdenSpeedFactor);
-            return _baseSpeed * Mathf.Max(_minSpeedMultiplier, burdenMod);
+            float burdenMod = Mathf.Max(_minSpeedMultiplier, stats.GetBurdenSpeedPenalty());
+            float speed = _baseSpeed * burdenMod;
+
+            var chapterMgr = ChapterManager.Instance;
+            bool isDarkArea = chapterMgr != null &&
+                Core.ChapterDatabase.Get(chapterMgr.CurrentChapter).Theme == Core.MapTheme.DarkValley;
+
+            if (isDarkArea)
+                speed *= stats.GetDarkAreaSpeedMultiplier();
+
+            if (stats.GetCourageTier() >= StatTier.High)
+                speed *= 1.05f;
+
+            return speed;
         }
 
         private void TryInteract()

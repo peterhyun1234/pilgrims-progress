@@ -383,3 +383,83 @@
     [ End of Chapter 1 — City of Destruction ]
 }
 -> ch02_opening
+
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch01_obstinate ===
+# SPEAKER: Obstinate
+# EMOTION: annoyed
+{lang == "ko":
+    크리스천! 너 대체 어디를 가겠다는 거야? 이 도시가 네 집이잖아!
+- else:
+    Christian! Where on earth do you think you're going? This city is your home!
+}
+# SPEAKER: Christian
+# EMOTION: determined
+{lang == "ko":
+    이 도시는 곧 멸망합니다. 전도자께서 알려주신 빛을 향해 가야 합니다.
+- else:
+    This city will be destroyed. I must go toward the light the Evangelist showed me.
+}
+# SPEAKER: Obstinate
+# EMOTION: mocking
+{lang == "ko":
+    불과 유황으로 멸망한다고? 허튼소리! 네 가족은 어떡하고?
+- else:
+    Fire and brimstone? Nonsense! What about your family?
+}
++ {lang == "ko"} 함께 가시지 않겠습니까? 이것은 진실입니다.
+    # SPEAKER: Obstinate
+    # EMOTION: angry
+    {lang == "ko":
+        절대로! 너야말로 정신 차려. 난 돌아간다!
+    - else:
+        Never! You need to come to your senses. I'm going back!
+    }
+    # STAT: courage +3
+    -> DONE
++ {lang != "ko"} Won't you come with me? This is the truth.
+    # SPEAKER: Obstinate
+    # EMOTION: angry
+    Never! You need to come to your senses. I'm going back!
+    # STAT: courage +3
+    -> DONE
+
+=== ch01_pliable ===
+# SPEAKER: Pliable
+# EMOTION: curious
+{lang == "ko":
+    크리스천, 네가 가려는 곳에 대해 더 이야기해 줘. 정말 좋은 곳이야?
+- else:
+    Christian, tell me more about this place you seek. Is it truly wonderful?
+}
+# SPEAKER: Christian
+# EMOTION: hopeful
+{lang == "ko":
+    네! 결코 죽지 않는 생명이 있고, 왕관과 영광이 있는 나라입니다.
+- else:
+    Yes! There is life that never ends, crowns of glory, and a kingdom of light.
+}
+# SPEAKER: Pliable
+# EMOTION: excited
+{lang == "ko":
+    그런 보상이 있다면 충분해! 나도 함께 가겠어!
+- else:
+    If such rewards await, that's enough for me! I'll come with you!
+}
++ {lang == "ko"} 함께 갑시다! 하지만 쉬운 길은 아닐 거예요.
+    # SPEAKER: Pliable
+    # EMOTION: worried
+    {lang == "ko":
+        쉽지 않다고? 음... 그래도 한번 가보자.
+    - else:
+        Not easy? Well... let's try anyway.
+    }
+    # STAT: faith +2
+    -> DONE
++ {lang != "ko"} Let's go together! But the path won't be easy.
+    # SPEAKER: Pliable
+    # EMOTION: worried
+    Not easy? Well... let's try anyway.
+    # STAT: faith +2
+    -> DONE

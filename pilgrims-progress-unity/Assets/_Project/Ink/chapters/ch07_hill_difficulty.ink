@@ -19,8 +19,14 @@
     The steep path went straight up, while easier roads curved left and right.
 }
 
-* {lang == "ko": [곧은 길로 올라간다] "어려워도 바른 길로 가자." -> ch07_steep_path} {lang != "ko": [Take the steep path] "Though hard, I'll take the right way." -> ch07_steep_path}
-* {lang == "ko": [왼쪽 편한 길로 간다] 편한 길이 눈에 들어왔다. -> ch07_wrong_path} {lang != "ko": [Take the easier left path] The easy road looked inviting. -> ch07_wrong_path}
++ {lang == "ko"} [곧은 길로 올라간다] "어려워도 바른 길로 가자."
+    -> ch07_steep_path
++ {lang != "ko"} [Take the steep path] "Though hard, I'll take the right way."
+    -> ch07_steep_path
++ {lang == "ko"} [왼쪽 편한 길로 간다] 편한 길이 눈에 들어왔다.
+    -> ch07_wrong_path
++ {lang != "ko"} [Take the easier left path] The easy road looked inviting.
+    -> ch07_wrong_path
 
 === ch07_steep_path ===
 ~ courage += 10
@@ -67,7 +73,10 @@
     Resting in the arbor, sleep overtook the pilgrim. Upon waking — the scroll had fallen!
 }
 
-* {lang == "ko": [두루마리를 찾으러 되돌아간다] -> ch07_retrieve_scroll} {lang != "ko": [Go back for the scroll] -> ch07_retrieve_scroll}
++ {lang == "ko"} [두루마리를 찾으러 되돌아간다]
+    -> ch07_retrieve_scroll
++ {lang != "ko"} [Go back for the scroll]
+    -> ch07_retrieve_scroll
 
 === ch07_retrieve_scroll ===
 ~ wisdom += 5
@@ -100,8 +109,14 @@
     A watchman called from afar: "Fear not! They are chained. Walk in the middle of the path!"
 }
 
-* {courage >= 30} {lang == "ko": [용기를 내어 한가운데로 걸어간다] -> ch07_pass_lions} {lang != "ko": [Walk boldly through the middle] -> ch07_pass_lions}
-* {lang == "ko": [조심스럽게 천천히 지나간다] -> ch07_pass_lions_slow} {lang != "ko": [Pass carefully and slowly] -> ch07_pass_lions_slow}
++ {courage >= 30} {lang == "ko"} [용기를 내어 한가운데로 걸어간다]
+    -> ch07_pass_lions
++ {courage >= 30} {lang != "ko"} [Walk boldly through the middle]
+    -> ch07_pass_lions
++ {lang == "ko"} [조심스럽게 천천히 지나간다]
+    -> ch07_pass_lions_slow
++ {lang != "ko"} [Pass carefully and slowly]
+    -> ch07_pass_lions_slow
 
 === ch07_pass_lions ===
 ~ courage += 10
@@ -161,8 +176,14 @@
     "What did you feel when the burden fell at the Cross?" (1 Peter 1:8, NIV)
 }
 
-* {lang == "ko": [말로 형용할 수 없는 기쁨이었습니다] -> ch07_joy_answer} {lang != "ko": [An inexpressible joy] -> ch07_joy_answer}
-* {lang == "ko": [아직도 잘 모르겠습니다] -> ch07_uncertain_answer} {lang != "ko": [I'm still not sure] -> ch07_uncertain_answer}
++ {lang == "ko"} [말로 형용할 수 없는 기쁨이었습니다]
+    -> ch07_joy_answer
++ {lang != "ko"} [An inexpressible joy]
+    -> ch07_joy_answer
++ {lang == "ko"} [아직도 잘 모르겠습니다]
+    -> ch07_uncertain_answer
++ {lang != "ko"} [I'm still not sure]
+    -> ch07_uncertain_answer
 
 === ch07_joy_answer ===
 ~ faith += 8
@@ -232,3 +253,99 @@
 }
 
 -> ch08_opening
+
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch07_prudence ===
+# SPEAKER: Prudence
+# EMOTION: gentle
+{lang == "ko":
+    순례자여, 궁전에 온 것을 환영하오. 나는 '신중'이라 하오. 네가 왜 이 길을 걷게 되었는지 듣고 싶구나.
+- else:
+    Welcome to the palace, pilgrim. I am Prudence. I would hear why you walk this path.
+}
++ {lang == "ko"} 전도자의 말씀을 듣고 멸망의 도시를 떠났습니다.
+    # SPEAKER: Prudence
+    {lang == "ko":
+        그 결심이 참되구나. 때로 옛 생각이 떠오르지 않느냐?
+    - else:
+        That resolve is true. Do old thoughts sometimes return?
+    }
+    # SPEAKER: Christian
+    # EMOTION: honest
+    {lang == "ko":
+        네, 하지만 더 좋은 것을 바라보려 합니다.
+    - else:
+        Yes, but I try to look toward better things.
+    }
+    # STAT: wisdom +3
+    # SPEAKER: Prudence
+    # EMOTION: approving
+    {lang == "ko":
+        잘하는 것이다. 위의 것을 생각하라. 하나님의 것을 구하라.
+    - else:
+        You do well. Set your mind on things above. Seek the things of God.
+    }
+    -> DONE
++ {lang != "ko"} I heard the Evangelist's words and left the City of Destruction.
+    # SPEAKER: Prudence
+    That resolve is true. Do old thoughts sometimes return?
+    # SPEAKER: Christian
+    # EMOTION: honest
+    Yes, but I try to look toward better things.
+    # STAT: wisdom +3
+    # SPEAKER: Prudence
+    # EMOTION: approving
+    You do well. Set your mind on things above. Seek the things of God.
+    -> DONE
+
+=== ch07_piety ===
+# SPEAKER: Piety
+# EMOTION: warm
+{lang == "ko":
+    나는 '경건'이라 하오. 지금까지의 여정에서 하나님을 어떻게 경험했소?
+- else:
+    I am Piety. How have you experienced God on your journey so far?
+}
++ {lang == "ko"} 십자가에서 짐이 풀렸을 때, 형언할 수 없는 기쁨을 느꼈습니다.
+    # SPEAKER: Piety
+    # EMOTION: joyful
+    {lang == "ko":
+        그 경험을 절대 잊지 마시오! 앞으로 어둡고 힘든 때가 올 것이나, 그 은혜를 기억하시오.
+    - else:
+        Never forget that experience! Dark and difficult times lie ahead, but remember that grace.
+    }
+    # STAT: faith +4
+    -> DONE
++ {lang != "ko"} When my burden fell at the Cross, I felt indescribable joy.
+    # SPEAKER: Piety
+    # EMOTION: joyful
+    Never forget that experience! Dark and difficult times lie ahead, but remember that grace.
+    # STAT: faith +4
+    -> DONE
+
+=== ch07_charity ===
+# SPEAKER: Charity
+# EMOTION: compassionate
+{lang == "ko":
+    나는 '사랑'이라 하오. 순례자여, 네 가족은 어떻게 되었소?
+- else:
+    I am Charity. Pilgrim, what became of your family?
+}
+# SPEAKER: Christian
+# EMOTION: sad
+{lang == "ko":
+    함께 오자고 간청했지만, 아무도 따라오지 않았습니다. 마음이 무겁습니다.
+- else:
+    I begged them to come with me, but none would follow. It weighs heavy on my heart.
+}
+# SPEAKER: Charity
+# EMOTION: gentle
+{lang == "ko":
+    그들을 위해 기도하라. 네 본이 되는 삶이 그들의 마음을 돌릴 수도 있소. 사랑은 모든 것을 참으며 모든 것을 바라느니라.
+- else:
+    Pray for them. Your faithful life may yet turn their hearts. Love bears all things and hopes all things.
+}
+# STAT: wisdom +2
+# STAT: faith +3
+-> DONE

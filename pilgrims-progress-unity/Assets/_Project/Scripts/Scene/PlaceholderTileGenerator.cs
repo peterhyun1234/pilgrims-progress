@@ -22,26 +22,45 @@ namespace PilgrimsProgress.Scene
         private Tile _pathTile;
         private Tile _wallTile;
         private Tile _waterTile;
-        private Tile _flowerTile;
+        private Tile[] _flowerTiles;
         private Tile _bridgeTile;
+
+        private Tilemap _decorTilemap;
 
         private void Start()
         {
             if (_groundTilemap == null || _wallTilemap == null) return;
             GenerateTiles();
+            EnsureDecorTilemap();
             GenerateMap();
+        }
+
+        private void EnsureDecorTilemap()
+        {
+            var grid = _groundTilemap.GetComponentInParent<Grid>();
+            if (grid == null) return;
+            var decorGo = new GameObject("DecorTilemap");
+            decorGo.transform.SetParent(grid.transform, false);
+            _decorTilemap = decorGo.AddComponent<Tilemap>();
+            var renderer = decorGo.AddComponent<TilemapRenderer>();
+            renderer.sortingOrder = 2;
         }
 
         private void GenerateTiles()
         {
-            _grassTiles = new Tile[4];
-            for (int i = 0; i < 4; i++)
-                _grassTiles[i] = ProceduralAssets.CreateGrassTile(i);
+            _grassTiles = new Tile[6];
+            for (int i = 0; i < 6; i++)
+                _grassTiles[i] = ProceduralAssets.CreateGrassTile(i, _theme);
 
-            _pathTile = ProceduralAssets.CreatePathTile();
-            _wallTile = ProceduralAssets.CreateWallTile();
+            _pathTile = ProceduralAssets.CreatePathTile(_theme);
+            _wallTile = ProceduralAssets.CreateWallTile(_theme);
             _waterTile = ProceduralAssets.CreateWaterTile();
-            _flowerTile = ProceduralAssets.CreateFlowerTile(new Color(0.85f, 0.35f, 0.35f));
+
+            _flowerTiles = new Tile[3];
+            _flowerTiles[0] = ProceduralAssets.CreateFlowerTile(new Color(0.85f, 0.35f, 0.35f), _theme);
+            _flowerTiles[1] = ProceduralAssets.CreateFlowerTile(new Color(0.90f, 0.78f, 0.30f), _theme);
+            _flowerTiles[2] = ProceduralAssets.CreateFlowerTile(new Color(0.55f, 0.40f, 0.80f), _theme);
+
             _bridgeTile = ProceduralAssets.CreateBridgeTile();
         }
 
@@ -83,6 +102,15 @@ namespace PilgrimsProgress.Scene
                 _wallTilemap.gameObject.AddComponent<TilemapCollider2D>();
         }
 
+        private Tile RndGrass(System.Random rng) => _grassTiles[rng.Next(_grassTiles.Length)];
+        private Tile RndFlower(System.Random rng) => _flowerTiles[rng.Next(_flowerTiles.Length)];
+
+        private void PlaceDecorTile(int x, int y, Tile tile)
+        {
+            if (_decorTilemap != null)
+                _decorTilemap.SetTile(new Vector3Int(x, y, 0), tile);
+        }
+
         private void GenerateFieldsMap()
         {
             int halfW = _width / 2;
@@ -104,14 +132,25 @@ namespace PilgrimsProgress.Scene
                     }
 
                     bool isMainPath = Mathf.Abs(y) <= 1;
+                    bool isPathEdge = Mathf.Abs(y) == 2 && rng.Next(3) == 0;
+
+                    float pondCx = 9f, pondCy = -6f, pondR = 3f;
+                    float pdx = x - pondCx, pdy = y - pondCy;
+                    bool isPond = pdx * pdx + pdy * pdy < pondR * pondR;
+                    bool isPondEdge = !isPond && pdx * pdx + pdy * pdy < (pondR + 1) * (pondR + 1);
 
                     if (isMainPath)
                         _groundTilemap.SetTile(pos, _pathTile);
-                    else if (x > 6 && x < 12 && y > -8 && y < -4 &&
-                             Mathf.Sqrt(Mathf.Pow(x - 9, 2) + Mathf.Pow(y + 6, 2)) < 2.5f)
+                    else if (isPathEdge)
+                        _groundTilemap.SetTile(pos, RndFlower(rng));
+                    else if (isPond)
                         _groundTilemap.SetTile(pos, _waterTile);
+                    else if (isPondEdge)
+                        _groundTilemap.SetTile(pos, RndFlower(rng));
+                    else if (rng.Next(20) == 0)
+                        _groundTilemap.SetTile(pos, RndFlower(rng));
                     else
-                        _groundTilemap.SetTile(pos, _grassTiles[rng.Next(_grassTiles.Length)]);
+                        _groundTilemap.SetTile(pos, RndGrass(rng));
                 }
             }
         }
@@ -151,7 +190,7 @@ namespace PilgrimsProgress.Scene
                     }
                     else
                     {
-                        _groundTilemap.SetTile(pos, _grassTiles[rng.Next(_grassTiles.Length)]);
+                        _groundTilemap.SetTile(pos, RndGrass(rng));
                     }
                 }
             }
@@ -173,7 +212,6 @@ namespace PilgrimsProgress.Scene
             int halfW = _width / 2;
             int halfH = _height / 2;
             var rng = new System.Random(66666);
-            var darkGrass = ProceduralAssets.CreateGrassTile(3);
 
             for (int x = -halfW; x < halfW; x++)
             {
@@ -197,7 +235,7 @@ namespace PilgrimsProgress.Scene
                     else if (isCliff)
                         _wallTilemap.SetTile(pos, _wallTile);
                     else
-                        _groundTilemap.SetTile(pos, darkGrass);
+                        _groundTilemap.SetTile(pos, RndGrass(rng));
                 }
             }
         }
@@ -229,8 +267,10 @@ namespace PilgrimsProgress.Scene
                         _wallTilemap.SetTile(pos, _wallTile);
                     else if (isPath)
                         _groundTilemap.SetTile(pos, _pathTile);
+                    else if (rng.Next(15) == 0)
+                        _groundTilemap.SetTile(pos, RndFlower(rng));
                     else
-                        _groundTilemap.SetTile(pos, _grassTiles[rng.Next(_grassTiles.Length)]);
+                        _groundTilemap.SetTile(pos, RndGrass(rng));
                 }
             }
         }
@@ -239,8 +279,6 @@ namespace PilgrimsProgress.Scene
         {
             int halfW = _width / 2;
             int halfH = _height / 2;
-            var rng = new System.Random(55555);
-            var floorTile = _pathTile;
 
             for (int x = -halfW; x < halfW; x++)
             {
@@ -260,7 +298,7 @@ namespace PilgrimsProgress.Scene
                     if (isRoomWall)
                         _wallTilemap.SetTile(pos, _wallTile);
                     else
-                        _groundTilemap.SetTile(pos, floorTile);
+                        _groundTilemap.SetTile(pos, _pathTile);
                 }
             }
         }
@@ -315,10 +353,10 @@ namespace PilgrimsProgress.Scene
                         _groundTilemap.SetTile(pos, _pathTile);
                     else if (isSideCliff)
                         _wallTilemap.SetTile(pos, _wallTile);
-                    else if (rng.Next(8) == 0)
-                        _groundTilemap.SetTile(pos, _flowerTile);
+                    else if (rng.Next(6) == 0)
+                        _groundTilemap.SetTile(pos, RndFlower(rng));
                     else
-                        _groundTilemap.SetTile(pos, _grassTiles[rng.Next(_grassTiles.Length)]);
+                        _groundTilemap.SetTile(pos, RndGrass(rng));
                 }
             }
         }
@@ -352,7 +390,7 @@ namespace PilgrimsProgress.Scene
                     else if (isStall)
                         _wallTilemap.SetTile(pos, _wallTile);
                     else
-                        _groundTilemap.SetTile(pos, _grassTiles[rng.Next(_grassTiles.Length)]);
+                        _groundTilemap.SetTile(pos, RndGrass(rng));
                 }
             }
         }
@@ -405,10 +443,10 @@ namespace PilgrimsProgress.Scene
                         bool isMtnPath = Mathf.Abs(x - 8) <= 1;
                         if (isMtnPath)
                             _groundTilemap.SetTile(pos, _pathTile);
-                        else if (rng.Next(5) == 0)
-                            _groundTilemap.SetTile(pos, _flowerTile);
+                        else if (rng.Next(4) == 0)
+                            _groundTilemap.SetTile(pos, RndFlower(rng));
                         else
-                            _groundTilemap.SetTile(pos, _grassTiles[rng.Next(_grassTiles.Length)]);
+                            _groundTilemap.SetTile(pos, RndGrass(rng));
                     }
                     else
                     {
@@ -416,7 +454,7 @@ namespace PilgrimsProgress.Scene
                         if (isPath)
                             _groundTilemap.SetTile(pos, _pathTile);
                         else
-                            _groundTilemap.SetTile(pos, _grassTiles[rng.Next(_grassTiles.Length)]);
+                            _groundTilemap.SetTile(pos, RndGrass(rng));
                     }
                 }
             }
@@ -452,10 +490,10 @@ namespace PilgrimsProgress.Scene
                         _groundTilemap.SetTile(pos, _bridgeTile);
                     else if (isPath)
                         _groundTilemap.SetTile(pos, _pathTile);
-                    else if (rng.Next(6) == 0)
-                        _groundTilemap.SetTile(pos, _flowerTile);
+                    else if (rng.Next(4) == 0)
+                        _groundTilemap.SetTile(pos, RndFlower(rng));
                     else
-                        _groundTilemap.SetTile(pos, _grassTiles[rng.Next(_grassTiles.Length)]);
+                        _groundTilemap.SetTile(pos, RndGrass(rng));
                 }
             }
         }

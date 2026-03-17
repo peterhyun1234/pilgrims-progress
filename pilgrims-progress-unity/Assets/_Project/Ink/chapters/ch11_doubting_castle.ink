@@ -19,8 +19,14 @@
     "Would it not be easier to walk through that meadow? It runs alongside the path."
 }
 
-* {wisdom >= 60} {lang == "ko": [거절한다] "아니오, 길을 벗어나면 안 됩니다." -> ch11_refuse_bypath} {lang != "ko": [Refuse] "No, we must not leave the path." -> ch11_refuse_bypath}
-* {lang == "ko": [초원으로 간다] "그래, 잠깐이면 괜찮겠지." -> ch11_take_bypath} {lang != "ko": [Go to the meadow] "Sure, just for a bit." -> ch11_take_bypath}
++ {wisdom >= 60} {lang == "ko"} [거절한다] "아니오, 길을 벗어나면 안 됩니다."
+    -> ch11_refuse_bypath
++ {wisdom >= 60} {lang != "ko"} [Refuse] "No, we must not leave the path."
+    -> ch11_refuse_bypath
++ {lang == "ko"} [초원으로 간다] "그래, 잠깐이면 괜찮겠지."
+    -> ch11_take_bypath
++ {lang != "ko"} [Go to the meadow] "Sure, just for a bit."
+    -> ch11_take_bypath
 
 === ch11_refuse_bypath ===
 ~ wisdom += 10
@@ -87,7 +93,10 @@
     "There is no hope for you. It would be better to end your own lives."
 }
 
-* {lang == "ko": [거부한다] "아니오. 자살은 죄입니다." -> ch11_refuse_suicide} {lang != "ko": [Refuse] "No. Self-murder is a sin." -> ch11_refuse_suicide}
++ {lang == "ko"} [거부한다] "아니오. 자살은 죄입니다."
+    -> ch11_refuse_suicide
++ {lang != "ko"} [Refuse] "No. Self-murder is a sin."
+    -> ch11_refuse_suicide
 
 === ch11_refuse_suicide ===
 ~ faith += 10
@@ -201,3 +210,78 @@
 }
 
 -> ch12_opening
+
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch11_giant_despair ===
+# SPEAKER: Giant Despair
+# EMOTION: threatening
+{lang == "ko":
+    누가 감히 내 땅에 들어왔느냐! 나는 절망의 거인이다!
+- else:
+    Who dares trespass on my grounds! I am Giant Despair!
+}
+# SHAKE: strong
+# SPEAKER: Christian
+# EMOTION: scared
+{lang == "ko":
+    이건 우리의 실수입니다... 정해진 길을 벗어났기 때문에...
+- else:
+    This was our mistake... we strayed from the appointed path...
+}
+# SPEAKER: Giant Despair
+# EMOTION: cruel
+{lang == "ko":
+    어리석은 것들! 내 감옥에 던져 넣겠다. 희망 따위는 버려라!
+- else:
+    Foolish wretches! I'll cast you into my dungeon. Abandon all hope!
+}
++ {lang == "ko"} 소망이여, 약속의 열쇠를 기억하시오!
+    # SPEAKER: Christian
+    # EMOTION: hopeful
+    {lang == "ko":
+        내 가슴에... '약속'이라는 열쇠가 있소! 이 열쇠로 어떤 자물쇠든 열 수 있다 했소!
+    - else:
+        In my breast... there is a key called Promise! It was said this key can open any lock!
+    }
+    # STAT: faith +6
+    # STAT: courage +5
+    -> DONE
++ {lang != "ko"} Hopeful, remember the key of Promise!
+    # SPEAKER: Christian
+    # EMOTION: hopeful
+    In my breast... there is a key called Promise! It was said this key can open any lock!
+    # STAT: faith +6
+    # STAT: courage +5
+    -> DONE
+
+=== ch11_shepherds ===
+# SPEAKER: Shepherd
+# EMOTION: welcoming
+{lang == "ko":
+    기쁨의 산에 온 것을 환영하오, 순례자들이여! 우리는 임마누엘 땅의 목자들이라오.
+- else:
+    Welcome to the Delectable Mountains, pilgrims! We are the shepherds of Immanuel's Land.
+}
+# SPEAKER: Christian
+# EMOTION: relieved
+{lang == "ko":
+    의심의 성에서 간신히 벗어났습니다. 여기는 정말 평화로운 곳이군요.
+- else:
+    We barely escaped from Doubting Castle. This place is truly peaceful.
+}
+# SPEAKER: Shepherd
+# EMOTION: wise
+{lang == "ko":
+    여기서 네 가지를 보여주리다. 오류의 산, 경고의 산, 그리고 저 멀리... 천상의 도시가 보이는 전망을.
+- else:
+    We will show you four things. The Hill of Error, the Mountain of Caution, and far away... a view of the Celestial City itself.
+}
+# STAT: wisdom +5
+# STAT: faith +4
+{lang == "ko":
+    저 빛나는 문을 보시오. 너희의 목적지가 바로 저곳이라오.
+- else:
+    See that shining gate. Your destination lies there.
+}
+-> DONE

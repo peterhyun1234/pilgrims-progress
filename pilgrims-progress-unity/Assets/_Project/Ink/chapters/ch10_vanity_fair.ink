@@ -58,8 +58,14 @@
     "Pilgrim, see these jewels. See this gold. What will you buy?"
 }
 
-* {lang == "ko": [아무것도 사지 않겠다] "진리 외에는 아무것도 사지 않겠소!" -> ch10_refuse_buy} {lang != "ko": [Buy nothing] "We buy nothing but the truth!" -> ch10_refuse_buy}
-* {lang == "ko": [구경만 한다] 주위를 둘러보았다. -> ch10_look_around} {lang != "ko": [Just look around] Looking around curiously. -> ch10_look_around}
++ {lang == "ko"} [아무것도 사지 않겠다] "진리 외에는 아무것도 사지 않겠소!"
+    -> ch10_refuse_buy
++ {lang != "ko"} [Buy nothing] "We buy nothing but the truth!"
+    -> ch10_refuse_buy
++ {lang == "ko"} [구경만 한다] 주위를 둘러보았다.
+    -> ch10_look_around
++ {lang != "ko"} [Just look around] Looking around curiously.
+    -> ch10_look_around
 
 === ch10_refuse_buy ===
 ~ faith += 10
@@ -189,7 +195,10 @@
 
 ~ hopeful_joined = true
 
-* {lang == "ko": [환영한다] "함께 갑시다, 소망." -> ch10_welcome_hopeful} {lang != "ko": [Welcome him] "Let us go together, Hopeful." -> ch10_welcome_hopeful}
++ {lang == "ko"} [환영한다] "함께 갑시다, 소망."
+    -> ch10_welcome_hopeful
++ {lang != "ko"} [Welcome him] "Let us go together, Hopeful."
+    -> ch10_welcome_hopeful
 
 === ch10_welcome_hopeful ===
 ~ faith += 5
@@ -214,3 +223,77 @@
 }
 
 -> ch11_opening
+
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch10_faithful ===
+# SPEAKER: Faithful
+# EMOTION: warm
+{lang == "ko":
+    크리스천! 반갑다! 나도 멸망의 도시를 떠나 순례의 길을 걷고 있다네.
+- else:
+    Christian! How good to see you! I too left the City of Destruction and walk the pilgrim's way.
+}
+# SPEAKER: Christian
+# EMOTION: joyful
+{lang == "ko":
+    신실이여! 동행이 생기다니 기쁩니다. 여정은 어떠했습니까?
+- else:
+    Faithful! What joy to have a companion. How has your journey been?
+}
+# SPEAKER: Faithful
+# EMOTION: reflective
+{lang == "ko":
+    순탄치 않았지. '정욕'이란 여인이 유혹했고, '수치'라는 자도 만났네. 하지만 은혜로 이겨냈다네.
+- else:
+    Not easy. Madam Wanton tried to tempt me, and I met one called Shame. But by grace, I overcame.
+}
+# STAT: courage +3
+# STAT: faith +3
+{lang == "ko":
+    함께 가세. 동행이 있으면 위로가 되지 않겠나.
+- else:
+    Let us go together. A companion brings comfort on the road.
+}
+-> DONE
+
+=== ch10_byends ===
+# SPEAKER: By-ends
+# EMOTION: friendly
+{lang == "ko":
+    이봐요, 순례자들! 나도 천상의 도시로 가는 중이라오. '사리사욕'이라 하오.
+- else:
+    Hey there, pilgrims! I too am headed for the Celestial City. The name's By-ends.
+}
+# SPEAKER: Christian
+# EMOTION: cautious
+{lang == "ko":
+    사리사욕이라... 어떤 원칙으로 살고 계십니까?
+- else:
+    By-ends... what principles do you live by?
+}
+# SPEAKER: By-ends
+# EMOTION: casual
+{lang == "ko":
+    나는 바람이 부는 쪽으로 돛을 올리는 현명한 사람이오. 비 올 때만 종교를 따르고, 불편하면 잠시 쉬지.
+- else:
+    I'm a wise man who sets my sails with the wind. I follow religion when it suits and rest when it's inconvenient.
+}
++ {lang == "ko"} 그것은 참된 순례가 아닙니다. 함께 갈 수 없습니다.
+    # SPEAKER: By-ends
+    # EMOTION: offended
+    {lang == "ko":
+        흥, 고집쟁이들. 나 혼자 가면 되지.
+    - else:
+        Hmph, stubborn fools. I'll go my own way then.
+    }
+    # STAT: wisdom +4
+    # STAT: faith +2
+    -> DONE
++ {lang != "ko"} That is not true pilgrimage. We cannot walk together.
+    # SPEAKER: By-ends
+    # EMOTION: offended
+    Hmph, stubborn fools. I'll go my own way then.
+    # STAT: wisdom +4
+    # STAT: faith +2
+    -> DONE

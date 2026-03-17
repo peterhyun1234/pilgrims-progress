@@ -286,3 +286,97 @@
     [ End of Chapter 3 — Mr. Worldly Wiseman ]
 }
 -> ch04_opening
+
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch03_worldly_wiseman ===
+# SPEAKER: Worldly Wiseman
+# EMOTION: friendly
+{lang == "ko":
+    이보시오, 여행자! 등에 그 무거운 짐을 지고 어디를 가시오?
+- else:
+    Well now, traveler! Where might you be going with that heavy burden on your back?
+}
+# SPEAKER: Christian
+# EMOTION: tired
+{lang == "ko":
+    좁은 문을 향해 가고 있습니다. 거기서 이 짐을 벗을 수 있다 하셨어요.
+- else:
+    I'm heading for the Wicket Gate. I was told I could lose this burden there.
+}
+# SPEAKER: Worldly Wiseman
+# EMOTION: persuasive
+{lang == "ko":
+    좁은 문이라... 험한 길이지. 차라리 '도덕' 마을로 가시오. 거기 '율법'이란 분이 짐을 내려줄 수 있소.
+- else:
+    The Wicket Gate... a difficult path indeed. Why not go to the village of Morality? Mr. Legality there can remove your burden easily.
+}
++ {lang == "ko"} 그 말이 맞는 것 같습니다. 좀 더 쉬운 길이 있다면...
+    # SPEAKER: Worldly Wiseman
+    # EMOTION: satisfied
+    {lang == "ko":
+        그렇지! 고생할 필요 없소. 편한 길을 가시오.
+    - else:
+        That's right! No need to suffer. Take the easy road.
+    }
+    # STAT: wisdom -3
+    # STAT: faith -2
+    -> DONE
++ {lang == "ko"} 아닙니다. 전도자의 말씀을 따르겠습니다.
+    # SPEAKER: Worldly Wiseman
+    # EMOTION: dismissive
+    {lang == "ko":
+        고집이 세군. 후회할 걸세.
+    - else:
+        Stubborn fool. You'll regret it.
+    }
+    # STAT: faith +3
+    # STAT: wisdom +2
+    -> DONE
++ {lang != "ko"} That sounds wise. If there's an easier way...
+    # SPEAKER: Worldly Wiseman
+    # EMOTION: satisfied
+    That's right! No need to suffer. Take the easy road.
+    # STAT: wisdom -3
+    # STAT: faith -2
+    -> DONE
++ {lang != "ko"} No. I will follow the Evangelist's words.
+    # SPEAKER: Worldly Wiseman
+    # EMOTION: dismissive
+    Stubborn fool. You'll regret it.
+    # STAT: faith +3
+    # STAT: wisdom +2
+    -> DONE
+
+=== ch03_evangelist_return ===
+# SPEAKER: Evangelist
+# EMOTION: stern
+{lang == "ko":
+    크리스천! 네가 무엇을 하고 있느냐? 세상지혜씨의 말을 들었느냐?
+- else:
+    Christian! What have you been doing? Did you listen to Mr. Worldly Wiseman?
+}
+# SPEAKER: Christian
+# EMOTION: ashamed
+{lang == "ko":
+    예... 그의 말이 그럴듯해서... 좀 더 쉬운 길이 있다기에...
+- else:
+    Yes... his words seemed so reasonable... he said there was an easier way...
+}
+# SPEAKER: Evangelist
+# EMOTION: passionate
+{lang == "ko":
+    "좁은 문으로 들어가라! 멸망으로 인도하는 문은 크고 그 길이 넓어 많은 사람이 그리로 들어가지만, 생명으로 인도하는 문은 좁고 길이 협착하니라." (마태복음 7:13-14)
+- else:
+    "Enter through the narrow gate! For wide is the gate and broad is the road that leads to destruction, but small is the gate and narrow the road that leads to life." (Matthew 7:13-14)
+}
+# STAT: faith +5
+# STAT: wisdom +3
+# SPEAKER: Christian
+# EMOTION: repentant
+{lang == "ko":
+    잘못했습니다. 다시 바른 길로 돌아가겠습니다!
+- else:
+    I was wrong. I will return to the true path!
+}
+-> DONE

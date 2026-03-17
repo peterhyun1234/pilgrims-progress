@@ -146,13 +146,46 @@ namespace PilgrimsProgress.Localization
                 {"prologue_goal3", "십자가에서 짐을 벗고, 끝까지 인내하라"},
                 {"prologue_start", "순례를 시작하다"},
                 {"prologue_tap", "화면을 터치하여 계속"},
+                {"prologue_game_desc", "1678년, 존 번연이 감옥에서 쓴 불멸의 고전\n'천로역정'의 세계에 오신 것을 환영합니다."},
+                {"prologue_game_desc2", "당신은 '순례자'가 되어 멸망의 도시에서 천상의 도시까지\n12개의 챕터를 여행하며, NPC들과 대화하고,\n선택에 따라 믿음, 용기, 지혜가 성장합니다."},
+                {"prologue_controls_title", "조작 방법"},
+                {"prologue_controls_move", "방향키 / WASD: 캐릭터 이동"},
+                {"prologue_controls_talk", "E 또는 Space: NPC와 대화"},
+                {"prologue_controls_escape", "ESC: 대화 종료"},
+                {"prologue_controls_tip", "머리 위 표시가 있는 NPC를 순서대로 만나세요!"},
 
                 // Epilogue
                 {"epilogue_burden_falls", "짐이 풀려 떨어졌다!"},
                 {"epilogue_free", "마침내 자유를 얻었도다"},
-                {"epilogue_demo_end", "데모가 끝났습니다"},
-                {"epilogue_full_version", "정식 버전에서 순례의 여정을 이어가세요"},
-                {"epilogue_thank_you", "감사합니다"}
+                {"epilogue_demo_end", "순례가 끝났습니다"},
+                {"epilogue_full_version", "신앙의 여정은 계속됩니다"},
+                {"epilogue_thank_you", "감사합니다"},
+
+                // Pause Menu
+                {"pause_title", "일시정지"},
+                {"pause_resume", "\u25B6  게임 계속"},
+                {"pause_save", "\u2B07  저장"},
+                {"pause_journey", "\u2690  여정 지도"},
+                {"pause_settings", "\u2699  설정"},
+                {"pause_main_menu", "\u2302  메인 메뉴"},
+                {"pause_quit", "\u274C  종료"},
+                {"pause_hint_esc", "ESC로 게임 재개"},
+                {"pause_saved", "게임이 저장되었습니다"},
+                {"pause_confirm_menu", "메인 메뉴로 돌아가시겠습니까?\n저장하지 않은 진행은 사라집니다."},
+                {"pause_confirm_quit", "게임을 종료하시겠습니까?"},
+
+                // Chapter Transition
+                {"chapter_complete", "챕터 완료"},
+                {"next_journey", "다음 여정"},
+                {"press_continue", "아무 키나 눌러 계속"},
+
+                // Confirm
+                {"confirm_yes", "예"},
+                {"confirm_no", "아니오"},
+
+                // Interaction
+                {"interact_hint", "E / Space 로 대화"},
+                {"dialogue_done", "대화 완료"}
             };
 
             var en = new Dictionary<string, string>
@@ -226,13 +259,46 @@ namespace PilgrimsProgress.Localization
                 {"prologue_goal3", "Lay down your burden at the Cross, and endure to the end"},
                 {"prologue_start", "Begin the Pilgrimage"},
                 {"prologue_tap", "Tap to continue"},
+                {"prologue_game_desc", "Welcome to the world of John Bunyan's immortal classic\n'The Pilgrim's Progress', written in prison in 1678."},
+                {"prologue_game_desc2", "You become the Pilgrim, journeying from the City of Destruction\nto the Celestial City across 12 chapters.\nTalk to NPCs and let your choices grow\nyour Faith, Courage, and Wisdom."},
+                {"prologue_controls_title", "Controls"},
+                {"prologue_controls_move", "Arrow Keys / WASD: Move character"},
+                {"prologue_controls_talk", "E or Space: Talk to NPCs"},
+                {"prologue_controls_escape", "ESC: End conversation"},
+                {"prologue_controls_tip", "Follow the markers above NPCs to meet them in order!"},
 
                 // Epilogue
                 {"epilogue_burden_falls", "The burden fell from his back!"},
                 {"epilogue_free", "At last, he was free"},
-                {"epilogue_demo_end", "End of Demo"},
-                {"epilogue_full_version", "Continue the pilgrimage in the full version"},
-                {"epilogue_thank_you", "Thank You"}
+                {"epilogue_demo_end", "The pilgrimage is complete"},
+                {"epilogue_full_version", "The journey of faith continues"},
+                {"epilogue_thank_you", "Thank You"},
+
+                // Pause Menu
+                {"pause_title", "Paused"},
+                {"pause_resume", "\u25B6  Resume"},
+                {"pause_save", "\u2B07  Save"},
+                {"pause_journey", "\u2690  Journey Map"},
+                {"pause_settings", "\u2699  Settings"},
+                {"pause_main_menu", "\u2302  Main Menu"},
+                {"pause_quit", "\u274C  Quit"},
+                {"pause_hint_esc", "Press ESC to resume"},
+                {"pause_saved", "Game saved"},
+                {"pause_confirm_menu", "Return to main menu?\nUnsaved progress will be lost."},
+                {"pause_confirm_quit", "Quit the game?"},
+
+                // Chapter Transition
+                {"chapter_complete", "Chapter Complete"},
+                {"next_journey", "Next Journey"},
+                {"press_continue", "Press any key to continue"},
+
+                // Confirm
+                {"confirm_yes", "Yes"},
+                {"confirm_no", "No"},
+
+                // Interaction
+                {"interact_hint", "E / Space to talk"},
+                {"dialogue_done", "Dialogue complete"}
             };
 
             _stringTables["ko"] = ko;

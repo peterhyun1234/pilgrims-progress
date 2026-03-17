@@ -237,3 +237,41 @@
     [ End of Chapter 2 — Slough of Despond ]
 }
 -> ch03_opening
+
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch02_help ===
+# SPEAKER: Help
+# EMOTION: kind
+{lang == "ko":
+    이봐요, 거기서 뭘 하고 있소? 이 늪에서 빠져나와야 하오!
+- else:
+    Hey there! What are you doing in this mire? You must get out!
+}
+# SPEAKER: Christian
+# EMOTION: distressed
+{lang == "ko":
+    전도자가 보내주셔서 가고 있었는데, 이 늪에 빠져버렸습니다!
+- else:
+    The Evangelist sent me this way, but I've fallen into this slough!
+}
+# SPEAKER: Help
+# EMOTION: compassionate
+{lang == "ko":
+    이곳은 '낙심의 늪'이라오. 죄를 깨달을 때 생기는 두려움과 의심이 이 진흙탕을 만들었지.
+- else:
+    This is the Slough of Despond. The fears and doubts that come with conviction of sin have made this bog.
+}
+{lang == "ko":
+    자, 내 손을 잡으시오. 단단한 땅으로 이끌어 드리리다.
+- else:
+    Here, take my hand. I'll lead you to solid ground.
+}
+# STAT: faith +3
+# STAT: courage +2
+{lang == "ko":
+    하나님께서 이 늪에도 디딤돌을 놓아두셨다오. 그것은 약속의 말씀이지. 그 위를 밟고 건너시오.
+- else:
+    God has placed stepping stones even in this slough. They are the promises of His Word. Step on them and cross.
+}
+-> DONE

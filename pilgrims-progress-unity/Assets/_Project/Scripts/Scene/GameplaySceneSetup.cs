@@ -45,16 +45,59 @@ namespace PilgrimsProgress.Scene
             BuildTilemap();
             var player = BuildPlayer();
             SetupCamera(player.transform);
+            InitializeNPCOrder();
             SpawnNPCs();
             SpawnEnvironment();
+            SpawnCollectibles();
             SpawnChapterExit();
             BuildDialogueUI();
             BuildExplorationHUD();
+            BuildChapterIntro();
+            BuildObjectiveArrow(player.transform);
             LoadInkStory();
+            BuildToastUI();
+            BuildPauseMenu();
+            BuildJourneyMap();
 
             var gm = GameManager.Instance;
             if (gm != null && gm.CurrentState != GameState.Gameplay)
                 gm.SetState(GameState.Gameplay);
+        }
+
+        private void InitializeNPCOrder()
+        {
+            var orderMgr = FindFirstObjectByType<NPCOrderManager>();
+            if (orderMgr == null)
+            {
+                var go = new GameObject("NPCOrderManager");
+                orderMgr = go.AddComponent<NPCOrderManager>();
+            }
+            orderMgr.Initialize(_chapterData.NPCs);
+        }
+
+        private void BuildObjectiveArrow(Transform player)
+        {
+            var canvasGo = GameObject.Find("HUDCanvas");
+            if (canvasGo == null) return;
+
+            var arrow = canvasGo.AddComponent<ObjectiveArrow>();
+            arrow.Initialize(player);
+        }
+
+        private void BuildChapterIntro()
+        {
+            var canvasGo = new GameObject("ChapterIntroCanvas");
+            var canvas = canvasGo.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 50;
+            var scaler = canvasGo.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920, 1080);
+            scaler.matchWidthOrHeight = 0.5f;
+            canvasGo.AddComponent<GraphicRaycaster>();
+
+            var introUI = canvasGo.AddComponent<ChapterIntroUI>();
+            introUI.Show(_chapterData);
         }
 
         private void BuildTilemap()
@@ -100,6 +143,7 @@ namespace PilgrimsProgress.Scene
 
             playerGo.AddComponent<PlaceholderPlayerSetup>();
             playerGo.AddComponent<PlayerAnimator>();
+            playerGo.AddComponent<PlayerStatVisuals>();
             playerGo.AddComponent<PlayerController>();
 
             return playerGo;
@@ -156,57 +200,301 @@ namespace PilgrimsProgress.Scene
             SetField(interactable, "_inkKnotName", inkKnot);
             SetField(interactable, "_displayNameKey", $"npc_{npcId}");
             SetField(interactable, "_spriteRenderer", sr);
+
+            var personality = Visuals.NPCBehavior.GetPersonalityForNPC(npcId);
+            var behavior = npcGo.AddComponent<Visuals.NPCBehavior>();
+            behavior.Initialize(npcId, personality);
         }
 
         private void SpawnEnvironment()
         {
-            var treeSprite = Visuals.ProceduralAssets.CreateTreeSprite();
+            var theme = _chapterData.Theme;
             var rng = new System.Random(_chapterData.ChapterNumber * 42);
 
             int halfW = _chapterData.MapWidth / 2 - 3;
             int halfH = _chapterData.MapHeight / 2 - 3;
-            int treeCount = Mathf.Clamp(_chapterData.MapWidth / 4, 4, 15);
 
-            for (int i = 0; i < treeCount; i++)
+            var envParent = new GameObject("Environment");
+
+            // Pre-create sprite variants
+            Sprite[] treeSprites = new Sprite[4];
+            for (int i = 0; i < 4; i++)
+                treeSprites[i] = Visuals.ProceduralAssets.CreateTreeSprite(i, theme);
+
+            Sprite[] rockSprites = new Sprite[3];
+            for (int i = 0; i < 3; i++)
+                rockSprites[i] = Visuals.ProceduralAssets.CreateRockSprite(i, theme);
+
+            Sprite[] bushSprites = new Sprite[3];
+            for (int i = 0; i < 3; i++)
+                bushSprites[i] = Visuals.ProceduralAssets.CreateBushSprite(i, theme);
+
+            Sprite[] flowerSprites = new Sprite[4];
+            for (int i = 0; i < 4; i++)
+                flowerSprites[i] = Visuals.ProceduralAssets.CreateFlowerPropSprite(i);
+
+            var tallGrass = Visuals.ProceduralAssets.CreateTallGrassSprite(theme);
+
+            int treeCount = GetTreeCount(theme);
+            int rockCount = GetRockCount(theme);
+            int bushCount = GetBushCount(theme);
+            int flowerCount = GetFlowerCount(theme);
+            int grassCount = GetTallGrassCount(theme);
+
+            SpawnProps(envParent.transform, "Tree", treeSprites, treeCount, rng, halfW, halfH, 5);
+            SpawnProps(envParent.transform, "Rock", rockSprites, rockCount, rng, halfW, halfH, 4);
+            SpawnProps(envParent.transform, "Bush", bushSprites, bushCount, rng, halfW, halfH, 3);
+            SpawnProps(envParent.transform, "Flower", flowerSprites, flowerCount, rng, halfW, halfH, 3);
+            SpawnProps(envParent.transform, "TallGrass", new[] { tallGrass }, grassCount, rng, halfW, halfH, 2);
+
+            // Theme-specific props
+            if (theme == MapTheme.City || theme == MapTheme.Market)
             {
-                float x = rng.Next(-halfW, halfW);
-                float y = rng.Next(-halfH, halfH);
+                var lantern = Visuals.ProceduralAssets.CreateLanternSprite();
+                SpawnProps(envParent.transform, "Lantern", new[] { lantern },
+                    Mathf.Max(4, _chapterData.MapWidth / 6), rng, halfW, halfH, 6);
 
-                bool tooCloseToSpawn = Vector2.Distance(
-                    new Vector2(x, y),
-                    (Vector2)_chapterData.PlayerSpawn) < 3f;
-                bool tooCloseToExit = Vector2.Distance(
-                    new Vector2(x, y),
-                    (Vector2)_chapterData.ExitPosition) < 3f;
-
-                if (tooCloseToSpawn || tooCloseToExit) continue;
-
-                var treeGo = new GameObject("Tree");
-                treeGo.transform.position = new Vector3(x, y, 0);
-                var sr = treeGo.AddComponent<SpriteRenderer>();
-                sr.sprite = treeSprite;
-                sr.sortingOrder = 5;
+                var fence = Visuals.ProceduralAssets.CreateFenceSprite();
+                SpawnProps(envParent.transform, "Fence", new[] { fence }, 3, rng, halfW, halfH, 3);
             }
 
-            var signSprite = Visuals.ProceduralAssets.CreateSignpostSprite();
-            var signGo = new GameObject("Signpost");
-            signGo.transform.position = _chapterData.PlayerSpawn + new Vector3(2, 1, 0);
-            var signSr = signGo.AddComponent<SpriteRenderer>();
-            signSr.sprite = signSprite;
-            signSr.sortingOrder = 5;
+            if (theme == MapTheme.DarkValley)
+            {
+                var grave = Visuals.ProceduralAssets.CreateGravestone();
+                SpawnProps(envParent.transform, "Grave", new[] { grave }, 4, rng, halfW, halfH, 4);
+
+                var mushroom0 = Visuals.ProceduralAssets.CreateMushroomSprite(0);
+                var mushroom1 = Visuals.ProceduralAssets.CreateMushroomSprite(1);
+                SpawnProps(envParent.transform, "Mushroom", new[] { mushroom0, mushroom1 }, 6, rng, halfW, halfH, 3);
+            }
+
+            if (theme == MapTheme.Hill || theme == MapTheme.Celestial)
+            {
+                var cross = Visuals.ProceduralAssets.CreateCrossMonumentSprite();
+                SpawnSingle(envParent.transform, "CrossMonument", cross,
+                    _chapterData.ExitPosition + new Vector3(-3, 2, 0), 6);
+            }
+
+            // Signpost near spawn
+            var signSprite = Visuals.ProceduralAssets.CreateSignpostSprite(theme);
+            SpawnSingle(envParent.transform, "Signpost", signSprite,
+                _chapterData.PlayerSpawn + new Vector3(2, 1, 0), 5);
+
+            // Atmosphere overlay
+            SpawnAtmosphere(theme);
+        }
+
+        private void SpawnProps(Transform parent, string baseName, Sprite[] sprites,
+            int count, System.Random rng, int halfW, int halfH, int sortOrder)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                float x = rng.Next(-halfW * 10, halfW * 10) / 10f;
+                float y = rng.Next(-halfH * 10, halfH * 10) / 10f;
+
+                if (IsTooCloseToKey(x, y)) continue;
+                if (IsOnPath(x, y)) continue;
+
+                var go = new GameObject($"{baseName}_{i}");
+                go.transform.SetParent(parent, false);
+                go.transform.position = new Vector3(x, y, 0);
+                var sr = go.AddComponent<SpriteRenderer>();
+                sr.sprite = sprites[rng.Next(sprites.Length)];
+                sr.sortingOrder = sortOrder;
+
+                if (baseName == "TallGrass" || baseName == "Flower")
+                    sr.color = new Color(1f, 1f, 1f, 0.85f + (float)rng.NextDouble() * 0.15f);
+            }
+        }
+
+        private void SpawnSingle(Transform parent, string name, Sprite sprite, Vector3 pos, int sortOrder)
+        {
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.position = pos;
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = sprite;
+            sr.sortingOrder = sortOrder;
+        }
+
+        private bool IsTooCloseToKey(float x, float y)
+        {
+            var pos2D = new Vector2(x, y);
+            if (Vector2.Distance(pos2D, (Vector2)_chapterData.PlayerSpawn) < 3f) return true;
+            if (Vector2.Distance(pos2D, (Vector2)_chapterData.ExitPosition) < 3f) return true;
+            if (_chapterData.NPCs != null)
+            {
+                foreach (var npc in _chapterData.NPCs)
+                {
+                    if (Vector2.Distance(pos2D, (Vector2)npc.Position) < 2f) return true;
+                }
+            }
+            return false;
+        }
+
+        private bool IsOnPath(float x, float y)
+        {
+            return Mathf.Abs(y) <= 1.5f && Mathf.Abs(x) < _chapterData.MapWidth / 2f - 2;
+        }
+
+        private int GetTreeCount(MapTheme theme)
+        {
+            switch (theme)
+            {
+                case MapTheme.Interior: return 0;
+                case MapTheme.City: return 4;
+                case MapTheme.Market: return 3;
+                case MapTheme.DarkValley: return 10;
+                case MapTheme.Celestial: return 8;
+                default: return Mathf.Clamp(_chapterData.MapWidth / 3, 6, 18);
+            }
+        }
+
+        private int GetRockCount(MapTheme theme)
+        {
+            switch (theme)
+            {
+                case MapTheme.Interior: return 0;
+                case MapTheme.DarkValley: return 8;
+                case MapTheme.Hill: return 10;
+                case MapTheme.Castle: return 6;
+                default: return 4;
+            }
+        }
+
+        private int GetBushCount(MapTheme theme)
+        {
+            switch (theme)
+            {
+                case MapTheme.Interior: return 0;
+                case MapTheme.DarkValley: return 5;
+                case MapTheme.Celestial: return 8;
+                default: return 6;
+            }
+        }
+
+        private int GetFlowerCount(MapTheme theme)
+        {
+            switch (theme)
+            {
+                case MapTheme.Interior: return 0;
+                case MapTheme.DarkValley: return 1;
+                case MapTheme.Celestial: return 15;
+                case MapTheme.Hill: return 12;
+                default: return 6;
+            }
+        }
+
+        private int GetTallGrassCount(MapTheme theme)
+        {
+            switch (theme)
+            {
+                case MapTheme.Interior: return 0;
+                case MapTheme.City: return 2;
+                case MapTheme.Celestial: return 10;
+                default: return 8;
+            }
+        }
+
+        private void SpawnAtmosphere(MapTheme theme)
+        {
+            var cam = Camera.main;
+            if (cam == null) return;
+
+            if (theme == MapTheme.DarkValley)
+            {
+                var fogGo = new GameObject("FogOverlay");
+                fogGo.transform.SetParent(cam.transform);
+                fogGo.transform.localPosition = new Vector3(0, 0, 5);
+                var sr = fogGo.AddComponent<SpriteRenderer>();
+                sr.sprite = CreateFogSprite();
+                sr.sortingOrder = 90;
+                sr.color = new Color(0.15f, 0.12f, 0.18f, 0.25f);
+                sr.transform.localScale = new Vector3(20, 12, 1);
+                sr.material = new Material(Shader.Find("Sprites/Default"));
+
+                cam.backgroundColor = new Color(0.03f, 0.03f, 0.05f);
+            }
+            else if (theme == MapTheme.Celestial)
+            {
+                var glowGo = new GameObject("CelestialGlow");
+                glowGo.transform.SetParent(cam.transform);
+                glowGo.transform.localPosition = new Vector3(0, 0, 5);
+                var sr = glowGo.AddComponent<SpriteRenderer>();
+                sr.sprite = CreateGlowSprite();
+                sr.sortingOrder = 90;
+                sr.color = new Color(1f, 0.95f, 0.75f, 0.08f);
+                sr.transform.localScale = new Vector3(20, 12, 1);
+
+                cam.backgroundColor = new Color(0.08f, 0.10f, 0.15f);
+            }
+            else
+            {
+                cam.backgroundColor = new Color(0.05f, 0.05f, 0.08f);
+            }
+        }
+
+        private static Sprite CreateFogSprite()
+        {
+            int w = 64, h = 64;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            var rng = new System.Random(999);
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float nx = (float)x / w;
+                    float ny = (float)y / h;
+                    float p = Mathf.PerlinNoise(nx * 4f, ny * 4f);
+                    float p2 = Mathf.PerlinNoise(nx * 8f + 5f, ny * 8f + 5f);
+                    float a = (p * 0.6f + p2 * 0.4f) * 0.5f;
+                    float edge = Mathf.Min(nx, 1 - nx, ny, 1 - ny) * 4f;
+                    a *= Mathf.Clamp01(edge);
+                    tex.SetPixel(x, y, new Color(1, 1, 1, a));
+                }
+            }
+            tex.Apply();
+            tex.filterMode = FilterMode.Bilinear;
+            return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 16f);
+        }
+
+        private static Sprite CreateGlowSprite()
+        {
+            int w = 64, h = 64;
+            var tex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+            float cx = w / 2f, cy = h / 2f;
+            for (int y = 0; y < h; y++)
+            {
+                for (int x = 0; x < w; x++)
+                {
+                    float dx = (x - cx) / cx;
+                    float dy = (y - cy) / cy;
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy);
+                    float a = Mathf.Max(0, 1f - dist) * 0.3f;
+                    tex.SetPixel(x, y, new Color(1, 1, 1, a));
+                }
+            }
+            tex.Apply();
+            tex.filterMode = FilterMode.Bilinear;
+            return Sprite.Create(tex, new Rect(0, 0, w, h), new Vector2(0.5f, 0.5f), 16f);
+        }
+
+        private void SpawnCollectibles()
+        {
+            Interaction.CollectibleSpawner.SpawnForChapter(_chapterData);
         }
 
         private void SpawnChapterExit()
         {
-            if (_chapterData.ChapterNumber >= ChapterManager.TotalChapters) return;
-
             var exitGo = new GameObject("ChapterExit");
             exitGo.transform.position = _chapterData.ExitPosition;
 
             var sr = exitGo.AddComponent<SpriteRenderer>();
-            sr.sprite = Visuals.ProceduralAssets.CreateSignpostSprite();
+            bool isFinal = _chapterData.ChapterNumber >= ChapterManager.TotalChapters;
+            sr.sprite = isFinal
+                ? Visuals.ProceduralAssets.CreateGateSprite(MapTheme.Celestial)
+                : Visuals.ProceduralAssets.CreateGateSprite(_chapterData.Theme);
             sr.sortingOrder = 6;
-            sr.color = new Color(0.9f, 0.78f, 0.45f);
 
             exitGo.AddComponent<Interaction.ChapterExitInteractable>();
         }
@@ -386,12 +674,19 @@ namespace PilgrimsProgress.Scene
                 new Vector2(0.88f, 0.93f), new Vector2(0.98f, 0.97f), "80");
             burdenText.alignment = TextAlignmentOptions.MidlineRight;
 
+            var lm = ServiceLocator.TryGet<Localization.LocalizationManager>(out var locMgr) ? locMgr : null;
+            bool isKo = lm != null && lm.CurrentLanguage == "ko";
+
             string locationDisplay = _chapterData != null
-                ? $"Ch.{_chapterData.ChapterNumber} {_chapterData.NameKR}"
+                ? $"Ch.{_chapterData.ChapterNumber} {(isKo ? _chapterData.NameKR : _chapterData.NameEN)}"
                 : "";
             var locationName = CreateTMP(canvasGo.transform, "LocationName", 18,
                 Color.white,
                 new Vector2(0.30f, 0.93f), new Vector2(0.70f, 0.98f), locationDisplay);
+
+            canvasGo.AddComponent<ObjectiveHUDText>().Initialize(_chapterData);
+
+            BuildMiniJourneyBar(canvasGo.transform);
 
             var hud = canvasGo.AddComponent<ExplorationHUD>();
             SetField(hud, "_faithBar", faithBar);
@@ -403,6 +698,88 @@ namespace PilgrimsProgress.Scene
             SetField(hud, "_burdenText", burdenText);
             SetField(hud, "_locationName", locationName);
             SetField(hud, "_canvasGroup", cg);
+        }
+
+        private void BuildToastUI()
+        {
+            var canvasGo = GameObject.Find("HUDCanvas");
+            if (canvasGo == null) return;
+            canvasGo.AddComponent<ToastUI>();
+            canvasGo.AddComponent<BuffIconDisplay>();
+            canvasGo.AddComponent<Visuals.ScreenFlash>();
+
+            var fxGo = new GameObject("DialogueEffectsManager");
+            var fxMgr = fxGo.AddComponent<DialogueEffectsManager>();
+            fxMgr.Initialize();
+        }
+
+        private void BuildMiniJourneyBar(Transform parent)
+        {
+            int current = _chapterData.ChapterNumber;
+            int total = ChapterManager.TotalChapters;
+
+            var container = new GameObject("MiniJourney");
+            container.transform.SetParent(parent, false);
+            var crt = container.AddComponent<RectTransform>();
+            crt.anchorMin = new Vector2(0.35f, 0.975f);
+            crt.anchorMax = new Vector2(0.65f, 0.99f);
+            crt.sizeDelta = Vector2.zero;
+
+            float dotWidth = 1.0f / total;
+            for (int i = 0; i < total; i++)
+            {
+                float x = i * dotWidth + dotWidth * 0.1f;
+                float xEnd = x + dotWidth * 0.7f;
+
+                var dotGo = new GameObject($"Dot{i + 1}");
+                dotGo.transform.SetParent(container.transform, false);
+                var dotImg = dotGo.AddComponent<Image>();
+
+                bool completed = (i + 1) < current;
+                bool isCurrent = (i + 1) == current;
+
+                Color dotColor;
+                if (completed) dotColor = new Color(0.35f, 0.70f, 0.40f, 0.7f);
+                else if (isCurrent) dotColor = new Color(1f, 0.92f, 0.55f, 0.9f);
+                else dotColor = new Color(0.3f, 0.3f, 0.3f, 0.3f);
+
+                dotImg.color = dotColor;
+                dotImg.raycastTarget = false;
+                var drt = dotImg.rectTransform;
+                drt.anchorMin = new Vector2(x, 0.1f);
+                drt.anchorMax = new Vector2(xEnd, 0.9f);
+                drt.sizeDelta = Vector2.zero;
+            }
+
+            // Tab hint
+            var lm = ServiceLocator.TryGet<Localization.LocalizationManager>(out var locMgr) ? locMgr : null;
+            bool isKo = lm != null && lm.CurrentLanguage == "ko";
+            string tabHint = isKo ? "[TAB] 여정 지도" : "[TAB] Journey Map";
+            var hintGo = new GameObject("TabHint");
+            hintGo.transform.SetParent(parent, false);
+            var hintTmp = hintGo.AddComponent<TextMeshProUGUI>();
+            hintTmp.text = tabHint;
+            hintTmp.fontSize = 11;
+            hintTmp.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
+            hintTmp.alignment = TextAlignmentOptions.MidlineRight;
+            hintTmp.raycastTarget = false;
+            var hrt = hintTmp.rectTransform;
+            hrt.anchorMin = new Vector2(0.65f, 0.975f);
+            hrt.anchorMax = new Vector2(0.80f, 0.995f);
+            hrt.sizeDelta = Vector2.zero;
+            hrt.anchoredPosition = Vector2.zero;
+        }
+
+        private void BuildPauseMenu()
+        {
+            var pauseGo = new GameObject("PauseMenu");
+            pauseGo.AddComponent<PauseMenuUI>();
+        }
+
+        private void BuildJourneyMap()
+        {
+            var journeyGo = new GameObject("JourneyMap");
+            journeyGo.AddComponent<JourneyMapUI>();
         }
 
         private void LoadInkStory()

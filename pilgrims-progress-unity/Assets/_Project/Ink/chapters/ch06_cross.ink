@@ -205,10 +205,39 @@
     [ End of Chapter 6 — The Cross ]
 }
 
-{lang == "ko":
-    [ MVP 클라이맥스 ]
-- else:
-    [ MVP Climax ]
-}
+-> ch07_opening
 
--> epilogue_start
+// ── NPC Interaction Knots (standalone) ──
+
+=== ch06_shining_ones ===
+# SPEAKER: Shining One
+# EMOTION: joyful
+{lang == "ko":
+    순례자여, 평안하라! 네 죄가 용서받았느니라.
+- else:
+    Peace be to you, pilgrim! Your sins are forgiven.
+}
+# SPEAKER: Christian
+# EMOTION: overwhelmed
+{lang == "ko":
+    정말입니까? 이 짐이... 진짜로 사라진 겁니까?
+- else:
+    Truly? This burden... is it really gone?
+}
+# SPEAKER: Shining One
+# EMOTION: blessed
+{lang == "ko":
+    그렇다. 십자가 아래에서 네 짐이 풀려 무덤 속으로 굴러 들어갔느니라. 다시는 보이지 않으리라.
+- else:
+    It is so. At the foot of the Cross, your burden was loosed and rolled into the sepulcher. You shall see it no more.
+}
+# STAT: faith +8
+# STAT: courage +5
+# BURDEN: -50
+{lang == "ko":
+    이제 너에게 새 옷을 입히고 이마에 표를 주며, 봉인된 두루마리를 주노니 — 천상의 도시 문 앞에서 내보이라.
+- else:
+    Now we clothe you in new garments, set a mark upon your forehead, and give you a sealed scroll — present it at the gate of the Celestial City.
+}
+# BIBLE_CARD: isaiah_61_10
+-> DONE

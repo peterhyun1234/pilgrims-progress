@@ -39,8 +39,14 @@
     "Turn back... only death lies ahead... your God has abandoned you..."
 }
 
-* {lang == "ko": [기도한다] "내가 사망의 음침한 골짜기로 다닐지라도..." -> ch09_pray} {lang != "ko": [Pray] "Even though I walk through the valley of the shadow of death..." -> ch09_pray}
-* {lang == "ko": [묵묵히 앞으로 걷는다] -> ch09_walk_silent} {lang != "ko": [Walk forward in silence] -> ch09_walk_silent}
++ {lang == "ko"} [기도한다] "내가 사망의 음침한 골짜기로 다닐지라도..."
+    -> ch09_pray
++ {lang != "ko"} [Pray] "Even though I walk through the valley of the shadow of death..."
+    -> ch09_pray
++ {lang == "ko"} [묵묵히 앞으로 걷는다]
+    -> ch09_walk_silent
++ {lang != "ko"} [Walk forward in silence]
+    -> ch09_walk_silent
 
 === ch09_pray ===
 ~ faith += 10
@@ -96,7 +102,10 @@
     The path led between the flames. Not a single misstep was allowed.
 }
 
-* {lang == "ko": [조심스럽게 불꽃 사이를 지나간다] -> ch09_through_flames} {lang != "ko": [Carefully pass through the flames] -> ch09_through_flames}
++ {lang == "ko"} [조심스럽게 불꽃 사이를 지나간다]
+    -> ch09_through_flames
++ {lang != "ko"} [Carefully pass through the flames]
+    -> ch09_through_flames
 
 === ch09_through_flames ===
 ~ courage += 10

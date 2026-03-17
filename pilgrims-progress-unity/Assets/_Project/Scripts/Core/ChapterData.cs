@@ -9,13 +9,17 @@ namespace PilgrimsProgress.Core
         public string NpcId;
         public string InkKnot;
         public Vector3 Position;
+        public int Order;
+        public bool Required;
 
-        public NPCSpawnData(string name, string npcId, string inkKnot, Vector3 position)
+        public NPCSpawnData(string name, string npcId, string inkKnot, Vector3 position, int order = 0, bool required = true)
         {
             Name = name;
             NpcId = npcId;
             InkKnot = inkKnot;
             Position = position;
+            Order = order;
+            Required = required;
         }
     }
 
@@ -83,9 +87,9 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.City,
             NPCs = new[]
             {
-                new NPCSpawnData("Evangelist", "evangelist", "ch01_evangelist", new Vector3(5, 0, 0)),
-                new NPCSpawnData("Obstinate", "obstinate", "ch01_obstinate", new Vector3(-5, 3, 0)),
-                new NPCSpawnData("Pliable", "pliable", "ch01_pliable", new Vector3(-3, 3, 0)),
+                new NPCSpawnData("Evangelist", "evangelist", "ch01_evangelist", new Vector3(5, 0, 0), 1),
+                new NPCSpawnData("Obstinate", "obstinate", "ch01_obstinate", new Vector3(-5, 3, 0), 2),
+                new NPCSpawnData("Pliable", "pliable", "ch01_pliable", new Vector3(-3, 5, 0), 3),
             }
         };
 
@@ -101,7 +105,7 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.Fields,
             NPCs = new[]
             {
-                new NPCSpawnData("Help", "help", "ch02_help", new Vector3(0, 3, 0)),
+                new NPCSpawnData("Help", "help", "ch02_help", new Vector3(0, 3, 0), 1),
             }
         };
 
@@ -117,8 +121,8 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.Village,
             NPCs = new[]
             {
-                new NPCSpawnData("Worldly Wiseman", "worldly_wiseman", "ch03_worldly_wiseman", new Vector3(-3, 0, 0)),
-                new NPCSpawnData("Evangelist", "evangelist", "ch03_evangelist_return", new Vector3(5, 5, 0)),
+                new NPCSpawnData("Worldly Wiseman", "worldly_wiseman", "ch03_worldly_wiseman", new Vector3(-3, 0, 0), 1),
+                new NPCSpawnData("Evangelist", "evangelist", "ch03_evangelist_return", new Vector3(5, 5, 0), 2),
             }
         };
 
@@ -134,7 +138,7 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.Gate,
             NPCs = new[]
             {
-                new NPCSpawnData("Good-will", "goodwill", "ch04_goodwill", new Vector3(0, 3, 0)),
+                new NPCSpawnData("Good-will", "goodwill", "ch04_goodwill", new Vector3(0, 3, 0), 1),
             }
         };
 
@@ -150,7 +154,7 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.Interior,
             NPCs = new[]
             {
-                new NPCSpawnData("Interpreter", "interpreter", "ch05_interpreter", new Vector3(0, 3, 0)),
+                new NPCSpawnData("Interpreter", "interpreter", "ch05_interpreter", new Vector3(0, 3, 0), 1),
             }
         };
 
@@ -166,9 +170,9 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.Hill,
             NPCs = new[]
             {
-                new NPCSpawnData("Shining One 1", "shining1", "ch06_shining_ones", new Vector3(-2, 6, 0)),
-                new NPCSpawnData("Shining One 2", "shining2", "ch06_shining_ones", new Vector3(0, 7, 0)),
-                new NPCSpawnData("Shining One 3", "shining3", "ch06_shining_ones", new Vector3(2, 6, 0)),
+                new NPCSpawnData("Shining One 1", "shining1", "ch06_shining_ones", new Vector3(-2, 6, 0), 1),
+                new NPCSpawnData("Shining One 2", "shining2", "ch06_shining_ones", new Vector3(0, 7, 0), 2, false),
+                new NPCSpawnData("Shining One 3", "shining3", "ch06_shining_ones", new Vector3(2, 6, 0), 3, false),
             }
         };
 
@@ -184,9 +188,9 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.Hill,
             NPCs = new[]
             {
-                new NPCSpawnData("Prudence", "prudence", "ch07_prudence", new Vector3(-3, 8, 0)),
-                new NPCSpawnData("Piety", "piety", "ch07_piety", new Vector3(0, 10, 0)),
-                new NPCSpawnData("Charity", "charity", "ch07_charity", new Vector3(3, 8, 0)),
+                new NPCSpawnData("Prudence", "prudence", "ch07_prudence", new Vector3(-3, 8, 0), 1),
+                new NPCSpawnData("Piety", "piety", "ch07_piety", new Vector3(0, 10, 0), 2),
+                new NPCSpawnData("Charity", "charity", "ch07_charity", new Vector3(3, 8, 0), 3),
             }
         };
 
@@ -202,7 +206,7 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.DarkValley,
             NPCs = new[]
             {
-                new NPCSpawnData("Apollyon", "apollyon", "ch08_apollyon_battle", new Vector3(0, 0, 0)),
+                new NPCSpawnData("Apollyon", "apollyon", "ch08_apollyon_battle", new Vector3(0, 0, 0), 1),
             }
         };
 
@@ -231,9 +235,9 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.Market,
             NPCs = new[]
             {
-                new NPCSpawnData("Faithful", "faithful", "ch10_faithful", new Vector3(-5, 0, 0)),
-                new NPCSpawnData("Hopeful", "hopeful", "ch10_hopeful", new Vector3(8, 5, 0)),
-                new NPCSpawnData("By-ends", "byends", "ch10_byends", new Vector3(3, -3, 0)),
+                new NPCSpawnData("Faithful", "faithful", "ch10_faithful", new Vector3(-5, 0, 0), 1),
+                new NPCSpawnData("By-ends", "byends", "ch10_byends", new Vector3(3, -3, 0), 2),
+                new NPCSpawnData("Hopeful", "hopeful", "ch10_hopeful", new Vector3(8, 5, 0), 3),
             }
         };
 
@@ -249,9 +253,9 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.Castle,
             NPCs = new[]
             {
-                new NPCSpawnData("Giant Despair", "giant_despair", "ch11_giant_despair", new Vector3(-5, 0, 0)),
-                new NPCSpawnData("Shepherd 1", "shepherd1", "ch11_shepherds", new Vector3(5, 10, 0)),
-                new NPCSpawnData("Shepherd 2", "shepherd2", "ch11_shepherds", new Vector3(7, 10, 0)),
+                new NPCSpawnData("Giant Despair", "giant_despair", "ch11_giant_despair", new Vector3(-5, 0, 0), 1),
+                new NPCSpawnData("Shepherd 1", "shepherd1", "ch11_shepherds", new Vector3(5, 10, 0), 2),
+                new NPCSpawnData("Shepherd 2", "shepherd2", "ch11_shepherds", new Vector3(7, 10, 0), 3, false),
             }
         };
 
@@ -267,8 +271,8 @@ namespace PilgrimsProgress.Core
             Theme = MapTheme.Celestial,
             NPCs = new[]
             {
-                new NPCSpawnData("Ignorance", "ignorance", "ch12_ignorance", new Vector3(-8, -3, 0)),
-                new NPCSpawnData("Hopeful", "hopeful", "ch12_hopeful_companion", new Vector3(-16, 1, 0)),
+                new NPCSpawnData("Hopeful", "hopeful", "ch12_hopeful_companion", new Vector3(-16, 1, 0), 1),
+                new NPCSpawnData("Ignorance", "ignorance", "ch12_ignorance", new Vector3(-8, -3, 0), 2),
             }
         };
     }
