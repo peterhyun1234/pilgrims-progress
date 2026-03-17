@@ -179,10 +179,6 @@ namespace PilgrimsProgress.Localization
                 {"next_journey", "다음 여정"},
                 {"press_continue", "아무 키나 눌러 계속"},
 
-                // Confirm
-                {"confirm_yes", "예"},
-                {"confirm_no", "아니오"},
-
                 // Interaction
                 {"interact_hint", "E / Space 로 대화"},
                 {"dialogue_done", "대화 완료"}
@@ -291,10 +287,6 @@ namespace PilgrimsProgress.Localization
                 {"chapter_complete", "Chapter Complete"},
                 {"next_journey", "Next Journey"},
                 {"press_continue", "Press any key to continue"},
-
-                // Confirm
-                {"confirm_yes", "Yes"},
-                {"confirm_no", "No"},
 
                 // Interaction
                 {"interact_hint", "E / Space to talk"},

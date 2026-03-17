@@ -10,6 +10,8 @@ namespace PilgrimsProgress.Player
     [RequireComponent(typeof(SpriteRenderer))]
     public class PlayerAnimator : MonoBehaviour
     {
+        private const string CustomSheetKey = "custom_player";
+
         [Header("Frame Rates")]
         [SerializeField] private float _idleFrameRate = 4f;
         [SerializeField] private float _walkFrameRate = 8f;
@@ -48,7 +50,6 @@ namespace PilgrimsProgress.Player
         private void Start()
         {
             LoadSprites();
-            ApplyCustomizationTint();
         }
 
         public void PlayAction(AnimAction action, Action onComplete = null)
@@ -77,6 +78,14 @@ namespace PilgrimsProgress.Player
 
         private void LoadSprites()
         {
+            if (TryBuildCustomSheet())
+            {
+                _useSpriteSheet = true;
+                _sr.color = Color.white;
+                _sr.sprite = _sheetData.Sprites[0];
+                return;
+            }
+
             string npcId = GetPlayerSpriteId();
             _sheetData = SpriteSheetLoader.Load(npcId);
             _useSpriteSheet = _sheetData != null;
@@ -84,6 +93,7 @@ namespace PilgrimsProgress.Player
             if (_useSpriteSheet)
             {
                 _sr.sprite = _sheetData.Sprites[0];
+                ApplyCustomizationTint();
             }
             else
             {
@@ -91,19 +101,35 @@ namespace PilgrimsProgress.Player
             }
         }
 
+        private bool TryBuildCustomSheet()
+        {
+            var custManager = GetCustManager();
+            if (custManager == null || custManager.Presets == null) return false;
+
+            var data = custManager.CurrentCustomization;
+            var presets = custManager.Presets;
+
+            bool showBurden = true;
+            var chapterMgr = ChapterManager.Instance;
+            if (chapterMgr != null && chapterMgr.CurrentChapter >= 6)
+                showBurden = false;
+
+            var sheetTex = CharacterSpriteBuilder.BuildSpriteSheet(data, presets, showBurden);
+            if (sheetTex == null) return false;
+
+            SpriteSheetLoader.InvalidateKey(CustomSheetKey);
+            _sheetData = SpriteSheetLoader.RegisterCustomSheet(CustomSheetKey, sheetTex);
+            return _sheetData != null;
+        }
+
         private string GetPlayerSpriteId()
         {
-            var chapterMgr = ChapterManager.Instance;
-            int chapter = chapterMgr != null ? chapterMgr.CurrentChapter : 1;
-            return chapter >= 6 ? "christian_free" : "christian";
+            return CustomSheetKey;
         }
 
         private void ApplyCustomizationTint()
         {
-            var custManager = PlayerCustomizationManager.Instance;
-            if (custManager == null)
-                ServiceLocator.TryGet<PlayerCustomizationManager>(out custManager);
-
+            var custManager = GetCustManager();
             if (custManager == null || custManager.Presets == null) return;
 
             Color outfitColor = custManager.GetOutfitColor();
@@ -113,10 +139,7 @@ namespace PilgrimsProgress.Player
 
         private void BuildFallbackSprite()
         {
-            var custManager = PlayerCustomizationManager.Instance;
-            if (custManager == null)
-                ServiceLocator.TryGet<PlayerCustomizationManager>(out custManager);
-
+            var custManager = GetCustManager();
             if (custManager != null && custManager.Presets != null)
             {
                 _fallbackSprite = CharacterSpriteBuilder.Build(
@@ -128,8 +151,24 @@ namespace PilgrimsProgress.Player
 
         public void RefreshCustomization()
         {
-            ApplyCustomizationTint();
-            if (!_useSpriteSheet) BuildFallbackSprite();
+            SpriteSheetLoader.InvalidateKey(CustomSheetKey);
+            if (TryBuildCustomSheet())
+            {
+                _useSpriteSheet = true;
+                _sr.color = Color.white;
+                ApplyFrame(_currentDir, 0);
+            }
+            else
+            {
+                BuildFallbackSprite();
+            }
+        }
+
+        private PlayerCustomizationManager GetCustManager()
+        {
+            var mgr = PlayerCustomizationManager.Instance;
+            if (mgr == null) ServiceLocator.TryGet(out mgr);
+            return mgr;
         }
 
         private void Update()
@@ -252,21 +291,20 @@ namespace PilgrimsProgress.Player
                 return;
             }
 
-            string id = GetPlayerSpriteId();
-            var data = SpriteSheetLoader.Load(id);
-            if (data != null && data.HasRow(SpriteSheetLoader.AnimRow.Interact))
+            if (_sheetData != null && _sheetData.HasRow(SpriteSheetLoader.AnimRow.Interact))
             {
                 _frameTimer += Time.deltaTime;
                 if (_frameTimer >= 1f / _interactFrameRate)
                 {
                     _frameTimer -= 1f / _interactFrameRate;
                     _currentFrame++;
-                    if (_currentFrame >= data.FramesPerDirection)
+                    if (_currentFrame >= _sheetData.FramesPerDirection)
                     {
                         SetState(AnimState.Idle);
                         return;
                     }
                 }
+                string id = GetPlayerSpriteId();
                 var sprite = SpriteSheetLoader.GetAnimSprite(id, SpriteSheetLoader.AnimRow.Interact, _currentFrame);
                 if (sprite != null) _sr.sprite = sprite;
             }

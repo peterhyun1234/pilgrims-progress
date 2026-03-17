@@ -127,10 +127,10 @@ namespace PilgrimsProgress.UI
             // Emotion bubble
             var bubbleGo = new GameObject("EmotionBubble");
             bubbleGo.transform.SetParent(canvasGo.transform, false);
+            _emotionBubbleRT = bubbleGo.AddComponent<RectTransform>();
             _emotionBubbleCG = bubbleGo.AddComponent<CanvasGroup>();
             _emotionBubbleCG.alpha = 0;
             _emotionBubbleCG.blocksRaycasts = false;
-            _emotionBubbleRT = bubbleGo.GetComponent<RectTransform>();
             _emotionBubbleRT.anchorMin = new Vector2(0.5f, 0.5f);
             _emotionBubbleRT.anchorMax = new Vector2(0.5f, 0.5f);
             _emotionBubbleRT.sizeDelta = new Vector2(80, 80);

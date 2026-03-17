@@ -5,7 +5,9 @@
         "Unity.TextMeshPro",
         "Ink-Libraries",
         "Unity.InputSystem",
-        "Unity.Cinemachine"
+        "Unity.Cinemachine",
+        "Unity.RenderPipelines.Universal.Runtime",
+        "Unity.RenderPipelines.Universal.2D.Runtime"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

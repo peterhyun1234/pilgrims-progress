@@ -1,6 +1,7 @@
 using UnityEngine;
 using PilgrimsProgress.Core;
 using PilgrimsProgress.Interaction;
+using PilgrimsProgress.Narrative;
 
 namespace PilgrimsProgress.Player
 {

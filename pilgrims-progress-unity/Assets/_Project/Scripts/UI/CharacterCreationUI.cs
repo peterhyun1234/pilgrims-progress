@@ -63,6 +63,9 @@ namespace PilgrimsProgress.UI
         private CustomizationPresets _presets;
         private bool _uiGenerated;
         private float _previewPulseTimer;
+        private float _directionTimer;
+        private int _previewDirIndex;
+        private Sprite[] _previewDirSprites;
 
         public event System.Action OnConfirmed;
         public event System.Action OnBack;
@@ -153,6 +156,17 @@ namespace PilgrimsProgress.UI
             _previewPulseTimer += Time.unscaledDeltaTime;
             float pulse = 1f + Mathf.Sin(_previewPulseTimer * 1.5f) * 0.02f;
             _previewImage.transform.localScale = new Vector3(pulse, pulse, 1f);
+
+            if (_previewDirSprites != null && _previewDirSprites.Length >= 4)
+            {
+                _directionTimer += Time.unscaledDeltaTime;
+                if (_directionTimer >= 1.2f)
+                {
+                    _directionTimer = 0f;
+                    _previewDirIndex = (_previewDirIndex + 1) % 4;
+                    _previewImage.sprite = _previewDirSprites[_previewDirIndex];
+                }
+            }
         }
 
         private void OnRandomize()
@@ -219,9 +233,26 @@ namespace PilgrimsProgress.UI
         {
             if (_previewImage == null) return;
 
-            var sprite = CharacterSpriteBuilder.BuildPreview(_editing, _presets);
-            if (sprite != null)
-                _previewImage.sprite = sprite;
+            var sheetTex = CharacterSpriteBuilder.BuildSpriteSheet(_editing, _presets, showBurden: true);
+            if (sheetTex == null) return;
+
+            int cellSize = 16;
+            int cols = sheetTex.width / cellSize;
+            int rows = sheetTex.height / cellSize;
+            _previewDirSprites = new Sprite[Mathf.Min(rows, 4)];
+
+            for (int row = 0; row < _previewDirSprites.Length; row++)
+            {
+                int x = 0;
+                int y = (rows - 1 - row) * cellSize;
+                _previewDirSprites[row] = Sprite.Create(sheetTex,
+                    new Rect(x, y, cellSize, cellSize),
+                    new Vector2(0.5f, 0.25f), cellSize, 0, SpriteMeshType.FullRect);
+            }
+
+            _previewDirIndex = 0;
+            _directionTimer = 0f;
+            _previewImage.sprite = _previewDirSprites[0];
         }
 
         private void UpdateAllSelectors()

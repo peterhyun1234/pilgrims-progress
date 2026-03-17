@@ -86,6 +86,10 @@ namespace PilgrimsProgress.UI
 
             bool hasSave = GameManager.Instance != null && GameManager.Instance.HasSaveData();
             if (_continueButton != null) _continueButton.interactable = hasSave;
+            if (_collectionButton != null) _collectionButton.interactable = false;
+            if (_settingsButton != null) _settingsButton.interactable = false;
+
+            DimDisabledButtons();
         }
 
         private void AddHoverEffects()
@@ -105,6 +109,27 @@ namespace PilgrimsProgress.UI
             if (btn == null) return;
             var hover = btn.gameObject.AddComponent<ButtonHoverEffect>();
             hover.Initialize(btn);
+        }
+
+        private void DimDisabledButtons()
+        {
+            Button[] buttons = { _continueButton, _collectionButton, _settingsButton };
+            foreach (var btn in buttons)
+            {
+                if (btn == null || btn.interactable) continue;
+                var img = btn.GetComponent<Image>();
+                if (img != null)
+                {
+                    var c = img.color;
+                    img.color = new Color(c.r, c.g, c.b, c.a * 0.4f);
+                }
+                var label = btn.GetComponentInChildren<TextMeshProUGUI>();
+                if (label != null)
+                {
+                    var c = label.color;
+                    label.color = new Color(c.r, c.g, c.b, 0.35f);
+                }
+            }
         }
 
         private void HideAllPanels()
@@ -237,8 +262,9 @@ namespace PilgrimsProgress.UI
             if (_subtitleText != null) _subtitleText.text = loc.Get("game_subtitle");
             if (_newGameLabel != null) _newGameLabel.text = loc.Get("menu_new_game");
             if (_continueLabel != null) _continueLabel.text = loc.Get("menu_continue");
-            if (_collectionLabel != null) _collectionLabel.text = loc.Get("menu_collection");
-            if (_settingsLabel != null) _settingsLabel.text = loc.Get("menu_settings");
+            string soon = loc.CurrentLanguage == "ko" ? " (준비 중)" : " (Soon)";
+            if (_collectionLabel != null) _collectionLabel.text = loc.Get("menu_collection") + soon;
+            if (_settingsLabel != null) _settingsLabel.text = loc.Get("menu_settings") + soon;
             if (_languageLabel != null) _languageLabel.text = loc.Get("menu_language");
             if (_quitLabel != null) _quitLabel.text = loc.Get("menu_quit");
             if (_guestLabel != null) _guestLabel.text = loc.Get("game_guest");

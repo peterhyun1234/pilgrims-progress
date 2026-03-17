@@ -11,9 +11,9 @@ namespace PilgrimsProgress.Visuals
 
         public enum AnimRow
         {
-            Walk = 0,     // rows 0-3: directional walk/idle (always present)
-            Interact = 4, // row 4: interact animation (if sheet is tall enough)
-            Emote = 5     // row 5: emote animation
+            Walk = 0,
+            Interact = 4,
+            Emote = 5
         }
 
         private const int DirectionCount = 4;
@@ -73,11 +73,48 @@ namespace PilgrimsProgress.Visuals
             return data;
         }
 
+        public static SheetData RegisterCustomSheet(string key, Texture2D tex, int cellSize = 16)
+        {
+            string k = key.ToLower();
+            int cols = tex.width / cellSize;
+            int rows = tex.height / cellSize;
+
+            var data = new SheetData
+            {
+                FramesPerDirection = cols,
+                TotalRows = rows,
+                CellWidth = cellSize,
+                CellHeight = cellSize,
+                Sprites = new Sprite[cols * rows]
+            };
+
+            for (int row = 0; row < rows; row++)
+            {
+                for (int col = 0; col < cols; col++)
+                {
+                    int x = col * cellSize;
+                    int y = (rows - 1 - row) * cellSize;
+                    var rect = new Rect(x, y, cellSize, cellSize);
+                    var pivot = new Vector2(0.5f, 0.25f);
+                    data.Sprites[row * cols + col] = Sprite.Create(
+                        tex, rect, pivot, cellSize, 0, SpriteMeshType.FullRect);
+                }
+            }
+
+            _cache[k] = data;
+            return data;
+        }
+
+        public static void InvalidateKey(string key)
+        {
+            _cache.Remove(key.ToLower());
+        }
+
         private static int DetectColumnCount(Texture2D tex)
         {
             float aspect = (float)tex.width / tex.height;
-            if (aspect >= 0.9f && aspect <= 1.1f) return 4;  // 4x4 grid
-            if (aspect >= 0.7f && aspect <= 0.8f) return 3;  // 3x4 grid
+            if (aspect >= 0.9f && aspect <= 1.1f) return 4;
+            if (aspect >= 0.7f && aspect <= 0.8f) return 3;
             return tex.width > tex.height ? 4 : 3;
         }
 

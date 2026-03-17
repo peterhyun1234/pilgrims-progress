@@ -222,8 +222,8 @@ namespace PilgrimsProgress.Visuals
                         new Vector3(Random.Range(-0.05f, 0.05f), Random.Range(0.1f, 0.3f), 0f),
                         Random.Range(3f, 7f));
 
-                case Core.MapTheme.River:
-                case Core.MapTheme.Swamp:
+                case Core.MapTheme.Village:
+                case Core.MapTheme.Enchanted:
                     return (
                         new Color(0.4f, 0.6f, 0.8f),
                         new Vector3(Random.Range(0.05f, 0.15f), Random.Range(-0.02f, 0.05f), 0f),

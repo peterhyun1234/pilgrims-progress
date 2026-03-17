@@ -95,8 +95,8 @@ namespace PilgrimsProgress.Visuals
                     return (new Color(0.08f, 0.05f, 0.12f), new Color(0.12f, 0.08f, 0.15f));
                 case MapTheme.Celestial:
                     return (new Color(0.25f, 0.20f, 0.35f), new Color(0.30f, 0.28f, 0.42f));
-                case MapTheme.River:
-                case MapTheme.Swamp:
+                case MapTheme.Village:
+                case MapTheme.Enchanted:
                     return (new Color(0.10f, 0.15f, 0.12f), new Color(0.14f, 0.18f, 0.15f));
                 case MapTheme.City:
                 case MapTheme.Market:
