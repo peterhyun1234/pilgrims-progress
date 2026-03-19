@@ -11,6 +11,33 @@ TextureImporter:
   - first:
       213: -707808184919203851
     second: ignorance_spritesheet_2
+  - first:
+      213: 5559869839422692948
+    second: ignorance_spritesheet_3
+  - first:
+      213: 2725155039617676103
+    second: ignorance_spritesheet_4
+  - first:
+      213: -3975405271121662113
+    second: ignorance_spritesheet_5
+  - first:
+      213: -5187240874067895415
+    second: ignorance_spritesheet_6
+  - first:
+      213: -8845864139416907521
+    second: ignorance_spritesheet_7
+  - first:
+      213: 5582231206013272775
+    second: ignorance_spritesheet_8
+  - first:
+      213: 652034943746716450
+    second: ignorance_spritesheet_9
+  - first:
+      213: -7505387889881636444
+    second: ignorance_spritesheet_10
+  - first:
+      213: 8614040901866723604
+    second: ignorance_spritesheet_11
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -30,7 +57,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -122,12 +149,12 @@ TextureImporter:
       name: ignorance_spritesheet_0
       rect:
         serializedVersion: 2
-        x: 2
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -144,12 +171,12 @@ TextureImporter:
       name: ignorance_spritesheet_1
       rect:
         serializedVersion: 2
-        x: 18
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 16
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -166,12 +193,12 @@ TextureImporter:
       name: ignorance_spritesheet_2
       rect:
         serializedVersion: 2
-        x: 34
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 32
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -180,6 +207,204 @@ TextureImporter:
       bones: []
       spriteID: 5ffd6c8b43c5d26f0800000000000000
       internalID: -707808184919203851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ignorance_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45e92385920a82d40800000000000000
+      internalID: 5559869839422692948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ignorance_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 743f64ee112b1d520800000000000000
+      internalID: 2725155039617676103
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ignorance_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5fe390f7f584d8c0800000000000000
+      internalID: -3975405271121662113
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ignorance_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 98bdbc088e73308b0800000000000000
+      internalID: -5187240874067895415
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ignorance_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff050bebe6d2d3580800000000000000
+      internalID: -8845864139416907521
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ignorance_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7c28588b4b1187d40800000000000000
+      internalID: 5582231206013272775
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ignorance_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2233a23a35e7c0900800000000000000
+      internalID: 652034943746716450
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ignorance_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a1261aba7187d790800000000000000
+      internalID: -7505387889881636444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ignorance_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4199374af883b8770800000000000000
+      internalID: 8614040901866723604
       vertices: []
       indices: 
       edges: []
@@ -200,7 +425,16 @@ TextureImporter:
     nameFileIdTable:
       ignorance_spritesheet_0: -4648889593624317088
       ignorance_spritesheet_1: 6811400047339126467
+      ignorance_spritesheet_10: -7505387889881636444
+      ignorance_spritesheet_11: 8614040901866723604
       ignorance_spritesheet_2: -707808184919203851
+      ignorance_spritesheet_3: 5559869839422692948
+      ignorance_spritesheet_4: 2725155039617676103
+      ignorance_spritesheet_5: -3975405271121662113
+      ignorance_spritesheet_6: -5187240874067895415
+      ignorance_spritesheet_7: -8845864139416907521
+      ignorance_spritesheet_8: 5582231206013272775
+      ignorance_spritesheet_9: 652034943746716450
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

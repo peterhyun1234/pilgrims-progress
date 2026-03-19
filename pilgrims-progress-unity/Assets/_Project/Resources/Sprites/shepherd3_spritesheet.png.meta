@@ -11,6 +11,33 @@ TextureImporter:
   - first:
       213: 3468117961982814316
     second: shepherd3_spritesheet_2
+  - first:
+      213: 7380197956983276816
+    second: shepherd3_spritesheet_3
+  - first:
+      213: -7334171481484627250
+    second: shepherd3_spritesheet_4
+  - first:
+      213: -4963923709269769387
+    second: shepherd3_spritesheet_5
+  - first:
+      213: 4760379298921153408
+    second: shepherd3_spritesheet_6
+  - first:
+      213: 5031436509108550306
+    second: shepherd3_spritesheet_7
+  - first:
+      213: 9201817138120227080
+    second: shepherd3_spritesheet_8
+  - first:
+      213: -3820801663682934533
+    second: shepherd3_spritesheet_9
+  - first:
+      213: -1127790285622352998
+    second: shepherd3_spritesheet_10
+  - first:
+      213: -8329716319478270534
+    second: shepherd3_spritesheet_11
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -30,7 +57,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -123,11 +150,11 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
+        y: 48
         width: 16
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -145,11 +172,11 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 16
-        y: 0
+        y: 48
         width: 16
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -167,11 +194,11 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 32
-        y: 0
+        y: 48
         width: 16
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -180,6 +207,204 @@ TextureImporter:
       bones: []
       spriteID: c68232b59ea312030800000000000000
       internalID: 3468117961982814316
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shepherd3_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0154d0e90fabb6660800000000000000
+      internalID: 7380197956983276816
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shepherd3_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec2fe4c45e9c73a90800000000000000
+      internalID: -7334171481484627250
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shepherd3_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 55306d8bfa99c1bb0800000000000000
+      internalID: -4963923709269769387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shepherd3_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 083815430c3401240800000000000000
+      internalID: 4760379298921153408
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shepherd3_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2aab85be8d043d540800000000000000
+      internalID: 5031436509108550306
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shepherd3_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 809f1cd0feb63bf70800000000000000
+      internalID: 9201817138120227080
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shepherd3_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bf805fe5129c9fac0800000000000000
+      internalID: -3820801663682934533
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shepherd3_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a93e754e5b84950f0800000000000000
+      internalID: -1127790285622352998
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shepherd3_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ab539b1e327e66c80800000000000000
+      internalID: -8329716319478270534
       vertices: []
       indices: 
       edges: []
@@ -200,7 +425,16 @@ TextureImporter:
     nameFileIdTable:
       shepherd3_spritesheet_0: -5093925858400650218
       shepherd3_spritesheet_1: 7049221317414441475
+      shepherd3_spritesheet_10: -1127790285622352998
+      shepherd3_spritesheet_11: -8329716319478270534
       shepherd3_spritesheet_2: 3468117961982814316
+      shepherd3_spritesheet_3: 7380197956983276816
+      shepherd3_spritesheet_4: -7334171481484627250
+      shepherd3_spritesheet_5: -4963923709269769387
+      shepherd3_spritesheet_6: 4760379298921153408
+      shepherd3_spritesheet_7: 5031436509108550306
+      shepherd3_spritesheet_8: 9201817138120227080
+      shepherd3_spritesheet_9: -3820801663682934533
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

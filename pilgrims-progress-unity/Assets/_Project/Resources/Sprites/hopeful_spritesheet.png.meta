@@ -11,6 +11,33 @@ TextureImporter:
   - first:
       213: -6773453179699106385
     second: hopeful_spritesheet_2
+  - first:
+      213: 4515293923320314949
+    second: hopeful_spritesheet_3
+  - first:
+      213: 7001009977280703267
+    second: hopeful_spritesheet_4
+  - first:
+      213: -594063903747575704
+    second: hopeful_spritesheet_5
+  - first:
+      213: -2329085078244993926
+    second: hopeful_spritesheet_6
+  - first:
+      213: -6041072962379971122
+    second: hopeful_spritesheet_7
+  - first:
+      213: -5675748384998553333
+    second: hopeful_spritesheet_8
+  - first:
+      213: 6247244784634124080
+    second: hopeful_spritesheet_9
+  - first:
+      213: 4667443304960434302
+    second: hopeful_spritesheet_10
+  - first:
+      213: -6299655430485629700
+    second: hopeful_spritesheet_11
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -30,7 +57,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -122,12 +149,12 @@ TextureImporter:
       name: hopeful_spritesheet_0
       rect:
         serializedVersion: 2
-        x: 2
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -144,12 +171,12 @@ TextureImporter:
       name: hopeful_spritesheet_1
       rect:
         serializedVersion: 2
-        x: 18
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 16
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -166,12 +193,12 @@ TextureImporter:
       name: hopeful_spritesheet_2
       rect:
         serializedVersion: 2
-        x: 34
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 32
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -180,6 +207,204 @@ TextureImporter:
       bones: []
       spriteID: fad6b49683cdff1a0800000000000000
       internalID: -6773453179699106385
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hopeful_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 54cbcf376eb89ae30800000000000000
+      internalID: 4515293923320314949
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hopeful_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 32b28cc3b75982160800000000000000
+      internalID: 7001009977280703267
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hopeful_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8607e3be60671c7f0800000000000000
+      internalID: -594063903747575704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hopeful_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a745b8b167d6dafd0800000000000000
+      internalID: -2329085078244993926
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hopeful_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec5002fc52cc92ca0800000000000000
+      internalID: -6041072962379971122
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hopeful_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b090aad4ae0bb31b0800000000000000
+      internalID: -5675748384998553333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hopeful_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0375705480ca2b650800000000000000
+      internalID: 6247244784634124080
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hopeful_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e702179e4f616c040800000000000000
+      internalID: 4667443304960434302
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: hopeful_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cf42b8253c02398a0800000000000000
+      internalID: -6299655430485629700
       vertices: []
       indices: 
       edges: []
@@ -200,7 +425,16 @@ TextureImporter:
     nameFileIdTable:
       hopeful_spritesheet_0: -9114372303282714001
       hopeful_spritesheet_1: -4425922050965557419
+      hopeful_spritesheet_10: 4667443304960434302
+      hopeful_spritesheet_11: -6299655430485629700
       hopeful_spritesheet_2: -6773453179699106385
+      hopeful_spritesheet_3: 4515293923320314949
+      hopeful_spritesheet_4: 7001009977280703267
+      hopeful_spritesheet_5: -594063903747575704
+      hopeful_spritesheet_6: -2329085078244993926
+      hopeful_spritesheet_7: -6041072962379971122
+      hopeful_spritesheet_8: -5675748384998553333
+      hopeful_spritesheet_9: 6247244784634124080
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

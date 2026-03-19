@@ -11,6 +11,33 @@ TextureImporter:
   - first:
       213: -560140600456381184
     second: shining1_spritesheet_2
+  - first:
+      213: 3124048726437925525
+    second: shining1_spritesheet_3
+  - first:
+      213: 8491198583724062380
+    second: shining1_spritesheet_4
+  - first:
+      213: -555621282877693319
+    second: shining1_spritesheet_5
+  - first:
+      213: -4231345055682392170
+    second: shining1_spritesheet_6
+  - first:
+      213: -6740172895312496119
+    second: shining1_spritesheet_7
+  - first:
+      213: 8047318199876378706
+    second: shining1_spritesheet_8
+  - first:
+      213: 9075988871915755830
+    second: shining1_spritesheet_9
+  - first:
+      213: -7595696483036746668
+    second: shining1_spritesheet_10
+  - first:
+      213: -1948668920109293393
+    second: shining1_spritesheet_11
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -30,7 +57,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -123,11 +150,11 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
+        y: 48
         width: 16
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -145,11 +172,11 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 16
-        y: 0
+        y: 48
         width: 16
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -167,11 +194,11 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 32
-        y: 0
+        y: 48
         width: 16
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -180,6 +207,204 @@ TextureImporter:
       bones: []
       spriteID: 00df585771bf938f0800000000000000
       internalID: -560140600456381184
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shining1_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5921858c3c9da5b20800000000000000
+      internalID: 3124048726437925525
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shining1_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca63c24af1cc6d570800000000000000
+      internalID: 8491198583724062380
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shining1_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 972ad6413690a48f0800000000000000
+      internalID: -555621282877693319
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shining1_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69f02f9271e3745c0800000000000000
+      internalID: -4231345055682392170
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shining1_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 90abe2276781672a0800000000000000
+      internalID: -6740172895312496119
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shining1_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 250ea2a2441ddaf60800000000000000
+      internalID: 8047318199876378706
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shining1_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 639dfe7dac364fd70800000000000000
+      internalID: 9075988871915755830
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shining1_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 45c29eada4aa69690800000000000000
+      internalID: -7595696483036746668
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: shining1_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fa0aa0011ffe4f4e0800000000000000
+      internalID: -1948668920109293393
       vertices: []
       indices: 
       edges: []
@@ -200,7 +425,16 @@ TextureImporter:
     nameFileIdTable:
       shining1_spritesheet_0: 619958713827759355
       shining1_spritesheet_1: -7467231144608410508
+      shining1_spritesheet_10: -7595696483036746668
+      shining1_spritesheet_11: -1948668920109293393
       shining1_spritesheet_2: -560140600456381184
+      shining1_spritesheet_3: 3124048726437925525
+      shining1_spritesheet_4: 8491198583724062380
+      shining1_spritesheet_5: -555621282877693319
+      shining1_spritesheet_6: -4231345055682392170
+      shining1_spritesheet_7: -6740172895312496119
+      shining1_spritesheet_8: 8047318199876378706
+      shining1_spritesheet_9: 9075988871915755830
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

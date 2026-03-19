@@ -11,6 +11,33 @@ TextureImporter:
   - first:
       213: 6718595635098590220
     second: flatterer_spritesheet_2
+  - first:
+      213: 8157741708767065158
+    second: flatterer_spritesheet_3
+  - first:
+      213: 2611348533754550658
+    second: flatterer_spritesheet_4
+  - first:
+      213: -1284277985326643560
+    second: flatterer_spritesheet_5
+  - first:
+      213: 1838335541874257814
+    second: flatterer_spritesheet_6
+  - first:
+      213: 6257474155870931352
+    second: flatterer_spritesheet_7
+  - first:
+      213: -8634076052598995162
+    second: flatterer_spritesheet_8
+  - first:
+      213: 8250549923445131038
+    second: flatterer_spritesheet_9
+  - first:
+      213: 656624797312002243
+    second: flatterer_spritesheet_10
+  - first:
+      213: -7800132278117533751
+    second: flatterer_spritesheet_11
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -30,7 +57,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -122,12 +149,12 @@ TextureImporter:
       name: flatterer_spritesheet_0
       rect:
         serializedVersion: 2
-        x: 2
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -144,12 +171,12 @@ TextureImporter:
       name: flatterer_spritesheet_1
       rect:
         serializedVersion: 2
-        x: 18
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 16
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -166,12 +193,12 @@ TextureImporter:
       name: flatterer_spritesheet_2
       rect:
         serializedVersion: 2
-        x: 34
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 32
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -180,6 +207,204 @@ TextureImporter:
       bones: []
       spriteID: c0c9a8b222f3d3d50800000000000000
       internalID: 6718595635098590220
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flatterer_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 644f270dcde163170800000000000000
+      internalID: 8157741708767065158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flatterer_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2895d2be7af5d3420800000000000000
+      internalID: 2611348533754550658
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flatterer_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89640cb0af35d2ee0800000000000000
+      internalID: -1284277985326643560
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flatterer_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 69fe3677f64138910800000000000000
+      internalID: 1838335541874257814
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flatterer_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 899cfdb579307d650800000000000000
+      internalID: 6257474155870931352
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flatterer_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 627412153999d2880800000000000000
+      internalID: -8634076052598995162
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flatterer_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e17c29c2177df7270800000000000000
+      internalID: 8250549923445131038
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flatterer_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3c8ae7236cccc1900800000000000000
+      internalID: 656624797312002243
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: flatterer_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c7feb9150d50c390800000000000000
+      internalID: -7800132278117533751
       vertices: []
       indices: 
       edges: []
@@ -200,7 +425,16 @@ TextureImporter:
     nameFileIdTable:
       flatterer_spritesheet_0: 8771547907933304380
       flatterer_spritesheet_1: -7445133107666270359
+      flatterer_spritesheet_10: 656624797312002243
+      flatterer_spritesheet_11: -7800132278117533751
       flatterer_spritesheet_2: 6718595635098590220
+      flatterer_spritesheet_3: 8157741708767065158
+      flatterer_spritesheet_4: 2611348533754550658
+      flatterer_spritesheet_5: -1284277985326643560
+      flatterer_spritesheet_6: 1838335541874257814
+      flatterer_spritesheet_7: 6257474155870931352
+      flatterer_spritesheet_8: -8634076052598995162
+      flatterer_spritesheet_9: 8250549923445131038
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

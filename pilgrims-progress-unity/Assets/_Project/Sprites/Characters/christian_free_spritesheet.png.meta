@@ -11,6 +11,33 @@ TextureImporter:
   - first:
       213: -5484518200389138836
     second: christian_free_spritesheet_2
+  - first:
+      213: 2877165933928876287
+    second: christian_free_spritesheet_3
+  - first:
+      213: -1054621911030463507
+    second: christian_free_spritesheet_4
+  - first:
+      213: 8108831768706464140
+    second: christian_free_spritesheet_5
+  - first:
+      213: -4882952525522171041
+    second: christian_free_spritesheet_6
+  - first:
+      213: -8383431247516916304
+    second: christian_free_spritesheet_7
+  - first:
+      213: -2955639454537188849
+    second: christian_free_spritesheet_8
+  - first:
+      213: -3196527915043192228
+    second: christian_free_spritesheet_9
+  - first:
+      213: -6870414748803494745
+    second: christian_free_spritesheet_10
+  - first:
+      213: 3108460830007161004
+    second: christian_free_spritesheet_11
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -30,7 +57,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -122,12 +149,12 @@ TextureImporter:
       name: christian_free_spritesheet_0
       rect:
         serializedVersion: 2
-        x: 2
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -144,12 +171,12 @@ TextureImporter:
       name: christian_free_spritesheet_1
       rect:
         serializedVersion: 2
-        x: 18
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 16
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -166,12 +193,12 @@ TextureImporter:
       name: christian_free_spritesheet_2
       rect:
         serializedVersion: 2
-        x: 34
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 32
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -180,6 +207,204 @@ TextureImporter:
       bones: []
       spriteID: c6604a541c313e3b0800000000000000
       internalID: -5484518200389138836
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: christian_free_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ff88fab4c2fbde720800000000000000
+      internalID: 2877165933928876287
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: christian_free_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: de38fa4a5fa3d51f0800000000000000
+      internalID: -1054621911030463507
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: christian_free_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c89b62df78b588070800000000000000
+      internalID: 8108831768706464140
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: christian_free_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f5b872d8c844c3cb0800000000000000
+      internalID: -4882952525522171041
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: christian_free_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0b528dc92b118ab80800000000000000
+      internalID: -8383431247516916304
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: christian_free_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0a7e2463957bf6d0800000000000000
+      internalID: -2955639454537188849
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: christian_free_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c520b351cc6a3a3d0800000000000000
+      internalID: -3196527915043192228
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: christian_free_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7ac86fddf2267a0a0800000000000000
+      internalID: -6870414748803494745
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: christian_free_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ca0fac2d7a8732b20800000000000000
+      internalID: 3108460830007161004
       vertices: []
       indices: 
       edges: []
@@ -200,7 +425,16 @@ TextureImporter:
     nameFileIdTable:
       christian_free_spritesheet_0: -8102051177235053615
       christian_free_spritesheet_1: -87085849023467807
+      christian_free_spritesheet_10: -6870414748803494745
+      christian_free_spritesheet_11: 3108460830007161004
       christian_free_spritesheet_2: -5484518200389138836
+      christian_free_spritesheet_3: 2877165933928876287
+      christian_free_spritesheet_4: -1054621911030463507
+      christian_free_spritesheet_5: 8108831768706464140
+      christian_free_spritesheet_6: -4882952525522171041
+      christian_free_spritesheet_7: -8383431247516916304
+      christian_free_spritesheet_8: -2955639454537188849
+      christian_free_spritesheet_9: -3196527915043192228
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

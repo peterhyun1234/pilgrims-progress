@@ -11,6 +11,33 @@ TextureImporter:
   - first:
       213: -9053454950234264071
     second: worldlywiseman_spritesheet_2
+  - first:
+      213: -4295596328027057876
+    second: worldlywiseman_spritesheet_3
+  - first:
+      213: 3560998243873639356
+    second: worldlywiseman_spritesheet_4
+  - first:
+      213: 6048008462974743734
+    second: worldlywiseman_spritesheet_5
+  - first:
+      213: -7922565243308350379
+    second: worldlywiseman_spritesheet_6
+  - first:
+      213: -7074504480526320337
+    second: worldlywiseman_spritesheet_7
+  - first:
+      213: 455075587641427216
+    second: worldlywiseman_spritesheet_8
+  - first:
+      213: 3623440588860886424
+    second: worldlywiseman_spritesheet_9
+  - first:
+      213: -3154956321185340416
+    second: worldlywiseman_spritesheet_10
+  - first:
+      213: -5766943814980657191
+    second: worldlywiseman_spritesheet_11
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -30,7 +57,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -122,12 +149,12 @@ TextureImporter:
       name: worldlywiseman_spritesheet_0
       rect:
         serializedVersion: 2
-        x: 2
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -144,12 +171,12 @@ TextureImporter:
       name: worldlywiseman_spritesheet_1
       rect:
         serializedVersion: 2
-        x: 18
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 16
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -166,12 +193,12 @@ TextureImporter:
       name: worldlywiseman_spritesheet_2
       rect:
         serializedVersion: 2
-        x: 34
-        y: 0
-        width: 12
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 32
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -180,6 +207,204 @@ TextureImporter:
       bones: []
       spriteID: 9fde845a0baab5280800000000000000
       internalID: -9053454950234264071
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: worldlywiseman_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c21997116e9f264c0800000000000000
+      internalID: -4295596328027057876
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: worldlywiseman_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cbbc0eb29053b6130800000000000000
+      internalID: 3560998243873639356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: worldlywiseman_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6b47a2247a7dee350800000000000000
+      internalID: 6048008462974743734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: worldlywiseman_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 554efb203e46d0290800000000000000
+      internalID: -7922565243308350379
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: worldlywiseman_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f2db15448af42dd90800000000000000
+      internalID: -7074504480526320337
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: worldlywiseman_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 015c15bf5d0c05600800000000000000
+      internalID: 455075587641427216
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: worldlywiseman_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 89d09cb840c094230800000000000000
+      internalID: 3623440588860886424
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: worldlywiseman_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 004efd901f75734d0800000000000000
+      internalID: -3154956321185340416
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: worldlywiseman_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9df1174a723b7ffa0800000000000000
+      internalID: -5766943814980657191
       vertices: []
       indices: 
       edges: []
@@ -200,7 +425,16 @@ TextureImporter:
     nameFileIdTable:
       worldlywiseman_spritesheet_0: 1432876831020319769
       worldlywiseman_spritesheet_1: 8459713598901432838
+      worldlywiseman_spritesheet_10: -3154956321185340416
+      worldlywiseman_spritesheet_11: -5766943814980657191
       worldlywiseman_spritesheet_2: -9053454950234264071
+      worldlywiseman_spritesheet_3: -4295596328027057876
+      worldlywiseman_spritesheet_4: 3560998243873639356
+      worldlywiseman_spritesheet_5: 6048008462974743734
+      worldlywiseman_spritesheet_6: -7922565243308350379
+      worldlywiseman_spritesheet_7: -7074504480526320337
+      worldlywiseman_spritesheet_8: 455075587641427216
+      worldlywiseman_spritesheet_9: 3623440588860886424
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

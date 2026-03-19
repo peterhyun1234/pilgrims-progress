@@ -1,10 +1,10 @@
 {
     "name": "EditModeTests",
-    "rootNamespace": "PilgrimsProgress.Tests",
+    "rootNamespace": "PP.Tests",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "PilgrimsProgress"
+        "PP.Runtime"
     ],
     "includePlatforms": [
         "Editor"

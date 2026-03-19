@@ -1,16 +1,11 @@
 using NUnit.Framework;
-using UnityEngine;
-using UnityEngine.TestTools;
-using PilgrimsProgress.Core;
+using PP.Core;
 
-namespace PilgrimsProgress.Tests
+namespace PP.Tests
 {
-    [TestFixture]
     public class ServiceLocatorTests
     {
-        private interface ITestService { string Name { get; } }
-        private class TestServiceA : ITestService { public string Name => "A"; }
-        private class TestServiceB : ITestService { public string Name => "B"; }
+        private class MockService { public int Value; }
 
         [SetUp]
         public void SetUp()
@@ -18,89 +13,52 @@ namespace PilgrimsProgress.Tests
             ServiceLocator.Reset();
         }
 
-        [TearDown]
-        public void TearDown()
+        [Test]
+        public void Register_And_Get_ReturnsService()
         {
-            ServiceLocator.Reset();
+            var svc = new MockService { Value = 42 };
+            ServiceLocator.Register(svc);
+            var result = ServiceLocator.Get<MockService>();
+            Assert.IsNotNull(result);
+            Assert.AreEqual(42, result.Value);
         }
 
         [Test]
-        public void Register_And_Get_Returns_Same_Instance()
+        public void TryGet_WhenNotRegistered_ReturnsFalse()
         {
-            var service = new TestServiceA();
-            ServiceLocator.Register<ITestService>(service);
-
-            var retrieved = ServiceLocator.Get<ITestService>();
-
-            Assert.AreSame(service, retrieved);
-        }
-
-        [Test]
-        public void Get_Unregistered_Service_Returns_Null()
-        {
-            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Service not found"));
-            var result = ServiceLocator.Get<ITestService>();
-
-            Assert.IsNull(result);
-        }
-
-        [Test]
-        public void TryGet_Registered_Returns_True_And_Service()
-        {
-            var service = new TestServiceA();
-            ServiceLocator.Register<ITestService>(service);
-
-            bool found = ServiceLocator.TryGet<ITestService>(out var retrieved);
-
-            Assert.IsTrue(found);
-            Assert.AreSame(service, retrieved);
-        }
-
-        [Test]
-        public void TryGet_Unregistered_Returns_False_And_Null()
-        {
-            bool found = ServiceLocator.TryGet<ITestService>(out var retrieved);
-
+            bool found = ServiceLocator.TryGet<MockService>(out var svc);
             Assert.IsFalse(found);
-            Assert.IsNull(retrieved);
+            Assert.IsNull(svc);
         }
 
         [Test]
-        public void Register_Overwrite_Uses_Latest()
+        public void Unregister_RemovesService()
         {
-            var first = new TestServiceA();
-            var second = new TestServiceA();
-
-            ServiceLocator.Register<ITestService>(first);
-            ServiceLocator.Register<ITestService>(second);
-
-            var retrieved = ServiceLocator.Get<ITestService>();
-
-            Assert.AreSame(second, retrieved);
+            ServiceLocator.Register(new MockService());
+            ServiceLocator.Unregister<MockService>();
+            bool found = ServiceLocator.TryGet<MockService>(out _);
+            Assert.IsFalse(found);
         }
 
         [Test]
-        public void Reset_Clears_All_Services()
+        public void RegisterTransient_ClearedByClearTransients()
         {
-            ServiceLocator.Register<ITestService>(new TestServiceA());
+            var svc = new MockService { Value = 99 };
+            ServiceLocator.RegisterTransient(svc);
+            Assert.IsNotNull(ServiceLocator.Get<MockService>());
 
+            ServiceLocator.ClearTransients();
+            bool found = ServiceLocator.TryGet<MockService>(out _);
+            Assert.IsFalse(found);
+        }
+
+        [Test]
+        public void Reset_ClearsAll()
+        {
+            ServiceLocator.Register(new MockService());
             ServiceLocator.Reset();
-
-            LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("Service not found"));
-            Assert.IsNull(ServiceLocator.Get<ITestService>());
-        }
-
-        [Test]
-        public void Register_Multiple_Types_Independently()
-        {
-            var serviceA = new TestServiceA();
-            var serviceB = new TestServiceB();
-
-            ServiceLocator.Register(serviceA);
-            ServiceLocator.Register(serviceB);
-
-            Assert.AreSame(serviceA, ServiceLocator.Get<TestServiceA>());
-            Assert.AreSame(serviceB, ServiceLocator.Get<TestServiceB>());
+            bool found = ServiceLocator.TryGet<MockService>(out _);
+            Assert.IsFalse(found);
         }
     }
 }

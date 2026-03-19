@@ -11,6 +11,33 @@ TextureImporter:
   - first:
       213: -5218306945520733991
     second: evangelist_spritesheet_2
+  - first:
+      213: 5938541080516570247
+    second: evangelist_spritesheet_3
+  - first:
+      213: -309151882787276756
+    second: evangelist_spritesheet_4
+  - first:
+      213: 4549906197426933224
+    second: evangelist_spritesheet_5
+  - first:
+      213: -855603131275648318
+    second: evangelist_spritesheet_6
+  - first:
+      213: -8177035755001360627
+    second: evangelist_spritesheet_7
+  - first:
+      213: 7770520678913539344
+    second: evangelist_spritesheet_8
+  - first:
+      213: -2774218759527919156
+    second: evangelist_spritesheet_9
+  - first:
+      213: 7988038480510997089
+    second: evangelist_spritesheet_10
+  - first:
+      213: 642632392208032015
+    second: evangelist_spritesheet_11
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -30,7 +57,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -122,12 +149,12 @@ TextureImporter:
       name: evangelist_spritesheet_0
       rect:
         serializedVersion: 2
-        x: 2
-        y: 0
-        width: 13
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -144,12 +171,12 @@ TextureImporter:
       name: evangelist_spritesheet_1
       rect:
         serializedVersion: 2
-        x: 18
-        y: 0
-        width: 13
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 16
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -166,12 +193,12 @@ TextureImporter:
       name: evangelist_spritesheet_2
       rect:
         serializedVersion: 2
-        x: 34
-        y: 0
-        width: 13
-        height: 64
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 32
+        y: 48
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -180,6 +207,204 @@ TextureImporter:
       bones: []
       spriteID: 9d078471b79d497b0800000000000000
       internalID: -5218306945520733991
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: evangelist_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 78c214426afe96250800000000000000
+      internalID: 5938541080516570247
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: evangelist_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c2832d4200ca5bbf0800000000000000
+      internalID: -309151882787276756
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: evangelist_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ed0bf28493842f30800000000000000
+      internalID: 4549906197426933224
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: evangelist_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2c26a9b3c794024f0800000000000000
+      internalID: -855603131275648318
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: evangelist_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d0fc97bfd45558e80800000000000000
+      internalID: -8177035755001360627
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: evangelist_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 16
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 01df772336f66db60800000000000000
+      internalID: 7770520678913539344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: evangelist_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cc11d159cbeff79d0800000000000000
+      internalID: -2774218759527919156
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: evangelist_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1625203fca63bde60800000000000000
+      internalID: 7988038480510997089
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: evangelist_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 16
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f0128b281c61be800800000000000000
+      internalID: 642632392208032015
       vertices: []
       indices: 
       edges: []
@@ -200,7 +425,16 @@ TextureImporter:
     nameFileIdTable:
       evangelist_spritesheet_0: -7332071470027437533
       evangelist_spritesheet_1: 4429934295956066450
+      evangelist_spritesheet_10: 7988038480510997089
+      evangelist_spritesheet_11: 642632392208032015
       evangelist_spritesheet_2: -5218306945520733991
+      evangelist_spritesheet_3: 5938541080516570247
+      evangelist_spritesheet_4: -309151882787276756
+      evangelist_spritesheet_5: 4549906197426933224
+      evangelist_spritesheet_6: -855603131275648318
+      evangelist_spritesheet_7: -8177035755001360627
+      evangelist_spritesheet_8: 7770520678913539344
+      evangelist_spritesheet_9: -2774218759527919156
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

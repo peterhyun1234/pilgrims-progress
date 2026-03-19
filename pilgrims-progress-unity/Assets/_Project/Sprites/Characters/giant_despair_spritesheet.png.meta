@@ -11,6 +11,33 @@ TextureImporter:
   - first:
       213: -7584710321941183566
     second: giant_despair_spritesheet_2
+  - first:
+      213: -7948517442233598902
+    second: giant_despair_spritesheet_3
+  - first:
+      213: -6105507034860480092
+    second: giant_despair_spritesheet_4
+  - first:
+      213: -6581063718966900350
+    second: giant_despair_spritesheet_5
+  - first:
+      213: -3152551673428831810
+    second: giant_despair_spritesheet_6
+  - first:
+      213: 9043038821272527604
+    second: giant_despair_spritesheet_7
+  - first:
+      213: 2024334466101594174
+    second: giant_despair_spritesheet_8
+  - first:
+      213: -124182265416931985
+    second: giant_despair_spritesheet_9
+  - first:
+      213: -1591578162555836406
+    second: giant_despair_spritesheet_10
+  - first:
+      213: -8964295060380386261
+    second: giant_despair_spritesheet_11
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -30,7 +57,7 @@ TextureImporter:
     heightScale: 0.25
     normalMapFilter: 0
     flipGreenChannel: 0
-  isReadable: 0
+  isReadable: 1
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
@@ -57,7 +84,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 16
+  spritePixelsToUnits: 32
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -122,12 +149,12 @@ TextureImporter:
       name: giant_despair_spritesheet_0
       rect:
         serializedVersion: 2
-        x: 5
-        y: 0
-        width: 22
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 0
+        y: 96
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -144,12 +171,12 @@ TextureImporter:
       name: giant_despair_spritesheet_1
       rect:
         serializedVersion: 2
-        x: 37
-        y: 0
-        width: 22
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 32
+        y: 96
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -166,12 +193,12 @@ TextureImporter:
       name: giant_despair_spritesheet_2
       rect:
         serializedVersion: 2
-        x: 69
-        y: 0
-        width: 22
-        height: 128
-      alignment: 0
-      pivot: {x: 0, y: 0}
+        x: 64
+        y: 96
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
       customData: 
       outline: []
@@ -180,6 +207,204 @@ TextureImporter:
       bones: []
       spriteID: 2b30570d522bdb690800000000000000
       internalID: -7584710321941183566
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: giant_despair_spritesheet_3
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 64
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a4c7ba4df7131b190800000000000000
+      internalID: -7948517442233598902
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: giant_despair_spritesheet_4
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 64
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4a91e7d33b1e44ba0800000000000000
+      internalID: -6105507034860480092
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: giant_despair_spritesheet_5
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 64
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 28944c26a6d5ba4a0800000000000000
+      internalID: -6581063718966900350
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: giant_despair_spritesheet_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 32
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eb11639b4f2ef34d0800000000000000
+      internalID: -3152551673428831810
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: giant_despair_spritesheet_7
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 32
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4f2240855e35f7d70800000000000000
+      internalID: 9043038821272527604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: giant_despair_spritesheet_8
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 32
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e38c096b871e71c10800000000000000
+      internalID: 2024334466101594174
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: giant_despair_spritesheet_9
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f65ab6633e0d64ef0800000000000000
+      internalID: -124182265416931985
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: giant_despair_spritesheet_10
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a08279cf71499e9e0800000000000000
+      internalID: -1591578162555836406
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: giant_despair_spritesheet_11
+      rect:
+        serializedVersion: 2
+        x: 64
+        y: 0
+        width: 32
+        height: 32
+      alignment: 7
+      pivot: {x: 0.5, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b2cfc30332d689380800000000000000
+      internalID: -8964295060380386261
       vertices: []
       indices: 
       edges: []
@@ -200,7 +425,16 @@ TextureImporter:
     nameFileIdTable:
       giant_despair_spritesheet_0: -6814279882361296137
       giant_despair_spritesheet_1: 1823124557927447194
+      giant_despair_spritesheet_10: -1591578162555836406
+      giant_despair_spritesheet_11: -8964295060380386261
       giant_despair_spritesheet_2: -7584710321941183566
+      giant_despair_spritesheet_3: -7948517442233598902
+      giant_despair_spritesheet_4: -6105507034860480092
+      giant_despair_spritesheet_5: -6581063718966900350
+      giant_despair_spritesheet_6: -3152551673428831810
+      giant_despair_spritesheet_7: 9043038821272527604
+      giant_despair_spritesheet_8: 2024334466101594174
+      giant_despair_spritesheet_9: -124182265416931985
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
