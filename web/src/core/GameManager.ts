@@ -21,35 +21,17 @@ export class GameManager {
     ServiceLocator.register(SERVICE_KEYS.GAME_MANAGER, this);
     ServiceLocator.register(SERVICE_KEYS.STATS_MANAGER, this.statsManager);
 
-    this.fsm
-      .addState({
-        id: GameState.BOOT,
-        onEnter: () => this.eventBus.emit(GameEvent.GAME_STATE_CHANGED, GameState.BOOT),
-      })
-      .addState({
-        id: GameState.MENU,
-        onEnter: () => this.eventBus.emit(GameEvent.GAME_STATE_CHANGED, GameState.MENU),
-      })
-      .addState({
-        id: GameState.GAME,
-        onEnter: () => this.eventBus.emit(GameEvent.GAME_STATE_CHANGED, GameState.GAME),
-      })
-      .addState({
-        id: GameState.PAUSE,
-        onEnter: () => this.eventBus.emit(GameEvent.GAME_STATE_CHANGED, GameState.PAUSE),
-      })
-      .addState({
-        id: GameState.BATTLE,
-        onEnter: () => this.eventBus.emit(GameEvent.GAME_STATE_CHANGED, GameState.BATTLE),
-      })
-      .addState({
-        id: GameState.CUTSCENE,
-        onEnter: () => this.eventBus.emit(GameEvent.GAME_STATE_CHANGED, GameState.CUTSCENE),
-      })
-      .addState({
-        id: GameState.DIALOGUE,
-        onEnter: () => this.eventBus.emit(GameEvent.GAME_STATE_CHANGED, GameState.DIALOGUE),
+    const states: GameState[] = [
+      GameState.BOOT, GameState.MENU, GameState.GAME,
+      GameState.PAUSE, GameState.BATTLE, GameState.CUTSCENE, GameState.DIALOGUE, GameState.INVENTORY,
+    ];
+
+    states.forEach(state => {
+      this.fsm.addState({
+        id: state,
+        onEnter: () => this.eventBus.emit(GameEvent.GAME_STATE_CHANGED, state),
       });
+    });
 
     this.fsm.setState(GameState.BOOT);
   }

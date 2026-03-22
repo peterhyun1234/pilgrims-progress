@@ -1,5 +1,5 @@
 export class Pool<T> {
-  private pool: T[] = [];
+  private items: T[] = [];
   private factory: () => T;
   private reset: (item: T) => void;
 
@@ -8,13 +8,13 @@ export class Pool<T> {
     this.reset = reset;
 
     for (let i = 0; i < initialSize; i++) {
-      this.pool.push(factory());
+      this.items.push(this.factory());
     }
   }
 
   get(): T {
-    if (this.pool.length > 0) {
-      const item = this.pool.pop()!;
+    if (this.items.length > 0) {
+      const item = this.items.pop()!;
       this.reset(item);
       return item;
     }
@@ -22,10 +22,10 @@ export class Pool<T> {
   }
 
   release(item: T): void {
-    this.pool.push(item);
+    this.items.push(item);
   }
 
   get size(): number {
-    return this.pool.length;
+    return this.items.length;
   }
 }

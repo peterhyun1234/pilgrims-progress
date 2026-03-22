@@ -1,28 +1,30 @@
-import Phaser from 'phaser';
 import { Entity } from './Entity';
 import { PlayerMotor } from './PlayerMotor';
 import { PlayerAnimator } from './PlayerAnimator';
 import { StateMachine } from '../core/StateMachine';
-import { PlayerState, Direction, GameEvent } from '../core/GameEvents';
-import { EventBus } from '../core/EventBus';
-import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
-import { GameManager } from '../core/GameManager';
-import { MovementInput } from '../input/InputManager';
-import { NPC } from '../entities/NPC';
-import { PLAYER } from '../config';
+import { PlayerState } from '../core/GameEvents';
+import { NPC } from './NPC';
+
+export interface PlayerInput {
+  x: number;
+  y: number;
+  interact: boolean;
+}
 
 export class Player extends Entity {
   private motor: PlayerMotor;
   private animator: PlayerAnimator;
   private fsm: StateMachine<PlayerState>;
-  private direction: Direction = Direction.DOWN;
-  private nearbyNPC: NPC | null = null;
+  public nearbyNPC: NPC | null = null;
+
+  private wasMoving = false;
+  private dustTimer = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'christian');
+    super(scene, x, y, 'christian', 0);
 
+    this.sprite.setSize(10, 10).setOffset(3, 6);
     this.sprite.setDepth(10);
-    this.sprite.setCollideWorldBounds(true);
 
     this.motor = new PlayerMotor();
     this.animator = new PlayerAnimator(this.sprite);
@@ -31,77 +33,115 @@ export class Player extends Entity {
     this.fsm
       .addState({ id: PlayerState.IDLE })
       .addState({ id: PlayerState.WALK })
-      .addState({
-        id: PlayerState.INTERACT,
-        onEnter: () => {
-          this.sprite.setVelocity(0, 0);
-        },
-      })
-      .addState({
-        id: PlayerState.CUTSCENE,
-        onEnter: () => {
-          this.sprite.setVelocity(0, 0);
-        },
-      });
+      .addState({ id: PlayerState.RUN })
+      .addState({ id: PlayerState.INTERACT })
+      .addState({ id: PlayerState.CUTSCENE })
+      .addState({ id: PlayerState.HURT })
+      .addState({ id: PlayerState.PRAY })
+      .addState({ id: PlayerState.CELEBRATE })
+      .addState({ id: PlayerState.FALL });
     this.fsm.setState(PlayerState.IDLE);
-
-    this.setupEventListeners();
   }
 
-  update(delta: number, input: MovementInput): void {
-    if (this.fsm.isState(PlayerState.INTERACT) || this.fsm.isState(PlayerState.CUTSCENE)) {
-      this.animator.playIdle(this.direction);
+  update(input: PlayerInput, delta: number): void {
+    const state = this.fsm.current;
+    if (state === PlayerState.CUTSCENE || state === PlayerState.INTERACT) {
+      this.sprite.setVelocity(0, 0);
       return;
     }
 
-    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-    const speedMultiplier = gm.stats.getSpeedMultiplier();
-    const velocity = this.motor.calculate(input.x, input.y, delta, speedMultiplier);
+    const isMoving = input.x !== 0 || input.y !== 0;
 
-    this.sprite.setVelocity(velocity.x * PLAYER.BASE_SPEED, velocity.y * PLAYER.BASE_SPEED);
-
-    if (input.x !== 0 || input.y !== 0) {
-      this.direction = this.getDirection(input.x, input.y);
+    if (isMoving) {
+      if (!this.wasMoving) {
+        this.squash(0.85, 1.15, 80);
+      }
       this.fsm.setState(PlayerState.WALK);
-      this.animator.playWalk(this.direction);
+      this.motor.update(this.sprite, input.x, input.y);
+      this.spawnDustParticles(delta);
     } else {
+      if (this.wasMoving) {
+        this.squash(1.1, 0.9, 100);
+      }
       this.fsm.setState(PlayerState.IDLE);
-      this.animator.playIdle(this.direction);
+      this.sprite.setVelocity(0, 0);
+      this.applyIdleBob();
     }
+    this.wasMoving = isMoving;
 
     if (input.interact && this.nearbyNPC) {
       this.fsm.setState(PlayerState.INTERACT);
-      EventBus.getInstance().emit(GameEvent.NPC_INTERACT, this.nearbyNPC.id);
+      this.sprite.setVelocity(0, 0);
+      this.nearbyNPC.interact();
     }
+
+    this.animator.update(
+      this.fsm.current!,
+      this.sprite.body!.velocity.x,
+      this.sprite.body!.velocity.y,
+    );
   }
 
-  setNearbyNPC(npc: NPC | null): void {
-    this.nearbyNPC = npc;
-  }
-
-  private getDirection(x: number, y: number): Direction {
-    if (Math.abs(x) > Math.abs(y)) {
-      return x > 0 ? Direction.RIGHT : Direction.LEFT;
-    }
-    return y > 0 ? Direction.DOWN : Direction.UP;
-  }
-
-  private setupEventListeners(): void {
-    const eventBus = EventBus.getInstance();
-
-    eventBus.on(GameEvent.DIALOGUE_START, () => {
-      this.fsm.setState(PlayerState.INTERACT);
+  private squash(sx: number, sy: number, duration: number): void {
+    this.scene.tweens.add({
+      targets: this.sprite,
+      scaleX: sx, scaleY: sy,
+      duration: duration / 2,
+      yoyo: true,
+      ease: 'Sine.easeOut',
     });
+  }
 
-    eventBus.on(GameEvent.DIALOGUE_END, () => {
+  private applyIdleBob(): void {
+    const t = Date.now() * 0.002;
+    const bob = Math.sin(t) * 0.3;
+    this.sprite.y += bob;
+  }
+
+  private spawnDustParticles(delta: number): void {
+    this.dustTimer += delta;
+    if (this.dustTimer < 220) return;
+    this.dustTimer = 0;
+
+    const px = this.sprite.x;
+    const py = this.sprite.y + 6;
+
+    for (let i = 0; i < 2; i++) {
+      const dust = this.scene.add.circle(
+        px + (Math.random() - 0.5) * 6,
+        py + Math.random() * 2,
+        1 + Math.random() * 1.2,
+        0x888877, 0.3,
+      ).setDepth(8);
+
+      this.scene.tweens.add({
+        targets: dust,
+        y: dust.y - 3 - Math.random() * 3,
+        alpha: 0,
+        scaleX: 0.3,
+        scaleY: 0.3,
+        duration: 350 + Math.random() * 200,
+        onComplete: () => dust.destroy(),
+      });
+    }
+  }
+
+  getState(): PlayerState | null {
+    return this.fsm.current;
+  }
+
+  enterCutscene(): void {
+    this.fsm.setState(PlayerState.CUTSCENE);
+    this.sprite.setVelocity(0, 0);
+  }
+
+  exitCutscene(): void {
+    this.fsm.setState(PlayerState.IDLE);
+  }
+
+  exitInteract(): void {
+    if (this.fsm.current === PlayerState.INTERACT) {
       this.fsm.setState(PlayerState.IDLE);
-    });
-  }
-
-  getBurdenSprite(): string {
-    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-    const burden = gm.stats.get('burden');
-    if (burden === 0) return 'christian_free';
-    return 'christian';
+    }
   }
 }

@@ -15,7 +15,8 @@
     "howler": "^2.2.4",
     "inkjs": "^2.3.0",
     "localforage": "^1.10.0",
-    "phaser": "^3.80.1"
+    "phaser": "^3.80.1",
+    "phaser3-rex-plugins": "^1.80.19"
   },
   "devDependencies": {
     "@types/howler": "^2.2.12",

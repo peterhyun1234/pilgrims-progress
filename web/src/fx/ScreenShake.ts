@@ -1,15 +1,16 @@
-import Phaser from 'phaser';
+import { EventBus } from '../core/EventBus';
+import { GameEvent, ShakePayload } from '../core/GameEvents';
 
 export class ScreenShake {
-  static shake(camera: Phaser.Cameras.Scene2D.Camera, intensity = 0.005, duration = 200): void {
-    camera.shake(duration, intensity);
-  }
+  private scene: Phaser.Scene;
 
-  static zoom(camera: Phaser.Cameras.Scene2D.Camera, zoom: number, duration = 300): void {
-    camera.zoomTo(zoom, duration);
-  }
+  constructor(scene: Phaser.Scene) {
+    this.scene = scene;
 
-  static resetZoom(camera: Phaser.Cameras.Scene2D.Camera, duration = 300): void {
-    camera.zoomTo(1, duration);
+    EventBus.getInstance().on<ShakePayload>(GameEvent.SCREEN_SHAKE, (payload) => {
+      if (payload) {
+        this.scene.cameras.main.shake(payload.duration, payload.intensity / 100);
+      }
+    });
   }
 }

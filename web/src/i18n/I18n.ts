@@ -4,31 +4,21 @@ import enData from './en.json';
 type TranslationData = Record<string, string>;
 
 export class I18n {
-  private currentLang: 'ko' | 'en' = 'ko';
+  private lang: 'ko' | 'en' = 'ko';
   private translations: Record<string, TranslationData> = {
-    ko: koData,
-    en: enData,
+    ko: koData as TranslationData,
+    en: enData as TranslationData,
   };
 
-  get language(): 'ko' | 'en' {
-    return this.currentLang;
-  }
-
   setLanguage(lang: 'ko' | 'en'): void {
-    this.currentLang = lang;
+    this.lang = lang;
   }
 
-  t(key: string, params?: Record<string, string>): string {
-    let text = this.translations[this.currentLang]?.[key]
-      ?? this.translations['en']?.[key]
-      ?? key;
+  t(key: string, fallback?: string): string {
+    return this.translations[this.lang]?.[key] ?? fallback ?? key;
+  }
 
-    if (params) {
-      for (const [k, v] of Object.entries(params)) {
-        text = text.replace(`{${k}}`, v);
-      }
-    }
-
-    return text;
+  getLanguage(): 'ko' | 'en' {
+    return this.lang;
   }
 }

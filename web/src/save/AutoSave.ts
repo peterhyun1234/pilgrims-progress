@@ -3,31 +3,19 @@ import { GameEvent } from '../core/GameEvents';
 import { SaveManager } from './SaveManager';
 
 export class AutoSave {
-  private saveManager: SaveManager;
   private eventBus: EventBus;
+  private saveManager: SaveManager;
 
-  constructor(saveManager: SaveManager) {
+  constructor(eventBus: EventBus, saveManager: SaveManager) {
+    this.eventBus = eventBus;
     this.saveManager = saveManager;
-    this.eventBus = EventBus.getInstance();
-    this.setupListeners();
-  }
 
-  private setupListeners(): void {
     this.eventBus.on(GameEvent.CHAPTER_CHANGED, () => {
-      this.performAutoSave();
+      this.saveManager.save();
     });
 
     this.eventBus.on(GameEvent.DIALOGUE_END, () => {
-      this.performAutoSave();
+      this.saveManager.save();
     });
-  }
-
-  private async performAutoSave(): Promise<void> {
-    try {
-      await this.saveManager.autoSave();
-      this.eventBus.emit(GameEvent.AUTO_SAVE);
-    } catch {
-      // Silent fail for auto-save
-    }
   }
 }

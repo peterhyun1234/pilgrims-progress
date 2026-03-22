@@ -3,87 +3,91 @@ import { EventBus } from '../core/EventBus';
 import { GameEvent } from '../core/GameEvents';
 
 export class AudioManager {
-  private bgm: Map<string, Howl> = new Map();
-  private sfx: Map<string, Howl> = new Map();
-  private currentBGM: string | null = null;
   private eventBus: EventBus;
+  private bgm: Howl | null = null;
+  private sfxCache: Map<string, Howl> = new Map();
+  private bgmVolume = 0.5;
+  private sfxVolume = 0.7;
 
-  private masterVolume = 1.0;
-  private bgmVolume = 0.7;
-  private sfxVolume = 0.8;
-
-  constructor() {
-    this.eventBus = EventBus.getInstance();
-    this.setupListeners();
+  constructor(eventBus: EventBus) {
+    this.eventBus = eventBus;
+    this.setupEvents();
   }
 
-  private setupListeners(): void {
-    this.eventBus.on(GameEvent.BGM_PLAY, (track: unknown) => {
-      this.playBGM(track as string);
+  private setupEvents(): void {
+    this.eventBus.on(GameEvent.BGM_PLAY, (key: string) => {
+      this.playBGM(key);
     });
 
     this.eventBus.on(GameEvent.BGM_STOP, () => {
       this.stopBGM();
     });
 
-    this.eventBus.on(GameEvent.SFX_PLAY, (sound: unknown) => {
-      this.playSFX(sound as string);
+    this.eventBus.on(GameEvent.SFX_PLAY, (key: string) => {
+      this.playSFX(key);
     });
-  }
 
-  loadBGM(key: string, src: string): void {
-    const howl = new Howl({
-      src: [src],
-      loop: true,
-      volume: this.bgmVolume * this.masterVolume,
+    this.eventBus.on(GameEvent.MUSIC_FADE_OUT, (data: { duration: number }) => {
+      this.fadeBGM(0, data.duration);
     });
-    this.bgm.set(key, howl);
-  }
 
-  loadSFX(key: string, src: string): void {
-    const howl = new Howl({
-      src: [src],
-      volume: this.sfxVolume * this.masterVolume,
+    this.eventBus.on(GameEvent.MUSIC_FADE_TO_SILENCE, (data: { duration: number }) => {
+      this.fadeBGM(0, data.duration);
     });
-    this.sfx.set(key, howl);
   }
 
   playBGM(key: string): void {
-    if (this.currentBGM === key) return;
-
-    this.stopBGM();
-    const howl = this.bgm.get(key);
-    if (howl) {
-      howl.play();
-      this.currentBGM = key;
+    if (this.bgm) {
+      this.bgm.fade(this.bgmVolume, 0, 500);
+      const oldBgm = this.bgm;
+      setTimeout(() => oldBgm.stop(), 500);
     }
+
+    this.bgm = new Howl({
+      src: [`assets/audio/bgm/${key}.mp3`, `assets/audio/bgm/${key}.ogg`],
+      loop: true,
+      volume: 0,
+    });
+
+    this.bgm.play();
+    this.bgm.fade(0, this.bgmVolume, 1000);
   }
 
   stopBGM(): void {
-    if (this.currentBGM) {
-      const howl = this.bgm.get(this.currentBGM);
-      howl?.stop();
-      this.currentBGM = null;
+    if (this.bgm) {
+      this.bgm.fade(this.bgmVolume, 0, 500);
+      setTimeout(() => this.bgm?.stop(), 500);
+    }
+  }
+
+  fadeBGM(targetVolume: number, duration: number): void {
+    if (this.bgm) {
+      this.bgm.fade(this.bgmVolume, targetVolume, duration);
     }
   }
 
   playSFX(key: string): void {
-    const howl = this.sfx.get(key);
-    howl?.play();
+    let sfx = this.sfxCache.get(key);
+    if (!sfx) {
+      sfx = new Howl({
+        src: [`assets/audio/sfx/${key}.mp3`, `assets/audio/sfx/${key}.ogg`],
+        volume: this.sfxVolume,
+      });
+      this.sfxCache.set(key, sfx);
+    }
+    sfx.play();
   }
 
-  setMasterVolume(volume: number): void {
-    this.masterVolume = Math.max(0, Math.min(1, volume));
-    Howler.volume(this.masterVolume);
+  setVolume(bgm: number, sfx: number): void {
+    this.bgmVolume = bgm;
+    this.sfxVolume = sfx;
+    if (this.bgm) this.bgm.volume(bgm);
+    Howler.volume(sfx);
   }
 
-  setBGMVolume(volume: number): void {
-    this.bgmVolume = Math.max(0, Math.min(1, volume));
-    this.bgm.forEach((howl) => howl.volume(this.bgmVolume * this.masterVolume));
-  }
-
-  setSFXVolume(volume: number): void {
-    this.sfxVolume = Math.max(0, Math.min(1, volume));
-    this.sfx.forEach((howl) => howl.volume(this.sfxVolume * this.masterVolume));
+  destroy(): void {
+    this.bgm?.stop();
+    this.sfxCache.forEach(s => s.stop());
+    this.sfxCache.clear();
   }
 }

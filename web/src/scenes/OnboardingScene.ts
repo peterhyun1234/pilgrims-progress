@@ -1,100 +1,135 @@
 import Phaser from 'phaser';
-import { SCENE_KEYS, GAME_WIDTH, GAME_HEIGHT } from '../config';
+import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS, COLORS } from '../config';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
+import { DesignSystem } from '../ui/DesignSystem';
+
+interface PrologueLine {
+  text: string;
+  delay: number;
+  style: 'normal' | 'dramatic' | 'dim' | 'scripture';
+}
+
+const PROLOGUE_KO: PrologueLine[] = [
+  { text: '...나는 꿈을 꾸었다.', delay: 0, style: 'dramatic' },
+  { text: '', delay: 2200, style: 'normal' },
+  { text: '한 남자가 누더기를 입고', delay: 3000, style: 'normal' },
+  { text: '서 있는 곳에서 얼굴을 돌리고', delay: 4500, style: 'normal' },
+  { text: '', delay: 6000, style: 'normal' },
+  { text: '등에는 무거운 짐을 지고', delay: 7000, style: 'dramatic' },
+  { text: '손에는 책을 들고 있었다.', delay: 8500, style: 'normal' },
+  { text: '', delay: 10000, style: 'normal' },
+  { text: '그가 책을 펼쳐 읽으니...', delay: 11000, style: 'dim' },
+  { text: '울며 떨기 시작했다.', delay: 13000, style: 'dramatic' },
+  { text: '', delay: 14500, style: 'normal' },
+  { text: '"내가 어떻게 해야 구원을 받을 수 있는가?"', delay: 15500, style: 'scripture' },
+];
+
+const PROLOGUE_EN: PrologueLine[] = [
+  { text: '...I dreamed a dream.', delay: 0, style: 'dramatic' },
+  { text: '', delay: 2200, style: 'normal' },
+  { text: 'A man clothed in rags,', delay: 3000, style: 'normal' },
+  { text: 'standing with his face turned away.', delay: 4500, style: 'normal' },
+  { text: '', delay: 6000, style: 'normal' },
+  { text: 'A heavy Burden upon his back,', delay: 7000, style: 'dramatic' },
+  { text: 'and a Book in his hand.', delay: 8500, style: 'normal' },
+  { text: '', delay: 10000, style: 'normal' },
+  { text: 'He opened the Book and read...', delay: 11000, style: 'dim' },
+  { text: 'and began to weep and tremble.', delay: 13000, style: 'dramatic' },
+  { text: '', delay: 14500, style: 'normal' },
+  { text: '"What must I do to be saved?"', delay: 15500, style: 'scripture' },
+];
 
 export class OnboardingScene extends Phaser.Scene {
-  private textIndex = 0;
-  private prologueTexts: string[][] = [];
-  private currentText?: Phaser.GameObjects.Text;
-
+  private bgParticles: { x: number; y: number; a: number; s: number; vy: number }[] = [];
+  private gfx!: Phaser.GameObjects.Graphics;
 
   constructor() {
-    super(SCENE_KEYS.ONBOARDING);
+    super({ key: SCENE_KEYS.ONBOARDING });
   }
 
   create(): void {
-    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-    this.cameras.main.setBackgroundColor(0x000000);
+    this.cameras.main.setBackgroundColor(COLORS.UI.DARK_BG);
+    DesignSystem.fadeIn(this, 800);
 
-    if (gm.language === 'ko') {
-      this.prologueTexts = [
-        ['나는 꿈을 꾸었노라...'],
-        ['이 세상의 광야에서,', '한 사람이 누더기를 입고 서 있었으니'],
-        ['그의 등에는 무거운 짐이 지워져 있었고,', '그의 손에는 한 권의 책이 들려 있었다.'],
-        ['당신은 멸망의 도시에 살고 있습니다.', '이 도시는 곧 심판의 불로 멸망할 것입니다.'],
-        ['등에 진 짐은 당신의 죄의 무게입니다.', '이 짐은 오직 한 곳에서만 벗을 수 있습니다.'],
-        ['천상의 도시를 향해 순례하십시오.', '좁은 문을 찾고, 십자가를 향해 걸으십시오.'],
-      ];
-    } else {
-      this.prologueTexts = [
-        ['I dreamed a dream...'],
-        ['In the wilderness of this world,', 'a man stood clothed in rags,'],
-        ['with a great burden upon his back,', 'and a book in his hand.'],
-        ['You live in the City of Destruction.', 'This city shall be burned with fire.'],
-        ['The burden on your back is the weight of sin.', 'It can only be removed in one place.'],
-        ['Journey to the Celestial City.', 'Find the Wicket Gate, walk toward the Cross.'],
-      ];
+    this.gfx = this.add.graphics().setDepth(0);
+    for (let i = 0; i < 20; i++) {
+      this.bgParticles.push({
+        x: Math.random() * GAME_WIDTH,
+        y: Math.random() * GAME_HEIGHT,
+        a: 0.02 + Math.random() * 0.06,
+        s: 0.3 + Math.random() * 0.8,
+        vy: -(0.05 + Math.random() * 0.15),
+      });
     }
 
-    this.textIndex = 0;
-    this.showNextText();
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    const lines = gm.language === 'ko' ? PROLOGUE_KO : PROLOGUE_EN;
+    const ko = gm.language === 'ko';
+    const cx = GAME_WIDTH / 2;
+    const startY = GAME_HEIGHT / 2 - 60;
 
-    this.add
-      .text(GAME_WIDTH - 8, GAME_HEIGHT - 8, gm.language === 'ko' ? '클릭하여 계속' : 'Click to continue', {
-        fontSize: '6px',
-        color: '#8C8070',
-      })
-      .setOrigin(1, 1);
+    let lineIndex = 0;
+    lines.forEach((line) => {
+      if (line.text === '') { lineIndex++; return; }
 
-    this.input.on('pointerdown', () => this.advance());
-    this.input.keyboard?.on('keydown-SPACE', () => this.advance());
-    this.input.keyboard?.on('keydown-ENTER', () => this.advance());
+      const y = startY + lineIndex * 20;
+
+      const styleConfig: Record<string, { size: number; color: string; alpha: number }> = {
+        dramatic: { size: DesignSystem.FONT_SIZE.LG, color: '#e8e0d0', alpha: 1 },
+        normal: { size: DesignSystem.FONT_SIZE.BASE, color: '#b0a898', alpha: 0.9 },
+        dim: { size: DesignSystem.FONT_SIZE.BASE, color: '#6b5b4f', alpha: 0.6 },
+        scripture: { size: DesignSystem.FONT_SIZE.LG, color: '#d4a853', alpha: 1 },
+      };
+      const cfg = styleConfig[line.style] ?? styleConfig.normal;
+
+      const textObj = this.add.text(cx, y, line.text,
+        DesignSystem.textStyle(cfg.size, cfg.color, {
+          align: 'center',
+          fontStyle: line.style === 'scripture' ? 'italic' : 'normal',
+        }),
+      ).setOrigin(0.5).setAlpha(0).setDepth(1);
+
+      this.time.delayedCall(line.delay, () => {
+        this.tweens.add({
+          targets: textObj,
+          alpha: cfg.alpha,
+          y: y - 3,
+          duration: 900, ease: 'Sine.easeOut',
+        });
+      });
+      lineIndex++;
+    });
+
+    const totalDuration = lines[lines.length - 1].delay + 3000;
+    const skipLabel = ko ? '아무 곳이나 터치하여 계속...' : 'Touch anywhere to continue...';
+    const skipText = this.add.text(cx, GAME_HEIGHT - 20, skipLabel,
+      DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
+    ).setOrigin(0.5).setAlpha(0).setDepth(1);
+
+    this.time.delayedCall(totalDuration, () => {
+      this.tweens.add({ targets: skipText, alpha: 0.7, duration: 500 });
+      this.input.once('pointerdown', () => this.proceed());
+      this.input.keyboard?.once('keydown-SPACE', () => this.proceed());
+      this.input.keyboard?.once('keydown-ENTER', () => this.proceed());
+    });
+
+    this.input.keyboard?.once('keydown-ESC', () => this.proceed());
   }
 
-  private showNextText(): void {
-    if (this.textIndex >= this.prologueTexts.length) {
-      this.scene.start(SCENE_KEYS.GAME);
-      return;
-    }
-
-    this.currentText?.destroy();
-
-    const lines = this.prologueTexts[this.textIndex];
-    const cx = GAME_WIDTH / 2;
-    const cy = GAME_HEIGHT / 2;
-
-    this.currentText = this.add
-      .text(cx, cy, lines.join('\n'), {
-        fontSize: '8px',
-        color: '#E6C86E',
-        fontFamily: 'serif',
-        align: 'center',
-        lineSpacing: 6,
-      })
-      .setOrigin(0.5)
-      .setAlpha(0);
-
-    this.tweens.add({
-      targets: this.currentText,
-      alpha: 1,
-      duration: 800,
-      ease: 'Power2',
+  update(): void {
+    this.gfx.clear();
+    this.bgParticles.forEach(p => {
+      p.y += p.vy;
+      p.x += Math.sin(p.y * 0.01) * 0.1;
+      if (p.y < -5) { p.y = GAME_HEIGHT + 5; p.x = Math.random() * GAME_WIDTH; }
+      this.gfx.fillStyle(0xd4a853, p.a);
+      this.gfx.fillCircle(p.x, p.y, p.s);
     });
   }
 
-  private advance(): void {
-    this.textIndex++;
-    if (this.currentText) {
-      this.tweens.add({
-        targets: this.currentText,
-        alpha: 0,
-        duration: 400,
-        ease: 'Power2',
-        onComplete: () => this.showNextText(),
-      });
-    } else {
-      this.showNextText();
-    }
+  private async proceed(): Promise<void> {
+    await DesignSystem.fadeOut(this, 600);
+    this.scene.start(SCENE_KEYS.GAME);
   }
 }

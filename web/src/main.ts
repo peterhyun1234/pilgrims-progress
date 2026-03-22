@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import UIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin.js';
 import { GAME_WIDTH, GAME_HEIGHT } from './config';
 import { BootScene } from './scenes/BootScene';
 import { PreloadScene } from './scenes/PreloadScene';
@@ -8,6 +9,7 @@ import { OnboardingScene } from './scenes/OnboardingScene';
 import { GameScene } from './scenes/GameScene';
 import { BattleScene } from './scenes/BattleScene';
 import { CutsceneScene } from './scenes/CutsceneScene';
+import { SettingsScene } from './scenes/SettingsScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -28,6 +30,11 @@ const config: Phaser.Types.Core.GameConfig = {
       debug: false,
     },
   },
+  plugins: {
+    scene: [
+      { key: 'rexUI', plugin: UIPlugin, mapping: 'rexUI' },
+    ],
+  },
   scene: [
     BootScene,
     PreloadScene,
@@ -37,8 +44,18 @@ const config: Phaser.Types.Core.GameConfig = {
     GameScene,
     BattleScene,
     CutsceneScene,
+    SettingsScene,
   ],
   backgroundColor: '#0A0814',
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
+
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const overlay = document.getElementById('loading-overlay');
+    if (overlay) overlay.classList.add('hidden');
+  }, 1500);
+});
+
+export default game;

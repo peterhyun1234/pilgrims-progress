@@ -4,146 +4,191 @@ import { GameEvent, StatType } from '../core/GameEvents';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { StatsManager } from '../core/StatsManager';
 
-export interface InkTag {
-  key: string;
-  value: string;
+export interface InkChoice {
+  text: string;
+  index: number;
+  isHidden: boolean;
+  requiredStat?: string;
+  requiredValue?: number;
 }
 
 export class InkService {
   private story: Story | null = null;
   private eventBus: EventBus;
+  private narrativeTags: string[] = [];
 
-  constructor() {
+  constructor(_scene: Phaser.Scene) {
     this.eventBus = EventBus.getInstance();
   }
 
-  loadStory(jsonData: Record<string, unknown>): void {
+  loadStory(jsonData: Record<string, never>): void {
     this.story = new Story(jsonData as Record<string, never>);
-    this.syncStatsToInk();
+    this.bindExternalFunctions();
+  }
+
+  private bindExternalFunctions(): void {
+    if (!this.story) return;
+
+    this.story.BindExternalFunction('getStat', (stat: string): number => {
+      const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
+      return sm.get(stat as StatType);
+    });
+
+    this.story.BindExternalFunction('hasMet', (_char: string): boolean => {
+      return true;
+    });
   }
 
   canContinue(): boolean {
     return this.story?.canContinue ?? false;
   }
 
-  continue(): { text: string; tags: InkTag[] } {
-    if (!this.story || !this.story.canContinue) {
-      return { text: '', tags: [] };
+  continue(): { text: string; tags: string[] } | null {
+    if (!this.story || !this.story.canContinue) return null;
+
+    const text = this.story.Continue()?.trim() ?? '';
+    const tags = this.story.currentTags ?? [];
+
+    this.narrativeTags = [];
+    for (const tag of tags) {
+      this.processTag(tag);
     }
 
-    const text = this.story.Continue() ?? '';
-    const rawTags = this.story.currentTags ?? [];
-    const tags = this.parseTags(rawTags);
-
-    this.processTags(tags);
-
-    return { text: text.trim(), tags };
+    return { text, tags: [...tags, ...this.narrativeTags] };
   }
 
-  getChoices(): { text: string; index: number }[] {
+  getChoices(): InkChoice[] {
     if (!this.story) return [];
-    return this.story.currentChoices.map((choice, index) => ({
-      text: choice.text,
-      index,
-    }));
-  }
 
-  chooseChoice(index: number): void {
-    this.story?.ChooseChoiceIndex(index);
-  }
+    const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
 
-  goToKnot(knotName: string): void {
-    if (this.story) {
-      this.story.ChoosePathString(knotName);
-    }
-  }
+    return this.story.currentChoices.map((choice, index) => {
+      let isHidden = false;
+      let requiredStat: string | undefined;
+      let requiredValue: number | undefined;
 
-  getVariable(name: string): unknown {
-    return this.story?.variablesState?.[name];
-  }
+      const bracketMatch = choice.text.match(/\[(\w+)>=(\d+)\]\s*(.*)/);
+      if (bracketMatch) {
+        requiredStat = bracketMatch[1].toLowerCase();
+        requiredValue = parseInt(bracketMatch[2], 10);
+        const currentVal = sm.get(requiredStat as StatType);
 
-  setVariable(name: string, value: unknown): void {
-    if (this.story?.variablesState) {
-      this.story.variablesState[name] = value;
-    }
-  }
+        if (currentVal >= requiredValue) {
+          isHidden = true;
+        }
 
-  getState(): string {
-    return this.story?.state.toJson() ?? '';
-  }
-
-  loadState(stateJson: string): void {
-    this.story?.state.LoadJson(stateJson);
-  }
-
-  private parseTags(rawTags: string[]): InkTag[] {
-    return rawTags.map((tag) => {
-      const colonIndex = tag.indexOf(':');
-      if (colonIndex >= 0) {
         return {
-          key: tag.substring(0, colonIndex).trim().toUpperCase(),
-          value: tag.substring(colonIndex + 1).trim(),
+          text: bracketMatch[3] || choice.text,
+          index,
+          isHidden,
+          requiredStat,
+          requiredValue,
         };
       }
-      return { key: tag.trim().toUpperCase(), value: '' };
+
+      return { text: choice.text, index, isHidden };
     });
   }
 
-  private processTags(tags: InkTag[]): void {
-    for (const tag of tags) {
-      switch (tag.key) {
-        case 'STAT': {
-          this.processStatTag(tag.value);
-          break;
-        }
-        case 'BIBLE_CARD': {
-          this.eventBus.emit(GameEvent.BIBLE_CARD_COLLECTED, tag.value);
-          break;
-        }
-        case 'BGM': {
-          this.eventBus.emit(GameEvent.BGM_PLAY, tag.value);
-          break;
-        }
-        case 'SFX': {
-          this.eventBus.emit(GameEvent.SFX_PLAY, tag.value);
-          break;
-        }
-        case 'SHAKE': {
-          this.eventBus.emit(GameEvent.SCREEN_SHAKE);
-          break;
-        }
-        case 'TRANSITION': {
-          this.eventBus.emit(GameEvent.SCREEN_FADE, tag.value);
-          break;
-        }
-      }
-    }
-  }
-
-  private processStatTag(value: string): void {
-    const match = value.match(/^(\w+)\s*([+-])\s*(\d+)$/);
-    if (!match) return;
-
-    const stat = match[1].toLowerCase() as StatType;
-    const sign = match[2] === '+' ? 1 : -1;
-    const amount = parseInt(match[3], 10) * sign;
-
-    const statsManager = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
-    statsManager.change(stat, amount);
-  }
-
-  private syncStatsToInk(): void {
+  choose(index: number): void {
     if (!this.story) return;
+    this.story.ChooseChoiceIndex(index);
+  }
 
-    const statsManager = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
-    const stats = statsManager.getAll();
+  private processTag(tag: string): void {
+    const parts = tag.trim().split(':').map(s => s.trim());
+    const command = parts[0];
+    const value = parts.slice(1).join(':').trim();
 
-    for (const [key, value] of Object.entries(stats)) {
-      try {
-        this.setVariable(key, value);
-      } catch {
-        // Variable may not exist in ink story
+    switch (command) {
+      case 'STAT': {
+        const match = value.match(/(\w+)\s*([\+\-])\s*(\d+)/);
+        if (match) {
+          const stat = match[1].toLowerCase() as StatType;
+          const sign = match[2] === '+' ? 1 : -1;
+          const amount = parseInt(match[3], 10) * sign;
+
+          const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
+          sm.change(stat, amount);
+        }
+        break;
       }
+
+      case 'RELATIONSHIP': {
+        const match = value.match(/(\w+)\s*([\+\-])\s*(\d+)/);
+        if (match) {
+          const npc = match[1];
+          const sign = match[2] === '+' ? 1 : -1;
+          const amount = parseInt(match[3], 10) * sign;
+
+          const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
+          sm.changeRelationship(npc, amount);
+        }
+        break;
+      }
+
+      case 'INSIGHT': {
+        const amount = parseInt(value, 10) || 1;
+        const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
+        sm.addInsight(amount);
+        break;
+      }
+
+      case 'BIBLE_CARD':
+        this.eventBus.emit(GameEvent.BIBLE_CARD_COLLECTED, value);
+        break;
+
+      case 'CHARACTER_MET':
+        this.eventBus.emit(GameEvent.CHARACTER_MET, value);
+        break;
+
+      case 'BURDEN_RELEASE': {
+        const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
+        sm.setBurdenZero();
+        break;
+      }
+
+      case 'CHAPTER_ENTER':
+        this.eventBus.emit(GameEvent.CHAPTER_ENTER, parseInt(value, 10));
+        break;
+
+      case 'MOOD':
+      case 'CAMERA':
+      case 'LIGHT':
+      case 'MUSIC':
+      case 'SFX':
+      case 'WAIT':
+      case 'TRANSITION':
+      case 'EMOTE':
+      case 'EMOTION':
+      case 'TYPING':
+      case 'TEXT_EFFECT':
+      case 'PALETTE':
+        this.narrativeTags.push(tag);
+        break;
+
+      case 'BGM':
+        this.eventBus.emit(GameEvent.BGM_PLAY, value);
+        break;
+
+      case 'SHAKE':
+        this.eventBus.emit(GameEvent.SCREEN_SHAKE, {
+          intensity: parseFloat(value) || 2,
+          duration: 300,
+        });
+        break;
     }
+  }
+
+  getState(): string | null {
+    return this.story?.state.toJson() ?? null;
+  }
+
+  loadState(state: string): void {
+    this.story?.state.LoadJson(state);
+  }
+
+  hasChoices(): boolean {
+    return (this.story?.currentChoices.length ?? 0) > 0;
   }
 }

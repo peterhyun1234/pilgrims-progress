@@ -1,61 +1,94 @@
-import Phaser from 'phaser';
 import { GAME_WIDTH, COLORS } from '../config';
+import { EventBus } from '../core/EventBus';
+import { GameEvent, ToastPayload } from '../core/GameEvents';
+import { DesignSystem } from './DesignSystem';
+
+interface ToastItem {
+  container: Phaser.GameObjects.Container;
+  createdAt: number;
+  duration: number;
+}
 
 export class Toast {
   private scene: Phaser.Scene;
-  private queue: { text: string; type: string }[] = [];
-  private isShowing = false;
+  private eventBus: EventBus;
+  private queue: ToastPayload[] = [];
+  private activeToasts: ToastItem[] = [];
+  private static readonly MAX_VISIBLE = 3;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
+    this.eventBus = EventBus.getInstance();
+    this.eventBus.on<ToastPayload>(GameEvent.TOAST_SHOW, (p) => { if (p) this.enqueue(p); });
   }
 
-  show(text: string, type: 'stat' | 'card' | 'info' = 'info', _duration = 2000): void {
-    this.queue.push({ text, type });
-    if (!this.isShowing) {
-      this.showNext();
+  private enqueue(payload: ToastPayload): void {
+    if (this.activeToasts.length >= Toast.MAX_VISIBLE) {
+      this.queue.push(payload);
+    } else {
+      this.showToast(payload);
     }
   }
 
-  private showNext(): void {
-    if (this.queue.length === 0) {
-      this.isShowing = false;
-      return;
-    }
+  private showToast(payload: ToastPayload): void {
+    const duration = payload.duration ?? 2000;
+    const y = 10 + this.activeToasts.length * 20;
 
-    this.isShowing = true;
-    const item = this.queue.shift()!;
+    const container = this.scene.add.container(GAME_WIDTH / 2, y - 12)
+      .setDepth(400).setScrollFactor(0).setAlpha(0);
 
-    const color = item.type === 'stat' ? '#E6C86E' :
-                  item.type === 'card' ? '#4A9E4A' : '#FFFFFF';
+    const isPositive = payload.type === 'stat-positive' || payload.type === 'achievement';
+    const bgColor = payload.type === 'card' ? 0x2a2040
+      : isPositive ? 0x1a3020 : 0x301a1a;
+    const textColor = payload.statColor
+      ? DesignSystem.hex(payload.statColor)
+      : (isPositive ? '#88cc88' : '#cc8888');
 
-    const bg = this.scene.add.rectangle(
-      GAME_WIDTH / 2, 50, 0, 12,
-      COLORS.UI.PANEL, 0.9,
-    ).setScrollFactor(0).setDepth(300);
+    const icon = payload.icon ?? (payload.type === 'card' ? '✝' : (isPositive ? '▲' : '▼'));
+    const fullText = `${icon} ${payload.text}`;
 
-    const text = this.scene.add.text(
-      GAME_WIDTH / 2, 50,
-      item.text,
-      { fontSize: '7px', color, fontStyle: 'bold' },
-    ).setOrigin(0.5).setScrollFactor(0).setDepth(301).setAlpha(0);
+    const text = this.scene.add.text(0, 0, fullText,
+      DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, textColor),
+    ).setOrigin(0.5);
 
-    bg.width = text.width + 16;
-    bg.setStrokeStyle(1, COLORS.UI.PANEL_BORDER);
+    const pw = text.width + 24;
+    const ph = 16;
+    const bg = this.scene.add.graphics();
+    bg.fillStyle(bgColor, 0.88);
+    bg.fillRoundedRect(-pw / 2, -ph / 2, pw, ph, 4);
+    bg.lineStyle(0.8, payload.statColor ?? COLORS.UI.PANEL_BORDER, 0.4);
+    bg.strokeRoundedRect(-pw / 2, -ph / 2, pw, ph, 4);
+
+    container.add([bg, text]);
+
+    const item: ToastItem = { container, createdAt: Date.now(), duration };
+    this.activeToasts.push(item);
 
     this.scene.tweens.add({
-      targets: [text, bg],
-      alpha: 1,
-      y: 44,
-      duration: 300,
-      ease: 'Power2',
-      hold: 1500,
-      yoyo: true,
-      onComplete: () => {
-        text.destroy();
-        bg.destroy();
-        this.showNext();
-      },
+      targets: container, alpha: 1, y, duration: 250, ease: 'Back.easeOut',
     });
+
+    this.scene.time.delayedCall(duration, () => {
+      this.scene.tweens.add({
+        targets: container, alpha: 0, y: y - 10, duration: 250,
+        onComplete: () => {
+          container.destroy(true);
+          this.activeToasts = this.activeToasts.filter(t => t !== item);
+          this.processQueue();
+        },
+      });
+    });
+  }
+
+  private processQueue(): void {
+    if (this.queue.length > 0 && this.activeToasts.length < Toast.MAX_VISIBLE) {
+      this.showToast(this.queue.shift()!);
+    }
+  }
+
+  destroy(): void {
+    this.activeToasts.forEach(t => t.container.destroy(true));
+    this.activeToasts = [];
+    this.queue = [];
   }
 }

@@ -1,92 +1,103 @@
-import { InkService, InkTag } from './InkService';
+import { InkService } from './InkService';
 import { EventBus } from '../core/EventBus';
-import { GameEvent, GameState, DialogueLinePayload, DialogueChoicePayload } from '../core/GameEvents';
-import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
-import { GameManager } from '../core/GameManager';
+import { GameEvent, DialogueLinePayload, DialogueChoicePayload } from '../core/GameEvents';
+import { NarrativeDirector } from './NarrativeDirector';
 
 export class DialogueManager {
   private inkService: InkService;
   private eventBus: EventBus;
-  private currentSpeaker = '';
   private isActive = false;
+  private currentSpeaker = '';
+  private narrativeDirector: NarrativeDirector | null = null;
 
-  constructor(inkService: InkService) {
+  constructor(inkService: InkService, eventBus: EventBus) {
     this.inkService = inkService;
-    this.eventBus = EventBus.getInstance();
+    this.eventBus = eventBus;
+
+    this.eventBus.on(GameEvent.DIALOGUE_CHOICE_SELECTED, (index: number) => {
+      if (!this.isActive) return;
+      if (index >= 0) {
+        this.inkService.choose(index);
+      }
+      this.advance();
+    });
   }
 
-  startDialogue(knotName?: string): void {
-    if (this.isActive) return;
+  setNarrativeDirector(director: NarrativeDirector): void {
+    this.narrativeDirector = director;
+  }
 
-    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-    gm.changeState(GameState.DIALOGUE);
-
+  start(npcId?: string): void {
     this.isActive = true;
-
-    if (knotName) {
-      this.inkService.goToKnot(knotName);
-    }
-
-    this.eventBus.emit(GameEvent.DIALOGUE_START);
-    this.advanceDialogue();
+    this.currentSpeaker = npcId ?? '';
+    this.eventBus.emit(GameEvent.DIALOGUE_START, npcId);
+    this.advance();
   }
 
-  advanceDialogue(): void {
+  private advance(): void {
     if (!this.isActive) return;
 
     if (this.inkService.canContinue()) {
       const result = this.inkService.continue();
-      const speaker = this.extractSpeaker(result.tags);
-      if (speaker) this.currentSpeaker = speaker;
+      if (!result) return;
+
+      let speaker = this.currentSpeaker;
+      let emotion = 'neutral';
+      const narrativeTags: string[] = [];
+
+      for (const tag of result.tags) {
+        const parts = tag.trim().split(':').map(s => s.trim());
+        const cmd = parts[0];
+        const val = parts.slice(1).join(':').trim();
+
+        if (cmd === 'SPEAKER') {
+          speaker = val;
+        } else if (cmd === 'EMOTION') {
+          if (val.includes(' ')) {
+            emotion = val.split(' ')[1];
+          } else {
+            emotion = val;
+          }
+        } else if (['MOOD', 'CAMERA', 'LIGHT', 'MUSIC', 'SFX', 'WAIT',
+          'TRANSITION', 'EMOTE', 'TYPING', 'TEXT_EFFECT', 'PALETTE'].includes(cmd)) {
+          narrativeTags.push(tag);
+        }
+      }
+
+      if (this.narrativeDirector) {
+        narrativeTags.forEach(t => this.narrativeDirector!.applyTag(t));
+      }
 
       if (result.text) {
         const payload: DialogueLinePayload = {
           text: result.text,
-          speaker: this.currentSpeaker || undefined,
-          tags: result.tags.map((t) => `${t.key}: ${t.value}`),
+          speaker,
+          emotion,
+          tags: result.tags,
         };
         this.eventBus.emit(GameEvent.DIALOGUE_LINE, payload);
       } else {
-        this.advanceDialogue();
+        this.advance();
       }
-    } else {
+    } else if (this.inkService.hasChoices()) {
       const choices = this.inkService.getChoices();
-      if (choices.length > 0) {
-        const payload: DialogueChoicePayload = {
-          choices: choices.map((c) => ({
-            text: c.text,
-            index: c.index,
-          })),
-        };
-        this.eventBus.emit(GameEvent.DIALOGUE_CHOICE, payload);
-      } else {
-        this.endDialogue();
-      }
+      const payload: DialogueChoicePayload = {
+        choices: choices.map(c => ({
+          text: c.text,
+          index: c.index,
+          isHidden: c.isHidden,
+          requiredStat: c.requiredStat,
+          requiredValue: c.requiredValue,
+        })),
+      };
+      this.eventBus.emit(GameEvent.DIALOGUE_CHOICE, payload);
+    } else {
+      this.isActive = false;
+      this.eventBus.emit(GameEvent.DIALOGUE_END);
     }
   }
 
-  selectChoice(index: number): void {
-    this.inkService.chooseChoice(index);
-    this.eventBus.emit(GameEvent.DIALOGUE_CHOICE_SELECTED, index);
-    this.advanceDialogue();
-  }
-
-  endDialogue(): void {
-    this.isActive = false;
-    this.currentSpeaker = '';
-
-    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-    gm.changeState(GameState.GAME);
-
-    this.eventBus.emit(GameEvent.DIALOGUE_END);
-  }
-
-  get active(): boolean {
+  isDialogueActive(): boolean {
     return this.isActive;
-  }
-
-  private extractSpeaker(tags: InkTag[]): string | null {
-    const speakerTag = tags.find((t) => t.key === 'SPEAKER');
-    return speakerTag?.value ?? null;
   }
 }

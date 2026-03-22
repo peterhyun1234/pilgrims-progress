@@ -1,15 +1,18 @@
-import Phaser from 'phaser';
+import { EventBus } from '../core/EventBus';
+import { GameEvent } from '../core/GameEvents';
 
 export class ScreenEffects {
-  static fadeIn(camera: Phaser.Cameras.Scene2D.Camera, duration = 500): void {
-    camera.fadeIn(duration);
-  }
+  private scene: Phaser.Scene;
 
-  static fadeOut(camera: Phaser.Cameras.Scene2D.Camera, duration = 500): void {
-    camera.fadeOut(duration);
-  }
+  constructor(scene: Phaser.Scene) {
+    this.scene = scene;
 
-  static flash(camera: Phaser.Cameras.Scene2D.Camera, duration = 200): void {
-    camera.flash(duration, 255, 255, 255);
+    EventBus.getInstance().on(GameEvent.SCREEN_FADE, (data: { color: number; duration: number }) => {
+      this.scene.cameras.main.fadeEffect.start(false, data.duration, 0, 0, 0, true);
+    });
+
+    EventBus.getInstance().on(GameEvent.SCREEN_FLASH, (data: { color: number; duration: number }) => {
+      this.scene.cameras.main.flash(data.duration);
+    });
   }
 }
