@@ -35,7 +35,7 @@ export class MenuScene extends Phaser.Scene {
     });
 
     this.add.text(cx, 76, "Pilgrim's Progress",
-      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XXL),
+      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XL),
     ).setOrigin(0.5);
 
     this.add.text(cx, 104, ko ? '순례자의 여정' : 'The Journey Begins',
@@ -70,7 +70,7 @@ export class MenuScene extends Phaser.Scene {
       { fontSize: DesignSystem.FONT_SIZE.SM },
     );
 
-    this.add.text(GAME_WIDTH - 8, GAME_HEIGHT - 8, 'v0.4.0',
+    this.add.text(GAME_WIDTH - 8, GAME_HEIGHT - 8, 'v0.5.0',
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(1, 1);
   }

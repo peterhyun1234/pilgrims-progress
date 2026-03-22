@@ -2,6 +2,8 @@ import { Entity } from './Entity';
 import { EventBus } from '../core/EventBus';
 import { NPC_CONFIG, COLORS } from '../config';
 import { DesignSystem, FONT_FAMILY } from '../ui/DesignSystem';
+import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
+import { GameManager } from '../core/GameManager';
 
 export interface NPCConfig {
   id: string;
@@ -70,9 +72,11 @@ export class NPC extends Entity {
 
     this.prompt.add([bg, icon]);
 
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    const displayName = gm.language === 'ko' ? this.nameKo : this.nameEn;
     this.nameLabel = this.scene.add.text(
       this.sprite.x, this.sprite.y - 14,
-      this.nameEn, {
+      displayName, {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
         color: '#b0a898', fontFamily: FONT_FAMILY,
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 2, stroke: true, fill: true },

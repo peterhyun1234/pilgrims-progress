@@ -67,13 +67,13 @@ export class OnboardingScene extends Phaser.Scene {
     const lines = gm.language === 'ko' ? PROLOGUE_KO : PROLOGUE_EN;
     const ko = gm.language === 'ko';
     const cx = GAME_WIDTH / 2;
-    const startY = GAME_HEIGHT / 2 - 60;
+    const startY = 35;
 
     let lineIndex = 0;
     lines.forEach((line) => {
       if (line.text === '') { lineIndex++; return; }
 
-      const y = startY + lineIndex * 20;
+      const y = startY + lineIndex * 22;
 
       const styleConfig: Record<string, { size: number; color: string; alpha: number }> = {
         dramatic: { size: DesignSystem.FONT_SIZE.LG, color: '#e8e0d0', alpha: 1 },

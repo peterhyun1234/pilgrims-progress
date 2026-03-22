@@ -42,9 +42,9 @@ export class HUD {
   private createBackground(): void {
     const bg = this.scene.add.graphics();
     bg.fillStyle(0x0a0814, 0.65);
-    bg.fillRoundedRect(2, 2, 108, 64, 4);
+    bg.fillRoundedRect(2, 2, 126, 64, 4);
     bg.lineStyle(0.5, 0xd4a853, 0.1);
-    bg.strokeRoundedRect(2, 2, 108, 64, 4);
+    bg.strokeRoundedRect(2, 2, 126, 64, 4);
     this.container.add(bg);
   }
 
