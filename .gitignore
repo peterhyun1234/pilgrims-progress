@@ -17,3 +17,6 @@ node_modules/
 
 # Build artifacts
 *.pptx.tmp
+
+# Test screenshots
+screenshots/
