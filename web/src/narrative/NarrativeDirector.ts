@@ -49,10 +49,12 @@ export class NarrativeDirector {
     ).setDepth(50).setScrollFactor(0).setBlendMode(Phaser.BlendModes.MULTIPLY);
   }
 
+  private onMoodChange = (payload: MoodPayload | undefined) => {
+    if (payload) this.setMood(payload.mood, payload.duration);
+  };
+
   private setupEvents(): void {
-    this.eventBus.on<MoodPayload>(GameEvent.MOOD_CHANGE, (payload) => {
-      if (payload) this.setMood(payload.mood, payload.duration);
-    });
+    this.eventBus.on(GameEvent.MOOD_CHANGE, this.onMoodChange);
   }
 
   setMood(mood: MoodType, duration = 1000): void {
@@ -220,6 +222,7 @@ export class NarrativeDirector {
   }
 
   destroy(): void {
+    this.eventBus.off(GameEvent.MOOD_CHANGE, this.onMoodChange);
     this.lightOverlay?.destroy();
     this.transitionTween?.destroy();
   }

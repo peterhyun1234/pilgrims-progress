@@ -89,7 +89,7 @@ export class TutorialSystem {
 
     let isMobile = false;
     try {
-      const rm = ServiceLocator.get<ResponsiveManager>('ResponsiveManager');
+      const rm = ServiceLocator.get<ResponsiveManager>(SERVICE_KEYS.RESPONSIVE_MANAGER);
       isMobile = rm.isTouchDevice;
     } catch { /* ignore */ }
 

@@ -66,9 +66,12 @@ export class InventoryPanel {
     this.container.add(equippedTitle);
   }
 
+  private onInventoryOpen = () => this.open();
+  private onInventoryClose = () => this.close();
+
   private setupEvents(): void {
-    this.eventBus.on(GameEvent.INVENTORY_OPEN, () => this.open());
-    this.eventBus.on(GameEvent.INVENTORY_CLOSE, () => this.close());
+    this.eventBus.on(GameEvent.INVENTORY_OPEN, this.onInventoryOpen);
+    this.eventBus.on(GameEvent.INVENTORY_CLOSE, this.onInventoryClose);
   }
 
   open(): void {
@@ -287,6 +290,8 @@ export class InventoryPanel {
   }
 
   destroy(): void {
+    this.eventBus.off(GameEvent.INVENTORY_OPEN, this.onInventoryOpen);
+    this.eventBus.off(GameEvent.INVENTORY_CLOSE, this.onInventoryClose);
     this.container.destroy(true);
   }
 }

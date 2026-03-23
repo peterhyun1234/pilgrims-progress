@@ -1,10 +1,12 @@
 import { PlayerInput } from '../entities/Player';
+import { GamepadManager } from './GamepadManager';
 
 export class InputManager {
   private cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   private wasd: { W: Phaser.Input.Keyboard.Key; A: Phaser.Input.Keyboard.Key; S: Phaser.Input.Keyboard.Key; D: Phaser.Input.Keyboard.Key } | null = null;
   private interactKey: Phaser.Input.Keyboard.Key | null = null;
   private escKey: Phaser.Input.Keyboard.Key | null = null;
+  private gamepad: GamepadManager;
 
   constructor(scene: Phaser.Scene) {
     if (scene.input.keyboard) {
@@ -18,6 +20,7 @@ export class InputManager {
       this.interactKey = scene.input.keyboard.addKey('E');
       this.escKey = scene.input.keyboard.addKey('ESC');
     }
+    this.gamepad = new GamepadManager();
   }
 
   getInput(): PlayerInput {
@@ -43,10 +46,27 @@ export class InputManager {
       interact = true;
     }
 
+    const gpInput = this.gamepad.getInput();
+    if (gpInput.x !== 0 || gpInput.y !== 0) {
+      x = gpInput.x;
+      y = gpInput.y;
+    }
+    if (gpInput.interact) interact = true;
+
+    this.gamepad.updatePrevState();
     return { x, y, interact };
   }
 
   isEscPressed(): boolean {
-    return this.escKey ? Phaser.Input.Keyboard.JustDown(this.escKey) : false;
+    const kbEsc = this.escKey ? Phaser.Input.Keyboard.JustDown(this.escKey) : false;
+    return kbEsc || this.gamepad.isStartPressed();
+  }
+
+  get gamepadManager(): GamepadManager {
+    return this.gamepad;
+  }
+
+  destroy(): void {
+    this.gamepad.destroy();
   }
 }

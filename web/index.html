@@ -47,9 +47,29 @@
     }
     @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
     #loading-overlay .cross { animation: pulse 2s infinite; }
+
+    #rotate-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(10, 8, 20, 0.95);
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 10000;
+      font-family: 'Galmuri11', monospace;
+      color: #d4a853;
+    }
+    #rotate-overlay .icon { font-size: 36px; margin-bottom: 16px; }
+    #rotate-overlay .msg { font-size: 11px; color: #8c8070; text-align: center; line-height: 1.6; }
+    @media (max-width: 480px) and (orientation: portrait) {
+      #rotate-overlay { display: flex; }
+    }
   </style>
 </head>
 <body>
+  <div id="rotate-overlay">
+    <div class="icon">📱↻</div>
+    <div class="msg">가로 모드로 회전해 주세요<br>Please rotate to landscape</div>
+  </div>
   <div id="loading-overlay">
     <div class="cross">✝</div>
     <div class="text">Loading...</div>

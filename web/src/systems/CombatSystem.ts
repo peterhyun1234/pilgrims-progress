@@ -202,11 +202,6 @@ export class CombatSystem {
       this.state.finished = true;
       this.state.victory = true;
       this.addLog('승리했다!', 'Victory!', 'system');
-      this.eventBus.emit(GameEvent.BATTLE_END, {
-        victory: true,
-        enemyId: this.state.enemy.id,
-        turnsUsed: this.state.turn,
-      });
     }
   }
 
@@ -225,12 +220,6 @@ export class CombatSystem {
 
       const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
       sm.incrementGrace();
-
-      this.eventBus.emit(GameEvent.BATTLE_END, {
-        victory: false,
-        enemyId: this.state.enemy.id,
-        turnsUsed: this.state.turn,
-      });
     }
   }
 

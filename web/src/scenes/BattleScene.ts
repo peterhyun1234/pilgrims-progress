@@ -363,26 +363,42 @@ export class BattleScene extends Phaser.Scene {
 
     this.time.delayedCall(2000, async () => {
       await DesignSystem.fadeOut(this, 500);
-      this.scene.start(SCENE_KEYS.GAME);
+      this.eventBus.emit(GameEvent.BATTLE_END, {
+        victory: state.victory,
+        enemyId: this.enemyId,
+        turnsUsed: state.turn,
+      });
+      this.scene.stop();
     });
   }
 
-  private setupBattleEvents(): void {
-    this.eventBus.on(GameEvent.PLAYER_DAMAGED, () => {
-      this.cameras.main.shake(150, 0.01);
-      this.tweens.add({
-        targets: this.playerContainer,
-        x: this.playerContainer.x + 3, duration: 50,
-        yoyo: true, repeat: 2,
-      });
+  private onPlayerDamaged = () => {
+    this.cameras.main.shake(150, 0.01);
+    this.tweens.add({
+      targets: this.playerContainer,
+      x: this.playerContainer.x + 3, duration: 50,
+      yoyo: true, repeat: 2,
     });
+  };
 
-    this.eventBus.on(GameEvent.ENEMY_DAMAGED, () => {
-      this.tweens.add({
-        targets: this.enemyContainer,
-        x: this.enemyContainer.x + 4, duration: 60,
-        yoyo: true, repeat: 1,
-      });
+  private onEnemyDamaged = () => {
+    this.tweens.add({
+      targets: this.enemyContainer,
+      x: this.enemyContainer.x + 4, duration: 60,
+      yoyo: true, repeat: 1,
     });
+  };
+
+  private setupBattleEvents(): void {
+    this.eventBus.on(GameEvent.PLAYER_DAMAGED, this.onPlayerDamaged);
+    this.eventBus.on(GameEvent.ENEMY_DAMAGED, this.onEnemyDamaged);
+
+    this.events.on('shutdown', () => this.cleanupEvents());
+    this.events.on('destroy', () => this.cleanupEvents());
+  }
+
+  private cleanupEvents(): void {
+    this.eventBus.off(GameEvent.PLAYER_DAMAGED, this.onPlayerDamaged);
+    this.eventBus.off(GameEvent.ENEMY_DAMAGED, this.onEnemyDamaged);
   }
 }

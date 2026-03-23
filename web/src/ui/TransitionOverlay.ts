@@ -20,14 +20,17 @@ export class TransitionOverlay {
     this.setupEvents();
   }
 
-  private setupEvents(): void {
-    this.eventBus.on(GameEvent.SCREEN_FADE, (data: { color: number; duration: number }) => {
-      this.fade(data.color, data.duration);
-    });
+  private onFade = (data: { color: number; duration: number }) => {
+    this.fade(data.color, data.duration);
+  };
 
-    this.eventBus.on(GameEvent.SCREEN_FLASH, (data: { color: number; duration: number }) => {
-      this.flash(data.color, data.duration);
-    });
+  private onFlash = (data: { color: number; duration: number }) => {
+    this.flash(data.color, data.duration);
+  };
+
+  private setupEvents(): void {
+    this.eventBus.on(GameEvent.SCREEN_FADE, this.onFade);
+    this.eventBus.on(GameEvent.SCREEN_FLASH, this.onFlash);
   }
 
   fade(color: number, duration: number): Promise<void> {
@@ -55,6 +58,8 @@ export class TransitionOverlay {
   }
 
   destroy(): void {
+    this.eventBus.off(GameEvent.SCREEN_FADE, this.onFade);
+    this.eventBus.off(GameEvent.SCREEN_FLASH, this.onFlash);
     this.overlay.destroy();
   }
 }

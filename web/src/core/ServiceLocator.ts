@@ -34,4 +34,5 @@ export const SERVICE_KEYS = {
   STATS_MANAGER: 'StatsManager',
   ITEM_SYSTEM: 'ItemSystem',
   COMBAT_SYSTEM: 'CombatSystem',
+  RESPONSIVE_MANAGER: 'ResponsiveManager',
 } as const;

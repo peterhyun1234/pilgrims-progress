@@ -13,15 +13,15 @@ export class ResponsiveManager {
   constructor(eventBus: EventBus) {
     this.eventBus = eventBus;
     this._isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    this.detect();
+    this.detect(true);
 
-    window.addEventListener('resize', () => this.detect());
+    window.addEventListener('resize', () => this.detect(false));
     window.addEventListener('orientationchange', () => {
-      setTimeout(() => this.detect(), 100);
+      setTimeout(() => this.detect(false), 100);
     });
   }
 
-  private detect(): void {
+  private detect(initial = false): void {
     this._screenWidth = window.innerWidth;
     this._screenHeight = window.innerHeight;
     this._isPortrait = this._screenHeight > this._screenWidth;
@@ -37,7 +37,7 @@ export class ResponsiveManager {
       newMode = 'desktop';
     }
 
-    if (newMode !== this._mode) {
+    if (initial || newMode !== this._mode) {
       this._mode = newMode;
       this.emit();
     }

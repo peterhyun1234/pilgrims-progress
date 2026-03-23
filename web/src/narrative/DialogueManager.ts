@@ -10,17 +10,22 @@ export class DialogueManager {
   private currentSpeaker = '';
   private narrativeDirector: NarrativeDirector | null = null;
 
+  private onChoiceSelected = (index: number) => {
+    if (!this.isActive) return;
+    if (index >= 0) {
+      this.inkService.choose(index);
+    }
+    this.advance();
+  };
+
   constructor(inkService: InkService, eventBus: EventBus) {
     this.inkService = inkService;
     this.eventBus = eventBus;
+    this.eventBus.on(GameEvent.DIALOGUE_CHOICE_SELECTED, this.onChoiceSelected);
+  }
 
-    this.eventBus.on(GameEvent.DIALOGUE_CHOICE_SELECTED, (index: number) => {
-      if (!this.isActive) return;
-      if (index >= 0) {
-        this.inkService.choose(index);
-      }
-      this.advance();
-    });
+  destroy(): void {
+    this.eventBus.off(GameEvent.DIALOGUE_CHOICE_SELECTED, this.onChoiceSelected);
   }
 
   setNarrativeDirector(director: NarrativeDirector): void {

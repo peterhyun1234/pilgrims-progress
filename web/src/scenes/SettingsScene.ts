@@ -4,6 +4,7 @@ import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
 import { GameState } from '../core/GameEvents';
 import { DesignSystem } from '../ui/DesignSystem';
+import { AudioManager } from '../audio/AudioManager';
 
 export class SettingsScene extends Phaser.Scene {
   private bgmVolume = 0.5;
@@ -16,6 +17,12 @@ export class SettingsScene extends Phaser.Scene {
 
   init(data?: { from?: string }): void {
     if (data?.from) this.fromScene = data.from;
+    if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+      const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      const volumes = audio.getVolume();
+      this.bgmVolume = volumes.bgm;
+      this.sfxVolume = volumes.sfx;
+    }
   }
 
   create(): void {
@@ -48,13 +55,19 @@ export class SettingsScene extends Phaser.Scene {
     this.add.text(cx - 140, y, ko ? '배경음악' : 'BGM Volume',
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a898'),
     );
-    this.createSlider(cx + 30, y, this.bgmVolume, (val) => { this.bgmVolume = val; });
+    this.createSlider(cx + 30, y, this.bgmVolume, (val) => {
+      this.bgmVolume = val;
+      this.syncAudioVolume();
+    });
 
     y += 32;
     this.add.text(cx - 140, y, ko ? '효과음' : 'SFX Volume',
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a898'),
     );
-    this.createSlider(cx + 30, y, this.sfxVolume, (val) => { this.sfxVolume = val; });
+    this.createSlider(cx + 30, y, this.sfxVolume, (val) => {
+      this.sfxVolume = val;
+      this.syncAudioVolume();
+    });
 
     y += 32;
     this.add.text(cx - 140, y, ko ? '언어' : 'Language',
@@ -103,6 +116,13 @@ export class SettingsScene extends Phaser.Scene {
       ko ? '돌아가기' : 'Back', () => this.goBack(),
       { fontSize: DesignSystem.FONT_SIZE.SM },
     );
+  }
+
+  private syncAudioVolume(): void {
+    if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+      const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      audio.setVolume(this.bgmVolume, this.sfxVolume);
+    }
   }
 
   private goBack(): void {

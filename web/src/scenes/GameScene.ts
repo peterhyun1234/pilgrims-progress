@@ -26,6 +26,9 @@ import { MiniMap } from '../ui/MiniMap';
 import { ItemSystem } from '../systems/ItemSystem';
 import { CHAPTER_ITEMS } from '../systems/ItemData';
 import { MapEvent } from '../world/ChapterData';
+import { ScreenShake } from '../fx/ScreenShake';
+import { ParticleManager } from '../fx/ParticleManager';
+import { MenuScene } from './MenuScene';
 
 export class GameScene extends Phaser.Scene {
   private inputManager!: InputManager;
@@ -53,6 +56,10 @@ export class GameScene extends Phaser.Scene {
   private gameManager!: GameManager;
   private itemSystem!: ItemSystem;
 
+  private screenShake!: ScreenShake;
+  private particleManager!: ParticleManager;
+
+  private pauseMenuCleanup: (() => void) | null = null;
   private locationTitle: Phaser.GameObjects.Container | null = null;
   private fallbackDialogueIndex: Record<string, number> = {};
   private ambientParticles: Phaser.GameObjects.Graphics | null = null;
@@ -75,7 +82,7 @@ export class GameScene extends Phaser.Scene {
     ServiceLocator.register(SERVICE_KEYS.INPUT_MANAGER, this.inputManager);
 
     this.itemSystem = new ItemSystem();
-    ServiceLocator.register('ItemSystem', this.itemSystem);
+    ServiceLocator.register(SERVICE_KEYS.ITEM_SYSTEM, this.itemSystem);
 
     this.tileMapManager = new TileMapManager(this);
     this.chapterManager = new ChapterManager(this, this.tileMapManager);
@@ -87,6 +94,9 @@ export class GameScene extends Phaser.Scene {
     ServiceLocator.register(SERVICE_KEYS.DIALOGUE_MANAGER, this.dialogueManager);
 
     this.narrativeDirector = new NarrativeDirector(this);
+
+    this.screenShake = new ScreenShake(this);
+    this.particleManager = new ParticleManager(this);
 
     const chapterConfig = this.chapterManager.loadChapter(this.gameManager.currentChapter);
 
@@ -115,7 +125,7 @@ export class GameScene extends Phaser.Scene {
     this.createAmbientParticles(chapterConfig.mapWidth, chapterConfig.mapHeight, chapterConfig.theme.ambientParticleColor, chapterConfig.theme.ambientCount);
     this.spawnChapterItems(this.gameManager.currentChapter);
 
-    const responsive = ServiceLocator.get<ResponsiveManager>('ResponsiveManager');
+    const responsive = ServiceLocator.get<ResponsiveManager>(SERVICE_KEYS.RESPONSIVE_MANAGER);
     if (responsive.isTouchDevice) {
       this.mobileControls = new MobileControls(this);
       this.mobileControls.showControls();
@@ -186,6 +196,7 @@ export class GameScene extends Phaser.Scene {
             type: 'achievement',
             duration: 2500,
           });
+          this.particleManager.emit('holy_light', itemEntry.x, itemEntry.y, 8);
           c.destroy(true);
           hitZone.destroy();
           this.tutorialSystem.showById('item_pickup');
@@ -220,6 +231,10 @@ export class GameScene extends Phaser.Scene {
         return;
       }
       if (this.gameManager.isState(GameState.DIALOGUE)) return;
+      if (this.gameManager.isState(GameState.PAUSE)) {
+        this.closePauseMenu();
+        return;
+      }
       this.openPauseMenu();
     });
 
@@ -244,7 +259,7 @@ export class GameScene extends Phaser.Scene {
     this.tweens.add({ targets: overlay, alpha: 0.55, duration: 200 });
 
     const panel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2).setDepth(501).setScrollFactor(0);
-    const bg = DesignSystem.createPanel(this, -110, -80, 220, 160);
+    const bg = DesignSystem.createPanel(this, -110, -80, 220, 200);
 
     const ko = this.gameManager.language === 'ko';
     const title = this.add.text(0, -58, ko ? '일시정지' : 'Paused',
@@ -257,73 +272,110 @@ export class GameScene extends Phaser.Scene {
 
     panel.add([bg, title, line]);
 
+    const buttons: Phaser.GameObjects.Container[] = [];
     const cleanup = () => {
-      overlay.destroy(); panel.destroy();
-      resume.destroy(); settings.destroy(); quit.destroy();
+      overlay.destroy();
+      panel.destroy();
+      buttons.forEach(b => b.destroy());
+      this.pauseMenuCleanup = null;
     };
+    this.pauseMenuCleanup = cleanup;
 
-    const resume = DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 18, 170, 28,
+    buttons.push(DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 18, 170, 28,
       ko ? '계속하기' : 'Resume', () => {
         cleanup();
         this.gameManager.changeState(GameState.GAME);
       }, { fontSize: DesignSystem.FONT_SIZE.SM, bgColor: 0x2a4a2a, hoverColor: 0x3a6a3a },
-    ).setDepth(502).setScrollFactor(0);
+    ).setDepth(502).setScrollFactor(0));
 
-    const settings = DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 16, 170, 28,
+    buttons.push(DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 16, 170, 28,
       ko ? '설정' : 'Settings', () => {
         cleanup();
         this.scene.pause();
         this.scene.launch('SettingsScene', { from: 'GameScene' });
       }, { fontSize: DesignSystem.FONT_SIZE.SM },
-    ).setDepth(502).setScrollFactor(0);
+    ).setDepth(502).setScrollFactor(0));
 
-    const quit = DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50, 170, 28,
+    buttons.push(DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50, 170, 28,
+      ko ? '전체화면' : 'Fullscreen', () => {
+        MenuScene.toggleFullscreen();
+      }, { fontSize: DesignSystem.FONT_SIZE.SM },
+    ).setDepth(502).setScrollFactor(0));
+
+    buttons.push(DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 84, 170, 28,
       ko ? '메뉴로 돌아가기' : 'Quit to Menu', async () => {
         cleanup();
         await DesignSystem.fadeOut(this, 400);
+        this.shutdown();
         this.scene.start(SCENE_KEYS.MENU);
       }, { fontSize: DesignSystem.FONT_SIZE.SM, bgColor: 0x3a1a1a, hoverColor: 0x5a2a2a },
-    ).setDepth(502).setScrollFactor(0);
+    ).setDepth(502).setScrollFactor(0));
   }
 
+  private closePauseMenu(): void {
+    if (!this.gameManager.isState(GameState.PAUSE)) return;
+    this.pauseMenuCleanup?.();
+    this.gameManager.changeState(GameState.GAME);
+  }
+
+  private onNpcInteract = (npcId: string) => {
+    const npc = this.npcs.find(n => n.npcId === npcId);
+    if (npc) {
+      this.particleManager.emit('light', npc.sprite.x, npc.sprite.y - 8, 4);
+    }
+    this.startDialogue(npcId);
+  };
+
+  private onStatChanged = (payload: StatChangePayload | undefined) => {
+    if (!payload) return;
+    const isPositive = payload.amount > 0;
+    const ko = this.gameManager.language === 'ko';
+    const statLabel = ko
+      ? DesignSystem.STAT_LABELS_KO[payload.stat]
+      : DesignSystem.STAT_LABELS_EN[payload.stat];
+    const sign = isPositive ? '+' : '';
+    this.eventBus.emit(GameEvent.TOAST_SHOW, {
+      text: `${statLabel} ${sign}${payload.amount}`,
+      type: isPositive ? 'stat-positive' : 'stat-negative',
+      statColor: DesignSystem.STAT_COLORS[payload.stat],
+      duration: 1500,
+    });
+  };
+
+  private onBibleCard = (cardId: string) => {
+    this.eventBus.emit(GameEvent.TOAST_SHOW, {
+      text: `✝ ${cardId}`, type: 'card', duration: 3000,
+    });
+  };
+
+  private onChapterEnter = (chapter: number) => {
+    this.transitionToChapter(chapter);
+  };
+
+  private onDialogueEnd = () => {
+    this.player?.exitInteract();
+  };
+
+  private onBattleEnd = () => {
+    this.gameManager.changeState(GameState.GAME);
+  };
+
   private setupEvents(): void {
-    this.eventBus.on('npc_interact', (npcId: string) => {
-      this.startDialogue(npcId);
-    });
+    this.eventBus.on('npc_interact', this.onNpcInteract);
+    this.eventBus.on(GameEvent.STAT_CHANGED, this.onStatChanged);
+    this.eventBus.on(GameEvent.BIBLE_CARD_COLLECTED, this.onBibleCard);
+    this.eventBus.on(GameEvent.CHAPTER_ENTER, this.onChapterEnter);
+    this.eventBus.on(GameEvent.DIALOGUE_END, this.onDialogueEnd);
+    this.eventBus.on(GameEvent.BATTLE_END, this.onBattleEnd);
+  }
 
-    this.eventBus.on<StatChangePayload>(GameEvent.STAT_CHANGED, (payload) => {
-      if (!payload) return;
-      const isPositive = payload.amount > 0;
-      const ko = this.gameManager.language === 'ko';
-      const statLabel = ko
-        ? DesignSystem.STAT_LABELS_KO[payload.stat]
-        : DesignSystem.STAT_LABELS_EN[payload.stat];
-      const sign = isPositive ? '+' : '';
-      this.eventBus.emit(GameEvent.TOAST_SHOW, {
-        text: `${statLabel} ${sign}${payload.amount}`,
-        type: isPositive ? 'stat-positive' : 'stat-negative',
-        statColor: DesignSystem.STAT_COLORS[payload.stat],
-        duration: 1500,
-      });
-    });
-
-    this.eventBus.on(GameEvent.BIBLE_CARD_COLLECTED, (cardId: string) => {
-      this.eventBus.emit(GameEvent.TOAST_SHOW, {
-        text: `✝ ${cardId}`, type: 'card', duration: 3000,
-      });
-    });
-
-    this.eventBus.on(GameEvent.CHAPTER_ENTER, (chapter: number) => {
-      this.transitionToChapter(chapter);
-    });
-
-    this.eventBus.on(GameEvent.DIALOGUE_END, () => {
-      this.player?.exitInteract();
-    });
-
-    this.eventBus.on(GameEvent.BATTLE_END, () => {
-      this.gameManager.changeState(GameState.GAME);
-    });
+  private cleanupEvents(): void {
+    this.eventBus.off('npc_interact', this.onNpcInteract);
+    this.eventBus.off(GameEvent.STAT_CHANGED, this.onStatChanged);
+    this.eventBus.off(GameEvent.BIBLE_CARD_COLLECTED, this.onBibleCard);
+    this.eventBus.off(GameEvent.CHAPTER_ENTER, this.onChapterEnter);
+    this.eventBus.off(GameEvent.DIALOGUE_END, this.onDialogueEnd);
+    this.eventBus.off(GameEvent.BATTLE_END, this.onBattleEnd);
   }
 
   private startDialogue(npcId: string): void {
@@ -610,8 +662,26 @@ export class GameScene extends Phaser.Scene {
     this.interactionZone.update();
     this.hud.update();
     this.dialogueBox.update();
-    this.npcs.forEach(npc => npc.update());
+
+    const cam = this.cameras.main;
+    const margin = 64;
+    const camL = cam.scrollX - margin;
+    const camR = cam.scrollX + cam.width + margin;
+    const camT = cam.scrollY - margin;
+    const camB = cam.scrollY + cam.height + margin;
+    this.npcs.forEach(npc => {
+      const nx = npc.sprite.x;
+      const ny = npc.sprite.y;
+      if (nx >= camL && nx <= camR && ny >= camT && ny <= camB) {
+        npc.sprite.setVisible(true);
+        npc.update();
+      } else {
+        npc.sprite.setVisible(false);
+      }
+    });
+
     this.miniMap.update(this.player.sprite.x, this.player.sprite.y, this.npcs);
+    this.particleManager.update(delta);
     this.checkMapEvents();
     this.tutorialSystem.checkStuck(this.player.sprite.x, this.player.sprite.y, delta);
   }
@@ -636,6 +706,8 @@ export class GameScene extends Phaser.Scene {
   }
 
   shutdown(): void {
+    this.cleanupEvents();
+    this.inputManager?.destroy();
     this.hud?.destroy();
     this.dialogueBox?.destroy();
     this.toast?.destroy();
@@ -645,9 +717,12 @@ export class GameScene extends Phaser.Scene {
     this.inventoryPanel?.destroy();
     this.tutorialSystem?.destroy();
     this.miniMap?.destroy();
+    this.screenShake?.destroy();
+    this.particleManager?.destroy();
     this.pauseBtn?.destroy(true);
     this.ambientParticles?.destroy();
     this.itemSprites.forEach(s => s.destroy(true));
     this.npcs.forEach(n => n.destroy());
+    this.player?.destroy();
   }
 }

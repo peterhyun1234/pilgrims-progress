@@ -190,15 +190,16 @@ export class MobileControls {
     this.scene.input.on('pointerupoutside', pointerUp);
   }
 
+  private onStateChanged = (state: GameState | undefined) => {
+    if (state === GameState.DIALOGUE || state === GameState.CUTSCENE || state === GameState.PAUSE) {
+      this.hideControls();
+    } else if (state === GameState.GAME) {
+      this.showControls();
+    }
+  };
+
   private setupEvents(): void {
-    const eventBus = EventBus.getInstance();
-    eventBus.on<GameState>(GameEvent.GAME_STATE_CHANGED, (state) => {
-      if (state === GameState.DIALOGUE || state === GameState.CUTSCENE) {
-        this.hideControls();
-      } else if (state === GameState.GAME) {
-        this.showControls();
-      }
-    });
+    EventBus.getInstance().on(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
   }
 
   showControls(): void {
@@ -258,6 +259,7 @@ export class MobileControls {
   }
 
   destroy(): void {
+    EventBus.getInstance().off(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
     this.hintContainer?.destroy(true);
     this.container.destroy(true);
   }

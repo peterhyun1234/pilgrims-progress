@@ -1,1 +1,41 @@
-{"inkVersion":21,"root":[["^천로역정 — 제1장: 멸망의 도시","\n",["done",{"#n":"g-0"}],null],"done",{"evangelist_meeting":["^",{"->":".^.evangelist_start"},["done",{"#n":"g-0"}],null,"evangelist_start",["# SPEAKER: Evangelist","# LOCATION: City of Destruction","\n","^전도자가 다가옵니다.","\n","# SPEAKER: Evangelist","\n","^\"이보시오, 어찌하여 울고 계시오?\"","\n","# SPEAKER: Christian","\n","^\"이 책에 기록된 바에 따르면, 나는 죽어야 할 운명이오. 심판 후에 지옥에 떨어지게 되어 있소.\"","\n","# SPEAKER: Evangelist","\n","^\"어찌하여 죽기를 원하지 않으시오?\"","\n","# SPEAKER: Christian","\n","^\"이 등에 진 짐이 나를 무덤보다 더 깊은 곳으로 가라앉게 할 것이기 때문이오.\"","\n","# SPEAKER: Evangelist","\n","^전도자가 양피지 두루마리를 내밉니다.","\n","^\"저기 빛나는 빛이 보이느냐?\"","\n","# BIBLE_CARD: Matt 3:7","\n",["ev",{"^->":"evangelist_meeting.evangelist_start.0.c-0.$r1"},{"temp=":"$r"},"str","^빛을 향해 달립니다","/str","/ev",{"*":".^.c-0","flg":18},["ev",{"^->":"evangelist_meeting.evangelist_start.0.c-1.$r1"},{"temp=":"$r"},"str","^두렵지만... 한 발만 내딛습니다","/str","/ev",{"*":".^.c-1","flg":18}],["ev",{"^->":"evangelist_meeting.evangelist_start.0.c-2.$r1"},{"temp=":"$r"},"str","^잠시 더 생각해봅니다","/str","/ev",{"*":".^.c-2","flg":18}],{"c-0":["ev",{"val->":"$r1"},"/ev","# STAT: faith +10","# STAT: courage +5","\n","^크리스천은 빛을 향해 힘껏 달립니다.","\n","^\"생명! 생명! 영원한 생명!\"","\n","# BIBLE_CARD: Matt 7:13-14","\n",{"->":"evangelist_meeting.evangelist_start.family_farewell"},{"#n":"$r1"}],"c-1":["ev",{"val->":"$r1"},"/ev","# STAT: faith +5","\n","^크리스천은 떨리는 다리로 한 발을 내딛습니다.","\n","^전도자: \"좋소. 그 길을 따라가시오. 좁은 문을 찾으시오.\"","\n",{"->":"evangelist_meeting.evangelist_start.family_farewell"},{"#n":"$r1"}],"c-2":["ev",{"val->":"$r1"},"/ev","# STAT: courage -5","# STAT: wisdom +5","\n","^크리스천이 망설입니다.","\n","^전도자: \"지체하지 마시오! 이 도시는 곧 멸망할 것이오.\"","\n","^전도자가 다시 한번 빛을 가리킵니다.","\n","^\"다가올 진노에서 도망하라!\"","\n",{"->":"evangelist_meeting.evangelist_start.family_farewell"},{"#n":"$r1"}]},"family_farewell",["^","\n","# SPEAKER: Narrator","\n","^크리스천의 아내와 자녀들이 뒤에서 외칩니다.","\n","^\"돌아오세요! 돌아오세요!\"","\n",["ev",{"^->":"evangelist_meeting.evangelist_start.family_farewell.0.c-0.$r1"},{"temp=":"$r"},"str","^귀를 막고 달립니다","/str","/ev",{"*":".^.c-0","flg":18},["ev",{"^->":"evangelist_meeting.evangelist_start.family_farewell.0.c-1.$r1"},{"temp=":"$r"},"str","^뒤를 돌아봅니다","/str","/ev",{"*":".^.c-1","flg":18}],{"c-0":["ev",{"val->":"$r1"},"/ev","# STAT: faith +5","# STAT: courage +10","\n","^크리스천은 귀를 막고 달리며 외칩니다.","\n","^\"생명! 생명! 영원한 생명!\"","\n","^그렇게 크리스천은 들판을 향해 달렸습니다.","\n",{"->":"evangelist_meeting.evangelist_end"},{"#n":"$r1"}],"c-1":["ev",{"val->":"$r1"},"/ev","# STAT: faith -5","# STAT: courage -5","\n","^크리스천은 잠시 뒤를 돌아봅니다.","\n","^가족의 모습이 보이지만... 전도자의 말이 떠오릅니다.","\n","^\"다가올 진노에서 도망하라...\"","\n","^크리스천은 다시 앞을 향해 달립니다.","\n",{"->":"evangelist_meeting.evangelist_end"},{"#n":"$r1"}]}]],"evangelist_end",["^","\n","# SPEAKER: Narrator","\n","^전도자와의 만남이 끝났습니다.","\n","^크리스천은 이제 좁은 문을 향해 여정을 시작합니다.","\n",["done",{"#n":"g-0"}],null]]],"obstinate_encounter":["^",{"->":".^.obstinate_start"},["done",{"#n":"g-0"}],null,"obstinate_start",["# SPEAKER: Obstinate","# LOCATION: The Field","\n","^완고와 유연이 크리스천을 따라잡습니다.","\n","# SPEAKER: Obstinate","\n","^\"당신을 설득하여 우리와 함께 돌아가려고 왔소.\"","\n","# SPEAKER: Christian","\n","^\"그것은 절대로 될 수 없소. 당신들이 사는 도시는 멸망할 것이오.\"","\n","# SPEAKER: Obstinate","\n","^\"쯧! 당신의 책 따위는 치워버리시오!\"","\n",["ev",{"^->":"obstinate_encounter.obstinate_start.0.c-0.$r1"},{"temp=":"$r"},"str","^\"쟁기에 손을 대었으니 뒤를 돌아볼 수 없소\"","/str","/ev",{"*":".^.c-0","flg":18},["ev",{"^->":"obstinate_encounter.obstinate_start.0.c-1.$r1"},{"temp=":"$r"},"str","^\"이 책에 기록된 것이 진실이오. 함께 읽어봅시다\"","/str","/ev",{"*":".^.c-1","flg":18}],{"c-0":["ev",{"val->":"$r1"},"/ev","# STAT: faith +5","# STAT: courage +10","\n","# SPEAKER: Obstinate","\n","^완고가 분노하며 돌아갑니다.","\n","^\"미친 자여! 돌아가겠소!\"","\n","# SPEAKER: Pliable","\n","^유연이 머뭇거리며 크리스천 곁에 남습니다.","\n","^\"그... 그 보물에 대해 더 이야기해 주시오.\"","\n","# STAT: wisdom +5","# BIBLE_CARD: Luke 9:62","\n",{"->":"obstinate_encounter.obstinate_end"},{"#n":"$r1"}],"c-1":["ev",{"val->":"$r1"},"/ev","# STAT: faith +5","# STAT: wisdom +5","\n","# SPEAKER: Obstinate","\n","^완고가 비웃으며 돌아갑니다.","\n","^\"당신 같은 바보는 또 없을 거요!\"","\n","# SPEAKER: Pliable","\n","^유연이 감동하여 크리스천과 함께 남습니다.","\n","^\"그 나라에 대해 더 말해 주시오.\"","\n",{"->":"obstinate_encounter.obstinate_end"},{"#n":"$r1"}]}},"obstinate_end",["^","\n","# SPEAKER: Narrator","\n","^완고는 돌아가고, 유연은 크리스천과 함께 걷기 시작합니다.","\n","# BIBLE_CARD: 1Pet 1:4","\n","^크리스천은 천국의 영광에 대해 이야기합니다.","\n","^\"썩지 않고 더럽혀지지 않으며 시들지 않는 유업이 기다리고 있소.\"","\n",["done",{"#n":"g-0"}],null]]],"pliable_encounter":["^",{"->":".^.pliable_start"},["done",{"#n":"g-0"}],null,"pliable_start",["# SPEAKER: Pliable","\n","^유연이 크리스천에게 다가옵니다.","\n","^\"그 나라에 대해 더 말해 주시오. 어떤 곳이오?\"","\n",["ev",{"^->":"pliable_encounter.pliable_start.0.c-0.$r1"},{"temp=":"$r"},"str","^\"끝없는 나라와 영원한 생명이 기다리고 있소\"","/str","/ev",{"*":".^.c-0","flg":18},["ev",{"^->":"pliable_encounter.pliable_start.0.c-1.$r1"},{"temp=":"$r"},"str","^\"거기에는 더 이상 눈물도 슬픔도 없을 것이오\"","/str","/ev",{"*":".^.c-1","flg":18}],{"c-0":["ev",{"val->":"$r1"},"/ev","# STAT: faith +5","\n","# SPEAKER: Pliable","\n","^유연의 눈이 빛납니다.","\n","^\"빨리 갑시다! 빨리!\"","\n",{"->":"pliable_encounter.pliable_end"},{"#n":"$r1"}],"c-1":["ev",{"val->":"$r1"},"/ev","# STAT: faith +5","# STAT: wisdom +5","\n","# SPEAKER: Pliable","\n","^유연이 감동하여 고개를 끄덕입니다.","\n","^\"정말... 그런 곳이 있다니. 함께 가겠소.\"","\n",{"->":"pliable_encounter.pliable_end"},{"#n":"$r1"}]}},"pliable_end",["^","\n","# SPEAKER: Narrator","\n","^유연과 크리스천은 함께 좁은 문을 향해 걸어갑니다.","\n",["done",{"#n":"g-0"}],null]]],"#f":5}],"listDefs":{}}
+{
+  "inkVersion": 21,
+  "root": [
+    [
+      "^천로역정 — 제1장: 멸망의 도시\n",
+      [
+        "ev",
+        {"^->": "root.0.7"},
+        {"temp=": "$r"},
+        "/ev",
+        {"*": ".^.c-0", "flg": 20},
+        {
+          "s": ["^좁은 문으로 가겠습니다", {"->": ".^.^.c-0"}, null],
+          "c-0": [
+            "ev", "/ev",
+            "^전도자: \"좋소! 빛을 따라가시오.\"\n",
+            {"#": "STAT: faith + 10"},
+            {"#": "STAT: courage + 5"},
+            {"#": "BIBLE_CARD: Isaiah 55:6"},
+            "done",
+            null
+          ]
+        },
+        {"*": ".^.c-1", "flg": 20},
+        {
+          "s": ["^잠시 더 생각해 보겠습니다", {"->": ".^.^.c-1"}, null],
+          "c-1": [
+            "ev", "/ev",
+            "^전도자가 슬픈 눈으로 바라봅니다.\n",
+            {"#": "STAT: faith - 5"},
+            "done",
+            null
+          ]
+        }
+      ],
+      null
+    ],
+    "done",
+    {"#f": 1}
+  ]
+}

@@ -35,6 +35,7 @@ export class DialogueBox {
   private currentTextEffect: TextEffect = 'none';
   private emotionState: PortraitEmotion = 'neutral';
   private currentSpeakerId = '';
+  private previousState: GameState = GameState.GAME;
 
   private static readonly BOX_W = 430;
   private static readonly BOX_H = 76;
@@ -107,10 +108,14 @@ export class DialogueBox {
     this.portraitBg.strokeRoundedRect(bx + 5, by + (76 - ps) / 2, ps, ps, 4);
   }
 
+  private onDialogueLine = (p: DialogueLinePayload | undefined) => { if (p) this.showLine(p); };
+  private onDialogueChoice = (p: DialogueChoicePayload | undefined) => { if (p) this.showChoices(p); };
+  private onDialogueEnd = () => this.hide();
+
   private setupEvents(): void {
-    this.eventBus.on<DialogueLinePayload>(GameEvent.DIALOGUE_LINE, (p) => { if (p) this.showLine(p); });
-    this.eventBus.on<DialogueChoicePayload>(GameEvent.DIALOGUE_CHOICE, (p) => { if (p) this.showChoices(p); });
-    this.eventBus.on(GameEvent.DIALOGUE_END, () => this.hide());
+    this.eventBus.on(GameEvent.DIALOGUE_LINE, this.onDialogueLine);
+    this.eventBus.on(GameEvent.DIALOGUE_CHOICE, this.onDialogueChoice);
+    this.eventBus.on(GameEvent.DIALOGUE_END, this.onDialogueEnd);
   }
 
   private setupInput(): void {
@@ -383,18 +388,23 @@ export class DialogueBox {
   show(): void {
     if (this.isVisible) return;
     this.isVisible = true;
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    this.previousState = gm.state ?? GameState.GAME;
     this.container.setVisible(true).setAlpha(0);
     this.container.y = 10;
     this.scene.tweens.add({
       targets: this.container, alpha: 1, y: 0,
       duration: 200, ease: 'Back.easeOut',
     });
-    ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER).changeState(GameState.DIALOGUE);
+    gm.changeState(GameState.DIALOGUE);
   }
 
   hide(): void {
     if (!this.isVisible) return;
     this.clearChoices();
+    const restoreState = this.previousState === GameState.DIALOGUE
+      ? GameState.GAME
+      : this.previousState;
     this.scene.tweens.add({
       targets: this.container, alpha: 0, y: 10, duration: 150,
       onComplete: () => {
@@ -405,7 +415,7 @@ export class DialogueBox {
         this.portraitImage?.destroy();
         this.portraitImage = null;
         this.sceneBg.clear();
-        ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER).changeState(GameState.GAME);
+        ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER).changeState(restoreState);
       },
     });
   }
@@ -422,6 +432,9 @@ export class DialogueBox {
   }
 
   destroy(): void {
+    this.eventBus.off(GameEvent.DIALOGUE_LINE, this.onDialogueLine);
+    this.eventBus.off(GameEvent.DIALOGUE_CHOICE, this.onDialogueChoice);
+    this.eventBus.off(GameEvent.DIALOGUE_END, this.onDialogueEnd);
     this.typingTimer?.remove();
     this.clearChoices();
     this.portraitImage?.destroy();

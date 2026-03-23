@@ -3,10 +3,12 @@ import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS, COLORS } from '../config';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
 import { DesignSystem } from '../ui/DesignSystem';
+import { SaveManager } from '../save/SaveManager';
 
 export class MenuScene extends Phaser.Scene {
   private particles: { x: number; y: number; vx: number; vy: number; alpha: number; size: number; phase: number }[] = [];
   private particleGfx!: Phaser.GameObjects.Graphics;
+  private continueBtn: Phaser.GameObjects.Container | null = null;
 
   constructor() {
     super({ key: SCENE_KEYS.MENU });
@@ -56,11 +58,16 @@ export class MenuScene extends Phaser.Scene {
       () => this.startNewGame(),
       { fontSize: DesignSystem.FONT_SIZE.BASE, bgColor: 0x2a4a2a, hoverColor: 0x3a6a3a },
     );
-    DesignSystem.createButton(this, cx, btnY + 40, 170, 32,
+
+    this.continueBtn = DesignSystem.createButton(this, cx, btnY + 40, 170, 32,
       ko ? '여정 계속하기' : 'Continue',
-      () => this.startNewGame(),
+      () => this.continueGame(),
       { fontSize: DesignSystem.FONT_SIZE.BASE },
     );
+    this.continueBtn.setAlpha(0.4);
+
+    this.checkSaveExists();
+
     DesignSystem.createButton(this, cx, btnY + 80, 170, 32,
       ko ? '설정' : 'Settings',
       () => {
@@ -70,9 +77,42 @@ export class MenuScene extends Phaser.Scene {
       { fontSize: DesignSystem.FONT_SIZE.SM },
     );
 
+    const fsBtn = this.add.text(12, GAME_HEIGHT - 10, '⛶',
+      { fontSize: '14px', color: '#6b5b4f', fontFamily: 'serif' },
+    ).setOrigin(0, 1).setInteractive({ useHandCursor: true });
+    fsBtn.on('pointerdown', () => MenuScene.toggleFullscreen());
+    fsBtn.on('pointerover', () => fsBtn.setColor('#d4a853'));
+    fsBtn.on('pointerout', () => fsBtn.setColor('#6b5b4f'));
+
     this.add.text(GAME_WIDTH - 8, GAME_HEIGHT - 8, 'v0.5.0',
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(1, 1);
+  }
+
+  static toggleFullscreen(): void {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }
+
+  private async checkSaveExists(): Promise<void> {
+    if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
+    const sm = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
+    const exists = await sm.hasSave();
+    if (this.continueBtn) {
+      this.continueBtn.setAlpha(exists ? 1 : 0.4);
+      this.continueBtn.getAll().forEach(child => {
+        if (child instanceof Phaser.GameObjects.Rectangle) {
+          if (exists) {
+            child.setInteractive({ useHandCursor: true });
+          } else {
+            child.disableInteractive();
+          }
+        }
+      });
+    }
   }
 
   private createParticles(): void {
@@ -103,6 +143,16 @@ export class MenuScene extends Phaser.Scene {
       this.particleGfx.fillStyle(0xd4a853, p.alpha);
       this.particleGfx.fillCircle(p.x, p.y, p.size);
     });
+  }
+
+  private async continueGame(): Promise<void> {
+    if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
+    const sm = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
+    const saveData = await sm.load();
+    if (!saveData) return;
+
+    await DesignSystem.fadeOut(this, 400);
+    this.scene.start(SCENE_KEYS.GAME);
   }
 
   private async startNewGame(): Promise<void> {

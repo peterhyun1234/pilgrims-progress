@@ -1,9 +1,12 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS, COLORS } from '../config';
 import { GameManager } from '../core/GameManager';
-import { ServiceLocator } from '../core/ServiceLocator';
+import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { ResponsiveManager } from '../ui/ResponsiveManager';
 import { EventBus } from '../core/EventBus';
+import { AudioManager } from '../audio/AudioManager';
+import { SaveManager } from '../save/SaveManager';
+import { AutoSave } from '../save/AutoSave';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -14,7 +17,14 @@ export class BootScene extends Phaser.Scene {
     new GameManager();
     const eventBus = EventBus.getInstance();
     const responsive = new ResponsiveManager(eventBus);
-    ServiceLocator.register('ResponsiveManager', responsive);
+    ServiceLocator.register(SERVICE_KEYS.RESPONSIVE_MANAGER, responsive);
+
+    const audioManager = new AudioManager(eventBus);
+    ServiceLocator.register(SERVICE_KEYS.AUDIO_MANAGER, audioManager);
+
+    const saveManager = new SaveManager(eventBus);
+    ServiceLocator.register(SERVICE_KEYS.SAVE_MANAGER, saveManager);
+    new AutoSave(eventBus, saveManager);
 
     this.cameras.main.setBackgroundColor(COLORS.UI.DARK_BG);
 

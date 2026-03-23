@@ -18,6 +18,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'pilgrims-progress-unity/**'
+      - '.github/workflows/build-and-deploy.yml'
   workflow_dispatch:
 
 # 동시에 여러 빌드가 실행되지 않도록 제한

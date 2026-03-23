@@ -2,7 +2,8 @@ import { Entity } from './Entity';
 import { PlayerMotor } from './PlayerMotor';
 import { PlayerAnimator } from './PlayerAnimator';
 import { StateMachine } from '../core/StateMachine';
-import { PlayerState } from '../core/GameEvents';
+import { PlayerState, GameEvent } from '../core/GameEvents';
+import { EventBus } from '../core/EventBus';
 import { NPC } from './NPC';
 
 export interface PlayerInput {
@@ -19,9 +20,13 @@ export class Player extends Entity {
 
   private wasMoving = false;
   private dustTimer = 0;
+  private baseY = 0;
+  private hurtTimer = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, 'christian', 0);
+    this.baseY = y;
+    this.setupEvents();
 
     this.sprite.setSize(10, 10).setOffset(3, 6);
     this.sprite.setDepth(10);
@@ -43,8 +48,57 @@ export class Player extends Entity {
     this.fsm.setState(PlayerState.IDLE);
   }
 
+  private onDamaged = () => {
+    if (!this.scene.scene.isActive()) return;
+    this.enterHurt();
+  };
+
+  private setupEvents(): void {
+    const eventBus = EventBus.getInstance();
+    eventBus.on(GameEvent.PLAYER_DAMAGED, this.onDamaged);
+  }
+
+  override destroy(): void {
+    EventBus.getInstance().off(GameEvent.PLAYER_DAMAGED, this.onDamaged);
+    super.destroy();
+  }
+
+  private enterHurt(): void {
+    this.fsm.setState(PlayerState.HURT);
+    this.sprite.setVelocity(0, 0);
+    this.sprite.setTint(0xff4444);
+    this.hurtTimer = 400;
+    this.squash(0.8, 1.2, 150);
+  }
+
+  enterPray(): void {
+    this.fsm.setState(PlayerState.PRAY);
+    this.sprite.setVelocity(0, 0);
+  }
+
+  exitPray(): void {
+    if (this.fsm.current === PlayerState.PRAY) {
+      this.fsm.setState(PlayerState.IDLE);
+    }
+  }
+
   update(input: PlayerInput, delta: number): void {
     const state = this.fsm.current;
+
+    if (state === PlayerState.HURT) {
+      this.hurtTimer -= delta;
+      if (this.hurtTimer <= 0) {
+        this.sprite.clearTint();
+        this.fsm.setState(PlayerState.IDLE);
+      }
+      return;
+    }
+
+    if (state === PlayerState.PRAY) {
+      this.sprite.setVelocity(0, 0);
+      return;
+    }
+
     if (state === PlayerState.CUTSCENE || state === PlayerState.INTERACT) {
       this.sprite.setVelocity(0, 0);
       return;
@@ -58,10 +112,12 @@ export class Player extends Entity {
       }
       this.fsm.setState(PlayerState.WALK);
       this.motor.update(this.sprite, input.x, input.y);
+      this.baseY = this.sprite.y;
       this.spawnDustParticles(delta);
     } else {
       if (this.wasMoving) {
         this.squash(1.1, 0.9, 100);
+        this.baseY = this.sprite.y;
       }
       this.fsm.setState(PlayerState.IDLE);
       this.sprite.setVelocity(0, 0);
@@ -95,7 +151,7 @@ export class Player extends Entity {
   private applyIdleBob(): void {
     const t = Date.now() * 0.002;
     const bob = Math.sin(t) * 0.3;
-    this.sprite.y += bob;
+    this.sprite.y = this.baseY + bob;
   }
 
   private spawnDustParticles(delta: number): void {
@@ -124,6 +180,11 @@ export class Player extends Entity {
         onComplete: () => dust.destroy(),
       });
     }
+  }
+
+  override setPosition(x: number, y: number): void {
+    super.setPosition(x, y);
+    this.baseY = y;
   }
 
   getState(): PlayerState | null {

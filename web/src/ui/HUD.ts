@@ -109,33 +109,36 @@ export class HUD {
     g.fillRect(x + 1, 1, Math.max(w - 2, 1), 2);
   }
 
+  private onStatChanged = (p: StatChangePayload | undefined) => {
+    if (!p) return;
+    const bar = this.bars.find(b => b.stat === p.stat);
+    if (!bar) return;
+    bar.targetWidth = (p.newValue / 100) * HUD.BAR_WIDTH;
+    bar.value.setText(p.newValue.toString());
+
+    const flashColor = p.amount > 0 ? '#66ff66' : '#ff6666';
+    bar.value.setColor(flashColor);
+    this.scene.tweens.add({
+      targets: bar.value, scaleX: 1.5, scaleY: 1.5, duration: 150, yoyo: true,
+      onComplete: () => bar.value.setColor(DesignSystem.hex(DesignSystem.STAT_COLORS[bar.stat])),
+    });
+
+    if (p.amount !== 0) {
+      this.showStatDelta(bar, p.amount);
+    }
+  };
+
+  private onStateChanged = (state: GameState | undefined) => {
+    if (state === GameState.CUTSCENE || state === GameState.DIALOGUE) {
+      this.scene.tweens.add({ targets: this.container, alpha: 0.3, duration: 300 });
+    } else if (state === GameState.GAME) {
+      this.scene.tweens.add({ targets: this.container, alpha: 1, duration: 300 });
+    }
+  };
+
   private setupEvents(): void {
-    this.eventBus.on<StatChangePayload>(GameEvent.STAT_CHANGED, (p) => {
-      if (!p) return;
-      const bar = this.bars.find(b => b.stat === p.stat);
-      if (!bar) return;
-      bar.targetWidth = (p.newValue / 100) * HUD.BAR_WIDTH;
-      bar.value.setText(p.newValue.toString());
-
-      const flashColor = p.amount > 0 ? '#66ff66' : '#ff6666';
-      bar.value.setColor(flashColor);
-      this.scene.tweens.add({
-        targets: bar.value, scaleX: 1.5, scaleY: 1.5, duration: 150, yoyo: true,
-        onComplete: () => bar.value.setColor(DesignSystem.hex(DesignSystem.STAT_COLORS[bar.stat])),
-      });
-
-      if (p.amount !== 0) {
-        this.showStatDelta(bar, p.amount);
-      }
-    });
-
-    this.eventBus.on<GameState>(GameEvent.GAME_STATE_CHANGED, (state) => {
-      if (state === GameState.CUTSCENE || state === GameState.DIALOGUE) {
-        this.scene.tweens.add({ targets: this.container, alpha: 0.3, duration: 300 });
-      } else if (state === GameState.GAME) {
-        this.scene.tweens.add({ targets: this.container, alpha: 1, duration: 300 });
-      }
-    });
+    this.eventBus.on(GameEvent.STAT_CHANGED, this.onStatChanged);
+    this.eventBus.on(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
   }
 
   private showStatDelta(bar: StatBar, amount: number): void {
@@ -175,6 +178,8 @@ export class HUD {
   }
 
   destroy(): void {
+    this.eventBus.off(GameEvent.STAT_CHANGED, this.onStatChanged);
+    this.eventBus.off(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
     this.container.destroy(true);
   }
 }

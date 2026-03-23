@@ -16,10 +16,12 @@ export class Toast {
   private activeToasts: ToastItem[] = [];
   private static readonly MAX_VISIBLE = 3;
 
+  private onToastShow = (p: ToastPayload | undefined) => { if (p) this.enqueue(p); };
+
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this.eventBus = EventBus.getInstance();
-    this.eventBus.on<ToastPayload>(GameEvent.TOAST_SHOW, (p) => { if (p) this.enqueue(p); });
+    this.eventBus.on(GameEvent.TOAST_SHOW, this.onToastShow);
   }
 
   private enqueue(payload: ToastPayload): void {
@@ -87,6 +89,7 @@ export class Toast {
   }
 
   destroy(): void {
+    this.eventBus.off(GameEvent.TOAST_SHOW, this.onToastShow);
     this.activeToasts.forEach(t => t.container.destroy(true));
     this.activeToasts = [];
     this.queue = [];
