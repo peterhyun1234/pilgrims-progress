@@ -49,7 +49,22 @@ const config: Phaser.Types.Core.GameConfig = {
   backgroundColor: '#0A0814',
 };
 
-const game = new Phaser.Game(config);
+// Wait for fonts (including Galmuri11 via @font-face swap) before initializing
+// to prevent Phaser Text drawImage errors during the font-swap window.
+let game: Phaser.Game;
+
+document.fonts.ready.then(() => {
+  game = new Phaser.Game(config);
+  (window as unknown as Record<string, unknown>).__game = game;
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      game.sound.setMute(true);
+    } else {
+      game.sound.setMute(false);
+    }
+  });
+});
 
 window.addEventListener('load', () => {
   setTimeout(() => {
@@ -58,4 +73,4 @@ window.addEventListener('load', () => {
   }, 1500);
 });
 
-export default game;
+export default game!;

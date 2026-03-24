@@ -5,6 +5,14 @@ import { StatsManager } from '../core/StatsManager';
 import { COMBAT } from '../config';
 import { SkillDef, SKILLS, EnemyDef } from './SkillData';
 
+/** Returns "이" if the last Korean syllable has a 받침, "가" otherwise. */
+function koParticle이가(word: string): string {
+  const last = word[word.length - 1];
+  const cp = last.charCodeAt(0);
+  if (cp >= 0xAC00 && cp <= 0xD7A3 && (cp - 0xAC00) % 28 !== 0) return '이';
+  return '가';
+}
+
 export interface CombatState {
   playerHp: number;
   playerMaxHp: number;
@@ -60,7 +68,7 @@ export class CombatSystem {
     };
 
     this.addLog(
-      `${enemy.nameKo}이(가) 나타났다!`,
+      `${enemy.nameKo}${koParticle이가(enemy.nameKo)} 나타났다!`,
       `${enemy.nameEn} appeared!`,
       'system',
     );

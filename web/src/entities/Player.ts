@@ -111,7 +111,7 @@ export class Player extends Entity {
         this.squash(0.85, 1.15, 80);
       }
       this.fsm.setState(PlayerState.WALK);
-      this.motor.update(this.sprite, input.x, input.y);
+      this.motor.update(this.sprite, input.x, input.y, delta);
       this.baseY = this.sprite.y;
       this.spawnDustParticles(delta);
     } else {

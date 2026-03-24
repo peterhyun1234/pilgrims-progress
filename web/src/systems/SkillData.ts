@@ -205,4 +205,22 @@ export const ENEMIES: Record<string, EnemyDef> = {
       { nameKo: '어둠의 날개', nameEn: 'Wings of Darkness', power: 30, type: 'faith' },
     ],
   },
+  giant_despair: {
+    id: 'giant_despair',
+    nameKo: '절망의 거인',
+    nameEn: 'Giant Despair',
+    hp: 150,
+    attack: 20,
+    defense: 12,
+    weakness: 'faith',
+    isBoss: true,
+    chapter: 4,
+    iconColor: 0x334466,
+    attackPatterns: [
+      { nameKo: '투옥', nameEn: 'Imprisonment', power: 20, type: 'courage' },
+      { nameKo: '굴욕', nameEn: 'Humiliation', power: 15, type: 'faith' },
+      { nameKo: '자기혐오 유도', nameEn: 'Counsel of Despair', power: 18, type: 'wisdom' },
+      { nameKo: '철장의 격노', nameEn: 'Iron Cage Rage', power: 25, type: 'courage' },
+    ],
+  },
 };

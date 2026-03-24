@@ -12,7 +12,7 @@ export class PortraitRenderer {
   getPortrait(
     characterId: string,
     emotion: PortraitEmotion = 'neutral',
-    size = 48,
+    size = 56,
   ): Phaser.GameObjects.RenderTexture | null {
     const config = PORTRAIT_CONFIGS[characterId];
     if (!config) return null;
@@ -32,7 +32,7 @@ export class PortraitRenderer {
     emotion: EmotionFeatures,
     size: number,
   ): Phaser.GameObjects.RenderTexture {
-    const rt = this.scene.add.renderTexture(0, 0, size, size).setVisible(false);
+    const rt = this.scene.add.renderTexture(0, 0, size, size).setVisible(false).setOrigin(0, 0);
     const g = this.scene.add.graphics();
     const cx = size / 2;
     const cy = size / 2;
@@ -49,7 +49,8 @@ export class PortraitRenderer {
     this.drawAccessory(g, config, cx, cy, headR, size);
     this.drawEmotionEffects(g, emotion, cx, cy, headR, size);
 
-    rt.draw(g);
+    // Draw at explicit (0, 0) so camera scroll doesn't offset the portrait content
+    rt.draw(g, 0, 0);
     g.destroy();
 
     return rt;

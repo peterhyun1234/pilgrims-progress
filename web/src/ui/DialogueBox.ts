@@ -24,6 +24,7 @@ export class DialogueBox {
   private portraitRenderer: PortraitRenderer;
   private choiceContainers: Phaser.GameObjects.Container[] = [];
   private dimOverlay: Phaser.GameObjects.Rectangle | null = null;
+  private choiceKeyHandlers: (() => void)[] = [];
 
   private eventBus: EventBus;
   private isVisible = false;
@@ -38,11 +39,11 @@ export class DialogueBox {
   private previousState: GameState = GameState.GAME;
 
   private static readonly BOX_W = 430;
-  private static readonly BOX_H = 76;
+  private static readonly BOX_H = 80;
   private static readonly BOX_X = (GAME_WIDTH - 430) / 2;
-  private static readonly BOX_Y = GAME_HEIGHT - 86;
-  private static readonly PORTRAIT_S = 48;
-  private static readonly TEXT_X = 60;
+  private static readonly BOX_Y = GAME_HEIGHT - 92;
+  private static readonly PORTRAIT_S = 56;
+  private static readonly TEXT_X = 68;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -79,10 +80,12 @@ export class DialogueBox {
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
     );
 
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    const dialogueFontSize = gm.language === 'ko' ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.BASE;
     this.dialogueText = this.scene.add.text(bx + DialogueBox.TEXT_X, by + 24, '', {
-      ...DesignSystem.textStyle(DesignSystem.FONT_SIZE.BASE, '#e8e0d0'),
+      ...DesignSystem.textStyle(dialogueFontSize, '#e8e0d0'),
       wordWrap: { width: bw - DialogueBox.TEXT_X - 16 },
-      lineSpacing: 5,
+      lineSpacing: 4,
     });
 
     this.continuePrompt = this.scene.add.text(bx + bw - 16, by + bh - 14, '▼',
@@ -100,12 +103,12 @@ export class DialogueBox {
   }
 
   private drawPortraitFrame(borderColor: number): void {
-    const { BOX_X: bx, BOX_Y: by, PORTRAIT_S: ps } = DialogueBox;
+    const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
     this.portraitBg.clear();
     this.portraitBg.fillStyle(0x0e0c18, 0.8);
-    this.portraitBg.fillRoundedRect(bx + 5, by + (76 - ps) / 2, ps, ps, 4);
+    this.portraitBg.fillRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
     this.portraitBg.lineStyle(1.5, borderColor, 0.6);
-    this.portraitBg.strokeRoundedRect(bx + 5, by + (76 - ps) / 2, ps, ps, 4);
+    this.portraitBg.strokeRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
   }
 
   private onDialogueLine = (p: DialogueLinePayload | undefined) => { if (p) this.showLine(p); };
@@ -206,14 +209,18 @@ export class DialogueBox {
   }
 
   private updatePortrait(): void {
-    this.portraitImage?.destroy();
-    this.portraitImage = null;
+    // Remove previous portrait from container WITHOUT destroying it
+    // (PortraitRenderer owns the cached RenderTextures)
+    if (this.portraitImage) {
+      this.container.remove(this.portraitImage, false);
+      this.portraitImage = null;
+    }
 
     if (!this.currentSpeakerId || !PORTRAIT_CONFIGS[this.currentSpeakerId]) {
       if (this.currentSpeakerId && this.scene.textures.exists(this.currentSpeakerId)) {
-        const { BOX_X: bx, BOX_Y: by, PORTRAIT_S: ps } = DialogueBox;
+        const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
         const sprite = this.scene.add.sprite(
-          bx + 5 + ps / 2, by + 76 / 2, this.currentSpeakerId, 0,
+          bx + 5 + ps / 2, by + bh / 2, this.currentSpeakerId, 0,
         ).setScale(2.5).setDepth(201);
         this.container.add(sprite);
         this.portraitImage = sprite as unknown as Phaser.GameObjects.RenderTexture;
@@ -223,8 +230,9 @@ export class DialogueBox {
 
     const rt = this.portraitRenderer.getPortrait(this.currentSpeakerId, this.emotionState);
     if (rt) {
-      const { BOX_X: bx, BOX_Y: by, PORTRAIT_S: ps } = DialogueBox;
-      rt.setPosition(bx + 5, by + (76 - ps) / 2);
+      const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
+      rt.setPosition(bx + 5, by + (bh - ps) / 2);
+      rt.setOrigin(0, 0).setScrollFactor(0);
       rt.setVisible(true).setDepth(201);
       this.container.add(rt);
       this.portraitImage = rt;
@@ -246,9 +254,9 @@ export class DialogueBox {
 
     const mood = moodColors[this.emotionState];
     if (mood.alpha > 0) {
-      const { BOX_X: bx, BOX_Y: by, BOX_W: bw } = DialogueBox;
+      const { BOX_X: bx, BOX_Y: by, BOX_W: bw, BOX_H: bh } = DialogueBox;
       this.sceneBg.fillStyle(mood.color, mood.alpha);
-      this.sceneBg.fillRoundedRect(bx, by - 8, bw, 84, 8);
+      this.sceneBg.fillRoundedRect(bx, by - 8, bw, bh + 8, 8);
     }
   }
 
@@ -318,11 +326,14 @@ export class DialogueBox {
         cbg.lineStyle(1, bdrClr, 0.5);
         cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
 
-        const prefix = choice.isHidden ? '★ ' : `${i + 1}. `;
+        const isLocked = choice.requiredStat !== undefined
+          && (ServiceLocator.get<import('../core/StatsManager').StatsManager>(SERVICE_KEYS.STATS_MANAGER)
+            .get(choice.requiredStat as import('../core/GameEvents').StatType) < (choice.requiredValue ?? 0));
+        const prefix = isLocked ? '🔒 ' : (choice.isHidden ? '★ ' : `${i + 1}. `);
+        const textColor = isLocked ? '#555555' : (choice.isHidden ? '#d4a853' : '#d0c8b8');
         const txt = this.scene.add.text(w / 2, choiceH / 2, prefix + choice.text,
-          DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM,
-            choice.isHidden ? '#d4a853' : '#d0c8b8'),
-        ).setOrigin(0.5);
+          DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, textColor),
+        ).setOrigin(0.5).setAlpha(isLocked ? 0.5 : 1);
 
         c.add([cbg, txt]);
 
@@ -359,6 +370,20 @@ export class DialogueBox {
         });
         this.choiceContainers.push(c);
         this.container.add(c);
+
+        // Keyboard shortcut: press number key to select
+        const keyCode = `ONE TWO THREE FOUR FIVE`.split(' ')[i];
+        if (keyCode) {
+          const handler = () => {
+            if (this.choiceContainers.length === 0) return;
+            this.clearChoices();
+            this.eventBus.emit(GameEvent.DIALOGUE_CHOICE_SELECTED, choice.index);
+          };
+          this.scene.input.keyboard?.on(`keydown-${keyCode}`, handler);
+          this.choiceKeyHandlers.push(handler);
+          // Store key name for cleanup
+          (handler as unknown as Record<string, string>).__key = keyCode;
+        }
       });
     });
   }
@@ -367,6 +392,11 @@ export class DialogueBox {
     this.choiceContainers.forEach(c => c.destroy(true));
     this.choiceContainers = [];
     this.hideDimOverlay();
+    const keys = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
+    this.choiceKeyHandlers.forEach((h, i) => {
+      this.scene.input.keyboard?.off(`keydown-${keys[i]}`, h);
+    });
+    this.choiceKeyHandlers = [];
   }
 
   private showDimOverlay(): void {
@@ -412,8 +442,10 @@ export class DialogueBox {
         this.container.setVisible(false);
         this.speakerText.setText('');
         this.dialogueText.setText('');
-        this.portraitImage?.destroy();
-        this.portraitImage = null;
+        if (this.portraitImage) {
+          this.container.remove(this.portraitImage, false);
+          this.portraitImage = null;
+        }
         this.sceneBg.clear();
         ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER).changeState(restoreState);
       },
@@ -437,7 +469,7 @@ export class DialogueBox {
     this.eventBus.off(GameEvent.DIALOGUE_END, this.onDialogueEnd);
     this.typingTimer?.remove();
     this.clearChoices();
-    this.portraitImage?.destroy();
+    this.portraitImage = null;
     this.portraitRenderer.destroy();
     this.container.destroy(true);
     this.dimOverlay?.destroy();

@@ -67,26 +67,28 @@ export class OnboardingScene extends Phaser.Scene {
     const lines = gm.language === 'ko' ? PROLOGUE_KO : PROLOGUE_EN;
     const ko = gm.language === 'ko';
     const cx = GAME_WIDTH / 2;
-    const startY = 35;
+    const startY = 28;
 
     let lineIndex = 0;
     lines.forEach((line) => {
       if (line.text === '') { lineIndex++; return; }
 
-      const y = startY + lineIndex * 22;
+      const y = startY + lineIndex * 20;
 
       const styleConfig: Record<string, { size: number; color: string; alpha: number }> = {
-        dramatic: { size: DesignSystem.FONT_SIZE.LG, color: '#e8e0d0', alpha: 1 },
-        normal: { size: DesignSystem.FONT_SIZE.BASE, color: '#b0a898', alpha: 0.9 },
-        dim: { size: DesignSystem.FONT_SIZE.BASE, color: '#6b5b4f', alpha: 0.6 },
-        scripture: { size: DesignSystem.FONT_SIZE.LG, color: '#d4a853', alpha: 1 },
+        dramatic: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.LG, color: '#e8e0d0', alpha: 1 },
+        normal: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.BASE, color: '#b0a898', alpha: 0.9 },
+        dim: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.BASE, color: '#6b5b4f', alpha: 0.6 },
+        scripture: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.LG, color: '#d4a853', alpha: 1 },
       };
       const cfg = styleConfig[line.style] ?? styleConfig.normal;
 
+      const isDramaticOrScripture = line.style === 'dramatic' || line.style === 'scripture';
       const textObj = this.add.text(cx, y, line.text,
         DesignSystem.textStyle(cfg.size, cfg.color, {
           align: 'center',
           fontStyle: line.style === 'scripture' ? 'italic' : 'normal',
+          ...(isDramaticOrScripture ? { lineSpacing: 3 } : {}),
         }),
       ).setOrigin(0.5).setAlpha(0).setDepth(1);
 
@@ -103,7 +105,7 @@ export class OnboardingScene extends Phaser.Scene {
 
     const totalDuration = lines[lines.length - 1].delay + 3000;
     const skipLabel = ko ? '아무 곳이나 터치하여 계속...' : 'Touch anywhere to continue...';
-    const skipText = this.add.text(cx, GAME_HEIGHT - 20, skipLabel,
+    const skipText = this.add.text(cx, GAME_HEIGHT - 10, skipLabel,
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5).setAlpha(0).setDepth(1);
 

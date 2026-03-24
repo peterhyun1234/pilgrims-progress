@@ -112,7 +112,10 @@ export class StatsManager {
   }
 
   getSpeedMultiplier(): number {
-    return 1.0 - (this.stats.burden / 100) * 0.5;
+    const b = this.stats.burden;
+    if (b >= 80) return 0.4;
+    if (b >= 60) return 0.6;
+    return 1.0 - (b / 100) * 0.4;
   }
 
   changeRelationship(npcId: string, amount: number): void {

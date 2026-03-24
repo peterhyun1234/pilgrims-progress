@@ -99,8 +99,8 @@ export class MenuScene extends Phaser.Scene {
 
   private async checkSaveExists(): Promise<void> {
     if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
-    const sm = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
-    const exists = await sm.hasSave();
+    const saveManager = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
+    const exists = await saveManager.hasSave();
     if (this.continueBtn) {
       this.continueBtn.setAlpha(exists ? 1 : 0.4);
       this.continueBtn.getAll().forEach(child => {
@@ -112,6 +112,28 @@ export class MenuScene extends Phaser.Scene {
           }
         }
       });
+    }
+
+    if (exists) {
+      const saveData = await saveManager.load();
+      if (saveData && this.continueBtn) {
+        const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+        const ko = gm.language === 'ko';
+        const cx = GAME_WIDTH / 2;
+        const btnY = 140;
+        const chapLabel = ko ? `제 ${saveData.chapter}장` : `Ch.${saveData.chapter}`;
+        const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
+        const burdenLabel = ko ? `짐 ${saveData.stats.burden}` : `Burden ${saveData.stats.burden}`;
+        this.add.text(cx, btnY + 57, `${chapLabel}  ·  ${faithLabel}  ·  ${burdenLabel}`, {
+          fontFamily: "'Press Start 2P', monospace",
+          fontSize: '4px',
+          color: '#6b5b4f',
+        }).setOrigin(0.5).setDepth(10);
+      }
+      // Restore save to avoid applying it prematurely (will load on continueGame)
+      const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+      gm.setChapter(1);
+      gm.stats.reset();
     }
   }
 

@@ -102,13 +102,16 @@ export class SettingsScene extends Phaser.Scene {
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a898'),
     );
     const modes = ['none', 'protanopia', 'deuteranopia', 'tritanopia'] as const;
+    const modeLabels = ko
+      ? ['없음', '적색맹', '녹색맹', '청색맹']
+      : ['none', 'protanopia', 'deuteranopia', 'tritanopia'];
     let modeIdx = 0;
-    const modeTxt = this.add.text(cx + 30, y, modes[0],
+    const modeTxt = this.add.text(cx + 30, y, modeLabels[0],
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#6b5b4f'),
     ).setInteractive({ useHandCursor: true });
     modeTxt.on('pointerdown', () => {
       modeIdx = (modeIdx + 1) % modes.length;
-      modeTxt.setText(modes[modeIdx]);
+      modeTxt.setText(modeLabels[modeIdx]);
     });
 
     y += 44;

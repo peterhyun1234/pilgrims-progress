@@ -8,6 +8,8 @@ export class TileMapManager {
   private objectLayer: Phaser.GameObjects.Graphics | null = null;
   private fogLayer: Phaser.GameObjects.Graphics | null = null;
   private colliders: Phaser.Physics.Arcade.StaticGroup | null = null;
+  private parallaxFar: Phaser.GameObjects.Graphics | null = null;
+  private parallaxMid: Phaser.GameObjects.Graphics | null = null;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -15,6 +17,8 @@ export class TileMapManager {
 
   generateMap(config: ChapterConfig): void {
     this.clearMap();
+
+    this.drawParallaxBackground(config);
 
     this.groundLayer = this.scene.add.graphics().setDepth(0);
     this.decorLayer = this.scene.add.graphics().setDepth(1);
@@ -375,16 +379,75 @@ export class TileMapManager {
     return this.colliders;
   }
 
+  private drawParallaxBackground(config: ChapterConfig): void {
+    const { mapWidth: W, mapHeight: H, theme } = config;
+    const GAME_H = H;
+
+    // Far layer: sky gradient — scrolls at 15% speed
+    const far = this.scene.add.graphics().setDepth(-2).setScrollFactor(0.15, 0.05);
+    // Sky: blend from dark top to slightly lighter bottom
+    const skyTop = this.darkenColor(theme.groundBase, 0.3);
+    const skyMid = this.darkenColor(theme.groundBase, 0.5);
+    const strips = 12;
+    for (let i = 0; i < strips; i++) {
+      const t = i / strips;
+      const color = this.lerpColor(skyTop, skyMid, t);
+      far.fillStyle(color, 1);
+      far.fillRect(0, Math.floor(t * GAME_H), W, Math.ceil(GAME_H / strips) + 1);
+    }
+    // Distant "mountain" silhouettes
+    far.fillStyle(this.darkenColor(theme.groundBase, 0.6), 0.5);
+    for (let x = 0; x < W; x += 60) {
+      const hash = ((x * 31) * 17) & 0xff;
+      const h = 20 + (hash % 40);
+      const w = 40 + (hash % 60);
+      far.fillTriangle(x, GAME_H, x + w / 2, GAME_H - h, x + w, GAME_H);
+    }
+    this.parallaxFar = far;
+
+    // Mid layer: rolling hills — scrolls at 40% speed
+    const mid = this.scene.add.graphics().setDepth(-1).setScrollFactor(0.4, 0.1);
+    mid.fillStyle(this.darkenColor(theme.groundBase, 0.7), 0.7);
+    const hillPoints: number[] = [];
+    for (let x = 0; x <= W; x += 16) {
+      const hash2 = ((x * 53 + 7) * 29) & 0xff;
+      hillPoints.push(GAME_H - 30 - (hash2 % 50));
+    }
+    // Draw hills as filled polygon using available segments
+    for (let i = 0; i < hillPoints.length - 1; i++) {
+      const x1 = i * 16;
+      const x2 = (i + 1) * 16;
+      const y1 = hillPoints[i];
+      const y2 = hillPoints[i + 1];
+      mid.fillTriangle(x1, GAME_H, x1, y1, x2, y2);
+      mid.fillTriangle(x1, GAME_H, x2, y2, x2, GAME_H);
+    }
+    this.parallaxMid = mid;
+  }
+
+  private darkenColor(color: number, factor: number): number {
+    const r = Math.floor(((color >> 16) & 0xff) * factor);
+    const g = Math.floor(((color >> 8) & 0xff) * factor);
+    const b = Math.floor((color & 0xff) * factor);
+    return (r << 16) | (g << 8) | b;
+  }
+
+  private lerpColor(a: number, b: number, t: number): number {
+    const ar = (a >> 16) & 0xff, ag = (a >> 8) & 0xff, ab = a & 0xff;
+    const br = (b >> 16) & 0xff, bg = (b >> 8) & 0xff, bb = b & 0xff;
+    const r = Math.round(ar + (br - ar) * t);
+    const g = Math.round(ag + (bg - ag) * t);
+    const bv = Math.round(ab + (bb - ab) * t);
+    return (r << 16) | (g << 8) | bv;
+  }
+
   clearMap(): void {
-    this.groundLayer?.destroy();
-    this.groundLayer = null;
-    this.decorLayer?.destroy();
-    this.decorLayer = null;
-    this.objectLayer?.destroy();
-    this.objectLayer = null;
-    this.fogLayer?.destroy();
-    this.fogLayer = null;
-    this.colliders?.destroy(true, true);
-    this.colliders = null;
+    this.parallaxFar?.destroy(); this.parallaxFar = null;
+    this.parallaxMid?.destroy(); this.parallaxMid = null;
+    this.groundLayer?.destroy(); this.groundLayer = null;
+    this.decorLayer?.destroy(); this.decorLayer = null;
+    this.objectLayer?.destroy(); this.objectLayer = null;
+    this.fogLayer?.destroy(); this.fogLayer = null;
+    this.colliders?.destroy(true, true); this.colliders = null;
   }
 }

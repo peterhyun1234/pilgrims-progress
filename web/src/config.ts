@@ -6,7 +6,7 @@ export const STATS = {
   FAITH: { initial: 30, min: 0, max: 100 },
   COURAGE: { initial: 20, min: 0, max: 100 },
   WISDOM: { initial: 20, min: 0, max: 100 },
-  BURDEN: { initial: 80, min: 0, max: 100 },
+  BURDEN: { initial: 60, min: 0, max: 100 },
 } as const;
 
 export const PLAYER = {

@@ -42,9 +42,9 @@ export class HUD {
   private createBackground(): void {
     const bg = this.scene.add.graphics();
     bg.fillStyle(0x0a0814, 0.65);
-    bg.fillRoundedRect(2, 2, 126, 64, 4);
+    bg.fillRoundedRect(2, 2, 134, 68, 4);
     bg.lineStyle(0.5, 0xd4a853, 0.1);
-    bg.strokeRoundedRect(2, 2, 126, 64, 4);
+    bg.strokeRoundedRect(2, 2, 134, 68, 4);
     this.container.add(bg);
   }
 
@@ -64,8 +64,10 @@ export class HUD {
       }).setOrigin(0, 0);
 
       const labelText = ko ? DesignSystem.STAT_LABELS_KO[stat] : DesignSystem.STAT_LABELS_EN[stat];
+      // Use native 11px for Galmuri11 (KO) so final consonants aren't clipped at 9px
+      const labelFontSize = ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.XS;
       const label = this.scene.add.text(11, 0, labelText, {
-        fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+        fontSize: `${labelFontSize}px`,
         color: DesignSystem.hex(DesignSystem.STAT_COLORS[stat]),
         fontFamily: FONT_FAMILY,
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 1, stroke: true, fill: true },
@@ -171,9 +173,24 @@ export class HUD {
     });
 
     const burdenBar = this.bars[3];
-    if (burdenBar && this.statsManager.get('burden') >= 80) {
-      const shake = Math.sin(Date.now() * 0.008) * 0.7;
-      burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP + shake;
+    const burden = this.statsManager.get('burden');
+    if (burdenBar && burden >= 60) {
+      const t = Date.now() * 0.004;
+      if (burden >= 80) {
+        // Shake + pulse fill color between red and dark-red
+        const shake = Math.sin(t * 2) * 0.8;
+        burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP + shake;
+        const pulse = 0.6 + Math.sin(t * 3) * 0.4;
+        burdenBar.fill.setAlpha(pulse);
+      } else {
+        // Just a slow pulse at burden 60-79
+        const pulse = 0.75 + Math.sin(t) * 0.25;
+        burdenBar.fill.setAlpha(pulse);
+        burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
+      }
+    } else if (burdenBar) {
+      burdenBar.fill.setAlpha(0.85);
+      burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
     }
   }
 

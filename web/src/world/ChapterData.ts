@@ -118,20 +118,23 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     chapter: 1,
     locationName: '멸망의 도시',
     locationNameEn: 'City of Destruction',
-    mapWidth: 640,
-    mapHeight: 480,
-    spawn: { x: 320, y: 380 },
+    mapWidth: 2400,
+    mapHeight: 400,
+    spawn: { x: 80, y: 200 },
     npcs: [
-      { id: 'evangelist', nameKo: '전도자', nameEn: 'Evangelist', sprite: 'evangelist', x: 400, y: 200, chapter: 1 },
-      { id: 'obstinate', nameKo: '완고', nameEn: 'Obstinate', sprite: 'obstinate', x: 180, y: 280, chapter: 1 },
-      { id: 'pliable', nameKo: '유연', nameEn: 'Pliable', sprite: 'pliable', x: 250, y: 350, chapter: 1 },
+      { id: 'evangelist',     nameKo: '전도자',   nameEn: 'Evangelist',        sprite: 'evangelist',     x: 280,  y: 160, chapter: 1 },
+      { id: 'obstinate',      nameKo: '완고',     nameEn: 'Obstinate',         sprite: 'obstinate',      x: 640,  y: 200, chapter: 1 },
+      { id: 'pliable',        nameKo: '유연',     nameEn: 'Pliable',           sprite: 'pliable',        x: 900,  y: 170, chapter: 1 },
+      { id: 'worldly_wiseman',nameKo: '세속 현자',nameEn: 'Mr. Worldly Wiseman',sprite: 'worldlywiseman',x: 1440, y: 150, chapter: 1 },
+      { id: 'interpreter',    nameKo: '해석자',   nameEn: 'Interpreter',       sprite: 'interpreter',    x: 1850, y: 160, chapter: 1 },
+      { id: 'goodwill',       nameKo: '선의',     nameEn: 'Good-will',         sprite: 'goodwill',       x: 2280, y: 140, chapter: 1 },
     ],
     exits: [
-      { x: 580, y: 140, width: 60, height: 80, targetChapter: 2 },
+      { x: 2340, y: 80, width: 60, height: 240, targetChapter: 2 },
     ],
     theme: THEMES[1],
     events: [
-      { id: 'ch1_battle_doubt', type: 'battle', x: 450, y: 300, width: 40, height: 40, triggerOnce: true, data: { enemyId: 'doubt' } },
+      { id: 'ch1_battle_doubt', type: 'battle', x: 1150, y: 160, width: 50, height: 50, triggerOnce: true, data: { enemyId: 'doubt' } },
     ],
   },
   {
@@ -184,6 +187,9 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       { x: 420, y: 80, width: 60, height: 80, targetChapter: 5 },
     ],
     theme: THEMES[4],
+    events: [
+      { id: 'ch4_boss_giant_despair', type: 'battle', x: 200, y: 140, width: 60, height: 60, triggerOnce: true, data: { enemyId: 'giant_despair' } },
+    ],
   },
   {
     chapter: 5,
