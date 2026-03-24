@@ -17,6 +17,7 @@ export class MobileControls {
   private actionBtn: Phaser.GameObjects.Container;
   private actionBtnBg!: Phaser.GameObjects.Graphics;
   private actionLabelText!: Phaser.GameObjects.Text;
+  private actionBtnHit!: Phaser.GameObjects.Arc;
   private hintContainer: Phaser.GameObjects.Container | null = null;
 
   private joystickActive = false;
@@ -90,7 +91,8 @@ export class MobileControls {
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
     ).setOrigin(0.5).setStyle({ fontStyle: 'bold' });
 
-    const hit = this.scene.add.circle(0, 0, r, 0, 0).setInteractive();
+    this.actionBtnHit = this.scene.add.circle(0, 0, r + 6, 0, 0).setInteractive();
+    const hit = this.actionBtnHit;
     hit.on('pointerdown', () => {
       this._virtualInput.interact = true;
       this.drawActionBtn(true);
@@ -202,6 +204,7 @@ export class MobileControls {
 
   showControls(): void {
     this.isVisible = true;
+    this.actionBtnHit.setInteractive();
     this.scene.tweens.add({
       targets: this.actionBtn, alpha: 0.7, duration: 200,
     });
@@ -218,6 +221,7 @@ export class MobileControls {
     this._virtualInput = { x: 0, y: 0, interact: false };
     this.joystickOuter.setAlpha(0);
     this.joystickInner.setAlpha(0);
+    this.actionBtnHit.disableInteractive();
     this.scene.tweens.add({ targets: this.actionBtn, alpha: 0, duration: 150 });
   }
 
