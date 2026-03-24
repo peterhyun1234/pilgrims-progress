@@ -57,7 +57,7 @@ export class CutsceneScene extends Phaser.Scene {
       gm.language === 'ko' ? '터치하여 계속...' : 'Touch to continue...',
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5).setAlpha(0);
-    this.tweens.add({ targets: hint, alpha: 0.5, delay: 2000, duration: 500 });
+    this.tweens.add({ targets: hint, alpha: 0.5, delay: 2000, duration: 500, ease: 'Sine.easeOut' });
 
     this.input.on('pointerdown', () => this.advanceStep());
     this.input.keyboard?.on('keydown-SPACE', () => this.advanceStep());
@@ -114,7 +114,7 @@ export class CutsceneScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: this.textObject,
-      alpha: 0, duration: 200,
+      alpha: 0, duration: 200, ease: 'Sine.easeIn',
       onComplete: () => this.showStep(next),
     });
   }

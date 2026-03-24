@@ -183,7 +183,8 @@ export class TutorialSystem {
       this.stuckTimer = 0;
     }
 
-    this.lastPlayerPos = { x: playerX, y: playerY };
+    this.lastPlayerPos.x = playerX;
+    this.lastPlayerPos.y = playerY;
   }
 
   private loadShown(): void {

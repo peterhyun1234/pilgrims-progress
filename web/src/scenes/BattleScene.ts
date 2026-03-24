@@ -214,7 +214,7 @@ export class BattleScene extends Phaser.Scene {
     const ko = this.gameManager.language === 'ko';
     this.skillPanel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2).setDepth(200).setAlpha(0);
 
-    const bg = DesignSystem.createPanel(this, -130, -60, 260, 120);
+    const bg = DesignSystem.createPanel(this, -130, -60, 260, 175);
     this.skillPanel.add(bg);
 
     const title = this.add.text(0, -48, ko ? '스킬 선택' : 'Select Skill',
@@ -242,13 +242,13 @@ export class BattleScene extends Phaser.Scene {
     }
 
     const closeBtn = DesignSystem.createButton(
-      this, 0, 76, 80, 24, ko ? '닫기' : 'Close',
+      this, 0, 90, 80, 24, ko ? '닫기' : 'Close',
       () => { this.skillPanel?.destroy(true); this.skillPanel = null; },
       { fontSize: DesignSystem.FONT_SIZE.XS, bgColor: 0x3a1a1a },
     );
     this.skillPanel.add(closeBtn);
 
-    this.tweens.add({ targets: this.skillPanel, alpha: 1, duration: 150 });
+    this.tweens.add({ targets: this.skillPanel, alpha: 1, duration: 150, ease: 'Sine.easeOut' });
   }
 
   private async onPray(): Promise<void> {

@@ -21,6 +21,7 @@ export class TutorialOverlay {
   private scene: Phaser.Scene;
   private container: Phaser.GameObjects.Container;
   private onComplete: () => void;
+  private pendingTimer: Phaser.Time.TimerEvent | null = null;
 
   constructor(scene: Phaser.Scene, onComplete: () => void) {
     this.scene = scene;
@@ -114,7 +115,8 @@ export class TutorialOverlay {
         onComplete: () => this.showStep(index + 1),
       });
     };
-    this.scene.time.delayedCall(400, () => {
+    this.pendingTimer = this.scene.time.delayedCall(400, () => {
+      this.pendingTimer = null;
       this.scene.input.once('pointerdown', advance);
       this.scene.input.keyboard?.once('keydown-SPACE', advance);
       this.scene.input.keyboard?.once('keydown-ENTER', advance);
@@ -128,6 +130,8 @@ export class TutorialOverlay {
   }
 
   destroy(): void {
+    this.pendingTimer?.remove();
+    this.pendingTimer = null;
     this.container.destroy(true);
   }
 }

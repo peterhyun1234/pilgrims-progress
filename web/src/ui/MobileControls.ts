@@ -97,7 +97,7 @@ export class MobileControls {
       this._virtualInput.interact = true;
       this.drawActionBtn(true);
       this.scene.tweens.add({
-        targets: c, scaleX: 0.9, scaleY: 0.9, duration: 50, yoyo: true,
+        targets: c, scaleX: 0.9, scaleY: 0.9, duration: 50, yoyo: true, ease: 'Sine.easeInOut',
       });
     });
     hit.on('pointerup', () => {

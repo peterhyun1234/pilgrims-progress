@@ -72,7 +72,7 @@ export class Toast {
 
     this.scene.time.delayedCall(duration, () => {
       this.scene.tweens.add({
-        targets: container, alpha: 0, y: y - 10, duration: 250,
+        targets: container, alpha: 0, y: y - 10, duration: 250, ease: 'Sine.easeIn',
         onComplete: () => {
           container.destroy(true);
           this.activeToasts = this.activeToasts.filter(t => t !== item);

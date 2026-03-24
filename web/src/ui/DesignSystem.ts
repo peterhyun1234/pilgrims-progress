@@ -171,16 +171,16 @@ export class DesignSystem {
 
     hitZone.on('pointerover', () => {
       drawBg(hoverColor, COLORS.UI.GOLD);
-      scene.tweens.add({ targets: container, scaleX: 1.03, scaleY: 1.03, duration: 80 });
+      scene.tweens.add({ targets: container, scaleX: 1.03, scaleY: 1.03, duration: 80, ease: 'Sine.easeOut' });
     });
     hitZone.on('pointerout', () => {
       drawBg(bgColor, borderColor);
-      scene.tweens.add({ targets: container, scaleX: 1, scaleY: 1, duration: 80 });
+      scene.tweens.add({ targets: container, scaleX: 1, scaleY: 1, duration: 80, ease: 'Sine.easeOut' });
     });
     hitZone.on('pointerdown', () => {
       scene.tweens.add({
         targets: container, scaleX: 0.96, scaleY: 0.96, duration: 50,
-        yoyo: true, onComplete: onClick,
+        yoyo: true, ease: 'Sine.easeInOut', onComplete: onClick,
       });
     });
 

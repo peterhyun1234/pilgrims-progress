@@ -25,7 +25,8 @@ export class NPC extends Entity {
   private prompt: Phaser.GameObjects.Container | null = null;
   private nameLabel: Phaser.GameObjects.Text | null = null;
   private isPromptVisible = false;
-  private idleTimer = 0;
+  private baseY = 0;
+  private baseYInit = false;
   private bobPhase: number;
   private glowGraphics: Phaser.GameObjects.Graphics | null = null;
 
@@ -110,11 +111,11 @@ export class NPC extends Entity {
   }
 
   update(): void {
-    this.idleTimer += 0.016;
+    if (!this.baseYInit) { this.baseY = this.sprite.y; this.baseYInit = true; }
 
-    const bob = Math.sin(this.idleTimer * 1.5 + this.bobPhase) * 0.5;
-    if (!this.sprite.getData('baseY')) this.sprite.setData('baseY', this.sprite.y);
-    this.sprite.y = (this.sprite.getData('baseY') as number) + bob;
+    const t = this.scene.time.now * 0.001;
+    const bob = Math.sin(t * 1.5 + this.bobPhase) * 0.5;
+    this.sprite.y = this.baseY + bob;
 
     if (this.prompt) {
       this.prompt.x = this.sprite.x;
@@ -125,7 +126,7 @@ export class NPC extends Entity {
     }
     if (this.glowGraphics) {
       this.glowGraphics.clear();
-      const pulse = 0.04 + Math.sin(this.idleTimer * 2) * 0.02;
+      const pulse = 0.04 + Math.sin(t * 2) * 0.02;
       this.glowGraphics.fillStyle(COLORS.UI.GOLD, pulse);
       this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 20);
     }

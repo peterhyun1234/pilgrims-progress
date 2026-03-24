@@ -273,7 +273,7 @@ export class GameScene extends Phaser.Scene {
     const overlay = this.add.rectangle(
       GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0,
     ).setDepth(500).setScrollFactor(0);
-    this.tweens.add({ targets: overlay, alpha: 0.55, duration: 200 });
+    this.tweens.add({ targets: overlay, alpha: 0.55, duration: 200, ease: 'Sine.easeOut' });
 
     const panel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2).setDepth(501).setScrollFactor(0);
     const bg = DesignSystem.createPanel(this, -110, -80, 220, 200);
@@ -438,11 +438,17 @@ export class GameScene extends Phaser.Scene {
           g.fillRect(0, H - 1 - i, W, 1);
         }
         this.faithVignette = g;
-        this.tweens.add({ targets: g, alpha: 1, duration: 600 });
-      } else {
-        // Pulse the faith vignette
-        const t = this.time.now * 0.002;
-        this.faithVignette.setAlpha(0.6 + Math.sin(t) * 0.4);
+        this.tweens.add({
+          targets: g, alpha: 1, duration: 600,
+          onComplete: () => {
+            if (this.faithVignette === g) {
+              this.tweens.add({
+                targets: g, alpha: 0.25, duration: 500,
+                yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+              });
+            }
+          },
+        });
       }
     } else if (this.faithVignette) {
       const g = this.faithVignette;
@@ -865,6 +871,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   shutdown(): void {
+    this.pauseMenuCleanup?.();
     this.cleanupEvents();
     this.inputManager?.destroy();
     this.hud?.destroy();

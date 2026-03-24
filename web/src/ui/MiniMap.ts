@@ -15,6 +15,7 @@ export class MiniMap {
   private config: ChapterConfig | null = null;
   private scaleX = 1;
   private scaleY = 1;
+  private frameCounter = 0;
 
   constructor(scene: Phaser.Scene) {
     this.container = scene.add.container(
@@ -58,6 +59,7 @@ export class MiniMap {
 
   update(playerX: number, playerY: number, npcs: NPC[]): void {
     if (!this.isVisible || !this.config) return;
+    if (++this.frameCounter % 3 !== 0) return;
 
     this.dotsGfx.clear();
 
