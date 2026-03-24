@@ -168,7 +168,7 @@ export class BattleScene extends Phaser.Scene {
 
     actions.forEach((a, i) => {
       const btn = DesignSystem.createButton(
-        this, startX + i * (btnW + gap), 0, btnW, 22, a.label, a.action,
+        this, startX + i * (btnW + gap), 0, btnW, 28, a.label, a.action,
         { fontSize: DesignSystem.FONT_SIZE.XS, bgColor: a.color, hoverColor: a.color + 0x111111 },
       );
       this.actionMenu.add(btn);
@@ -230,9 +230,9 @@ export class BattleScene extends Phaser.Scene {
       this.skillPanel.add(noSkill);
     } else {
       skills.slice(0, 4).forEach((skill, i) => {
-        const sy = -24 + i * 22;
+        const sy = -24 + i * 28;
         const btn = DesignSystem.createButton(
-          this, 0, sy, 220, 18,
+          this, 0, sy, 220, 24,
           `${skill.icon} ${ko ? skill.nameKo : skill.nameEn}`,
           () => this.onSkill(skill),
           { fontSize: DesignSystem.FONT_SIZE.XS },
@@ -242,7 +242,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     const closeBtn = DesignSystem.createButton(
-      this, 0, 48, 80, 18, ko ? '닫기' : 'Close',
+      this, 0, 76, 80, 24, ko ? '닫기' : 'Close',
       () => { this.skillPanel?.destroy(true); this.skillPanel = null; },
       { fontSize: DesignSystem.FONT_SIZE.XS, bgColor: 0x3a1a1a },
     );

@@ -37,6 +37,7 @@ export class DialogueBox {
   private emotionState: PortraitEmotion = 'neutral';
   private currentSpeakerId = '';
   private previousState: GameState = GameState.GAME;
+  private advanceHandler: (() => void) | null = null;
 
   private static readonly BOX_W = 430;
   private static readonly BOX_H = 80;
@@ -122,15 +123,15 @@ export class DialogueBox {
   }
 
   private setupInput(): void {
-    const advance = () => {
+    this.advanceHandler = () => {
       if (!this.isVisible) return;
       if (this.isTyping) this.completeTyping();
       else if (this.choiceContainers.length === 0)
         this.eventBus.emit(GameEvent.DIALOGUE_CHOICE_SELECTED, -1);
     };
-    this.scene.input.on('pointerdown', advance);
-    this.scene.input.keyboard?.on('keydown-SPACE', advance);
-    this.scene.input.keyboard?.on('keydown-ENTER', advance);
+    this.scene.input.on('pointerdown', this.advanceHandler);
+    this.scene.input.keyboard?.on('keydown-SPACE', this.advanceHandler);
+    this.scene.input.keyboard?.on('keydown-ENTER', this.advanceHandler);
   }
 
   private showLine(payload: DialogueLinePayload): void {
@@ -467,6 +468,12 @@ export class DialogueBox {
     this.eventBus.off(GameEvent.DIALOGUE_LINE, this.onDialogueLine);
     this.eventBus.off(GameEvent.DIALOGUE_CHOICE, this.onDialogueChoice);
     this.eventBus.off(GameEvent.DIALOGUE_END, this.onDialogueEnd);
+    if (this.advanceHandler) {
+      this.scene.input.off('pointerdown', this.advanceHandler);
+      this.scene.input.keyboard?.off('keydown-SPACE', this.advanceHandler);
+      this.scene.input.keyboard?.off('keydown-ENTER', this.advanceHandler);
+      this.advanceHandler = null;
+    }
     this.typingTimer?.remove();
     this.clearChoices();
     this.portraitImage = null;

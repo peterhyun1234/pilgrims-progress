@@ -367,8 +367,8 @@ export class GameScene extends Phaser.Scene {
     const px = this.player.sprite.x;
     const py = this.player.sprite.y - 14;
     const txt = this.add.text(px, py, `${sign}${amount} ${label}`, {
-      fontFamily: "'Press Start 2P', monospace",
-      fontSize: '5px',
+      fontFamily: DesignSystem.getFontFamily(),
+      fontSize: '6px',
       color: `#${color.toString(16).padStart(6, '0')}`,
       stroke: '#000000',
       strokeThickness: 2,

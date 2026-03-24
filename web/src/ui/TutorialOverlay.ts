@@ -62,7 +62,7 @@ export class TutorialOverlay {
     const stepLabel = `${index + 1} / ${STEPS.length}`;
     const stepTxt = this.scene.add.text(cx + panelW / 2 - 6, cy - panelH / 2 + 6, stepLabel, {
       fontFamily: "'Press Start 2P', monospace",
-      fontSize: '4px',
+      fontSize: '6px',
       color: '#666655',
     }).setOrigin(1, 0);
 
@@ -73,7 +73,7 @@ export class TutorialOverlay {
     iconBg.lineStyle(1, 0xd4a853, 0.5);
     iconBg.strokeRoundedRect(cx - panelW / 2 + 10, cy - 18, 36, 36, 4);
 
-    const iconFontSize = step.icon.length > 2 ? '5px' : '7px';
+    const iconFontSize = step.icon.length > 2 ? '6px' : '8px';
     const iconTxt = this.scene.add.text(cx - panelW / 2 + 28, cy, step.icon, {
       fontFamily: "'Press Start 2P', monospace",
       fontSize: iconFontSize,
@@ -99,7 +99,7 @@ export class TutorialOverlay {
     const hintText = ko ? '터치하여 계속...' : 'Tap to continue...';
     const hint = this.scene.add.text(cx, cy + panelH / 2 - 10, hintText, {
       fontFamily: ko ? FONT_FAMILY : "'Press Start 2P', monospace",
-      fontSize: ko ? '9px' : '4px',
+      fontSize: ko ? '9px' : '6px',
       color: '#6b5b4f',
     }).setOrigin(0.5);
 
