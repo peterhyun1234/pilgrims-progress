@@ -1,7 +1,7 @@
 import { GAME_WIDTH, GAME_HEIGHT, TOUCH } from '../config';
 import { EventBus } from '../core/EventBus';
 import { GameEvent, GameState } from '../core/GameEvents';
-import { DesignSystem, FONT_FAMILY } from './DesignSystem';
+import { DesignSystem } from './DesignSystem';
 
 export interface VirtualInput {
   x: number;
@@ -86,13 +86,11 @@ export class MobileControls {
     this.actionBtnBg = this.scene.add.graphics();
     this.drawActionBtn(false);
 
-    this.actionLabelText = this.scene.add.text(0, 0, this.contextLabel, {
-      fontSize: '15px', color: '#d4a853', fontFamily: FONT_FAMILY,
-      fontStyle: 'bold',
-      shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 2, stroke: true, fill: true },
-    }).setOrigin(0.5);
+    this.actionLabelText = this.scene.add.text(0, 0, this.contextLabel,
+      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
+    ).setOrigin(0.5).setStyle({ fontStyle: 'bold' });
 
-    const hit = this.scene.add.circle(0, 0, r + 10, 0, 0).setInteractive();
+    const hit = this.scene.add.circle(0, 0, r, 0, 0).setInteractive();
     hit.on('pointerdown', () => {
       this._virtualInput.interact = true;
       this.drawActionBtn(true);

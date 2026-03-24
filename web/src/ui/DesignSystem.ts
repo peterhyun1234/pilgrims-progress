@@ -79,7 +79,7 @@ export class DesignSystem {
       color,
       shadow: {
         offsetX: 1, offsetY: 1, color: '#000000',
-        blur: 2, stroke: true, fill: true,
+        blur: 0, stroke: true, fill: true,
       },
       ...extra,
     };

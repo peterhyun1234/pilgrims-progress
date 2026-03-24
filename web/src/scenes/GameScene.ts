@@ -795,7 +795,7 @@ export class GameScene extends Phaser.Scene {
         input.x = vi.x;
         input.y = vi.y;
       }
-      if (vi.interact) input.interact = true;
+      if (vi.interact) { input.interact = true; vi.interact = false; }
 
       if (this.player.nearbyNPC) {
         this.mobileControls.setActionLabel('!');
