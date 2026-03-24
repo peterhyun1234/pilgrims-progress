@@ -14,79 +14,98 @@ pilgrims-progress 프로젝트 전체 QA를 수행하고 발견되는 모든 문
 
 ### 1. 모바일 렌더링 품질
 - [ ] 폰트가 흐릿하지 않은가?
-  - `pixelArt: true`, `roundPixels: true`, shadow `blur: 0` 확인
-  - Phaser scale `zoom: 2` 설정 여부 확인 (960×540 canvas → text 2× pixel density)
-  - `index.html` canvas CSS에 `image-rendering: pixelated` 적용 확인
+  - `pixelArt: true`, `roundPixels: true`, shadow `blur: 0` 전체 소스에서 확인
+    (grep: `blur:\s*[1-9]` — 장식적 glow 제외한 모든 텍스트 shadow blur는 0이어야 함)
+  - Phaser scale `zoom: 2` 설정 여부 확인 (`main.ts` scale 블록)
+  - `index.html` canvas CSS에 `image-rendering: pixelated` 확인
   - `font-display: block` (Galmuri11 FOUT 방지) 확인
-- [ ] 터치 버튼 크기가 최소 44px CSS (Apple HIG) 이상인가?
-  - MobileControls action button hit zone 확인
-  - 히트존이 숨겨질 때 `disableInteractive()` 호출 확인 (dialogue 중 버튼이 tap 가로챔 방지)
-- [ ] 조이스틱 dead zone이 적절한가? (`TOUCH.JOYSTICK_DEADZONE`)
+- [ ] `Date.now()` 핫패스 사용 없는가?
+  - grep: `Date\.now\(\)` — save timestamp 제외한 모든 update/animation 루프는
+    `scene.time.now` 또는 `this.time.now` 사용
+  - 대상: HUD.update(), Player.applyIdleBob(), DialogueBox.update(),
+    GameScene.updateFaithVignette(), MenuScene.update()
+- [ ] 터치 버튼 hit zone이 최소 44px CSS (Apple HIG) 이상인가?
+  - zoom:2 기준: 논리적 22px 이상이면 CSS 30px+, 30px 이상이면 OK
+  - MobileControls: action button hit zone = `r + 6` 확인
+  - 히트존이 숨겨질 때 `disableInteractive()` 호출 확인
 
 ### 2. 입력 버그
 - [ ] NPC 대화가 한 번 탭에 한 번만 트리거되는가?
-  - `GameScene.update()`에서 `vi.interact` edge-trigger 패턴 확인:
+  - `GameScene.update()`에서 edge-trigger 패턴:
     `if (vi.interact) { input.interact = true; vi.interact = false; }`
-- [ ] 키보드 `E` 키 중복 트리거 없는가? (`Phaser.Input.Keyboard.JustDown` 사용 확인)
-- [ ] 대화 중 이동 입력이 무시되는가? (DIALOGUE state에서 player.update 스킵 확인)
-- [ ] ESC/pause 중 게임 로직이 멈추는가?
+- [ ] 키보드 `E` 키 edge-trigger: `Phaser.Input.Keyboard.JustDown` 사용 확인
+- [ ] 대화/일시정지 중 이동 입력 무시되는가?
+- [ ] MobileControls action button이 dialogue 중 `disableInteractive()` 상태인가?
 
-### 3. UI 레이아웃 (480×270 기준)
+### 3. UI 레이아웃 (480×270 논리 해상도)
+- [ ] 하드코딩된 작은 폰트(4px, 5px) 없는가?
+  - grep: `fontSize.*['"]\d{1,1}px['"]` — zoom:2 기준 최소 6px 이상 권장
+  - 주요 위치: GameScene 챕터 레이블, 저장 인디케이터, MenuScene 세이브 데이터
 - [ ] 텍스트가 패널 밖으로 넘치는 곳이 없는가? (`wordWrap` 설정 확인)
-- [ ] NPC 이름이 대화창 안에 잘 들어가는가?
-- [ ] HUD 요소가 화면 가장자리에 겹치지 않는가? (최소 4px 여백)
-- [ ] 스크롤 팩터 0인 UI 요소가 카메라 이동에 영향받지 않는가? (`setScrollFactor(0)`)
-- [ ] Portrait (캐릭터 초상화)가 대화창 내에 올바르게 렌더링되는가?
-  - `RenderTexture` origin이 `(0, 0)`인지 확인
-  - `rt.setScrollFactor(0)` 확인
+- [ ] HUD 요소가 화면 가장자리에 겹치지 않는가? (최소 2px 여백)
+- [ ] ScrollFactor(0) UI가 카메라 이동에 영향받지 않는가?
+- [ ] Portrait RenderTexture origin이 `(0, 0)`인가? (`rt.setOrigin(0, 0).setScrollFactor(0)`)
 
 ### 4. 한국어/영어 이중 언어
-- [ ] 언어 선택에 따라 올바른 폰트가 사용되는가?
-  - 한국어: Galmuri11 (11px 또는 11의 배수 권장)
-  - 영어: Press Start 2P
-- [ ] 한국어 텍스트가 잘리지 않는가? (fontSize 11px 이하 사용 시 주의)
-- [ ] `DesignSystem.FONT_SIZE` 값이 한국어/영어 모두에서 적절한가?
+- [ ] 하드코딩된 폰트패밀리 없는가?
+  - 모든 텍스트는 `DesignSystem.textStyle()` 또는 `getFontFamily()` 사용
+  - grep: `fontFamily.*Press Start 2P` — DesignSystem 외에 직접 사용되는 곳 확인
+- [ ] 한국어: Galmuri11 11px 사용 (`FONT_SIZE.SM`), 영어: Press Start 2P 확인
+- [ ] 모바일 힌트 텍스트 등 모든 UI 문자열이 이중 언어인가?
+  - 한국어 전용 or 영어 전용 문자열 grep 확인
 
 ### 5. 씬 전환 & 상태 관리
-- [ ] fadeIn/fadeOut 트랜지션이 모든 씬에서 동작하는가?
-- [ ] 씬 전환 시 이전 씬 리소스가 정리되는가? (`destroy()` 호출 확인)
-- [ ] GameState 변경 이벤트가 올바르게 emit/receive되는가?
-- [ ] `ServiceLocator`에 등록되지 않은 서비스에 접근하는 곳이 없는가?
+- [ ] fadeIn/fadeOut이 모든 씬에서 동작하는가?
+- [ ] 씬 shutdown 시 EventBus 리스너, 타이머, RenderTexture 캐시 정리되는가?
+- [ ] `ServiceLocator`에 등록되지 않은 서비스 접근 시 조용히 실패하는가?
 
 ### 6. 오디오
 - [ ] BGM이 씬 전환 시 중복 재생되지 않는가?
-- [ ] `visibilitychange` 이벤트로 탭 숨김 시 음소거되는가? (`main.ts` 확인)
-- [ ] 사운드 파일이 없을 때 에러가 발생하지 않는가? (옵셔널 체이닝 확인)
+- [ ] `visibilitychange`로 탭 숨김 시 음소거 확인 (`main.ts`)
+- [ ] 사운드 파일 없을 때 에러 없는가? (옵셔널 체이닝)
 
 ### 7. 성능
-- [ ] `update()` 루프에서 불필요한 객체 생성이 없는가? (new Array/Object 등)
-- [ ] 타일맵 렌더 범위가 카메라 뷰포트로 제한되는가?
-- [ ] 파티클/그래픽 오브젝트가 화면 밖에서도 업데이트되는가? (frustum culling 확인)
-- [ ] `RenderTexture` 캐시가 씬 종료 시 정리되는가? (`clearCache()`)
+- [ ] update() 루프 핫패스에 객체 생성 없는가?
+  - dust 파티클: 220ms 간격으로 제한됨 확인
+  - 앰비언트 파티클: frustum culling 적용 확인
+- [ ] HUD burden bar pulse가 scene.time.now 사용하는가?
+- [ ] RenderTexture 캐시가 씬 종료 시 `clearCache()` 호출되는가?
 
 ### 8. 내러티브 & 대화
-- [ ] 대화가 끝난 후 NPC와 재대화 시 올바른 dialogue ID로 시작되는가?
-- [ ] Bible verse/fallback dialogue 파일이 로드되는가?
-- [ ] 대화 중 선택지 버튼이 올바른 위치에 렌더링되는가?
+- [ ] 대화 종료 후 재대화 시 올바른 시작 지점인가?
+- [ ] 선택지 버튼이 올바른 위치에 렌더링되는가?
+- [ ] 키보드 shortcut handler(1-5) cleanup이 선택지 show/hide에서 올바르게 동작하는가?
 
 ### 9. 시각적 polish
-- [ ] 버튼 hover/press 애니메이션이 자연스러운가? (scale tween 확인)
-- [ ] 프롤로그 텍스트 타이밍 및 y 위치 겹침이 없는가?
-- [ ] 파티클 효과(ambient, prologue)가 화면 경계에서 재순환되는가?
-- [ ] 씬별 배경색이 일관성 있는가? (`COLORS.UI.DARK_BG` 사용 확인)
+- [ ] 버튼 hover/press scale tween이 자연스러운가?
+- [ ] 프롤로그 텍스트 y위치 겹침이 없는가?
+- [ ] 씬별 배경색이 일관성 있는가?
+- [ ] 장식적 glow 효과(✝ 십자가, 배경 glow)만 blur > 0 사용하는가?
 
-### 10. 배포 (itch.io / GitHub Pages)
-- [ ] `vite.config.ts`의 `base`가 환경에 맞게 설정되어 있는가?
-  - itch.io: `'./'` (상대 경로)
-  - GitHub Pages: `'/pilgrims-progress/'`
-- [ ] 폰트 파일(`Galmuri11.woff2`)이 `public/fonts/`에 있는가?
-- [ ] 빌드 후 `dist/` 폴더에서 모든 에셋이 상대 경로로 로드되는가?
+### 10. 배포
+- [ ] `vite.config.ts` base: itch.io=`'./'`, GitHub Pages=`'/pilgrims-progress/'`
+- [ ] `public/fonts/Galmuri11.woff2` 존재 확인
+- [ ] `npx tsc --noEmit` 에러 없음 확인
 
 ---
 
 각 항목 점검 후:
 1. 문제 발견 시 즉시 코드 수정
 2. 모든 수정 완료 후 `npx tsc --noEmit`으로 타입 오류 없음 확인
-3. 변경사항 git commit (메시지 형식: `fix: [항목] 설명`)
+3. 변경사항 git commit + push
 4. 새로 발견한 개선점이 있으면 이 체크리스트에 추가해줘
 ```
+
+---
+
+## 현재 적용된 핵심 설정 (참조용)
+
+| 항목 | 값 | 위치 |
+|------|-----|------|
+| 캔버스 해상도 | 480×270 논리, 960×540 실제 (zoom:2) | `main.ts` |
+| 폰트 shadow blur | 0 (전체 통일) | `DesignSystem.textStyle()` |
+| font-display | block | `index.html` |
+| 터치 hit zone | r+6 (≈42px CSS) | `MobileControls.ts` |
+| 한국어 폰트 | Galmuri11 11px (`FONT_SIZE.SM`) | `config.ts` FONT |
+| 영어 폰트 | Press Start 2P (×0.85 scale) | `config.ts` FONT |
+| Date.now() | 모두 scene.time.now 대체됨 | 전체 소스 |
