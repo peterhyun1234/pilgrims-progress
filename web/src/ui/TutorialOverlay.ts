@@ -62,7 +62,7 @@ export class TutorialOverlay {
     // Step indicator
     const stepLabel = `${index + 1} / ${STEPS.length}`;
     const stepTxt = this.scene.add.text(cx + panelW / 2 - 6, cy - panelH / 2 + 6, stepLabel, {
-      fontFamily: "'Press Start 2P', monospace",
+      fontFamily: "'Silkscreen', monospace",
       fontSize: '6px',
       color: '#666655',
     }).setOrigin(1, 0);
@@ -76,7 +76,7 @@ export class TutorialOverlay {
 
     const iconFontSize = step.icon.length > 2 ? '6px' : '8px';
     const iconTxt = this.scene.add.text(cx - panelW / 2 + 28, cy, step.icon, {
-      fontFamily: "'Press Start 2P', monospace",
+      fontFamily: "'Silkscreen', monospace",
       fontSize: iconFontSize,
       color: '#d4a853',
     }).setOrigin(0.5);
@@ -88,7 +88,7 @@ export class TutorialOverlay {
       cy,
       label,
       {
-        fontFamily: ko ? FONT_FAMILY : "'Press Start 2P', monospace",
+        fontFamily: ko ? FONT_FAMILY : "'Silkscreen', monospace",
         fontSize: ko ? '11px' : '6px',
         color: '#e8e0d0',
         wordWrap: { width: panelW - 66 },
@@ -99,7 +99,7 @@ export class TutorialOverlay {
     // "Tap to continue" hint
     const hintText = ko ? '터치하여 계속...' : 'Tap to continue...';
     const hint = this.scene.add.text(cx, cy + panelH / 2 - 10, hintText, {
-      fontFamily: ko ? FONT_FAMILY : "'Press Start 2P', monospace",
+      fontFamily: ko ? FONT_FAMILY : "'Silkscreen', monospace",
       fontSize: ko ? '9px' : '6px',
       color: '#6b5b4f',
     }).setOrigin(0.5);

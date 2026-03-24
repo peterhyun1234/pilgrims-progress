@@ -117,10 +117,10 @@ export const CAMERA = {
 } as const;
 
 export const FONT = {
-  KO_PRIMARY: "'Galmuri11', 'Press Start 2P', monospace",
-  EN_PRIMARY: "'Press Start 2P', 'Galmuri11', monospace",
+  KO_PRIMARY: "'Galmuri11', 'Silkscreen', monospace",
+  EN_PRIMARY: "'Silkscreen', 'Galmuri11', monospace",
   SERIF: "'Georgia', 'Times New Roman', serif",
-  EN_SIZE_SCALE: 0.85,
+  EN_SIZE_SCALE: 1.0,
 } as const;
 
 export const COMBAT = {
