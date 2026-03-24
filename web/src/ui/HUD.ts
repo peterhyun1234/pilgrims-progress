@@ -70,7 +70,7 @@ export class HUD {
         fontSize: `${labelFontSize}px`,
         color: DesignSystem.hex(DesignSystem.STAT_COLORS[stat]),
         fontFamily: FONT_FAMILY,
-        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 1, stroke: true, fill: true },
+        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
       }).setOrigin(0, 0);
 
       const barX = 44;
@@ -88,7 +88,7 @@ export class HUD {
           fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
           color: DesignSystem.hex(DesignSystem.STAT_COLORS[stat]),
           fontFamily: FONT_FAMILY,
-          shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 1, stroke: true, fill: true },
+          shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
         }).setOrigin(0, 0);
 
       barContainer.add([bg, fill, icon, label, value]);
@@ -153,7 +153,7 @@ export class HUD {
       {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
         color, fontFamily: FONT_FAMILY, fontStyle: 'bold',
-        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 2, stroke: true, fill: true },
+        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
       },
     ).setDepth(101).setScrollFactor(0);
 
@@ -175,7 +175,7 @@ export class HUD {
     const burdenBar = this.bars[3];
     const burden = this.statsManager.get('burden');
     if (burdenBar && burden >= 60) {
-      const t = Date.now() * 0.004;
+      const t = this.scene.time.now * 0.004;
       if (burden >= 80) {
         // Shake + pulse fill color between red and dark-red
         const shake = Math.sin(t * 2) * 0.8;

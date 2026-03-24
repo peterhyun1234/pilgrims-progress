@@ -124,11 +124,9 @@ export class MenuScene extends Phaser.Scene {
         const chapLabel = ko ? `제 ${saveData.chapter}장` : `Ch.${saveData.chapter}`;
         const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
         const burdenLabel = ko ? `짐 ${saveData.stats.burden}` : `Burden ${saveData.stats.burden}`;
-        this.add.text(cx, btnY + 57, `${chapLabel}  ·  ${faithLabel}  ·  ${burdenLabel}`, {
-          fontFamily: "'Press Start 2P', monospace",
-          fontSize: '4px',
-          color: '#6b5b4f',
-        }).setOrigin(0.5).setDepth(10);
+        this.add.text(cx, btnY + 57, `${chapLabel}  ·  ${faithLabel}  ·  ${burdenLabel}`,
+          DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
+        ).setOrigin(0.5).setDepth(10);
       }
       // Restore save to avoid applying it prematurely (will load on continueGame)
       const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
@@ -154,7 +152,7 @@ export class MenuScene extends Phaser.Scene {
 
   update(_time: number): void {
     this.particleGfx.clear();
-    const t = Date.now() * 0.001;
+    const t = this.time.now * 0.001;
     this.particles.forEach(p => {
       p.y += p.vy;
       p.x += p.vx + Math.sin(t + p.phase) * 0.12;

@@ -149,7 +149,7 @@ export class Player extends Entity {
   }
 
   private applyIdleBob(): void {
-    const t = Date.now() * 0.002;
+    const t = this.scene.time.now * 0.002;
     const bob = Math.sin(t) * 0.3;
     this.sprite.y = this.baseY + bob;
   }

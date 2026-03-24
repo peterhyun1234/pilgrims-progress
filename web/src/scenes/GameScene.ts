@@ -441,7 +441,7 @@ export class GameScene extends Phaser.Scene {
         this.tweens.add({ targets: g, alpha: 1, duration: 600 });
       } else {
         // Pulse the faith vignette
-        const t = Date.now() * 0.002;
+        const t = this.time.now * 0.002;
         this.faithVignette.setAlpha(0.6 + Math.sin(t) * 0.4);
       }
     } else if (this.faithVignette) {
@@ -656,7 +656,7 @@ export class GameScene extends Phaser.Scene {
     if (verse) {
       // Chapter number (small) — use language-appropriate font
       const chapLabel = ko ? `제 ${chapter} 장` : `Chapter ${chapter}`;
-      const chapFontSize = ko ? DesignSystem.FONT_SIZE.XS : 4;
+      const chapFontSize = ko ? DesignSystem.FONT_SIZE.XS : 6;
       const chapText = this.add.text(0, -panelH / 2 + (ko ? 7 : 5), chapLabel, {
         fontFamily: DesignSystem.getFontFamily(),
         fontSize: `${chapFontSize}px`,
@@ -666,7 +666,7 @@ export class GameScene extends Phaser.Scene {
       // Bible verse — use language-appropriate font and size
       const verseText = ko ? verse.ko : verse.en;
       const refText = ko ? verse.refKo : verse.refEn;
-      const verseFontSize = ko ? DesignSystem.FONT_SIZE.XS : 5;
+      const verseFontSize = ko ? DesignSystem.FONT_SIZE.XS : 6;
       const vt = this.add.text(0, nameY + (ko ? 18 : 16), `"${verseText}"`, {
         fontFamily: DesignSystem.getFontFamily(),
         fontSize: `${verseFontSize}px`,
@@ -731,7 +731,7 @@ export class GameScene extends Phaser.Scene {
   private showSaveIndicator(): void {
     const ko = this.gameManager.language === 'ko';
     const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 16, ko ? '● 저장됨' : '● Saved',
-      { fontFamily: "'Press Start 2P', monospace", fontSize: '5px', color: '#d4a853' },
+      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5).setDepth(400).setScrollFactor(0).setAlpha(0);
     this.tweens.add({
       targets: txt, alpha: 0.8, duration: 300, hold: 1200, yoyo: true,

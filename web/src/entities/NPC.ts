@@ -67,7 +67,7 @@ export class NPC extends Entity {
     const icon = this.scene.add.text(0, 0, '!', {
       fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
       color: '#d4a853', fontFamily: FONT_FAMILY, fontStyle: 'bold',
-      shadow: { offsetX: 0, offsetY: 1, color: '#000', blur: 2, stroke: true, fill: true },
+      shadow: { offsetX: 0, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
     }).setOrigin(0.5);
 
     this.prompt.add([bg, icon]);
@@ -79,7 +79,7 @@ export class NPC extends Entity {
       displayName, {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
         color: '#b0a898', fontFamily: FONT_FAMILY,
-        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 2, stroke: true, fill: true },
+        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
       },
     ).setOrigin(0.5).setDepth(20);
 

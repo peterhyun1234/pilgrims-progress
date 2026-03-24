@@ -236,7 +236,9 @@ export class MobileControls {
     hintBg.fillStyle(0x0a0814, 0.7);
     hintBg.fillRoundedRect(-50, -30, 100, 20, 4);
 
-    const hintText = this.scene.add.text(0, -20, 'Drag to move',
+    const isKo = DesignSystem.getLanguage() === 'ko';
+    const hintText = this.scene.add.text(0, -20,
+      isKo ? '드래그하여 이동' : 'Drag to move',
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5);
 

@@ -459,7 +459,7 @@ export class DialogueBox {
       this.dialogueText.x = bx + tx + (Math.random() - 0.5) * 1.2;
       this.dialogueText.y = by + 24 + (Math.random() - 0.5) * 1.2;
     } else if (this.currentTextEffect === 'wave') {
-      this.dialogueText.y = by + 24 + Math.sin(Date.now() * 0.004) * 1.5;
+      this.dialogueText.y = by + 24 + Math.sin(this.scene.time.now * 0.004) * 1.5;
     }
   }
 
