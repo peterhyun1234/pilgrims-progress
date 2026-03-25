@@ -35,4 +35,7 @@ export const SERVICE_KEYS = {
   ITEM_SYSTEM: 'ItemSystem',
   COMBAT_SYSTEM: 'CombatSystem',
   RESPONSIVE_MANAGER: 'ResponsiveManager',
+  NPC_STATE_MANAGER: 'NpcStateManager',
+  GAMEPLAY_STATE: 'GamePlayState',
+  NARRATIVE_DIRECTOR: 'NarrativeDirector',
 } as const;

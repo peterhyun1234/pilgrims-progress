@@ -16,14 +16,66 @@ export class InkService {
   private story: Story | null = null;
   private eventBus: EventBus;
   private narrativeTags: string[] = [];
+  /** Current story key (e.g. "ch01_ink") — used for state persistence. */
+  private currentStoryKey: string | null = null;
+  /** Current NPC ID — used by STAT ONCE guard. */
+  private currentNpcId: string | null = null;
+  /** Persisted Ink states keyed by story key. */
+  private savedStates: Record<string, string> = {};
 
   constructor(_scene: Phaser.Scene) {
     this.eventBus = EventBus.getInstance();
   }
 
-  loadStory(jsonData: Record<string, never>): void {
+  /** Initialise from a previously loaded save (call in GameScene.create). */
+  initFromSave(inkState: Record<string, string>): void {
+    this.savedStates = { ...inkState };
+  }
+
+  /** Returns all currently persisted states (for SaveManager). */
+  getAllStates(): Record<string, string> {
+    return { ...this.savedStates };
+  }
+
+  loadStory(jsonData: Record<string, never>, storyKey?: string): void {
     this.story = new Story(jsonData as Record<string, never>);
+    this.currentStoryKey = storyKey ?? null;
     this.bindExternalFunctions();
+
+    // Restore saved state if available
+    if (storyKey && this.savedStates[storyKey]) {
+      try {
+        this.story.state.LoadJson(this.savedStates[storyKey]);
+      } catch (e) {
+        console.warn(`[InkService] Failed to restore state for ${storyKey}, starting fresh:`, e);
+      }
+    }
+  }
+
+  /** Persist the current story state (call after dialogue ends). */
+  persistState(): void {
+    if (!this.story || !this.currentStoryKey) return;
+    try {
+      this.savedStates[this.currentStoryKey] = this.story.state.toJson();
+    } catch (e) {
+      console.warn('[InkService] Failed to persist ink state:', e);
+    }
+  }
+
+  /** Set the NPC context — used by STAT ONCE guard. */
+  setCurrentNpc(npcId: string | null): void {
+    this.currentNpcId = npcId;
+  }
+
+  /** Jump to a named Ink knot. Returns false if knot does not exist. */
+  jumpToKnot(knot: string): boolean {
+    if (!this.story) return false;
+    try {
+      this.story.ChoosePathString(knot);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   private bindExternalFunctions(): void {
@@ -36,6 +88,14 @@ export class InkService {
 
     this.story.BindExternalFunction('hasMet', (_char: string): boolean => {
       return true;
+    });
+
+    this.story.BindExternalFunction('getTalkCount', (npcId: string): number => {
+      if (ServiceLocator.has(SERVICE_KEYS.NPC_STATE_MANAGER)) {
+        const nsm = ServiceLocator.get<import('../systems/NpcStateManager').NpcStateManager>(SERVICE_KEYS.NPC_STATE_MANAGER);
+        return nsm.getTalkCount(npcId);
+      }
+      return 0;
     });
   }
 
@@ -102,8 +162,19 @@ export class InkService {
 
     switch (command) {
       case 'STAT': {
-        const match = value.match(/(\w+)\s*([\+\-])\s*(\d+)/);
+        // Support "STAT: faith + 5" and "STAT: faith + 5 ONCE"
+        const match = value.match(/(\w+)\s*([\+\-])\s*(\d+)(\s+ONCE)?/i);
         if (match) {
+          const isOnce = !!match[4];
+
+          // ONCE guard: skip if this NPC has already been talked to
+          if (isOnce && this.currentNpcId) {
+            if (ServiceLocator.has(SERVICE_KEYS.NPC_STATE_MANAGER)) {
+              const nsm = ServiceLocator.get<import('../systems/NpcStateManager').NpcStateManager>(SERVICE_KEYS.NPC_STATE_MANAGER);
+              if (nsm.getTalkCount(this.currentNpcId) > 0) break;
+            }
+          }
+
           const stat = match[1].toLowerCase() as StatType;
           const sign = match[2] === '+' ? 1 : -1;
           const amount = parseInt(match[3], 10) * sign;
@@ -180,15 +251,26 @@ export class InkService {
     }
   }
 
+  /** @deprecated Use getAllStates() + initFromSave() instead. */
   getState(): string | null {
     return this.story?.state.toJson() ?? null;
   }
 
+  /** @deprecated Use initFromSave() instead. */
   loadState(state: string): void {
     this.story?.state.LoadJson(state);
   }
 
   hasChoices(): boolean {
     return (this.story?.currentChoices.length ?? 0) > 0;
+  }
+
+  getCurrentKnot(): string {
+    if (!this.story) return '';
+    try {
+      return (this.story.state as unknown as { currentPathString: string }).currentPathString ?? '';
+    } catch {
+      return '';
+    }
   }
 }

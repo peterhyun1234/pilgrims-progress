@@ -137,3 +137,8 @@ export const ITEMS = {
   ICON_SIZE: 16,
   GRID_COLS: 5,
 } as const;
+
+export const HIDDEN_STAT_CAPS = {
+  SPIRITUAL_INSIGHT: 100,
+  GRACE_COUNTER: 10,
+} as const;

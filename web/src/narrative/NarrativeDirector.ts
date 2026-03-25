@@ -1,6 +1,10 @@
 import { EventBus } from '../core/EventBus';
-import { GameEvent, MoodType, MoodPayload } from '../core/GameEvents';
+import { GameEvent, MoodType, MoodPayload, StatChangePayload, NpcPhaseChangedPayload } from '../core/GameEvents';
 import { CAMERA, DIALOGUE } from '../config';
+import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
+import { StatsManager } from '../core/StatsManager';
+import { GameManager } from '../core/GameManager';
+import { NpcStateManager } from '../systems/NpcStateManager';
 
 interface MoodConfig {
   cameraZoom: number;
@@ -11,19 +15,65 @@ interface MoodConfig {
 }
 
 const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
-  tense:    { cameraZoom: 1.1, lightAlpha: 0.75, lightTint: 0x222222, typingSpeed: DIALOGUE.TYPING_SPEED_FAST, particleType: null },
-  dread:    { cameraZoom: 1.15, lightAlpha: 0.5, lightTint: 0x110022, typingSpeed: DIALOGUE.TYPING_SPEED_SLOW, particleType: 'darkness' },
-  sorrow:   { cameraZoom: 0.95, lightAlpha: 0.7, lightTint: 0x1a2a3a, typingSpeed: DIALOGUE.TYPING_SPEED_SLOW, particleType: 'rain' },
-  awe:      { cameraZoom: 0.85, lightAlpha: 1.2, lightTint: 0xffeedd, typingSpeed: DIALOGUE.TYPING_SPEED_DRAMATIC, particleType: 'light' },
-  joy:      { cameraZoom: 0.95, lightAlpha: 1.1, lightTint: 0xfff5e0, typingSpeed: DIALOGUE.TYPING_SPEED_NORMAL, particleType: 'light' },
-  anger:    { cameraZoom: 1.2, lightAlpha: 0.8, lightTint: 0x3a0000, typingSpeed: DIALOGUE.TYPING_SPEED_FAST, particleType: 'fire' },
-  peace:    { cameraZoom: 1.0, lightAlpha: 1.0, lightTint: 0xf5f5e0, typingSpeed: DIALOGUE.TYPING_SPEED_NORMAL, particleType: 'leaf' },
-  resolve:  { cameraZoom: 1.15, lightAlpha: 1.0, lightTint: 0xffffff, typingSpeed: DIALOGUE.TYPING_SPEED_NORMAL, particleType: null },
-  despair:  { cameraZoom: 0.9, lightAlpha: 0.3, lightTint: 0x000000, typingSpeed: DIALOGUE.TYPING_SPEED_SLOW, particleType: null },
-  grace:    { cameraZoom: 0.8, lightAlpha: 1.5, lightTint: 0xfffae0, typingSpeed: DIALOGUE.TYPING_SPEED_DRAMATIC, particleType: 'holy_light' },
-  silence:  { cameraZoom: 1.0, lightAlpha: 0.8, lightTint: 0x222222, typingSpeed: DIALOGUE.TYPING_SPEED_SLOW, particleType: null },
-  betrayal: { cameraZoom: 1.3, lightAlpha: 0.6, lightTint: 0x111111, typingSpeed: DIALOGUE.TYPING_SPEED_INSTANT, particleType: null },
+  tense:    { cameraZoom: 1.1,  lightAlpha: 0.75, lightTint: 0x222222, typingSpeed: DIALOGUE.TYPING_SPEED_FAST,     particleType: null },
+  dread:    { cameraZoom: 1.15, lightAlpha: 0.5,  lightTint: 0x110022, typingSpeed: DIALOGUE.TYPING_SPEED_SLOW,     particleType: 'darkness' },
+  sorrow:   { cameraZoom: 0.95, lightAlpha: 0.7,  lightTint: 0x1a2a3a, typingSpeed: DIALOGUE.TYPING_SPEED_SLOW,     particleType: 'rain' },
+  awe:      { cameraZoom: 0.85, lightAlpha: 1.2,  lightTint: 0xffeedd, typingSpeed: DIALOGUE.TYPING_SPEED_DRAMATIC, particleType: 'light' },
+  joy:      { cameraZoom: 0.95, lightAlpha: 1.1,  lightTint: 0xfff5e0, typingSpeed: DIALOGUE.TYPING_SPEED_NORMAL,   particleType: 'light' },
+  anger:    { cameraZoom: 1.2,  lightAlpha: 0.8,  lightTint: 0x3a0000, typingSpeed: DIALOGUE.TYPING_SPEED_FAST,     particleType: 'fire' },
+  peace:    { cameraZoom: 1.0,  lightAlpha: 1.0,  lightTint: 0xf5f5e0, typingSpeed: DIALOGUE.TYPING_SPEED_NORMAL,   particleType: 'leaf' },
+  resolve:  { cameraZoom: 1.15, lightAlpha: 1.0,  lightTint: 0xffffff, typingSpeed: DIALOGUE.TYPING_SPEED_NORMAL,   particleType: null },
+  despair:  { cameraZoom: 0.9,  lightAlpha: 0.3,  lightTint: 0x000000, typingSpeed: DIALOGUE.TYPING_SPEED_SLOW,     particleType: null },
+  grace:    { cameraZoom: 0.8,  lightAlpha: 1.5,  lightTint: 0xfffae0, typingSpeed: DIALOGUE.TYPING_SPEED_DRAMATIC, particleType: 'holy_light' },
+  silence:  { cameraZoom: 1.0,  lightAlpha: 0.8,  lightTint: 0x222222, typingSpeed: DIALOGUE.TYPING_SPEED_SLOW,     particleType: null },
+  betrayal: { cameraZoom: 1.3,  lightAlpha: 0.6,  lightTint: 0x111111, typingSpeed: DIALOGUE.TYPING_SPEED_INSTANT,  particleType: null },
 };
+
+/** A declarative story trigger evaluated after each significant game event. */
+interface StoryTrigger {
+  id: string;
+  /** Returns true when this trigger's condition is met. */
+  condition: (sm: StatsManager, gm: GameManager, nsm: NpcStateManager) => boolean;
+  /** Side-effect to execute when the trigger fires. */
+  effect: (sm: StatsManager, gm: GameManager, nsm: NpcStateManager) => void;
+  /** If true, will only fire once per save (id stored in firedTriggers). */
+  once: boolean;
+}
+
+const STORY_TRIGGERS: StoryTrigger[] = [
+  {
+    id: 'interpreter_early_unlock',
+    condition: (sm, gm) => sm.get('wisdom') >= 50 && gm.currentChapter < 5,
+    effect: (_sm, _gm, nsm) => nsm.setPhase('interpreter', 'available'),
+    once: true,
+  },
+  {
+    id: 'goodwill_wisdom_unlock_ch4',
+    condition: (sm, gm) => sm.get('wisdom') >= 40 && gm.currentChapter === 4,
+    effect: (_sm, _gm, nsm) => {
+      if (nsm.getPhase('goodwill') === 'locked') nsm.setPhase('goodwill', 'available');
+    },
+    once: false,
+  },
+  {
+    id: 'high_faith_bonus',
+    condition: (sm, gm) => sm.get('faith') >= 80 && gm.currentChapter >= 4,
+    effect: (sm) => sm.addInsight(5),
+    once: true,
+  },
+  {
+    id: 'burden_almost_free_hint',
+    condition: (sm) => sm.get('burden') <= 10 && sm.get('burden') > 0,
+    effect: (_sm, _gm, _nsm) => {
+      EventBus.getInstance().emit(GameEvent.TOAST_SHOW, {
+        text: '짐이 거의 없어졌습니다...',
+        type: 'info',
+        duration: 3000,
+      });
+    },
+    once: true,
+  },
+];
 
 export class NarrativeDirector {
   private scene: Phaser.Scene;
@@ -31,6 +81,7 @@ export class NarrativeDirector {
   private currentMood: MoodType = 'peace';
   private lightOverlay: Phaser.GameObjects.Rectangle | null = null;
   private transitionTween: Phaser.Tweens.Tween | null = null;
+  private firedTriggers: Set<string> = new Set();
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -49,12 +100,60 @@ export class NarrativeDirector {
     ).setDepth(50).setScrollFactor(0).setBlendMode(Phaser.BlendModes.MULTIPLY);
   }
 
+  initFiredTriggers(ids: string[]): void {
+    this.firedTriggers = new Set(ids);
+  }
+
+  getFiredTriggers(): string[] {
+    return Array.from(this.firedTriggers);
+  }
+
   private onMoodChange = (payload: MoodPayload | undefined) => {
     if (payload) this.setMood(payload.mood, payload.duration);
   };
 
+  private onStatChanged = (_payload: StatChangePayload | undefined) => {
+    this.evaluateTriggers();
+  };
+
+  private onNpcPhaseChanged = (_payload: NpcPhaseChangedPayload | undefined) => {
+    this.evaluateTriggers();
+  };
+
+  private onChapterChanged = () => {
+    this.evaluateTriggers();
+  };
+
+  private onBattleEnd = () => {
+    this.evaluateTriggers();
+  };
+
   private setupEvents(): void {
     this.eventBus.on(GameEvent.MOOD_CHANGE, this.onMoodChange);
+    this.eventBus.on(GameEvent.STAT_CHANGED, this.onStatChanged);
+    this.eventBus.on(GameEvent.NPC_PHASE_CHANGED, this.onNpcPhaseChanged);
+    this.eventBus.on(GameEvent.CHAPTER_CHANGED, this.onChapterChanged);
+    this.eventBus.on(GameEvent.BATTLE_END, this.onBattleEnd);
+  }
+
+  private evaluateTriggers(): void {
+    if (!ServiceLocator.has(SERVICE_KEYS.STATS_MANAGER)) return;
+    if (!ServiceLocator.has(SERVICE_KEYS.GAME_MANAGER)) return;
+    if (!ServiceLocator.has(SERVICE_KEYS.NPC_STATE_MANAGER)) return;
+
+    const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    const nsm = ServiceLocator.get<NpcStateManager>(SERVICE_KEYS.NPC_STATE_MANAGER);
+
+    for (const trigger of STORY_TRIGGERS) {
+      if (trigger.once && this.firedTriggers.has(trigger.id)) continue;
+      if (!trigger.condition(sm, gm, nsm)) continue;
+
+      trigger.effect(sm, gm, nsm);
+      if (trigger.once) this.firedTriggers.add(trigger.id);
+
+      this.eventBus.emit(GameEvent.STORY_TRIGGER_FIRED, { triggerId: trigger.id });
+    }
   }
 
   setMood(mood: MoodType, duration = 1000): void {
@@ -223,6 +322,10 @@ export class NarrativeDirector {
 
   destroy(): void {
     this.eventBus.off(GameEvent.MOOD_CHANGE, this.onMoodChange);
+    this.eventBus.off(GameEvent.STAT_CHANGED, this.onStatChanged);
+    this.eventBus.off(GameEvent.NPC_PHASE_CHANGED, this.onNpcPhaseChanged);
+    this.eventBus.off(GameEvent.CHAPTER_CHANGED, this.onChapterChanged);
+    this.eventBus.off(GameEvent.BATTLE_END, this.onBattleEnd);
     this.lightOverlay?.destroy();
     this.transitionTween?.destroy();
   }

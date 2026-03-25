@@ -85,6 +85,12 @@ export enum GameEvent {
   TUTORIAL_SHOW = 'tutorial_show',
   TUTORIAL_DISMISS = 'tutorial_dismiss',
   MAP_EVENT = 'map_event',
+
+  NPC_PHASE_CHANGED = 'npc_phase_changed',
+  MAP_OBJECT_CHANGED = 'map_object_changed',
+  STORY_TRIGGER_FIRED = 'story_trigger_fired',
+  CHAPTER_COMPLETE = 'chapter_complete',
+  EXIT_BLOCKED = 'exit_blocked',
 }
 
 export enum GameState {
@@ -241,3 +247,22 @@ export interface QTEResultPayload {
 }
 
 export type PortraitEmotion = 'neutral' | 'happy' | 'angry' | 'sad' | 'fearful' | 'surprised' | 'determined';
+
+export type NpcPhase = 'locked' | 'available' | 'active' | 'completed' | 'idle';
+
+export interface NpcPhaseChangedPayload {
+  npcId: string;
+  phase: NpcPhase;
+  prevPhase: NpcPhase;
+}
+
+export interface MapObjectChangedPayload {
+  objectId: string;
+  open?: boolean;
+  visible?: boolean;
+  activated?: boolean;
+}
+
+export interface StoryTriggerFiredPayload {
+  triggerId: string;
+}

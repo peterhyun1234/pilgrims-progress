@@ -1,5 +1,5 @@
 import localforage from 'localforage';
-import { SaveData, createDefaultSaveData } from './SaveData';
+import { SaveData, createDefaultSaveData, migrateSaveData } from './SaveData';
 import { EventBus } from '../core/EventBus';
 import { GameEvent } from '../core/GameEvents';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
@@ -9,6 +9,7 @@ import { StatsManager } from '../core/StatsManager';
 export class SaveManager {
   private eventBus: EventBus;
   private static readonly SAVE_KEY = 'pilgrims_progress_save';
+  private lastLoaded: SaveData | null = null;
 
   private onSave = () => { this.save(); };
   private onLoad = () => { this.load(); };
@@ -29,13 +30,18 @@ export class SaveManager {
     this.eventBus.on(GameEvent.LOAD_GAME, this.onLoad);
   }
 
+  /** Returns the last successfully loaded save (for GameScene to read on init). */
+  getLastLoaded(): SaveData | null {
+    return this.lastLoaded;
+  }
+
   async save(): Promise<void> {
     try {
       const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
       const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
 
       const existing = await localforage.getItem<SaveData>(SaveManager.SAVE_KEY);
-      const base = existing ?? createDefaultSaveData();
+      const base = existing ? migrateSaveData(existing) : createDefaultSaveData();
 
       let bgmVolume = base.settings.bgmVolume;
       let sfxVolume = base.settings.sfxVolume;
@@ -61,7 +67,34 @@ export class SaveManager {
         },
       };
 
+      // v3: gather state from registered systems
+      if (ServiceLocator.has(SERVICE_KEYS.NPC_STATE_MANAGER)) {
+        const nsm = ServiceLocator.get<import('../systems/NpcStateManager').NpcStateManager>(SERVICE_KEYS.NPC_STATE_MANAGER);
+        data.npcStates = nsm.getNpcStates();
+        data.talkedNpcs = nsm.getTalkedNpcs();
+      }
+
+      if (ServiceLocator.has(SERVICE_KEYS.INK_SERVICE)) {
+        const ink = ServiceLocator.get<import('../narrative/InkService').InkService>(SERVICE_KEYS.INK_SERVICE);
+        const allStates = ink.getAllStates();
+        if (Object.keys(allStates).length > 0) {
+          data.inkState = allStates;
+        }
+      }
+
+      if (ServiceLocator.has(SERVICE_KEYS.GAMEPLAY_STATE)) {
+        const gps = ServiceLocator.get<import('../core/GamePlayState').GamePlayState>(SERVICE_KEYS.GAMEPLAY_STATE);
+        data.triggeredEvents = Array.from(gps.triggeredEvents);
+        data.mapState = { ...gps.mapState };
+      }
+
+      if (ServiceLocator.has(SERVICE_KEYS.NARRATIVE_DIRECTOR)) {
+        const nd = ServiceLocator.get<import('../narrative/NarrativeDirector').NarrativeDirector>(SERVICE_KEYS.NARRATIVE_DIRECTOR);
+        data.firedTriggers = nd.getFiredTriggers();
+      }
+
       await localforage.setItem(SaveManager.SAVE_KEY, data);
+      this.lastLoaded = data;
     } catch (e) {
       console.error('[SaveManager] save failed:', e);
     }
@@ -69,8 +102,10 @@ export class SaveManager {
 
   async load(): Promise<SaveData | null> {
     try {
-      const data = await localforage.getItem<SaveData>(SaveManager.SAVE_KEY);
-      if (!data) return null;
+      const raw = await localforage.getItem<SaveData>(SaveManager.SAVE_KEY);
+      if (!raw) return null;
+
+      const data = migrateSaveData(raw);
 
       const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
       const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
@@ -86,6 +121,7 @@ export class SaveManager {
         audio.setVolume(data.settings.bgmVolume, data.settings.sfxVolume);
       }
 
+      this.lastLoaded = data;
       return data;
     } catch (e) {
       console.error('[SaveManager] load failed:', e);
@@ -104,6 +140,7 @@ export class SaveManager {
 
   async deleteSave(): Promise<void> {
     await localforage.removeItem(SaveManager.SAVE_KEY);
+    this.lastLoaded = null;
   }
 
   destroy(): void {

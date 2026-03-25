@@ -1,4 +1,4 @@
-import { STATS } from '../config';
+import { STATS, HIDDEN_STAT_CAPS } from '../config';
 import { EventBus } from './EventBus';
 import { GameEvent, StatType, StatChangePayload } from './GameEvents';
 
@@ -80,7 +80,7 @@ export class StatsManager {
 
   private checkAntifrustration(): void {
     if (this.stats.faith <= 0) {
-      this.hidden.graceCounter++;
+      this.hidden.graceCounter = Math.min(HIDDEN_STAT_CAPS.GRACE_COUNTER, this.hidden.graceCounter + 1);
       this.stats.faith = 10;
       this.eventBus.emit(GameEvent.STAT_CHANGED, {
         stat: 'faith' as StatType,
@@ -94,7 +94,7 @@ export class StatsManager {
       && this.stats.courage <= 20
       && this.stats.wisdom <= 20;
     if (allLow && !this.burdenFreed) {
-      this.hidden.graceCounter++;
+      this.hidden.graceCounter = Math.min(HIDDEN_STAT_CAPS.GRACE_COUNTER, this.hidden.graceCounter + 1);
       this.stats.faith = Math.min(100, this.stats.faith + 10);
       this.stats.courage = Math.min(100, this.stats.courage + 10);
       this.stats.wisdom = Math.min(100, this.stats.wisdom + 10);
@@ -128,7 +128,10 @@ export class StatsManager {
   }
 
   addInsight(amount: number): void {
-    this.hidden.spiritualInsight = Math.max(0, this.hidden.spiritualInsight + amount);
+    this.hidden.spiritualInsight = Math.max(0, Math.min(
+      HIDDEN_STAT_CAPS.SPIRITUAL_INSIGHT,
+      this.hidden.spiritualInsight + amount,
+    ));
   }
 
   getInsight(): number {
@@ -136,7 +139,7 @@ export class StatsManager {
   }
 
   incrementGrace(): void {
-    this.hidden.graceCounter++;
+    this.hidden.graceCounter = Math.min(HIDDEN_STAT_CAPS.GRACE_COUNTER, this.hidden.graceCounter + 1);
   }
 
   hasSynergy(stat1: StatType, stat2: StatType, threshold = 50): boolean {
