@@ -39,7 +39,7 @@ export class MenuScene extends Phaser.Scene {
   private buildBackground(): void {
     const W = GAME_WIDTH;
     const H = GAME_HEIGHT;
-    const HOR = H * 0.60; // horizon line
+    const HOR = H * 0.45; // horizon line — upper half for sky, lower for ground+buttons
 
     // Layer 0: Deep sky gradient (top → horizon)
     const sky = this.add.graphics().setDepth(-10);
@@ -67,7 +67,7 @@ export class MenuScene extends Phaser.Scene {
 
     // Moon (top-right area)
     const moon = this.add.graphics().setDepth(-8);
-    const mx = W * 0.78, my = H * 0.12;
+    const mx = W * 0.78, my = H * 0.16;
     moon.fillStyle(0xeeddcc, 0.6);
     moon.fillCircle(mx, my, 11);
     moon.fillStyle(0xffeedd, 0.35);
@@ -218,56 +218,54 @@ export class MenuScene extends Phaser.Scene {
     // Decorative cross with glow
     const crossGlow = this.add.graphics().setDepth(9);
     crossGlow.fillStyle(0xd4a853, 0.08);
-    crossGlow.fillCircle(cx, 36, 28);
-    crossGlow.fillStyle(0xd4a853, 0.05);
-    crossGlow.fillCircle(cx, 36, 40);
+    crossGlow.fillCircle(cx, 22, 22);
+    crossGlow.fillStyle(0xd4a853, 0.04);
+    crossGlow.fillCircle(cx, 22, 34);
 
-    const cross = this.add.text(cx, 36, '✝', {
-      fontSize: '20px', color: '#d4a853', fontFamily: 'serif',
+    const cross = this.add.text(cx, 22, '✝', {
+      fontSize: '16px', color: '#d4a853', fontFamily: 'serif',
       shadow: { offsetX: 0, offsetY: 0, color: '#d4a853', blur: 6, stroke: false, fill: true },
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: cross, alpha: 0.7, duration: 1200, ease: 'Quad.easeOut' });
     this.tweens.add({
-      targets: cross, y: 38, duration: 3500,
+      targets: cross, y: 24, duration: 3500,
       yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
 
     // Main title
-    const title = this.add.text(cx, 60, ko ? '천로역정' : "Pilgrim's Progress", {
-      fontSize: ko ? '18px' : '16px',
+    const title = this.add.text(cx, 42, ko ? '천로역정' : "Pilgrim's Progress", {
+      fontSize: ko ? '16px' : '14px',
       color: '#e8dfc8',
       fontFamily: DesignSystem.getFontFamily(),
       fontStyle: 'bold',
       shadow: { offsetX: 0, offsetY: 0, color: '#d4a853', blur: 4, stroke: false, fill: true },
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
-    this.tweens.add({ targets: title, alpha: 1, y: 63, duration: 900, delay: 200, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: title, alpha: 1, y: 44, duration: 900, delay: 200, ease: 'Back.easeOut' });
 
     // Subtitle
-    const subtitle = this.add.text(cx, 78, ko ? 'The Pilgrim\'s Progress' : '순례자의 여정', {
-      fontSize: '7px', color: '#7a6a54', fontFamily: "'Silkscreen', monospace",
-      letterSpacing: 2,
+    const subtitle = this.add.text(cx, 57, ko ? "The Pilgrim's Progress" : '순례자의 여정', {
+      fontSize: '6px', color: '#6a5a44', fontFamily: "'Silkscreen', monospace",
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
-    this.tweens.add({ targets: subtitle, alpha: 0.8, duration: 700, delay: 500 });
+    this.tweens.add({ targets: subtitle, alpha: 0.7, duration: 700, delay: 500 });
 
     // Ornamental divider
     const divider = this.add.graphics().setDepth(10).setAlpha(0);
     divider.lineStyle(0.5, 0xd4a853, 0.3);
-    divider.lineBetween(cx - 80, 90, cx + 80, 90);
+    divider.lineBetween(cx - 70, 67, cx + 70, 67);
     divider.fillStyle(0xd4a853, 0.5);
-    divider.fillCircle(cx, 90, 1.5);
-    divider.fillCircle(cx - 80, 90, 1);
-    divider.fillCircle(cx + 80, 90, 1);
+    divider.fillCircle(cx, 67, 1.5);
+    divider.fillCircle(cx - 70, 67, 1);
+    divider.fillCircle(cx + 70, 67, 1);
     this.tweens.add({ targets: divider, alpha: 1, duration: 600, delay: 600 });
 
     // — Bible verse —
-    const verse = this.add.text(cx, W * 0.06, '"좁은 문으로 들어가라"\n마태복음 7:13', {
+    const verse = this.add.text(cx, 78, '"좁은 문으로 들어가라"  마 7:13', {
       fontSize: '6px', color: '#4a3f2f', fontFamily: "'Silkscreen', monospace",
-      align: 'center', lineSpacing: 3,
     }).setOrigin(0.5).setDepth(10).setAlpha(0);
-    this.tweens.add({ targets: verse, alpha: 0.7, duration: 800, delay: 1200 });
+    this.tweens.add({ targets: verse, alpha: 0.65, duration: 800, delay: 1200 });
 
-    // — Button panel (lower section) —
-    const btnAreaY = H * 0.50;
+    // — Button panel (lower section, below horizon) —
+    const btnAreaY = H * 0.58;
     this.buildButtonPanel(cx, btnAreaY, ko);
 
     // — Bottom info bar —
@@ -291,9 +289,9 @@ export class MenuScene extends Phaser.Scene {
 
     // Semi-transparent panel behind buttons
     const panelBg = this.add.graphics().setDepth(10).setAlpha(0);
-    panelBg.fillStyle(0x06031a, 0.75);
+    panelBg.fillStyle(0x06031a, 0.85);
     panelBg.fillRoundedRect(cx - btnW / 2 - 12, topY - 6, btnW + 24, btnH * 3 + gap * 2 + 18, 6);
-    panelBg.lineStyle(0.5, 0xd4a853, 0.1);
+    panelBg.lineStyle(0.8, 0xd4a853, 0.18);
     panelBg.strokeRoundedRect(cx - btnW / 2 - 12, topY - 6, btnW + 24, btnH * 3 + gap * 2 + 18, 6);
     this.tweens.add({ targets: panelBg, alpha: 1, duration: 500, delay: 700 });
 
@@ -311,8 +309,11 @@ export class MenuScene extends Phaser.Scene {
 
       const txt = this.add.text(0, 0, label, {
         fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
-        color: opts?.accent ? '#8ad88a' : '#c8bfaa',
+        color: opts?.accent ? '#ccffcc' : '#c8bfaa',
         fontFamily: DesignSystem.getFontFamily(),
+        shadow: opts?.accent
+          ? { offsetX: 0, offsetY: 0, color: '#55ff55', blur: 3, stroke: false, fill: true }
+          : undefined,
       }).setOrigin(0.5);
 
       const hit = this.add.rectangle(0, 0, btnW, btnH, 0, 0)
