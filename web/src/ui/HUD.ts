@@ -1,9 +1,11 @@
+import { COLORS } from '../config';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { StatsManager } from '../core/StatsManager';
 import { EventBus } from '../core/EventBus';
 import { GameEvent, StatChangePayload, StatType, GameState } from '../core/GameEvents';
 import { DesignSystem, FONT_FAMILY } from './DesignSystem';
 import { GameManager } from '../core/GameManager';
+import { AudioManager } from '../audio/AudioManager';
 
 interface StatBar {
   container: Phaser.GameObjects.Container;
@@ -127,20 +129,94 @@ export class HUD {
 
     if (p.amount !== 0) {
       this.showStatDelta(bar, p.amount);
+      const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      if (p.amount > 0) audio?.procedural?.playStatGain();
+      else audio?.procedural?.playStatLoss();
     }
   };
 
   private onStateChanged = (state: GameState | undefined) => {
     if (state === GameState.CUTSCENE || state === GameState.DIALOGUE) {
-      this.scene.tweens.add({ targets: this.container, alpha: 0.3, duration: 300 });
+      // Slide out left when entering dialogue/cutscene
+      this.scene.tweens.add({
+        targets: this.container, x: -80, alpha: 0.15,
+        duration: 350, ease: 'Quad.easeIn',
+      });
     } else if (state === GameState.GAME) {
-      this.scene.tweens.add({ targets: this.container, alpha: 1, duration: 300 });
+      // Slide back in
+      this.scene.tweens.add({
+        targets: this.container, x: 0, alpha: 1,
+        duration: 350, ease: 'Back.easeOut',
+      });
     }
+  };
+
+  private onChapterLoaded = (payload?: { chapter: number; title?: string }) => {
+    if (!payload) return;
+    this.showLocationCard(payload.chapter, payload.title);
   };
 
   private setupEvents(): void {
     this.eventBus.on(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.on(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
+    this.eventBus.on(GameEvent.CHAPTER_CHANGED, this.onChapterLoaded);
+  }
+
+  /** Show a cinematic location card when entering a new chapter */
+  private showLocationCard(chapter: number, title?: string): void {
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    const ko = gm.language === 'ko';
+
+    const chapterLabel = ko ? `제 ${chapter} 장` : `Chapter ${chapter}`;
+    const locationName = title ?? chapterLabel;
+
+    // Create location card (centered, top area)
+    const cx = 240; // GAME_WIDTH / 2
+    const cardY = 40;
+
+    const card = this.scene.add.container(cx, cardY - 20)
+      .setDepth(150).setScrollFactor(0).setAlpha(0);
+
+    // Background
+    const bg = this.scene.add.graphics();
+    bg.fillStyle(0x0a0814, 0.85);
+    bg.fillRoundedRect(-100, -18, 200, 36, 6);
+    bg.lineStyle(1, COLORS.UI.GOLD, 0.3);
+    bg.strokeRoundedRect(-100, -18, 200, 36, 6);
+
+    // Decorative line
+    bg.lineStyle(0.5, COLORS.UI.GOLD, 0.5);
+    bg.lineBetween(-60, 1, 60, 1);
+
+    // Chapter number
+    const chText = this.scene.add.text(0, -8, chapterLabel, {
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+      color: '#d4a853', fontFamily: FONT_FAMILY,
+    }).setOrigin(0.5);
+
+    // Location name
+    const locText = this.scene.add.text(0, 6, locationName, {
+      fontSize: `${DesignSystem.FONT_SIZE.BASE}px`,
+      color: '#e8e0d0', fontFamily: FONT_FAMILY,
+      fontStyle: 'bold',
+    }).setOrigin(0.5);
+
+    card.add([bg, chText, locText]);
+
+    // Animate in
+    this.scene.tweens.add({
+      targets: card, alpha: 1, y: cardY,
+      duration: 600, ease: 'Back.easeOut',
+    });
+
+    // Animate out after delay
+    this.scene.time.delayedCall(3000, () => {
+      this.scene.tweens.add({
+        targets: card, alpha: 0, y: cardY - 15,
+        duration: 500, ease: 'Quad.easeIn',
+        onComplete: () => card.destroy(true),
+      });
+    });
   }
 
   private showStatDelta(bar: StatBar, amount: number): void {
@@ -197,6 +273,7 @@ export class HUD {
   destroy(): void {
     this.eventBus.off(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.off(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
+    this.eventBus.off(GameEvent.CHAPTER_CHANGED, this.onChapterLoaded);
     this.container.destroy(true);
   }
 }

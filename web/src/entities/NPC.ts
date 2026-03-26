@@ -50,8 +50,10 @@ export class NPC extends Entity {
   private patrolIndex = 0;
 
   constructor(scene: Phaser.Scene, config: NPCConfig) {
-    super(scene, config.x, config.y, config.sprite, config.frame ?? 0);
-
+    // Use generated 32×32 sprite if available, fallback to legacy PNG
+    const genKey = `${config.id}_gen`;
+    const texKey = scene.textures.exists(genKey) ? genKey : config.sprite;
+    super(scene, config.x, config.y, texKey, config.frame ?? 0);
     this.npcId = config.id;
     this.nameKo = config.nameKo;
     this.nameEn = config.nameEn;
@@ -62,10 +64,16 @@ export class NPC extends Entity {
     this.sprite.setImmovable(true);
     this.sprite.setDepth(9);
     if (this.sprite.body) {
-      (this.sprite.body as Phaser.Physics.Arcade.Body).setSize(10, 10).setOffset(3, 6);
+      // Hitbox proportional to sprite size
+      const is32 = texKey.endsWith('_gen');
+      if (is32) {
+        (this.sprite.body as Phaser.Physics.Arcade.Body).setSize(12, 12).setOffset(10, 18);
+      } else {
+        (this.sprite.body as Phaser.Physics.Arcade.Body).setSize(10, 10).setOffset(3, 6);
+      }
     }
 
-    const anim = `${config.sprite}_idle_down`;
+    const anim = `${texKey}_idle_down`;
     if (scene.anims.exists(anim)) {
       this.sprite.play(anim, true);
     }

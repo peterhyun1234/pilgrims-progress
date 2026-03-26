@@ -31,6 +31,9 @@ import { CHAPTER_ITEMS } from '../systems/ItemData';
 import { ChapterConfig, MapEvent, MapObject } from '../world/ChapterData';
 import { ScreenShake } from '../fx/ScreenShake';
 import { ParticleManager } from '../fx/ParticleManager';
+import { JuiceEffects } from '../fx/JuiceEffects';
+import { LightingManager } from '../fx/LightingManager';
+import { TransitionEffects } from '../fx/TransitionEffects';
 import { MenuScene } from './MenuScene';
 import { FALLBACK_DIALOGUES, Conversation, ConvLine } from '../narrative/data/fallbackDialogues';
 import { CHAPTER_VERSES } from '../narrative/data/bibleVerses';
@@ -69,6 +72,9 @@ export class GameScene extends Phaser.Scene {
 
   private screenShake!: ScreenShake;
   private particleManager!: ParticleManager;
+  private juiceEffects!: JuiceEffects;
+  private lightingManager!: LightingManager;
+  private transitionEffects!: TransitionEffects;
 
   private pauseMenuCleanup: (() => void) | null = null;
   private locationTitle: Phaser.GameObjects.Container | null = null;
@@ -128,6 +134,9 @@ export class GameScene extends Phaser.Scene {
 
     this.screenShake = new ScreenShake(this);
     this.particleManager = new ParticleManager(this);
+    this.juiceEffects = new JuiceEffects(this);
+    this.lightingManager = new LightingManager(this);
+    this.transitionEffects = new TransitionEffects(this);
 
     // ── Restore state from last save ─────────────────────────────────────
     if (ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) {
@@ -147,6 +156,10 @@ export class GameScene extends Phaser.Scene {
     this.player = new Player(this, chapterConfig.spawn.x, chapterConfig.spawn.y);
     this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
     this.cameras.main.setZoom(CAMERA.ZOOM_DEFAULT);
+
+    // Setup dynamic lighting for this chapter
+    this.lightingManager.setChapterLighting(this.gameManager.currentChapter);
+    this.lightingManager.addFollowLight('player', this.player.sprite, 60, 0xffd4a0, 0.7);
 
     const colliders = this.tileMapManager.getColliders();
     if (colliders) {
@@ -1239,6 +1252,7 @@ export class GameScene extends Phaser.Scene {
 
     this.miniMap.update(this.player.sprite.x, this.player.sprite.y, this.npcs);
     this.particleManager.update(delta);
+    this.lightingManager.update();
     this.checkMapEvents();
     this.checkExits();
     this.tutorialSystem.checkStuck(this.player.sprite.x, this.player.sprite.y, delta);
@@ -1310,6 +1324,9 @@ export class GameScene extends Phaser.Scene {
     this.miniMap?.destroy();
     this.screenShake?.destroy();
     this.particleManager?.destroy();
+    this.juiceEffects?.destroy();
+    this.lightingManager?.destroy();
+    this.transitionEffects?.destroy();
     this.debugPanel?.destroy();
     this.pauseBtn?.destroy(true);
     this.ambientParticles?.destroy();

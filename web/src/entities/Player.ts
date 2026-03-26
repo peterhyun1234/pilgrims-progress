@@ -24,15 +24,18 @@ export class Player extends Entity {
   private hurtTimer = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    super(scene, x, y, 'christian', 0);
+    // Use generated 32×32 sprite if available, fallback to legacy
+    const texKey = scene.textures.exists('christian_gen') ? 'christian_gen' : 'christian';
+    super(scene, x, y, texKey, 0);
     this.baseY = y;
     this.setupEvents();
 
-    this.sprite.setSize(10, 10).setOffset(3, 6);
+    // Hitbox sized for gameplay collision (smaller than visual)
+    this.sprite.setSize(12, 12).setOffset(10, 18);
     this.sprite.setDepth(10);
 
     this.motor = new PlayerMotor();
-    this.animator = new PlayerAnimator(this.sprite);
+    this.animator = new PlayerAnimator(this.sprite, texKey);
 
     this.fsm = new StateMachine<PlayerState>();
     this.fsm

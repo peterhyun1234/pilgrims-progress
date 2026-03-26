@@ -1,4 +1,4 @@
-import { TILE_SIZE } from '../config';
+import { TILE_SIZE, GAME_WIDTH, GAME_HEIGHT } from '../config';
 import { ChapterConfig, ChapterTheme } from './ChapterData';
 
 export class TileMapManager {
@@ -8,8 +8,7 @@ export class TileMapManager {
   private objectLayer: Phaser.GameObjects.Graphics | null = null;
   private fogLayer: Phaser.GameObjects.Graphics | null = null;
   private colliders: Phaser.Physics.Arcade.StaticGroup | null = null;
-  private parallaxFar: Phaser.GameObjects.Graphics | null = null;
-  private parallaxMid: Phaser.GameObjects.Graphics | null = null;
+  private parallaxLayers: Phaser.GameObjects.GameObject[] = [];
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -379,50 +378,222 @@ export class TileMapManager {
     return this.colliders;
   }
 
+  /** Per-chapter sky gradient colors [top, bottom] */
+  private static readonly SKY_PALETTE: Record<number, [number, number]> = {
+    1:  [0x1a1020, 0x3d2010], // City of Destruction: dark ember sky
+    2:  [0x111828, 0x1e2d3a], // Slough of Despond: murky overcast
+    3:  [0x0d2240, 0x2a5878], // Straight & Narrow: clear blue day
+    4:  [0x1a2e4a, 0x3a6478], // Hill Difficulty: pale haze
+    5:  [0x1e1228, 0x3a2218], // Interpreter's House: warm dusk
+    6:  [0x261a06, 0x5a4210], // Cross / Celestial: golden radiance
+    7:  [0x10181e, 0x1e2a30], // Palace Beautiful: twilight blue
+    8:  [0x0a0610, 0x160c18], // Apollyon: oppressive dark
+    9:  [0x080408, 0x120810], // Valley of Shadow: near-black
+    10: [0x182030, 0x2e4260], // Vanity Fair: cold city night
+    11: [0x0e1a28, 0x203850], // Enchanted Ground: hazy mist
+    12: [0x1a1a30, 0x403868], // Celestial City approach: deep purple-blue
+  };
+
   private drawParallaxBackground(config: ChapterConfig): void {
     const { mapWidth: W, mapHeight: H, theme } = config;
-    const GAME_H = H;
+    const ch = config.chapter;
 
-    // Far layer: sky gradient — scrolls at 15% speed
-    const far = this.scene.add.graphics().setDepth(-2).setScrollFactor(0.15, 0.05);
-    // Sky: blend from dark top to slightly lighter bottom
-    const skyTop = this.darkenColor(theme.groundBase, 0.3);
-    const skyMid = this.darkenColor(theme.groundBase, 0.5);
-    const strips = 12;
+    // ── Layer 1: Sky (depth -4, scrollFactor 0.05) ──
+    const sky = this.scene.add.graphics().setDepth(-4).setScrollFactor(0.05, 0.02);
+    const [skyTop, skyBottom] = TileMapManager.SKY_PALETTE[ch] ?? [0x0d1a2e, 0x1e3a50];
+    const strips = 20;
     for (let i = 0; i < strips; i++) {
       const t = i / strips;
-      const color = this.lerpColor(skyTop, skyMid, t);
-      far.fillStyle(color, 1);
-      far.fillRect(0, Math.floor(t * GAME_H), W, Math.ceil(GAME_H / strips) + 1);
+      sky.fillStyle(this.lerpColor(skyTop, skyBottom, t), 1);
+      sky.fillRect(0, Math.floor(t * H), W, Math.ceil(H / strips) + 1);
     }
-    // Distant "mountain" silhouettes
-    far.fillStyle(this.darkenColor(theme.groundBase, 0.6), 0.5);
-    for (let x = 0; x < W; x += 60) {
-      const hash = ((x * 31) * 17) & 0xff;
-      const h = 20 + (hash % 40);
-      const w = 40 + (hash % 60);
-      far.fillTriangle(x, GAME_H, x + w / 2, GAME_H - h, x + w, GAME_H);
+    // Stars (visible for night/dark chapters)
+    if ([1, 8, 9, 11, 12].includes(ch)) {
+      const starCount = ch === 12 ? 80 : 50;
+      for (let i = 0; i < starCount; i++) {
+        const hash = ((i * 127 + ch * 37) * 31) & 0xffff;
+        const sx = hash % W;
+        const sy = (hash * 3) % (H * 0.55);
+        const brightness = 0.35 + (hash % 10) * 0.06;
+        const size = 0.5 + (hash % 3) * 0.35;
+        sky.fillStyle(0xffffff, brightness);
+        sky.fillCircle(sx, sy, size);
+      }
     }
-    this.parallaxFar = far;
+    // Moon for night chapters
+    if (ch === 1 || ch === 8 || ch === 9 || ch === 11) {
+      const mx = W * 0.75;
+      const my = H * 0.12;
+      sky.fillStyle(0xeeddcc, 0.5);
+      sky.fillCircle(mx, my, 10);
+      sky.fillStyle(0xffeedd, 0.3);
+      sky.fillCircle(mx, my, 7);
+      sky.fillStyle(0xffffff, 0.2);
+      sky.fillCircle(mx, my, 4);
+      // Moon glow
+      sky.fillStyle(0xddccbb, 0.06);
+      sky.fillCircle(mx, my, 22);
+    }
+    // Sun for daytime chapters
+    if (ch === 3 || ch === 4 || ch === 7) {
+      const sx2 = W * 0.7;
+      const sy2 = H * 0.12;
+      sky.fillStyle(0xffffaa, 0.7);
+      sky.fillCircle(sx2, sy2, 10);
+      sky.fillStyle(0xffd700, 0.15);
+      sky.fillCircle(sx2, sy2, 22);
+      sky.fillStyle(0xffeeaa, 0.07);
+      sky.fillCircle(sx2, sy2, 38);
+    }
+    // Holy light beams for celestial chapters
+    if (ch === 6 || ch === 12) {
+      const lx = W * 0.5;
+      sky.fillStyle(0xffd700, 0.06);
+      sky.fillTriangle(lx - 90, 0, lx, H * 0.75, lx + 90, 0);
+      sky.fillStyle(0xffeedd, 0.04);
+      sky.fillTriangle(lx - 45, 0, lx, H * 0.55, lx + 45, 0);
+      sky.fillStyle(0xffffff, 0.02);
+      sky.fillTriangle(lx - 20, 0, lx, H * 0.4, lx + 20, 0);
+    }
+    // Sunrise glow for Ch5 (Interpreter's House at dusk)
+    if (ch === 5) {
+      const hx = W * 0.4;
+      sky.fillStyle(0xff8800, 0.06);
+      sky.fillCircle(hx, H * 0.35, 55);
+      sky.fillStyle(0xffaa44, 0.04);
+      sky.fillCircle(hx, H * 0.35, 80);
+    }
+    this.parallaxLayers.push(sky);
 
-    // Mid layer: rolling hills — scrolls at 40% speed
-    const mid = this.scene.add.graphics().setDepth(-1).setScrollFactor(0.4, 0.1);
-    mid.fillStyle(this.darkenColor(theme.groundBase, 0.7), 0.7);
-    const hillPoints: number[] = [];
-    for (let x = 0; x <= W; x += 16) {
-      const hash2 = ((x * 53 + 7) * 29) & 0xff;
-      hillPoints.push(GAME_H - 30 - (hash2 % 50));
+    // ── Layer 2: Far mountains/structures (depth -3, scrollFactor 0.12) ──
+    const far = this.scene.add.graphics().setDepth(-3).setScrollFactor(0.12, 0.04);
+    // Mountain colors derived from sky bottom with a slight tint
+    const mtBase = this.lerpColor(skyBottom, theme.groundBase, 0.35);
+    const mtColor = this.darkenColor(mtBase, 0.55);
+    const mtHighlight = this.lerpColor(mtColor, 0xffffff, 0.12);
+
+    // Draw mountain range
+    for (let x = -20; x < W + 40; x += 35) {
+      const hash = ((x * 31 + ch * 13) * 17) & 0xff;
+      const h = 30 + (hash % 50);
+      const w = 50 + (hash % 40);
+      far.fillStyle(mtColor, 0.6);
+      far.fillTriangle(x, H, x + w / 2, H - h, x + w, H);
+      // Snow cap / highlight
+      if (h > 50 || ch === 6 || ch === 12) {
+        far.fillStyle(mtHighlight, 0.3);
+        far.fillTriangle(x + w / 2 - 5, H - h + 8, x + w / 2, H - h, x + w / 2 + 5, H - h + 8);
+      }
     }
-    // Draw hills as filled polygon using available segments
-    for (let i = 0; i < hillPoints.length - 1; i++) {
-      const x1 = i * 16;
-      const x2 = (i + 1) * 16;
-      const y1 = hillPoints[i];
-      const y2 = hillPoints[i + 1];
-      mid.fillTriangle(x1, GAME_H, x1, y1, x2, y2);
-      mid.fillTriangle(x1, GAME_H, x2, y2, x2, GAME_H);
+
+    // Chapter-specific far elements
+    if (ch === 1) {
+      // Distant burning city
+      for (let i = 0; i < 6; i++) {
+        const bx = 50 + i * 80 + (i * 37 % 20);
+        const bh = 25 + (i * 13 % 20);
+        far.fillStyle(0x3a2a1a, 0.5);
+        far.fillRect(bx, H - bh - 20, 12, bh);
+        far.fillStyle(0xff6600, 0.12);
+        far.fillCircle(bx + 6, H - bh - 22, 6 + (i % 3));
+        far.fillStyle(0xff4400, 0.08);
+        far.fillCircle(bx + 6, H - bh - 26, 4);
+      }
+    } else if (ch === 5) {
+      // Interpreter's house silhouette
+      const hx = W * 0.6;
+      far.fillStyle(0x2a1a0a, 0.4);
+      far.fillRect(hx, H - 60, 50, 40);
+      far.fillTriangle(hx - 5, H - 60, hx + 25, H - 80, hx + 55, H - 60);
+      // Warm window glow
+      far.fillStyle(0xff8800, 0.15);
+      far.fillRect(hx + 10, H - 50, 8, 8);
+      far.fillRect(hx + 30, H - 50, 8, 8);
     }
-    this.parallaxMid = mid;
+    this.parallaxLayers.push(far);
+
+    // ── Layer 3: Mid hills/terrain (depth -2, scrollFactor 0.3) ──
+    const mid = this.scene.add.graphics().setDepth(-2).setScrollFactor(0.3, 0.08);
+    const hillColor = this.lerpColor(skyBottom, theme.groundBase, 0.5);
+
+    // Rolling hills
+    const hillSegments = Math.ceil(W / 12) + 2;
+    const hillHeights: number[] = [];
+    for (let i = 0; i <= hillSegments; i++) {
+      const hash2 = ((i * 53 + ch * 7) * 29) & 0xff;
+      hillHeights.push(H - 25 - (hash2 % 40));
+    }
+
+    mid.fillStyle(hillColor, 0.75);
+    for (let i = 0; i < hillHeights.length - 1; i++) {
+      const x1 = i * 12;
+      const x2 = (i + 1) * 12;
+      mid.fillTriangle(x1, H, x1, hillHeights[i], x2, hillHeights[i + 1]);
+      mid.fillTriangle(x1, H, x2, hillHeights[i + 1], x2, H);
+    }
+
+    // Add vegetation dots on hills
+    const vegColor = ch === 2 ? 0x2a4a3a : (ch === 6 ? 0x5a7a3a : 0x3a5a2a);
+    for (let i = 0; i < 30; i++) {
+      const hash3 = ((i * 89 + ch * 41) * 23) & 0xffff;
+      const vx = hash3 % W;
+      const vi = Math.floor(vx / 12);
+      if (vi >= hillHeights.length) continue;
+      const vy = hillHeights[vi] - 1 - (hash3 % 4);
+      mid.fillStyle(vegColor, 0.25 + (hash3 % 10) * 0.02);
+      mid.fillCircle(vx, vy, 2 + (hash3 % 3));
+    }
+    this.parallaxLayers.push(mid);
+
+    // ── Layer 4: Near atmospheric overlay (depth -1, scrollFactor 0.5) ──
+    const near = this.scene.add.graphics().setDepth(-1).setScrollFactor(0.5, 0.15);
+    const nearColor = this.lerpColor(theme.groundBase, 0x000000, 0.3);
+
+    // Foreground bushes/terrain details
+    for (let x = -10; x < W + 20; x += 25) {
+      const hash4 = ((x * 71 + ch * 19) * 43) & 0xffff;
+      const bw = 15 + (hash4 % 20);
+      const bh = 8 + (hash4 % 10);
+      const by = H - bh / 2 - 5;
+      near.fillStyle(nearColor, 0.5);
+      near.fillEllipse(x + bw / 2, by, bw, bh);
+    }
+
+    // Chapter atmospheric effects
+    if (ch === 2) {
+      // Swamp mist
+      for (let i = 0; i < 6; i++) {
+        const hash5 = ((i * 137 + 11) * 31) & 0xffff;
+        near.fillStyle(0x3a5a4a, 0.08);
+        near.fillEllipse(hash5 % W, H - 20 - (hash5 % 30), 60 + (hash5 % 40), 15);
+      }
+    } else if (ch === 9) {
+      // Shadow of death darkness
+      near.fillStyle(0x0a0008, 0.3);
+      near.fillRect(0, 0, W, H);
+    }
+    this.parallaxLayers.push(near);
+
+    // ── Vignette overlay (depth 3, fixed to camera) ──
+    const vignette = this.scene.add.graphics().setDepth(3).setScrollFactor(0);
+    const vigW = GAME_WIDTH + 4;
+    const vigH = GAME_HEIGHT + 4;
+    const vigAlpha = ch === 9 ? 0.25 : (ch === 1 || ch === 8 ? 0.15 : 0.1);
+    // Top/bottom gradient strips
+    for (let i = 0; i < 8; i++) {
+      const t = i / 8;
+      vignette.fillStyle(0x000000, vigAlpha * (1 - t));
+      vignette.fillRect(-2, -2 + i * 6, vigW, 6);
+      vignette.fillRect(-2, vigH - 8 - i * 6, vigW, 6);
+    }
+    // Side vignettes
+    for (let i = 0; i < 5; i++) {
+      const t = i / 5;
+      vignette.fillStyle(0x000000, vigAlpha * 0.6 * (1 - t));
+      vignette.fillRect(-2 + i * 6, -2, 6, vigH);
+      vignette.fillRect(vigW - 8 - i * 6, -2, 6, vigH);
+    }
+    this.parallaxLayers.push(vignette);
   }
 
   private darkenColor(color: number, factor: number): number {
@@ -442,8 +613,8 @@ export class TileMapManager {
   }
 
   clearMap(): void {
-    this.parallaxFar?.destroy(); this.parallaxFar = null;
-    this.parallaxMid?.destroy(); this.parallaxMid = null;
+    this.parallaxLayers.forEach(l => l.destroy());
+    this.parallaxLayers = [];
     this.groundLayer?.destroy(); this.groundLayer = null;
     this.decorLayer?.destroy(); this.decorLayer = null;
     this.objectLayer?.destroy(); this.objectLayer = null;

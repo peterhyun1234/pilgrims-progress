@@ -1,6 +1,7 @@
 import { Howl, Howler } from 'howler';
 import { EventBus } from '../core/EventBus';
 import { GameEvent } from '../core/GameEvents';
+import { ProceduralAudio } from './ProceduralAudio';
 
 export class AudioManager {
   private eventBus: EventBus;
@@ -9,6 +10,7 @@ export class AudioManager {
   private bgmVolume = 0.5;
   private sfxVolume = 0.7;
   private audioUnlocked = false;
+  readonly procedural: ProceduralAudio;
 
   private onBgmPlay = (key: string) => this.playBGM(key);
   private onBgmStop = () => this.stopBGM();
@@ -18,6 +20,7 @@ export class AudioManager {
 
   constructor(eventBus: EventBus) {
     this.eventBus = eventBus;
+    this.procedural = new ProceduralAudio();
     this.setupEvents();
     this.setupAutoplayUnlock();
   }
@@ -26,6 +29,7 @@ export class AudioManager {
     if (this.audioUnlocked) return;
     this.audioUnlocked = true;
     Howler.ctx?.resume();
+    this.procedural.resume();
     document.removeEventListener('pointerdown', this.unlockHandler);
     document.removeEventListener('keydown', this.unlockHandler);
   };
@@ -90,6 +94,7 @@ export class AudioManager {
     this.sfxVolume = Math.max(0, Math.min(1, sfx));
     if (this.bgm) this.bgm.volume(this.bgmVolume);
     this.sfxCache.forEach(s => s.volume(this.sfxVolume));
+    this.procedural.setVolume(sfx * 0.6);
   }
 
   getVolume(): { bgm: number; sfx: number } {
@@ -107,5 +112,6 @@ export class AudioManager {
     this.bgm?.unload();
     this.sfxCache.forEach(s => s.unload());
     this.sfxCache.clear();
+    this.procedural.destroy();
   }
 }

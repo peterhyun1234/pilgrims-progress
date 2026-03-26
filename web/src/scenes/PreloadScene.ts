@@ -1,6 +1,23 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS, COLORS } from '../config';
+import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS, COLORS, PLAYER } from '../config';
 import { DesignSystem } from '../ui/DesignSystem';
+import { CharacterSpriteFactory } from '../entities/CharacterSpriteFactory';
+import { AnimationRegistry, DEFAULT_ANIM_SET_32, LEGACY_ANIM_SET_16 } from '../entities/AnimationRegistry';
+
+/** Characters that have PortraitConfig and will get generated 32×32 sprites */
+const GENERATED_CHARACTERS = [
+  'christian', 'evangelist', 'obstinate', 'pliable',
+  'help', 'worldly_wiseman', 'goodwill', 'interpreter',
+  'shining_ones',
+];
+
+/** Characters loaded from legacy 16×16 PNGs (no portrait config yet) */
+const LEGACY_SPRITE_MAP: Record<string, string> = {
+  faithful: 'faithful_spritesheet',
+  hopeful: 'hopeful_spritesheet',
+  apollyon: 'apollyon_spritesheet',
+  giant_despair: 'giant_despair_spritesheet',
+};
 
 export class PreloadScene extends Phaser.Scene {
   private progressBar!: Phaser.GameObjects.Graphics;
@@ -44,57 +61,48 @@ export class PreloadScene extends Phaser.Scene {
   }
 
   private loadAssets(): void {
-    const spriteMap: Record<string, string> = {
-      christian: 'christian_spritesheet',
-      evangelist: 'evangelist_spritesheet',
-      obstinate: 'obstinate_spritesheet',
-      pliable: 'pliable_spritesheet',
-      help: 'help_spritesheet',
-      worldly_wiseman: 'worldlywiseman_spritesheet',
-      goodwill: 'goodwill_spritesheet',
-      interpreter: 'interpreter_spritesheet',
-      faithful: 'faithful_spritesheet',
-      hopeful: 'hopeful_spritesheet',
-    };
-
-    Object.entries(spriteMap).forEach(([key, file]) => {
+    // Load legacy 16×16 spritesheets for characters without portrait configs
+    Object.entries(LEGACY_SPRITE_MAP).forEach(([key, file]) => {
       this.load.spritesheet(key, `assets/sprites/characters/${file}.png`, {
-        frameWidth: 16, frameHeight: 16,
+        frameWidth: PLAYER.LEGACY_SPRITE_SIZE,
+        frameHeight: PLAYER.LEGACY_SPRITE_SIZE,
       });
     });
 
+    // Ink story data
     this.load.json('ch01_ink', 'assets/ink/ch01.ink.json');
   }
 
   create(): void {
-    this.createAnimations();
+    // Generate 32×32 spritesheets for main characters
+    this.generateCharacterSprites();
+
+    // Register all animations
+    this.registerAnimations();
+
     this.time.delayedCall(200, () => this.scene.start(SCENE_KEYS.LANGUAGE));
   }
 
-  private createAnimations(): void {
-    const characters = [
-      'christian', 'evangelist', 'obstinate', 'pliable',
-      'help', 'worldly_wiseman', 'goodwill', 'interpreter',
-      'faithful', 'hopeful',
-    ];
-    const directions = ['down', 'left', 'right', 'up'];
-    const cols = 3;
+  private generateCharacterSprites(): void {
+    for (const id of GENERATED_CHARACTERS) {
+      CharacterSpriteFactory.generate(this, id);
+    }
+  }
 
-    characters.forEach(char => {
-      if (!this.textures.exists(char)) return;
-      directions.forEach((dir, dirIndex) => {
-        const start = dirIndex * cols;
-        this.anims.create({
-          key: `${char}_idle_${dir}`,
-          frames: [{ key: char, frame: start }],
-          frameRate: 1,
-        });
-        this.anims.create({
-          key: `${char}_walk_${dir}`,
-          frames: this.anims.generateFrameNumbers(char, { start, end: start + cols - 1 }),
-          frameRate: 8, repeat: -1,
-        });
-      });
-    });
+  private registerAnimations(): void {
+    // Register generated 32×32 characters
+    for (const id of GENERATED_CHARACTERS) {
+      const texKey = `${id}_gen`;
+      if (this.textures.exists(texKey)) {
+        AnimationRegistry.register(this, texKey, DEFAULT_ANIM_SET_32);
+      }
+    }
+
+    // Register legacy 16×16 characters
+    for (const key of Object.keys(LEGACY_SPRITE_MAP)) {
+      if (this.textures.exists(key)) {
+        AnimationRegistry.register(this, key, LEGACY_ANIM_SET_16);
+      }
+    }
   }
 }

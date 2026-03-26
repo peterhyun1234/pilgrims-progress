@@ -14,8 +14,22 @@ export const PLAYER = {
   ACCELERATION: 600,
   DECELERATION: 400,
   COYOTE_TIME: 120,
-  SPRITE_SIZE: 16,
+  SPRITE_SIZE: 32,
+  LEGACY_SPRITE_SIZE: 16,
   BURDEN_SPEED_FACTOR: 0.5,
+} as const;
+
+export const ANIM = {
+  IDLE_FPS: 4,
+  WALK_FPS: 10,
+  RUN_FPS: 14,
+  INTERACT_FPS: 6,
+  HURT_FPS: 8,
+  PRAY_FPS: 3,
+  CELEBRATE_FPS: 6,
+  /** Number of columns in generated 32×32 spritesheets */
+  SHEET_COLS: 8,
+  SHEET_ROWS: 8,
 } as const;
 
 export const NPC_CONFIG = {

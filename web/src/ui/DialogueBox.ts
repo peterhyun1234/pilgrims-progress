@@ -6,6 +6,9 @@ import { GameManager } from '../core/GameManager';
 import { DesignSystem } from './DesignSystem';
 import { PortraitRenderer } from './PortraitRenderer';
 import { PORTRAIT_CONFIGS } from '../narrative/data/portraitData';
+import BBCodeText from 'phaser3-rex-plugins/plugins/bbcodetext.js';
+import TextTyping from 'phaser3-rex-plugins/plugins/texttyping.js';
+import { AudioManager } from '../audio/AudioManager';
 
 type TextEffect = 'none' | 'shake' | 'wave' | 'glow';
 
@@ -15,7 +18,8 @@ export class DialogueBox {
   private bg!: Phaser.GameObjects.Graphics;
   private speakerBg!: Phaser.GameObjects.Graphics;
   private speakerText!: Phaser.GameObjects.Text;
-  private dialogueText!: Phaser.GameObjects.Text;
+  private dialogueText!: BBCodeText;
+  private textTyping!: TextTyping;
   private continuePrompt!: Phaser.GameObjects.Text;
   private portraitBg!: Phaser.GameObjects.Graphics;
   private portraitImage: Phaser.GameObjects.RenderTexture | null = null;
@@ -30,8 +34,6 @@ export class DialogueBox {
   private isVisible = false;
   private isTyping = false;
   private fullText = '';
-  private typingTimer: Phaser.Time.TimerEvent | null = null;
-  private currentCharIndex = 0;
   private typingSpeed: number = DIALOGUE.TYPING_SPEED_NORMAL;
   private currentTextEffect: TextEffect = 'none';
   private emotionState: PortraitEmotion = 'neutral';
@@ -83,10 +85,33 @@ export class DialogueBox {
 
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const dialogueFontSize = gm.language === 'ko' ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.BASE;
-    this.dialogueText = this.scene.add.text(bx + DialogueBox.TEXT_X, by + 24, '', {
-      ...DesignSystem.textStyle(dialogueFontSize, '#e8e0d0'),
-      wordWrap: { width: bw - DialogueBox.TEXT_X - 16 },
+    const fontFamily = DesignSystem.getFontFamily();
+
+    // Use Rex BBCodeText for rich inline formatting
+    this.dialogueText = new BBCodeText(this.scene, bx + DialogueBox.TEXT_X, by + 24, '', {
+      fontFamily,
+      fontSize: `${dialogueFontSize}px`,
+      color: '#e8e0d0',
+      wrap: {
+        mode: 'word',
+        width: bw - DialogueBox.TEXT_X - 16,
+      },
       lineSpacing: 4,
+    });
+    this.scene.add.existing(this.dialogueText);
+
+    // Setup TextTyping behavior on the BBCodeText
+    this.textTyping = new TextTyping(this.dialogueText, {
+      speed: this.typingSpeed,
+      setTextCallback: (text: string) => text,
+    });
+    this.textTyping.on('type', () => {
+      const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      audio?.procedural?.playTypingClick();
+    });
+    this.textTyping.on('complete', () => {
+      this.isTyping = false;
+      this.continuePrompt.setVisible(true);
     });
 
     this.continuePrompt = this.scene.add.text(bx + bw - 16, by + bh - 14, '▼',
@@ -134,6 +159,37 @@ export class DialogueBox {
     this.scene.input.keyboard?.on('keydown-ENTER', this.advanceHandler);
   }
 
+  /**
+   * Convert raw dialogue text into BBCode-enriched text.
+   * Supports Ink-style inline tags embedded in the text:
+   *   {color:red}text{/color}  → [color=red]text[/color]
+   *   {b}text{/b}              → [b]text[/b]
+   *   {i}text{/i}              → [i]text[/i]
+   *   {gold}text{/gold}        → [color=#d4a853]text[/color]
+   *   {scripture}text{/}       → [color=#c8b070][i]text[/i][/color]
+   */
+  private enrichText(raw: string): string {
+    let text = raw;
+    // Ink-style shorthand → BBCode
+    text = text.replace(/\{color:(\w+)\}/g, '[color=$1]');
+    text = text.replace(/\{\/color\}/g, '[/color]');
+    text = text.replace(/\{b\}/g, '[b]');
+    text = text.replace(/\{\/b\}/g, '[/b]');
+    text = text.replace(/\{i\}/g, '[i]');
+    text = text.replace(/\{\/i\}/g, '[/i]');
+    text = text.replace(/\{gold\}([\s\S]*?)\{\/gold\}/g, '[color=#d4a853]$1[/color]');
+    text = text.replace(/\{scripture\}([\s\S]*?)\{\/\}/g, '[color=#c8b070][i]$1[/i][/color]');
+
+    // Emotion-based auto-coloring
+    if (this.emotionState === 'angry') {
+      // Bold key phrases by wrapping first "!" occurrence
+    } else if (this.emotionState === 'fearful') {
+      // Could add subtle effects for fearful text
+    }
+
+    return text;
+  }
+
   private showLine(payload: DialogueLinePayload): void {
     this.show();
     this.clearChoices();
@@ -164,20 +220,31 @@ export class DialogueBox {
     this.updatePortrait();
     this.updateSceneMood();
 
+    // Reset typing speed and effects
+    this.typingSpeed = DIALOGUE.TYPING_SPEED_NORMAL;
+    this.currentTextEffect = 'none';
+
     for (const tag of payload.tags) {
       const t = tag.trim();
       if (t.startsWith('TYPING:')) {
         const sp = t.split(':')[1]?.trim();
-        const speeds: Record<string, number> = { slow: 80, fast: 20, dramatic: 200, instant: 0 };
+        const speeds: Record<string, number> = {
+          slow: DIALOGUE.TYPING_SPEED_SLOW,
+          fast: DIALOGUE.TYPING_SPEED_FAST,
+          dramatic: DIALOGUE.TYPING_SPEED_DRAMATIC,
+          whisper: DIALOGUE.TYPING_SPEED_WHISPER,
+          scripture: DIALOGUE.TYPING_SPEED_SCRIPTURE,
+          instant: DIALOGUE.TYPING_SPEED_INSTANT,
+        };
         this.typingSpeed = speeds[sp] ?? DIALOGUE.TYPING_SPEED_NORMAL;
       } else if (t.startsWith('TEXT_EFFECT:')) {
         this.currentTextEffect = (t.split(':')[1]?.trim() as TextEffect) || 'none';
       }
     }
 
-    this.fullText = payload.text;
+    // Enrich text with BBCode formatting
+    this.fullText = this.enrichText(payload.text);
     this.dialogueText.setText('');
-    this.currentCharIndex = 0;
     this.isTyping = true;
     this.continuePrompt.setVisible(false);
     this.startTyping();
@@ -210,8 +277,6 @@ export class DialogueBox {
   }
 
   private updatePortrait(): void {
-    // Remove previous portrait from container WITHOUT destroying it
-    // (PortraitRenderer owns the cached RenderTextures)
     if (this.portraitImage) {
       this.container.remove(this.portraitImage, false);
       this.portraitImage = null;
@@ -268,33 +333,13 @@ export class DialogueBox {
       this.continuePrompt.setVisible(true);
       return;
     }
-    this.typeNextChar();
-  }
-
-  private typeNextChar(): void {
-    if (this.currentCharIndex >= this.fullText.length) {
-      this.isTyping = false;
-      this.continuePrompt.setVisible(true);
-      this.typingTimer?.remove();
-      this.typingTimer = null;
-      return;
-    }
-    const char = this.fullText[this.currentCharIndex];
-    this.currentCharIndex++;
-    this.dialogueText.setText(this.fullText.substring(0, this.currentCharIndex));
-
-    let delay = this.typingSpeed;
-    if (char === '.' || char === '!' || char === '?') delay = this.typingSpeed * 5;
-    else if (char === ',') delay = this.typingSpeed * 2.5;
-    else if (char === ' ') delay = this.typingSpeed * 0.5;
-
-    this.typingTimer?.remove();
-    this.typingTimer = this.scene.time.delayedCall(delay, () => this.typeNextChar());
+    // Use Rex TextTyping for smooth character-by-character reveal
+    this.textTyping.setTypingSpeed(this.typingSpeed);
+    this.textTyping.start(this.fullText, this.typingSpeed);
   }
 
   private completeTyping(): void {
-    this.typingTimer?.remove();
-    this.typingTimer = null;
+    this.textTyping.stop(true); // true = show all text immediately
     this.dialogueText.setText(this.fullText);
     this.isTyping = false;
     this.continuePrompt.setVisible(true);
@@ -382,7 +427,6 @@ export class DialogueBox {
           };
           this.scene.input.keyboard?.on(`keydown-${keyCode}`, handler);
           this.choiceKeyHandlers.push(handler);
-          // Store key name for cleanup
           (handler as unknown as Record<string, string>).__key = keyCode;
         }
       });
@@ -474,7 +518,7 @@ export class DialogueBox {
       this.scene.input.keyboard?.off('keydown-ENTER', this.advanceHandler);
       this.advanceHandler = null;
     }
-    this.typingTimer?.remove();
+    this.textTyping.destroy();
     this.clearChoices();
     this.portraitImage = null;
     this.portraitRenderer.destroy();
