@@ -73,6 +73,153 @@ const STORY_TRIGGERS: StoryTrigger[] = [
     },
     once: true,
   },
+
+  // ─── Ch7: Beautiful Palace triggers ──────────────────────────────────────
+  {
+    id: 'ch7_wrong_path_warning',
+    condition: (_sm, gm) => gm.currentChapter === 7,
+    effect: (_sm, _gm, _nsm) => {
+      // Mood shift handled by map event trigger; NarrativeDirector responds
+    },
+    once: false,
+  },
+  {
+    id: 'ch7_palace_courage_bonus',
+    condition: (sm, gm) => gm.currentChapter === 7 && sm.get('courage') >= 50,
+    effect: (sm) => {
+      sm.addInsight(3);
+      EventBus.getInstance().emit(GameEvent.TOAST_SHOW, {
+        text: '용기가 문을 열었다.',
+        type: 'stat-positive',
+        icon: '⚔️',
+        duration: 3000,
+      });
+    },
+    once: true,
+  },
+
+  // ─── Ch8: Valley of Humiliation ──────────────────────────────────────────
+  {
+    id: 'ch8_pre_apollyon_dread',
+    condition: (_sm, gm) => gm.currentChapter === 8,
+    effect: (_sm, _gm, _nsm) => {
+      EventBus.getInstance().emit(GameEvent.MOOD_CHANGE, { mood: 'dread', duration: 2000 });
+    },
+    once: true,
+  },
+  {
+    id: 'ch8_apollyon_victory',
+    condition: (sm, gm) => gm.currentChapter > 8 && sm.get('faith') >= 40,
+    effect: (sm) => {
+      sm.change('courage', 15);
+      sm.change('faith', 10);
+      EventBus.getInstance().emit(GameEvent.MOOD_CHANGE, { mood: 'resolve', duration: 1500 });
+    },
+    once: true,
+  },
+
+  // ─── Ch9: Valley of Death's Shadow ───────────────────────────────────────
+  {
+    id: 'ch9_enter_darkness',
+    condition: (_sm, gm) => gm.currentChapter === 9,
+    effect: (_sm, _gm, _nsm) => {
+      EventBus.getInstance().emit(GameEvent.MOOD_CHANGE, { mood: 'despair', duration: 2500 });
+    },
+    once: true,
+  },
+  {
+    id: 'ch9_faithful_joins',
+    condition: (sm, gm) => gm.currentChapter === 9 && sm.get('faith') >= 30,
+    effect: (_sm, _gm, _nsm) => {
+      EventBus.getInstance().emit(GameEvent.MOOD_CHANGE, { mood: 'joy', duration: 1500 });
+      EventBus.getInstance().emit(GameEvent.TOAST_SHOW, {
+        text: '충실자가 나타났다! 함께 걷는다.',
+        type: 'info',
+        icon: '👥',
+        duration: 4000,
+      });
+    },
+    once: true,
+  },
+
+  // ─── Ch10: Vanity Fair ────────────────────────────────────────────────────
+  {
+    id: 'ch10_faithful_martyrdom',
+    condition: (_sm, gm) => gm.currentChapter > 10,
+    effect: (_sm, _gm, _nsm) => {
+      EventBus.getInstance().emit(GameEvent.MOOD_CHANGE, { mood: 'sorrow', duration: 3000 });
+      EventBus.getInstance().emit(GameEvent.MUSIC_FADE_TO_SILENCE, { duration: 2000 });
+    },
+    once: true,
+  },
+  {
+    id: 'ch10_resolve_after_loss',
+    condition: (sm, gm) => gm.currentChapter === 11 && sm.get('faith') >= 20,
+    effect: (sm) => {
+      sm.change('faith', 10);
+      EventBus.getInstance().emit(GameEvent.MOOD_CHANGE, { mood: 'resolve', duration: 1500 });
+    },
+    once: true,
+  },
+
+  // ─── Ch11: Doubting Castle ────────────────────────────────────────────────
+  {
+    id: 'ch11_enter_despair',
+    condition: (_sm, gm) => gm.currentChapter === 11,
+    effect: (_sm, _gm, _nsm) => {
+      EventBus.getInstance().emit(GameEvent.MOOD_CHANGE, { mood: 'despair', duration: 2000 });
+    },
+    once: true,
+  },
+  {
+    id: 'ch11_key_of_promise',
+    condition: (sm, gm) => gm.currentChapter === 11 && sm.get('wisdom') >= 40,
+    effect: (_sm, _gm, _nsm) => {
+      EventBus.getInstance().emit(GameEvent.MOOD_CHANGE, { mood: 'resolve', duration: 2000 });
+      EventBus.getInstance().emit(GameEvent.TOAST_SHOW, {
+        text: '약속의 열쇠를 발견했다!',
+        type: 'achievement',
+        icon: '🗝️',
+        duration: 4000,
+      });
+    },
+    once: true,
+  },
+  {
+    id: 'ch11_hopeful_companion',
+    condition: (sm, gm) => gm.currentChapter > 11 && sm.get('faith') >= 30,
+    effect: (_sm, _gm, _nsm) => {
+      EventBus.getInstance().emit(GameEvent.TOAST_SHOW, {
+        text: '소망이 동행자가 되었다.',
+        type: 'info',
+        icon: '👥',
+        duration: 4000,
+      });
+    },
+    once: true,
+  },
+
+  // ─── Ch12: Celestial City ─────────────────────────────────────────────────
+  {
+    id: 'ch12_river_crossing',
+    condition: (_sm, gm) => gm.currentChapter === 12,
+    effect: (_sm, _gm, _nsm) => {
+      EventBus.getInstance().emit(GameEvent.MOOD_CHANGE, { mood: 'awe', duration: 3000 });
+    },
+    once: true,
+  },
+  {
+    id: 'ch12_celestial_arrival',
+    condition: (sm, gm) => gm.currentChapter === 12 && sm.get('faith') >= 50,
+    effect: (sm) => {
+      EventBus.getInstance().emit(GameEvent.MOOD_CHANGE, { mood: 'grace', duration: 4000 });
+      sm.change('faith', 30);
+      sm.change('courage', 20);
+      sm.change('wisdom', 20);
+      EventBus.getInstance().emit(GameEvent.SCREEN_FLASH, { color: 0xffd700, duration: 1500 });
+    },
+    once: true,
+  },
 ];
 
 export class NarrativeDirector {

@@ -65,6 +65,24 @@ export interface ChapterConfig {
   events?: MapEvent[];
   mapObjects?: MapObject[];
   completionRequirements?: CompletionRequirements;
+  terrainZones?: TerrainZone[];
+}
+
+export interface TerrainZone {
+  id: string;
+  type: 'elevated' | 'water' | 'cave' | 'interior' | 'bridge' | 'pit';
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** Visual height offset for elevated terrain */
+  elevation?: number;
+  /** Tile tint override */
+  tint?: number;
+  /** If false, non-walkable (collision wall) */
+  walkable?: boolean;
+  /** Speed multiplier while inside zone */
+  slowFactor?: number;
 }
 
 const THEMES: Record<number, ChapterTheme> = {
@@ -141,6 +159,97 @@ const THEMES: Record<number, ChapterTheme> = {
     fogColor: 0xffeedd,
     fogAlpha: 0.08,
     pathColor: 0x6a7058,
+  },
+
+  // ─── Ch7: Beautiful Palace ─────────────────────────────────────────────
+  7: {
+    groundBase: 0x4a4055,
+    groundVariant: 0x3a3048,
+    wallColor: 0x2a2038,
+    wallTop: 0x3a3050,
+    decorColors: [0x665577, 0x7a6688, 0x554466],
+    ambientParticleColor: 0x9988bb,
+    ambientCount: 15,
+    fogColor: 0x3a3050,
+    fogAlpha: 0.12,
+    pathColor: 0x554460,
+    playerSpeedMod: 0.95,
+  },
+
+  // ─── Ch8: Valley of Humiliation ───────────────────────────────────────
+  8: {
+    groundBase: 0x1a1520,
+    groundVariant: 0x140f18,
+    wallColor: 0x0e0b12,
+    wallTop: 0x1a151e,
+    decorColors: [0x2a2030, 0x1e1828, 0x2a1a28],
+    ambientParticleColor: 0x440022,
+    ambientCount: 8,
+    ambientDirection: 'down',
+    fogColor: 0x110022,
+    fogAlpha: 0.4,
+    pathColor: 0x281c30,
+    playerSpeedMod: 0.9,
+  },
+
+  // ─── Ch9: Valley of Death's Shadow ────────────────────────────────────
+  9: {
+    groundBase: 0x0e0c10,
+    groundVariant: 0x080608,
+    wallColor: 0x080408,
+    wallTop: 0x100c12,
+    decorColors: [0x1a1020, 0x140a18, 0x180e1e],
+    ambientParticleColor: 0x221a2a,
+    ambientCount: 5,
+    ambientDirection: 'down',
+    fogColor: 0x080408,
+    fogAlpha: 0.5,
+    pathColor: 0x181020,
+    playerSpeedMod: 0.85,
+  },
+
+  // ─── Ch10: Vanity Fair ────────────────────────────────────────────────
+  10: {
+    groundBase: 0x222030,
+    groundVariant: 0x1a1828,
+    wallColor: 0x151320,
+    wallTop: 0x222030,
+    decorColors: [0x554488, 0x774499, 0xaa6699],
+    ambientParticleColor: 0xcc88aa,
+    ambientCount: 20,
+    fogColor: 0x1a1828,
+    fogAlpha: 0.1,
+    pathColor: 0x332840,
+  },
+
+  // ─── Ch11: Doubting Castle ────────────────────────────────────────────
+  11: {
+    groundBase: 0x181620,
+    groundVariant: 0x121018,
+    wallColor: 0x0e0c14,
+    wallTop: 0x181620,
+    decorColors: [0x222030, 0x1a1828, 0x2a2035],
+    ambientParticleColor: 0x221830,
+    ambientCount: 6,
+    ambientDirection: 'down',
+    fogColor: 0x101018,
+    fogAlpha: 0.45,
+    pathColor: 0x201828,
+    playerSpeedMod: 0.8,
+  },
+
+  // ─── Ch12: Celestial City ─────────────────────────────────────────────
+  12: {
+    groundBase: 0x3a2855,
+    groundVariant: 0x4a3868,
+    wallColor: 0x2a1a40,
+    wallTop: 0x3a2858,
+    decorColors: [0xd4a853, 0xffd700, 0xffeedd],
+    ambientParticleColor: 0xffd700,
+    ambientCount: 35,
+    fogColor: 0xffeedd,
+    fogAlpha: 0.06,
+    pathColor: 0x5a4870,
   },
 };
 
@@ -431,5 +540,458 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     spawn: { x: 240, y: 500 },
     npcs: [],
     theme: THEMES[6],
+  },
+
+  // ─── Chapter 7: Beautiful Palace ──────────────────────────────────────────
+  // Emotional arc: weight of choice → wrong path frustration → palace relief
+  {
+    chapter: 7,
+    locationName: '아름다운 궁전',
+    locationNameEn: 'Beautiful Palace',
+    mapWidth: 2400,
+    mapHeight: 600,
+    spawn: { x: 80, y: 300 },
+    theme: THEMES[7],
+    bgmKey: 'bgm_palace',
+    npcs: [
+      {
+        id: 'timorous',
+        nameKo: '겁쟁이',
+        nameEn: 'Timorous',
+        sprite: 'timorous',
+        x: 320, y: 320,
+        chapter: 7,
+        patrolPath: [{ x: 260, y: 320 }, { x: 350, y: 310 }],
+        patrolSpeed: 30,
+      },
+      {
+        id: 'mistrust',
+        nameKo: '불신',
+        nameEn: 'Mistrust',
+        sprite: 'mistrust',
+        x: 480, y: 290,
+        chapter: 7,
+        patrolPath: [{ x: 440, y: 300 }, { x: 520, y: 280 }],
+        patrolSpeed: 28,
+      },
+      {
+        id: 'watchful',
+        nameKo: '경비원',
+        nameEn: 'Watchful',
+        sprite: 'watchful',
+        x: 1500, y: 300,
+        chapter: 7,
+      },
+      {
+        id: 'prudence',
+        nameKo: '분별',
+        nameEn: 'Prudence',
+        sprite: 'prudence',
+        x: 1800, y: 280,
+        chapter: 7,
+        unlockedAt: 'watchful',
+      },
+      {
+        id: 'piety',
+        nameKo: '경건',
+        nameEn: 'Piety',
+        sprite: 'piety',
+        x: 2000, y: 310,
+        chapter: 7,
+        unlockedAt: 'watchful',
+      },
+      {
+        id: 'charity',
+        nameKo: '사랑',
+        nameEn: 'Charity',
+        sprite: 'charity',
+        x: 2200, y: 290,
+        chapter: 7,
+        unlockedAt: 'watchful',
+      },
+    ],
+    exits: [
+      { x: 2340, y: 150, width: 60, height: 300, targetChapter: 8 },
+    ],
+    events: [
+      {
+        id: 'ch7_lion_gate',
+        type: 'battle',
+        x: 1320, y: 260, width: 60, height: 80,
+        triggerOnce: true,
+        data: { enemyId: 'lion_fear' },
+      },
+      {
+        id: 'ch7_wrong_path_dead_end',
+        type: 'dialogue',
+        x: 680, y: 500, width: 80, height: 60,
+        triggerOnce: false,
+        data: { npcId: 'timorous', knotName: 'timorous_warning' },
+      },
+    ],
+    mapObjects: [
+      {
+        id: 'ch7_easy_road_sign',
+        type: 'sign',
+        x: 620, y: 480,
+        label: '↓ 쉬운 길',
+        labelEn: '↓ Easy Way',
+      },
+      {
+        id: 'ch7_palace_gate',
+        type: 'gate',
+        x: 1460, y: 200,
+        open: false,
+        opensOnNpcComplete: 'watchful',
+      },
+    ],
+    terrainZones: [
+      { id: 'ch7_steep_path', type: 'elevated', x: 700, y: 180, width: 500, height: 120, elevation: 30, tint: 0x554466 },
+      { id: 'ch7_palace_interior', type: 'interior', x: 1600, y: 200, width: 700, height: 300, tint: 0x7a6050 },
+    ],
+    completionRequirements: {
+      requiredNpcs: ['watchful'],
+      requiredEvents: ['ch7_lion_gate'],
+    },
+  },
+
+  // ─── Chapter 8: Valley of Humiliation ─────────────────────────────────────
+  // Emotional arc: solitary dread → overwhelming Apollyon → hard-won victory
+  {
+    chapter: 8,
+    locationName: '겸손의 골짜기',
+    locationNameEn: 'Valley of Humiliation',
+    mapWidth: 1200,
+    mapHeight: 400,
+    spawn: { x: 80, y: 200 },
+    theme: THEMES[8],
+    bgmKey: 'bgm_valley',
+    npcs: [],
+    exits: [
+      { x: 1140, y: 80, width: 60, height: 240, targetChapter: 9 },
+    ],
+    events: [
+      {
+        id: 'ch8_boss_apollyon',
+        type: 'battle',
+        x: 580, y: 160, width: 80, height: 80,
+        triggerOnce: true,
+        data: { enemyId: 'apollyon', isBoss: true, cutsceneBefore: 'apollyon_entrance' },
+      },
+    ],
+    terrainZones: [
+      { id: 'ch8_descent', type: 'cave', x: 0, y: 0, width: 1200, height: 400, tint: 0x110022 },
+      { id: 'ch8_battle_pit', type: 'pit', x: 480, y: 300, width: 280, height: 100, walkable: false },
+    ],
+    completionRequirements: {
+      requiredEvents: ['ch8_boss_apollyon'],
+    },
+  },
+
+  // ─── Chapter 9: Valley of Death's Shadow ──────────────────────────────────
+  // Emotional arc: extreme darkness → whispers of fear → Faithful's companionship
+  {
+    chapter: 9,
+    locationName: '사망의 음침한 골짜기',
+    locationNameEn: "Valley of the Shadow of Death",
+    mapWidth: 2400,
+    mapHeight: 400,
+    spawn: { x: 80, y: 200 },
+    theme: THEMES[9],
+    bgmKey: 'bgm_shadow',
+    npcs: [
+      {
+        id: 'faithful',
+        nameKo: '충실자',
+        nameEn: 'Faithful',
+        sprite: 'faithful',
+        x: 1960, y: 200,
+        chapter: 9,
+      },
+    ],
+    exits: [
+      { x: 2340, y: 80, width: 60, height: 240, targetChapter: 10 },
+    ],
+    events: [
+      {
+        id: 'ch9_specter_1',
+        type: 'battle',
+        x: 480, y: 180, width: 60, height: 60,
+        triggerOnce: true,
+        data: { enemyId: 'specter' },
+      },
+      {
+        id: 'ch9_specter_2',
+        type: 'battle',
+        x: 1100, y: 180, width: 60, height: 60,
+        triggerOnce: true,
+        data: { enemyId: 'specter' },
+      },
+      {
+        id: 'ch9_specter_3',
+        type: 'battle',
+        x: 1680, y: 180, width: 60, height: 60,
+        triggerOnce: true,
+        data: { enemyId: 'specter' },
+      },
+      {
+        id: 'ch9_whisper_zone_1',
+        type: 'dialogue',
+        x: 700, y: 100, width: 100, height: 200,
+        triggerOnce: false,
+        data: { npcId: 'faithful', knotName: 'valley_whisper_1' },
+      },
+      {
+        id: 'ch9_whisper_zone_2',
+        type: 'dialogue',
+        x: 1300, y: 100, width: 100, height: 200,
+        triggerOnce: false,
+        data: { npcId: 'faithful', knotName: 'valley_whisper_2' },
+      },
+      {
+        id: 'ch9_faithful_joins',
+        type: 'cutscene',
+        x: 1900, y: 160, width: 100, height: 80,
+        triggerOnce: true,
+        data: { cutsceneId: 'faithful_joins' },
+      },
+    ],
+    terrainZones: [
+      { id: 'ch9_pit_left', type: 'pit', x: 0, y: 0, width: 60, height: 400, walkable: false },
+      { id: 'ch9_pit_right', type: 'pit', x: 2340, y: 0, width: 60, height: 400, walkable: false },
+      { id: 'ch9_narrow_path', type: 'cave', x: 60, y: 140, width: 2280, height: 120, tint: 0x0a0408, slowFactor: 0.85 },
+    ],
+    completionRequirements: {
+      requiredNpcs: ['faithful'],
+      requiredEvents: ['ch9_specter_1', 'ch9_specter_2', 'ch9_specter_3'],
+    },
+  },
+
+  // ─── Chapter 10: Vanity Fair ───────────────────────────────────────────────
+  // Emotional arc: temptation glamour → Faithful's trial → the most painful farewell
+  {
+    chapter: 10,
+    locationName: '허영의 시장',
+    locationNameEn: 'Vanity Fair',
+    mapWidth: 2400,
+    mapHeight: 600,
+    spawn: { x: 80, y: 300 },
+    theme: THEMES[10],
+    bgmKey: 'bgm_fair',
+    npcs: [
+      {
+        id: 'faithful',
+        nameKo: '충실자',
+        nameEn: 'Faithful',
+        sprite: 'faithful',
+        x: 200, y: 300,
+        chapter: 10,
+      },
+      {
+        id: 'lord_hategood',
+        nameKo: '증오선 재판관',
+        nameEn: 'Lord Hate-good',
+        sprite: 'lord_hategood',
+        x: 1500, y: 280,
+        chapter: 10,
+        unlockedAt: 'faithful',
+      },
+    ],
+    exits: [
+      { x: 2340, y: 150, width: 60, height: 300, targetChapter: 11 },
+    ],
+    events: [
+      {
+        id: 'ch10_market_temptation_1',
+        type: 'battle',
+        x: 500, y: 280, width: 60, height: 60,
+        triggerOnce: true,
+        data: { enemyId: 'vanity' },
+      },
+      {
+        id: 'ch10_market_temptation_2',
+        type: 'battle',
+        x: 900, y: 280, width: 60, height: 60,
+        triggerOnce: true,
+        data: { enemyId: 'vanity' },
+      },
+      {
+        id: 'ch10_faithful_trial',
+        type: 'cutscene',
+        x: 1460, y: 240, width: 100, height: 80,
+        triggerOnce: true,
+        data: { cutsceneId: 'faithful_martyrdom' },
+      },
+    ],
+    mapObjects: [
+      { id: 'ch10_stall_1', type: 'exhibit', x: 360, y: 260, label: '부귀', labelEn: 'Riches' },
+      { id: 'ch10_stall_2', type: 'exhibit', x: 680, y: 260, label: '쾌락', labelEn: 'Pleasures' },
+      { id: 'ch10_stall_3', type: 'exhibit', x: 1000, y: 260, label: '명예', labelEn: 'Honour' },
+      { id: 'ch10_judgment_stage', type: 'sign', x: 1500, y: 220, label: '재판대', labelEn: 'Judgment Stage' },
+    ],
+    terrainZones: [
+      { id: 'ch10_market_zone', type: 'interior', x: 300, y: 180, width: 1200, height: 240, tint: 0x2a1828 },
+    ],
+    completionRequirements: {
+      requiredNpcs: ['lord_hategood'],
+      requiredEvents: ['ch10_faithful_trial'],
+    },
+  },
+
+  // ─── Chapter 11: Doubting Castle ──────────────────────────────────────────
+  // Emotional arc: imprisonment in despair → promise key revelation → freedom
+  {
+    chapter: 11,
+    locationName: '의심의 성',
+    locationNameEn: 'Doubting Castle',
+    mapWidth: 800,
+    mapHeight: 800,
+    spawn: { x: 400, y: 720 },
+    theme: THEMES[11],
+    bgmKey: 'bgm_dungeon',
+    npcs: [
+      {
+        id: 'hopeful',
+        nameKo: '소망',
+        nameEn: 'Hopeful',
+        sprite: 'hopeful',
+        x: 400, y: 680,
+        chapter: 11,
+      },
+      {
+        id: 'diffidence',
+        nameKo: '소심',
+        nameEn: 'Diffidence',
+        sprite: 'diffidence',
+        x: 400, y: 400,
+        chapter: 11,
+        unlockedAt: 'hopeful',
+      },
+    ],
+    exits: [
+      { x: 340, y: 60, width: 120, height: 60, targetChapter: 12 },
+    ],
+    events: [
+      {
+        id: 'ch11_diffidence_battle',
+        type: 'battle',
+        x: 350, y: 360, width: 100, height: 80,
+        triggerOnce: true,
+        data: { enemyId: 'diffidence_enemy' },
+      },
+      {
+        id: 'ch11_boss_giant_despair',
+        type: 'battle',
+        x: 340, y: 200, width: 120, height: 120,
+        triggerOnce: true,
+        data: { enemyId: 'giant_despair', isBoss: true, cutsceneBefore: 'giant_despair_entrance' },
+      },
+      {
+        id: 'ch11_key_of_promise',
+        type: 'cutscene',
+        x: 360, y: 580, width: 80, height: 80,
+        triggerOnce: true,
+        data: { cutsceneId: 'key_of_promise' },
+      },
+    ],
+    mapObjects: [
+      { id: 'ch11_prison_bars', type: 'gate', x: 340, y: 500, open: false, opensOnNpcComplete: 'hopeful' },
+      { id: 'ch11_castle_gate', type: 'gate', x: 340, y: 100, open: false, opensOnNpcComplete: 'hopeful' },
+    ],
+    terrainZones: [
+      { id: 'ch11_dungeon', type: 'cave', x: 0, y: 0, width: 800, height: 800, tint: 0x101018 },
+      { id: 'ch11_cell', type: 'interior', x: 200, y: 480, width: 400, height: 200, tint: 0x0e0c14, slowFactor: 0.7 },
+    ],
+    completionRequirements: {
+      requiredNpcs: ['hopeful'],
+      requiredEvents: ['ch11_boss_giant_despair', 'ch11_key_of_promise'],
+    },
+  },
+
+  // ─── Chapter 12: Celestial City ───────────────────────────────────────────
+  // Emotional arc: final trial → river crossing → transcendent joy at the gates
+  {
+    chapter: 12,
+    locationName: '천성',
+    locationNameEn: 'Celestial City',
+    mapWidth: 3000,
+    mapHeight: 600,
+    spawn: { x: 80, y: 300 },
+    theme: THEMES[12],
+    bgmKey: 'bgm_celestial',
+    npcs: [
+      {
+        id: 'hopeful',
+        nameKo: '소망',
+        nameEn: 'Hopeful',
+        sprite: 'hopeful',
+        x: 200, y: 300,
+        chapter: 12,
+      },
+      {
+        id: 'ignorance',
+        nameKo: '무지',
+        nameEn: 'Ignorance',
+        sprite: 'ignorance',
+        x: 600, y: 320,
+        chapter: 12,
+      },
+      {
+        id: 'shining_ones',
+        nameKo: '빛나는 자들',
+        nameEn: 'Shining Ones',
+        sprite: 'shining_ones',
+        x: 2100, y: 280,
+        chapter: 12,
+      },
+    ],
+    exits: [],
+    events: [
+      {
+        id: 'ch12_enchanted_ground_warning',
+        type: 'dialogue',
+        x: 800, y: 250, width: 100, height: 100,
+        triggerOnce: false,
+        data: { npcId: 'hopeful', knotName: 'enchanted_ground_warning' },
+      },
+      {
+        id: 'ch12_river_crossing',
+        type: 'cutscene',
+        x: 1020, y: 200, width: 100, height: 200,
+        triggerOnce: true,
+        data: { cutsceneId: 'river_crossing' },
+      },
+      {
+        id: 'ch12_ignorance_warning',
+        type: 'cutscene',
+        x: 2800, y: 220, width: 80, height: 160,
+        triggerOnce: true,
+        data: { cutsceneId: 'ignorance_turned_away' },
+      },
+      {
+        id: 'ch12_celestial_arrival',
+        type: 'cutscene',
+        x: 2900, y: 200, width: 100, height: 200,
+        triggerOnce: true,
+        data: { cutsceneId: 'celestial_arrival', isEnding: true },
+      },
+    ],
+    mapObjects: [
+      { id: 'ch12_celestial_gate', type: 'gate', x: 2900, y: 140, open: true, label: '천성 문', labelEn: 'Celestial Gate' },
+    ],
+    terrainZones: [
+      // Zone 1: Enchanted Ground (sleepy flowers)
+      { id: 'ch12_enchanted_ground', type: 'elevated', x: 100, y: 180, width: 900, height: 240, slowFactor: 0.75, tint: 0x3a2855 },
+      // Zone 2: River of Death (water crossing)
+      { id: 'ch12_river', type: 'water', x: 1000, y: 180, width: 1000, height: 240, slowFactor: 0.4, tint: 0x1a2a4a },
+      // Bridge through river
+      { id: 'ch12_river_bridge', type: 'bridge', x: 1200, y: 260, width: 600, height: 80, slowFactor: 0.9 },
+      // Zone 3: Celestial shore
+      { id: 'ch12_celestial_shore', type: 'elevated', x: 2000, y: 160, width: 1000, height: 280, elevation: 20, tint: 0x5a4870 },
+    ],
+    completionRequirements: {
+      requiredNpcs: ['shining_ones'],
+      requiredEvents: ['ch12_river_crossing', 'ch12_celestial_arrival'],
+    },
   },
 ];

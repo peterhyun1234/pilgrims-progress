@@ -6,9 +6,20 @@ import { AnimationRegistry, DEFAULT_ANIM_SET_32, LEGACY_ANIM_SET_16 } from '../e
 
 /** Characters that have PortraitConfig and will get generated 32×32 sprites */
 const GENERATED_CHARACTERS = [
+  // Ch1-6
   'christian', 'evangelist', 'obstinate', 'pliable',
   'help', 'worldly_wiseman', 'goodwill', 'interpreter',
   'shining_ones',
+  // Ch7: Beautiful Palace
+  'timorous', 'mistrust', 'watchful', 'prudence', 'piety', 'charity',
+  // Ch9-10: Companions
+  'faithful', 'hopeful',
+  // Ch10: Vanity Fair
+  'lord_hategood',
+  // Ch11: Doubting Castle
+  'diffidence',
+  // Ch12: Final
+  'ignorance',
 ];
 
 /** Characters loaded from legacy 16×16 PNGs (no portrait config yet) */
