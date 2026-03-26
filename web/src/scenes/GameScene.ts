@@ -44,6 +44,7 @@ import { CutsceneEngine } from './CutsceneEngine';
 import { CUTSCENE_REGISTRY } from '../narrative/data/cutsceneDefinitions';
 import { EnvironmentAnimations } from '../fx/EnvironmentAnimations';
 import { Companion } from '../entities/Companion';
+import { AudioManager } from '../audio/AudioManager';
 
 export class GameScene extends Phaser.Scene {
   private inputManager!: InputManager;
@@ -165,6 +166,13 @@ export class GameScene extends Phaser.Scene {
 
     const chapterConfig = this.chapterManager.loadChapter(this.gameManager.currentChapter);
     this.environmentAnimations.init(chapterConfig);
+
+    // Start chapter-specific ambient soundscape
+    if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+      const audioMgr = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      audioMgr.ambient.init(this.gameManager.currentChapter);
+      audioMgr.ambient.playChapterStinger(this.gameManager.currentChapter);
+    }
 
     this.player = new Player(this, chapterConfig.spawn.x, chapterConfig.spawn.y);
     this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
@@ -1244,6 +1252,15 @@ export class GameScene extends Phaser.Scene {
 
     const config = this.chapterManager.loadChapter(chapter);
     this.environmentAnimations.init(config);
+
+    // Crossfade ambient soundscape to new chapter
+    if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+      const audioMgr = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      audioMgr.ambient.crossfadeTo(chapter, 3000);
+      this.time.delayedCall(1500, () => {
+        audioMgr.ambient.playChapterStinger(chapter);
+      });
+    }
 
     const colliders = this.tileMapManager.getColliders();
     if (colliders) {
