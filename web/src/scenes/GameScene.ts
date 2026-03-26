@@ -40,6 +40,8 @@ import { CHAPTER_VERSES } from '../narrative/data/bibleVerses';
 import { StatsManager } from '../core/StatsManager';
 import { SaveManager } from '../save/SaveManager';
 import { GamePlayState } from '../core/GamePlayState';
+import { CutsceneEngine } from './CutsceneEngine';
+import { CUTSCENE_REGISTRY } from '../narrative/data/cutsceneDefinitions';
 
 export class GameScene extends Phaser.Scene {
   private inputManager!: InputManager;
@@ -94,6 +96,8 @@ export class GameScene extends Phaser.Scene {
   private mapObjectSprites: Record<string, Phaser.GameObjects.Container> = {};
   /** Exit-hint cooldown guard. */
   private exitHintCooldown = 0;
+  /** Cutscene engine for key emotional scenes. */
+  private cutsceneEngine!: CutsceneEngine;
 
   constructor() {
     super({ key: SCENE_KEYS.GAME });
@@ -131,6 +135,8 @@ export class GameScene extends Phaser.Scene {
 
     this.narrativeDirector = new NarrativeDirector(this);
     ServiceLocator.register(SERVICE_KEYS.NARRATIVE_DIRECTOR, this.narrativeDirector);
+
+    this.cutsceneEngine = new CutsceneEngine(this);
 
     this.screenShake = new ScreenShake(this);
     this.particleManager = new ParticleManager(this);
@@ -895,7 +901,19 @@ export class GameScene extends Phaser.Scene {
     this.eventBus.on(GameEvent.DIALOGUE_END, this.onDialogueEnd);
     this.eventBus.on(GameEvent.BATTLE_END, this.onBattleEnd);
     this.eventBus.on(GameEvent.BURDEN_RELEASED, this.onBurdenReleased);
+    this.eventBus.on('cutscene:stat_change', this.onCutsceneStatChange);
   }
+
+  private onCutsceneStatChange = (payload: { stat: string; amount: number } | undefined) => {
+    if (!payload) return;
+    const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
+    const stat = payload.stat as import('../core/GameEvents').StatType;
+    if (stat === 'burden' && payload.amount < 0) {
+      sm.setBurdenZero();
+    } else {
+      sm.change(stat, payload.amount);
+    }
+  };
 
   private cleanupEvents(): void {
     this.eventBus.off(GameEvent.NPC_INTERACT, this.onNpcInteract);
@@ -906,6 +924,7 @@ export class GameScene extends Phaser.Scene {
     this.eventBus.off(GameEvent.DIALOGUE_END, this.onDialogueEnd);
     this.eventBus.off(GameEvent.BATTLE_END, this.onBattleEnd);
     this.eventBus.off(GameEvent.BURDEN_RELEASED, this.onBurdenReleased);
+    this.eventBus.off('cutscene:stat_change', this.onCutsceneStatChange);
   }
 
   // ── Location title ───────────────────────────────────────────────────────
@@ -1006,7 +1025,7 @@ export class GameScene extends Phaser.Scene {
             this.triggerDialogueEvent(event);
             break;
           case 'cutscene':
-            this.eventBus.emit(GameEvent.MAP_EVENT, event);
+            this.playCutsceneEvent(event.data.cutsceneId as string);
             break;
         }
       }
@@ -1050,6 +1069,45 @@ export class GameScene extends Phaser.Scene {
     if (event.data.exhibitLabel) {
       this.gamePlayState.setObjectState(event.id, { activated: true });
     }
+  }
+
+  // ── Cutscene events ──────────────────────────────────────────────────────
+
+  private playCutsceneEvent(cutsceneId: string): void {
+    if (this.cutsceneEngine.playing) return;
+    if (this.gameManager.isState(GameState.CUTSCENE)) return;
+
+    const def = CUTSCENE_REGISTRY[cutsceneId];
+    if (!def) {
+      // Unknown cutscene — emit generic event for extensibility
+      this.eventBus.emit(GameEvent.MAP_EVENT, { cutsceneId });
+      return;
+    }
+
+    this.gameManager.changeState(GameState.CUTSCENE);
+    // Halt player during cutscene
+    if (this.player.sprite.body instanceof Phaser.Physics.Arcade.Body) {
+      this.player.sprite.body.setVelocity(0, 0);
+    }
+
+    void this.cutsceneEngine.play(def).then(() => {
+      this.gameManager.changeState(GameState.GAME);
+
+      // Special post-cutscene hooks
+      if (cutsceneId === 'ch6_burden_released') {
+        // Ch6 cross: burden stat is zeroed via cutscene step, trigger NPC state
+        this.npcStateManager.setPhase('shining_ones', 'available');
+      }
+      if (cutsceneId === 'celestial_arrival') {
+        // Game complete — transition to menu after a long fade
+        this.time.delayedCall(3000, () => {
+          void DesignSystem.fadeOut(this, 1500).then(() => {
+            this.shutdown();
+            this.scene.start(SCENE_KEYS.MENU);
+          });
+        });
+      }
+    });
   }
 
   // ── Exit zone checking (ARCH-03) ─────────────────────────────────────────
@@ -1328,6 +1386,7 @@ export class GameScene extends Phaser.Scene {
     this.lightingManager?.destroy();
     this.transitionEffects?.destroy();
     this.debugPanel?.destroy();
+    this.cutsceneEngine?.destroy();
     this.pauseBtn?.destroy(true);
     this.ambientParticles?.destroy();
     this.itemSprites.forEach(s => s.destroy(true));
