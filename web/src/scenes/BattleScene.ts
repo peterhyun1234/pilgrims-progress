@@ -63,20 +63,66 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private createBattleBackground(): void {
-    const bg = this.add.graphics().setDepth(0);
+    const W = GAME_WIDTH, H = GAME_HEIGHT;
+    const ground = H * 0.48;
 
-    bg.fillStyle(0x1a0a0a, 1);
-    bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    for (let i = 0; i < 20; i++) {
-      const x = Math.random() * GAME_WIDTH;
-      const y = Math.random() * GAME_HEIGHT * 0.5;
-      bg.fillStyle(0xff3300, 0.03 + Math.random() * 0.05);
-      bg.fillCircle(x, y, 2 + Math.random() * 8);
+    // Sky: dark gradient
+    const sky = this.add.graphics().setDepth(0);
+    const strips = 16;
+    for (let i = 0; i < strips; i++) {
+      const t = i / strips;
+      const r = Math.round(0x08 + (0x18 - 0x08) * t);
+      const g2 = Math.round(0x04 + (0x06 - 0x04) * t);
+      const b = Math.round(0x12 + (0x08 - 0x12) * t);
+      sky.fillStyle((r << 16) | (g2 << 8) | b, 1);
+      sky.fillRect(0, Math.floor(t * ground), W, Math.ceil(ground / strips) + 1);
     }
 
-    bg.lineStyle(0.5, COLORS.UI.GOLD, 0.15);
-    bg.lineBetween(0, GAME_HEIGHT * 0.45, GAME_WIDTH, GAME_HEIGHT * 0.45);
+    // Distant red-orange supernatural glow (the enemy's domain)
+    sky.fillStyle(0x880000, 0.05);
+    sky.fillEllipse(W / 2, ground * 0.7, W * 0.8, ground * 0.5);
+    sky.fillStyle(0xcc2200, 0.03);
+    sky.fillEllipse(W / 2, ground * 0.8, W * 0.5, ground * 0.3);
+
+    // Stars / supernatural lights
+    for (let i = 0; i < 30; i++) {
+      const hash = (i * 137 * 31) & 0xffff;
+      sky.fillStyle(0xffffff, 0.08 + (hash % 8) * 0.03);
+      sky.fillCircle(hash % W, (hash * 3) % (ground * 0.7), 0.5 + (hash % 2) * 0.3);
+    }
+
+    // Ground (dark earth plane)
+    const gr = this.add.graphics().setDepth(0);
+    const groundStrips = 8;
+    for (let i = 0; i < groundStrips; i++) {
+      gr.fillStyle(0x06020e + (i << 1), 1);
+      gr.fillRect(0, ground + i * (H - ground) / groundStrips, W, (H - ground) / groundStrips + 1);
+    }
+
+    // Ground line — gold divider
+    gr.lineStyle(0.8, COLORS.UI.GOLD, 0.25);
+    gr.lineBetween(0, ground, W, ground);
+    gr.fillStyle(COLORS.UI.GOLD, 0.15);
+    for (let x = 0; x < W; x += 30) {
+      gr.fillRect(x, ground - 0.5, 15, 1);
+    }
+
+    // Subtle grid in ground
+    gr.lineStyle(0.3, 0x333355, 0.15);
+    for (let x2 = 20; x2 < W; x2 += 20) {
+      gr.lineBetween(x2, ground, x2 - 10, H);
+    }
+
+    // Vignette
+    const vig = this.add.graphics().setDepth(1);
+    for (let i = 0; i < 8; i++) {
+      const t = i / 8;
+      vig.fillStyle(0x000000, 0.2 * (1 - t));
+      vig.fillRect(0, 0, W, 4 - i * 0.5 + 1);
+      vig.fillRect(0, H - 4 + i, W, 4);
+      vig.fillRect(0, 0, 4, H);
+      vig.fillRect(W - 4, 0, 4, H);
+    }
   }
 
   private createEnemyDisplay(enemy: EnemyDef, state: CombatState): void {
@@ -251,16 +297,22 @@ export class BattleScene extends Phaser.Scene {
     this.tweens.add({ targets: this.skillPanel, alpha: 1, duration: 150, ease: 'Sine.easeOut' });
   }
 
+  private getAudio() {
+    return ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)
+      ? ServiceLocator.get<import('../audio/AudioManager').AudioManager>(SERVICE_KEYS.AUDIO_MANAGER)
+      : null;
+  }
+
   private async onPray(): Promise<void> {
     if (this.isAnimating) return;
     this.isAnimating = true;
 
+    this.getAudio()?.procedural?.playStatGain();
     await this.animatePlayerAction('🙏');
     const state = this.combatSystem.pray();
     if (state) this.updateDisplay(state);
 
     this.isAnimating = false;
-
     if (state?.finished) this.endBattle(state);
   }
 
@@ -268,12 +320,12 @@ export class BattleScene extends Phaser.Scene {
     if (this.isAnimating) return;
     this.isAnimating = true;
 
+    this.getAudio()?.procedural?.playUIClick();
     await this.animatePlayerAction('🛡');
     const state = this.combatSystem.defend();
     if (state) this.updateDisplay(state);
 
     this.isAnimating = false;
-
     if (state?.finished) this.endBattle(state);
   }
 
@@ -284,12 +336,12 @@ export class BattleScene extends Phaser.Scene {
     this.skillPanel?.destroy(true);
     this.skillPanel = null;
 
+    this.getAudio()?.procedural?.playPickup();
     await this.animatePlayerAction(skill.icon);
     const state = this.combatSystem.useSkill(skill.id);
     if (state) this.updateDisplay(state);
 
     this.isAnimating = false;
-
     if (state?.finished) this.endBattle(state);
   }
 
@@ -341,6 +393,7 @@ export class BattleScene extends Phaser.Scene {
     await new Promise<void>(resolve => this.time.delayedCall(800, resolve));
 
     if (state.victory) {
+      this.getAudio()?.procedural?.playChapterComplete();
       const victoryText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20,
         ko ? '✝ 승리!' : '✝ Victory!',
         DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XXL),
@@ -351,6 +404,7 @@ export class BattleScene extends Phaser.Scene {
         duration: 500, ease: 'Back.easeOut',
       });
     } else {
+      this.getAudio()?.procedural?.playStatLoss();
       const graceText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20,
         ko ? '은혜로 다시 일어선다...' : 'Grace lifts you up again...',
         DesignSystem.textStyle(DesignSystem.FONT_SIZE.LG, '#aaaaff'),
