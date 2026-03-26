@@ -24,7 +24,7 @@ export interface MapObjectState {
 }
 
 export interface GameSettings {
-  language: 'ko' | 'en';
+  language: string;
   bgmVolume: number;
   sfxVolume: number;
   touchControlsType: 'dynamic' | 'fixed';

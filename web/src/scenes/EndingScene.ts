@@ -161,7 +161,7 @@ export class EndingScene extends Phaser.Scene {
 
     // Return to menu button
     this.time.delayedCall(1500, () => {
-      const menuLabel = ko ? '처음으로 돌아가기' : 'Return to Main Menu';
+      const menuLabel = this.gameManager.i18n.t('ending.return');
       const btn = DesignSystem.createButton(
         this, cx, statsY + 30, 150, 22, menuLabel,
         () => {

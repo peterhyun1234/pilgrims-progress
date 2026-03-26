@@ -210,6 +210,7 @@ export class MenuScene extends Phaser.Scene {
   // ── UI Layout ────────────────────────────────────────────────────────────
 
   private buildUI(cx: number, ko: boolean): void {
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const W = GAME_WIDTH;
     const H = GAME_HEIGHT;
 
@@ -233,7 +234,7 @@ export class MenuScene extends Phaser.Scene {
     });
 
     // Main title
-    const title = this.add.text(cx, 42, ko ? '천로역정' : "Pilgrim's Progress", {
+    const title = this.add.text(cx, 42, gm.i18n.t('game.title'), {
       fontSize: ko ? '16px' : '14px',
       color: '#e8dfc8',
       fontFamily: DesignSystem.getFontFamily(),
@@ -243,7 +244,7 @@ export class MenuScene extends Phaser.Scene {
     this.tweens.add({ targets: title, alpha: 1, y: 44, duration: 900, delay: 200, ease: 'Back.easeOut' });
 
     // Subtitle
-    const subtitle = this.add.text(cx, 57, ko ? "The Pilgrim's Progress" : '순례자의 여정', {
+    const subtitle = this.add.text(cx, 57, gm.i18n.t('game.subtitle'), {
       fontSize: '6px', color: '#6a5a44', fontFamily: "'Silkscreen', monospace",
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: subtitle, alpha: 0.7, duration: 700, delay: 500 });
@@ -283,6 +284,7 @@ export class MenuScene extends Phaser.Scene {
   }
 
   private buildButtonPanel(cx: number, topY: number, ko: boolean): void {
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const btnW = 160;
     const btnH = 26;
     const gap = 8;
@@ -349,11 +351,11 @@ export class MenuScene extends Phaser.Scene {
       return c;
     };
 
-    makeBtn(topY, ko ? '새 여정 시작' : 'New Journey', () => this.startNewGame(), { accent: true });
+    makeBtn(topY, gm.i18n.t('menu.newJourney'), () => this.startNewGame(), { accent: true });
 
-    this.continueBtn = makeBtn(topY + btnH + gap, ko ? '여정 계속하기' : 'Continue', () => this.continueGame(), { dim: true });
+    this.continueBtn = makeBtn(topY + btnH + gap, gm.i18n.t('menu.continueJourney'), () => this.continueGame(), { dim: true });
 
-    makeBtn(topY + (btnH + gap) * 2, ko ? '설정' : 'Settings', () => {
+    makeBtn(topY + (btnH + gap) * 2, gm.i18n.t('menu.settings'), () => {
       this.scene.pause();
       this.scene.launch('SettingsScene', { from: 'MenuScene' });
     });

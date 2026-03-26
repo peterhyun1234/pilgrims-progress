@@ -65,7 +65,7 @@ export class HUD {
         fontFamily: 'serif',
       }).setOrigin(0, 0);
 
-      const labelText = ko ? DesignSystem.STAT_LABELS_KO[stat] : DesignSystem.STAT_LABELS_EN[stat];
+      const labelText = gm.i18n.t(`hud.${stat}`);
       // Use native 11px for Galmuri11 (KO) so final consonants aren't clipped at 9px
       const labelFontSize = ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.XS;
       const label = this.scene.add.text(11, 0, labelText, {

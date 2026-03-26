@@ -3,6 +3,7 @@ import { EventBus } from './EventBus';
 import { GameEvent, GameState } from './GameEvents';
 import { StatsManager } from './StatsManager';
 import { ServiceLocator, SERVICE_KEYS } from './ServiceLocator';
+import { I18n } from '../i18n/I18n';
 
 export class GameManager {
   private fsm: StateMachine<GameState>;
@@ -10,7 +11,8 @@ export class GameManager {
   private statsManager: StatsManager;
   private _currentChapter = 1;
   private _playerName = 'Christian';
-  private _language: 'ko' | 'en' = 'ko';
+  private _language: string = 'ko';
+  readonly i18n: I18n = new I18n();
 
   constructor() {
     this.eventBus = EventBus.getInstance();
@@ -52,12 +54,13 @@ export class GameManager {
     this._playerName = name;
   }
 
-  get language(): 'ko' | 'en' {
+  get language(): string {
     return this._language;
   }
 
-  set language(lang: 'ko' | 'en') {
+  set language(lang: string) {
     this._language = lang;
+    this.i18n.setLanguage(lang);
   }
 
   get stats(): StatsManager {
