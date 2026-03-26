@@ -290,6 +290,11 @@ export class NPC extends Entity {
   override destroy(): void {
     this.eventBus.off(GameEvent.NPC_PHASE_CHANGED, this.onPhaseChanged);
     this.patrolTween?.destroy();
+    this.patrolTween = null;
+    // Kill any orphaned tweens targeting this sprite
+    if (this.scene?.tweens) {
+      this.scene.tweens.killTweensOf(this.sprite);
+    }
     this.hidePrompt();
     this.completedBadge?.destroy();
     super.destroy();

@@ -69,8 +69,8 @@ export class PreloadScene extends Phaser.Scene {
       });
     });
 
-    // Ink story data
-    this.load.json('ch01_ink', 'assets/ink/ch01.ink.json');
+    // Ink story data — all 12 chapters compiled into a single JSON
+    this.load.json('story_ink', 'assets/ink/story.ink.json');
   }
 
   create(): void {

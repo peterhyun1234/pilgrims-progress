@@ -540,7 +540,7 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    const storyKey = `ch0${this.gameManager.currentChapter}_ink`;
+    const storyKey = 'story_ink';
     const data = this.cache.json.get(storyKey);
 
     if (data) {
@@ -1023,7 +1023,7 @@ export class GameScene extends Phaser.Scene {
       const npc = this.npcs.find(n => n.npcId === npcId);
       if (!npc) return;
 
-      const storyKey = `ch0${this.gameManager.currentChapter}_ink`;
+      const storyKey = 'story_ink';
       const data = this.cache.json.get(storyKey);
       if (data) {
         try {
