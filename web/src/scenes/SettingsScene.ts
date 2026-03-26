@@ -42,7 +42,7 @@ export class SettingsScene extends Phaser.Scene {
     bg.lineStyle(0.5, COLORS.UI.GOLD, 0.1);
     bg.strokeRoundedRect(cx - 167, 21, 334, 232, 7);
 
-    this.add.text(cx, 40, ko ? '설정' : 'Settings',
+    this.add.text(cx, 40, gm.i18n.t('settings.title'),
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XL),
     ).setOrigin(0.5);
 
@@ -52,7 +52,7 @@ export class SettingsScene extends Phaser.Scene {
 
     let y = 72;
 
-    this.add.text(cx - 140, y, ko ? '배경음악' : 'BGM Volume',
+    this.add.text(cx - 140, y, gm.i18n.t('settings.bgm'),
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a898'),
     );
     this.createSlider(cx + 30, y, this.bgmVolume, (val) => {
@@ -61,7 +61,7 @@ export class SettingsScene extends Phaser.Scene {
     });
 
     y += 32;
-    this.add.text(cx - 140, y, ko ? '효과음' : 'SFX Volume',
+    this.add.text(cx - 140, y, gm.i18n.t('settings.sfx'),
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a898'),
     );
     this.createSlider(cx + 30, y, this.sfxVolume, (val) => {
@@ -70,7 +70,7 @@ export class SettingsScene extends Phaser.Scene {
     });
 
     y += 32;
-    this.add.text(cx - 140, y, ko ? '언어' : 'Language',
+    this.add.text(cx - 140, y, gm.i18n.t('settings.language'),
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a898'),
     );
     const langBtn = this.add.text(cx + 30, y, gm.language === 'ko' ? '한국어 ▸' : 'English ▸',
@@ -84,7 +84,7 @@ export class SettingsScene extends Phaser.Scene {
     langBtn.on('pointerout', () => langBtn.setColor('#d4a853'));
 
     y += 32;
-    this.add.text(cx - 140, y, ko ? '모션 감소' : 'Reduce Motion',
+    this.add.text(cx - 140, y, gm.i18n.t('settings.reduceMotion'),
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a898'),
     );
     let motionReduced = false;
@@ -98,7 +98,7 @@ export class SettingsScene extends Phaser.Scene {
     });
 
     y += 32;
-    this.add.text(cx - 140, y, ko ? '색맹 모드' : 'Colorblind',
+    this.add.text(cx - 140, y, gm.i18n.t('settings.colorblind'),
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a898'),
     );
     const modes = ['none', 'protanopia', 'deuteranopia', 'tritanopia'] as const;
@@ -116,7 +116,7 @@ export class SettingsScene extends Phaser.Scene {
 
     y += 44;
     DesignSystem.createButton(this, cx, y, 150, 28,
-      ko ? '돌아가기' : 'Back', () => this.goBack(),
+      gm.i18n.t('settings.back'), () => this.goBack(),
       { fontSize: DesignSystem.FONT_SIZE.SM },
     );
   }

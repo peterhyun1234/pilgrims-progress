@@ -39,15 +39,15 @@ export class DesignSystem {
     legendary: 0xd4a853,
   };
 
-  private static _lang: 'ko' | 'en' = 'ko';
+  private static _lang: string = 'ko';
 
-  static setLanguage(lang: 'ko' | 'en'): void {
+  static setLanguage(lang: string): void {
     DesignSystem._lang = lang;
   }
 
-  static getLanguage(): 'ko' | 'en' {
+  static getLanguage(): string {
     try {
-      const gm = ServiceLocator.get<{ language: 'ko' | 'en' }>(SERVICE_KEYS.GAME_MANAGER);
+      const gm = ServiceLocator.get<{ language: string }>(SERVICE_KEYS.GAME_MANAGER);
       return gm.language;
     } catch {
       return DesignSystem._lang;

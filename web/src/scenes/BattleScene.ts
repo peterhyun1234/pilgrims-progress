@@ -7,6 +7,7 @@ import { GameEvent, GameState } from '../core/GameEvents';
 import { DesignSystem } from '../ui/DesignSystem';
 import { CombatSystem, CombatState } from '../systems/CombatSystem';
 import { EnemyDef, ENEMIES, SkillDef } from '../systems/SkillData';
+import { AudioManager } from '../audio/AudioManager';
 
 export class BattleScene extends Phaser.Scene {
   private combatSystem!: CombatSystem;
@@ -522,6 +523,11 @@ export class BattleScene extends Phaser.Scene {
     const lines = this.bossPhaseDialogues[phaseIndex];
     if (!lines || lines.length === 0) return;
     const line = lines[0];
+
+    // Boss phase audio warning
+    if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+      ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER).ambient.playBossWarning();
+    }
 
     // Screen shake + red flash
     this.cameras.main.shake(300, 0.015);

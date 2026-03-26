@@ -54,7 +54,7 @@ export class CutsceneScene extends Phaser.Scene {
     }).setOrigin(0.5).setAlpha(0);
 
     const hint = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 20,
-      gm.language === 'ko' ? '터치하여 계속...' : 'Touch to continue...',
+      gm.i18n.t('cutscene.touchContinue'),
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5).setAlpha(0);
     this.tweens.add({ targets: hint, alpha: 0.5, delay: 2000, duration: 500, ease: 'Sine.easeOut' });

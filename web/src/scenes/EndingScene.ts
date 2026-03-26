@@ -3,6 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS, COLORS } from '../config';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
 import { DesignSystem, FONT_FAMILY } from '../ui/DesignSystem';
+import { AudioManager } from '../audio/AudioManager';
 
 /**
  * EndingScene — displayed after the player completes Ch12 (Celestial City arrival).
@@ -26,6 +27,13 @@ export class EndingScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(0x000000);
     this.createStarfield();
     this.runEpilogueSequence();
+
+    // Celestial arrival soundscape
+    if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+      const audioMgr = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      audioMgr.ambient.init(12);
+      this.time.delayedCall(500, () => audioMgr.ambient.playCelestialArrival());
+    }
   }
 
   private createStarfield(): void {
@@ -161,7 +169,7 @@ export class EndingScene extends Phaser.Scene {
 
     // Return to menu button
     this.time.delayedCall(1500, () => {
-      const menuLabel = ko ? '처음으로 돌아가기' : 'Return to Main Menu';
+      const menuLabel = this.gameManager.i18n.t('ending.return');
       const btn = DesignSystem.createButton(
         this, cx, statsY + 30, 150, 22, menuLabel,
         () => {
