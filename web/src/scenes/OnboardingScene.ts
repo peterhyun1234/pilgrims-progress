@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS, COLORS } from '../config';
+import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS } from '../config';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
 import { DesignSystem } from '../ui/DesignSystem';
@@ -40,34 +40,197 @@ const PROLOGUE_EN: PrologueLine[] = [
   { text: '"What must I do to be saved?"', delay: 15500, style: 'scripture' },
 ];
 
+interface Ember {
+  x: number; y: number;
+  vx: number; vy: number;
+  alpha: number; size: number;
+  life: number; maxLife: number;
+  color: number;
+}
+
 export class OnboardingScene extends Phaser.Scene {
-  private bgParticles: { x: number; y: number; a: number; s: number; vy: number }[] = [];
-  private gfx!: Phaser.GameObjects.Graphics;
+  private embers: Ember[] = [];
+  private bgGfx!: Phaser.GameObjects.Graphics;
+  private emberGfx!: Phaser.GameObjects.Graphics;
 
   constructor() {
     super({ key: SCENE_KEYS.ONBOARDING });
   }
 
   create(): void {
-    this.cameras.main.setBackgroundColor(COLORS.UI.DARK_BG);
-    DesignSystem.fadeIn(this, 800);
+    this.cameras.main.setBackgroundColor(0x0a0610);
+    DesignSystem.fadeIn(this, 1200);
 
-    this.gfx = this.add.graphics().setDepth(0);
-    for (let i = 0; i < 20; i++) {
-      this.bgParticles.push({
-        x: Math.random() * GAME_WIDTH,
-        y: Math.random() * GAME_HEIGHT,
-        a: 0.02 + Math.random() * 0.06,
-        s: 0.3 + Math.random() * 0.8,
-        vy: -(0.05 + Math.random() * 0.15),
-      });
+    this.bgGfx = this.add.graphics().setDepth(0);
+    this.emberGfx = this.add.graphics().setDepth(2);
+
+    this.buildBackground();
+    this.spawnInitialEmbers();
+    this.buildPrologueText();
+  }
+
+  // ─── Static background ──────────────────────────────────────────────
+
+  private buildBackground(): void {
+    const g = this.bgGfx;
+    const W = GAME_WIDTH;
+    const H = GAME_HEIGHT;
+    const horizon = Math.floor(H * 0.62);
+
+    // Sky gradient — dark ember tones (top: near-black, bottom: fiery dark red)
+    const skySteps = 20;
+    for (let i = 0; i < skySteps; i++) {
+      const t = i / skySteps;
+      const r = Math.floor(Phaser.Math.Linear(0x0a, 0x28, t));
+      const grn = Math.floor(Phaser.Math.Linear(0x06, 0x08, t));
+      const b = Math.floor(Phaser.Math.Linear(0x10, 0x06, t));
+      const color = (r << 16) | (grn << 8) | b;
+      g.fillStyle(color, 1);
+      g.fillRect(0, Math.floor((i / skySteps) * horizon), W, Math.ceil(H / skySteps) + 2);
     }
 
+    // Stars
+    for (let i = 0; i < 60; i++) {
+      const sx = Math.random() * W;
+      const sy = Math.random() * horizon * 0.75;
+      const sa = 0.15 + Math.random() * 0.45;
+      const ss = Math.random() < 0.15 ? 1.5 : 1;
+      g.fillStyle(0xffd8a0, sa);
+      g.fillCircle(sx, sy, ss);
+    }
+
+    // Distant fire glow on horizon (diffuse orange light behind buildings)
+    for (let i = 0; i < 5; i++) {
+      const fx = W * (0.1 + i * 0.2) + (Math.random() - 0.5) * 20;
+      const fw = 20 + Math.random() * 40;
+      const fh = 18 + Math.random() * 20;
+      g.fillStyle(0xff4400, 0.06 + Math.random() * 0.08);
+      g.fillEllipse(fx, horizon - 4, fw, fh);
+    }
+
+    // Ground — dark earth tones
+    const groundSteps = 8;
+    for (let i = 0; i < groundSteps; i++) {
+      const t = i / groundSteps;
+      const r = Math.floor(Phaser.Math.Linear(0x18, 0x0c, t));
+      const grn = Math.floor(Phaser.Math.Linear(0x0c, 0x06, t));
+      const b = Math.floor(Phaser.Math.Linear(0x0a, 0x04, t));
+      const color = (r << 16) | (grn << 8) | b;
+      const segY = horizon + Math.floor((i / groundSteps) * (H - horizon));
+      const segH = Math.ceil((H - horizon) / groundSteps) + 2;
+      g.fillStyle(color, 1);
+      g.fillRect(0, segY, W, segH);
+    }
+
+    // City silhouette — distant far buildings (muted)
+    this.drawCityLayer(g, horizon, 0x1a0c08, 0.55, 8, 16, 28, 0.7);
+    // City silhouette — near buildings (darker, taller)
+    this.drawCityLayer(g, horizon, 0x0e0604, 0.85, 6, 26, 48, 0.5);
+
+    // Fire tops on near buildings
+    this.drawFireTops(g, horizon);
+
+    // Ground level mist / smoke
+    g.fillStyle(0x1a0a06, 0.35);
+    g.fillRect(0, horizon - 4, W, 12);
+    g.fillStyle(0x0a0610, 0.12);
+    g.fillRect(0, H - 18, W, 18);
+
+    // Dark vignette overlay
+    g.fillStyle(0x000000, 0.22);
+    g.fillRect(0, 0, W, H);
+    // Extra darken at top so text is readable
+    for (let i = 0; i < 8; i++) {
+      const t = 1 - i / 8;
+      g.fillStyle(0x000000, 0.035 * t * t);
+      g.fillRect(0, 0, W, (i / 8) * H * 0.45);
+    }
+  }
+
+  private drawCityLayer(
+    g: Phaser.GameObjects.Graphics,
+    horizon: number,
+    color: number,
+    alpha: number,
+    count: number,
+    minH: number,
+    maxH: number,
+    widthFactor: number,
+  ): void {
+    const W = GAME_WIDTH;
+    const spacing = W / count;
+    for (let i = 0; i < count; i++) {
+      const bw = Math.floor(spacing * widthFactor + (Math.random() - 0.5) * 8);
+      const bh = Math.floor(minH + Math.random() * (maxH - minH));
+      const bx = Math.floor(i * spacing + (Math.random() - 0.5) * 12);
+
+      g.fillStyle(color, alpha);
+      // Main building body
+      g.fillRect(bx, horizon - bh, bw, bh);
+      // Slightly lighter top
+      g.fillStyle(color, alpha * 0.4);
+      g.fillRect(bx + 2, horizon - bh, bw - 4, 3);
+
+      // Windows (small lit rectangles, some with fire-orange tint)
+      const winRows = Math.floor(bh / 10);
+      const winCols = Math.floor(bw / 8);
+      for (let wr = 0; wr < winRows; wr++) {
+        for (let wc = 0; wc < winCols; wc++) {
+          if (Math.random() > 0.35) continue;
+          const wx = bx + 3 + wc * 7;
+          const wy = horizon - bh + 5 + wr * 9;
+          const isOrange = Math.random() < 0.4;
+          g.fillStyle(isOrange ? 0xff6600 : 0xffcc66, isOrange ? 0.5 : 0.3);
+          g.fillRect(wx, wy, 3, 3);
+        }
+      }
+    }
+  }
+
+  private drawFireTops(g: Phaser.GameObjects.Graphics, horizon: number): void {
+    const W = GAME_WIDTH;
+    const firePositions = [W * 0.12, W * 0.28, W * 0.47, W * 0.63, W * 0.82];
+    firePositions.forEach(fx => {
+      // Glow
+      g.fillStyle(0xff5500, 0.08);
+      g.fillEllipse(fx, horizon - 35, 28, 22);
+      g.fillStyle(0xff8800, 0.06);
+      g.fillEllipse(fx, horizon - 38, 18, 16);
+    });
+  }
+
+  // ─── Ember particles ────────────────────────────────────────────────
+
+  private spawnInitialEmbers(): void {
+    for (let i = 0; i < 40; i++) {
+      this.embers.push(this.createEmber(true));
+    }
+  }
+
+  private createEmber(randomY = false): Ember {
+    const W = GAME_WIDTH;
+    const horizon = Math.floor(GAME_HEIGHT * 0.62);
+    return {
+      x: Math.random() * W,
+      y: randomY ? Math.random() * GAME_HEIGHT : horizon,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: -(0.2 + Math.random() * 0.6),
+      alpha: 0.3 + Math.random() * 0.5,
+      size: 0.5 + Math.random() * 1.2,
+      life: 0,
+      maxLife: 120 + Math.random() * 180,
+      color: Math.random() < 0.6 ? 0xff6600 : (Math.random() < 0.5 ? 0xffaa00 : 0xffddaa),
+    };
+  }
+
+  // ─── Prologue text ──────────────────────────────────────────────────
+
+  private buildPrologueText(): void {
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const lines = gm.language === 'ko' ? PROLOGUE_KO : PROLOGUE_EN;
     const ko = gm.language === 'ko';
     const cx = GAME_WIDTH / 2;
-    const startY = 28;
+    const startY = 22;
 
     let lineIndex = 0;
     lines.forEach((line) => {
@@ -89,8 +252,9 @@ export class OnboardingScene extends Phaser.Scene {
           align: 'center',
           fontStyle: line.style === 'scripture' ? 'italic' : 'normal',
           ...(isDramaticOrScripture ? { lineSpacing: 3 } : {}),
+          shadow: { offsetX: 0, offsetY: 1, color: '#000000', blur: 3, stroke: false, fill: true },
         }),
-      ).setOrigin(0.5).setAlpha(0).setDepth(1);
+      ).setOrigin(0.5).setAlpha(0).setDepth(3);
 
       this.time.delayedCall(line.delay, () => {
         this.tweens.add({
@@ -107,7 +271,7 @@ export class OnboardingScene extends Phaser.Scene {
     const skipLabel = ko ? '아무 곳이나 터치하여 계속...' : 'Touch anywhere to continue...';
     const skipText = this.add.text(cx, GAME_HEIGHT - 10, skipLabel,
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
-    ).setOrigin(0.5).setAlpha(0).setDepth(1);
+    ).setOrigin(0.5).setAlpha(0).setDepth(3);
 
     this.time.delayedCall(totalDuration, () => {
       this.tweens.add({ targets: skipText, alpha: 0.7, duration: 500 });
@@ -119,15 +283,38 @@ export class OnboardingScene extends Phaser.Scene {
     this.input.keyboard?.once('keydown-ESC', () => this.proceed());
   }
 
+  // ─── Update ─────────────────────────────────────────────────────────
+
   update(): void {
-    this.gfx.clear();
-    this.bgParticles.forEach(p => {
-      p.y += p.vy;
-      p.x += Math.sin(p.y * 0.01) * 0.1;
-      if (p.y < -5) { p.y = GAME_HEIGHT + 5; p.x = Math.random() * GAME_WIDTH; }
-      this.gfx.fillStyle(0xd4a853, p.a);
-      this.gfx.fillCircle(p.x, p.y, p.s);
-    });
+    this.emberGfx.clear();
+
+    for (let i = this.embers.length - 1; i >= 0; i--) {
+      const e = this.embers[i];
+      e.x += e.vx;
+      e.y += e.vy;
+      e.vx += (Math.random() - 0.5) * 0.04; // slight drift
+      e.life++;
+
+      const lifeFrac = e.life / e.maxLife;
+      const fadeAlpha = lifeFrac < 0.1
+        ? e.alpha * (lifeFrac / 0.1)
+        : lifeFrac > 0.7
+        ? e.alpha * (1 - (lifeFrac - 0.7) / 0.3)
+        : e.alpha;
+
+      if (e.life >= e.maxLife || e.y < -5) {
+        this.embers[i] = this.createEmber(false);
+        continue;
+      }
+
+      this.emberGfx.fillStyle(e.color, fadeAlpha);
+      this.emberGfx.fillCircle(e.x, e.y, e.size);
+    }
+
+    // Occasionally spawn extra embers for variety
+    if (Math.random() < 0.08 && this.embers.length < 60) {
+      this.embers.push(this.createEmber(false));
+    }
   }
 
   private async proceed(): Promise<void> {
