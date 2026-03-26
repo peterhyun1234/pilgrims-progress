@@ -40,6 +40,10 @@ import { CHAPTER_VERSES } from '../narrative/data/bibleVerses';
 import { StatsManager } from '../core/StatsManager';
 import { SaveManager } from '../save/SaveManager';
 import { GamePlayState } from '../core/GamePlayState';
+import { CutsceneEngine } from './CutsceneEngine';
+import { CUTSCENE_REGISTRY } from '../narrative/data/cutsceneDefinitions';
+import { EnvironmentAnimations } from '../fx/EnvironmentAnimations';
+import { Companion } from '../entities/Companion';
 
 export class GameScene extends Phaser.Scene {
   private inputManager!: InputManager;
@@ -94,6 +98,11 @@ export class GameScene extends Phaser.Scene {
   private mapObjectSprites: Record<string, Phaser.GameObjects.Container> = {};
   /** Exit-hint cooldown guard. */
   private exitHintCooldown = 0;
+  /** Cutscene engine for key emotional scenes. */
+  private cutsceneEngine!: CutsceneEngine;
+  private environmentAnimations!: EnvironmentAnimations;
+  /** Active companion (Faithful Ch9, Hopeful Ch11+). */
+  private companion: Companion | null = null;
 
   constructor() {
     super({ key: SCENE_KEYS.GAME });
@@ -132,6 +141,9 @@ export class GameScene extends Phaser.Scene {
     this.narrativeDirector = new NarrativeDirector(this);
     ServiceLocator.register(SERVICE_KEYS.NARRATIVE_DIRECTOR, this.narrativeDirector);
 
+    this.cutsceneEngine = new CutsceneEngine(this);
+    this.environmentAnimations = new EnvironmentAnimations(this);
+
     this.screenShake = new ScreenShake(this);
     this.particleManager = new ParticleManager(this);
     this.juiceEffects = new JuiceEffects(this);
@@ -152,6 +164,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const chapterConfig = this.chapterManager.loadChapter(this.gameManager.currentChapter);
+    this.environmentAnimations.init(chapterConfig);
 
     this.player = new Player(this, chapterConfig.spawn.x, chapterConfig.spawn.y);
     this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
@@ -239,6 +252,19 @@ export class GameScene extends Phaser.Scene {
 
   private applyChapterModifiers(config: ChapterConfig): void {
     this.chapterSpeedMod = config.theme.playerSpeedMod ?? 1.0;
+  }
+
+  // ── Companion ─────────────────────────────────────────────────────────────
+
+  private spawnChapterCompanion(chapter: number, x: number, y: number): void {
+    this.companion?.destroy();
+    this.companion = null;
+
+    if (chapter === 9) {
+      this.companion = Companion.createFaithful(this, x, y);
+    } else if (chapter >= 11 && chapter <= 12) {
+      this.companion = Companion.createHopeful(this, x, y);
+    }
   }
 
   // ── Map objects ──────────────────────────────────────────────────────────
@@ -540,7 +566,7 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    const storyKey = `ch0${this.gameManager.currentChapter}_ink`;
+    const storyKey = 'story_ink';
     const data = this.cache.json.get(storyKey);
 
     if (data) {
@@ -895,7 +921,19 @@ export class GameScene extends Phaser.Scene {
     this.eventBus.on(GameEvent.DIALOGUE_END, this.onDialogueEnd);
     this.eventBus.on(GameEvent.BATTLE_END, this.onBattleEnd);
     this.eventBus.on(GameEvent.BURDEN_RELEASED, this.onBurdenReleased);
+    this.eventBus.on('cutscene:stat_change', this.onCutsceneStatChange);
   }
+
+  private onCutsceneStatChange = (payload: { stat: string; amount: number } | undefined) => {
+    if (!payload) return;
+    const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
+    const stat = payload.stat as import('../core/GameEvents').StatType;
+    if (stat === 'burden' && payload.amount < 0) {
+      sm.setBurdenZero();
+    } else {
+      sm.change(stat, payload.amount);
+    }
+  };
 
   private cleanupEvents(): void {
     this.eventBus.off(GameEvent.NPC_INTERACT, this.onNpcInteract);
@@ -906,6 +944,7 @@ export class GameScene extends Phaser.Scene {
     this.eventBus.off(GameEvent.DIALOGUE_END, this.onDialogueEnd);
     this.eventBus.off(GameEvent.BATTLE_END, this.onBattleEnd);
     this.eventBus.off(GameEvent.BURDEN_RELEASED, this.onBurdenReleased);
+    this.eventBus.off('cutscene:stat_change', this.onCutsceneStatChange);
   }
 
   // ── Location title ───────────────────────────────────────────────────────
@@ -1006,7 +1045,7 @@ export class GameScene extends Phaser.Scene {
             this.triggerDialogueEvent(event);
             break;
           case 'cutscene':
-            this.eventBus.emit(GameEvent.MAP_EVENT, event);
+            this.playCutsceneEvent(event.data.cutsceneId as string);
             break;
         }
       }
@@ -1023,7 +1062,7 @@ export class GameScene extends Phaser.Scene {
       const npc = this.npcs.find(n => n.npcId === npcId);
       if (!npc) return;
 
-      const storyKey = `ch0${this.gameManager.currentChapter}_ink`;
+      const storyKey = 'story_ink';
       const data = this.cache.json.get(storyKey);
       if (data) {
         try {
@@ -1050,6 +1089,45 @@ export class GameScene extends Phaser.Scene {
     if (event.data.exhibitLabel) {
       this.gamePlayState.setObjectState(event.id, { activated: true });
     }
+  }
+
+  // ── Cutscene events ──────────────────────────────────────────────────────
+
+  private playCutsceneEvent(cutsceneId: string): void {
+    if (this.cutsceneEngine.playing) return;
+    if (this.gameManager.isState(GameState.CUTSCENE)) return;
+
+    const def = CUTSCENE_REGISTRY[cutsceneId];
+    if (!def) {
+      // Unknown cutscene — emit generic event for extensibility
+      this.eventBus.emit(GameEvent.MAP_EVENT, { cutsceneId });
+      return;
+    }
+
+    this.gameManager.changeState(GameState.CUTSCENE);
+    // Halt player during cutscene
+    if (this.player.sprite.body instanceof Phaser.Physics.Arcade.Body) {
+      this.player.sprite.body.setVelocity(0, 0);
+    }
+
+    void this.cutsceneEngine.play(def).then(() => {
+      this.gameManager.changeState(GameState.GAME);
+
+      // Special post-cutscene hooks
+      if (cutsceneId === 'ch6_burden_released') {
+        // Ch6 cross: burden stat is zeroed via cutscene step, trigger NPC state
+        this.npcStateManager.setPhase('shining_ones', 'available');
+      }
+      if (cutsceneId === 'celestial_arrival') {
+        // Game complete — transition to EndingScene
+        this.time.delayedCall(3000, () => {
+          void DesignSystem.fadeOut(this, 1500).then(() => {
+            this.shutdown();
+            this.scene.start(SCENE_KEYS.ENDING);
+          });
+        });
+      }
+    });
   }
 
   // ── Exit zone checking (ARCH-03) ─────────────────────────────────────────
@@ -1165,6 +1243,7 @@ export class GameScene extends Phaser.Scene {
     // Note: do NOT clear triggeredEvents — they persist globally
 
     const config = this.chapterManager.loadChapter(chapter);
+    this.environmentAnimations.init(config);
 
     const colliders = this.tileMapManager.getColliders();
     if (colliders) {
@@ -1183,6 +1262,7 @@ export class GameScene extends Phaser.Scene {
     this.spawnMapObjects(config);
     this.applyChapterModifiers(config);
     this.tutorialSystem.showForChapter(chapter);
+    this.spawnChapterCompanion(chapter, config.spawn.x + 40, config.spawn.y);
 
     const locName = this.chapterManager.getLocationName?.()
       ?? config.locationName
@@ -1253,6 +1333,11 @@ export class GameScene extends Phaser.Scene {
     this.miniMap.update(this.player.sprite.x, this.player.sprite.y, this.npcs);
     this.particleManager.update(delta);
     this.lightingManager.update();
+    this.environmentAnimations.update(delta);
+    this.companion?.update(
+      this.player.sprite.x, this.player.sprite.y,
+      this.player.sprite.flipX, delta,
+    );
     this.checkMapEvents();
     this.checkExits();
     this.tutorialSystem.checkStuck(this.player.sprite.x, this.player.sprite.y, delta);
@@ -1328,6 +1413,10 @@ export class GameScene extends Phaser.Scene {
     this.lightingManager?.destroy();
     this.transitionEffects?.destroy();
     this.debugPanel?.destroy();
+    this.cutsceneEngine?.destroy();
+    this.environmentAnimations?.destroy();
+    this.companion?.destroy();
+    this.companion = null;
     this.pauseBtn?.destroy(true);
     this.ambientParticles?.destroy();
     this.itemSprites.forEach(s => s.destroy(true));

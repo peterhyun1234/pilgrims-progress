@@ -101,6 +101,7 @@ export const SCENE_KEYS = {
   GAME: 'GameScene',
   BATTLE: 'BattleScene',
   CUTSCENE: 'CutsceneScene',
+  ENDING: 'EndingScene',
 } as const;
 
 export const BREAKPOINTS = {

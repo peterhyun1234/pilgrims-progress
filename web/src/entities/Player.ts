@@ -1,6 +1,7 @@
 import { Entity } from './Entity';
 import { PlayerMotor } from './PlayerMotor';
 import { PlayerAnimator } from './PlayerAnimator';
+import { ActionAnimations } from './ActionAnimations';
 import { StateMachine } from '../core/StateMachine';
 import { PlayerState, GameEvent } from '../core/GameEvents';
 import { EventBus } from '../core/EventBus';
@@ -15,6 +16,7 @@ export interface PlayerInput {
 export class Player extends Entity {
   private motor: PlayerMotor;
   private animator: PlayerAnimator;
+  private actionAnimations: ActionAnimations;
   private fsm: StateMachine<PlayerState>;
   public nearbyNPC: NPC | null = null;
 
@@ -36,6 +38,7 @@ export class Player extends Entity {
 
     this.motor = new PlayerMotor();
     this.animator = new PlayerAnimator(this.sprite, texKey);
+    this.actionAnimations = new ActionAnimations(scene, this.sprite);
 
     this.fsm = new StateMachine<PlayerState>();
     this.fsm
@@ -63,6 +66,7 @@ export class Player extends Entity {
 
   override destroy(): void {
     EventBus.getInstance().off(GameEvent.PLAYER_DAMAGED, this.onDamaged);
+    this.actionAnimations.destroy();
     super.destroy();
   }
 
@@ -139,6 +143,17 @@ export class Player extends Entity {
       this.sprite.body!.velocity.x,
       this.sprite.body!.velocity.y,
     );
+
+    // Sync ActionAnimations overlay with player FSM state
+    const stateMap: Partial<Record<PlayerState, import('./ActionAnimations').PlayerActionState>> = {
+      [PlayerState.PRAY]:      'pray',
+      [PlayerState.HURT]:      'hurt',
+      [PlayerState.CELEBRATE]: 'celebrate',
+      [PlayerState.INTERACT]:  'interact',
+    };
+    const actionState = stateMap[this.fsm.current!] ?? 'idle';
+    this.actionAnimations.setState(actionState);
+    this.actionAnimations.update(delta);
   }
 
   private squash(sx: number, sy: number, duration: number): void {

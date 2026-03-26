@@ -10,9 +10,10 @@ export class SaveManager {
   private eventBus: EventBus;
   private static readonly SAVE_KEY = 'pilgrims_progress_save';
   private lastLoaded: SaveData | null = null;
+  private saving = false;
 
-  private onSave = () => { this.save(); };
-  private onLoad = () => { this.load(); };
+  private onSave = () => { void this.save(); };
+  private onLoad = () => { void this.load(); };
 
   constructor(eventBus: EventBus) {
     this.eventBus = eventBus;
@@ -36,6 +37,8 @@ export class SaveManager {
   }
 
   async save(): Promise<void> {
+    if (this.saving) return; // Prevent concurrent saves
+    this.saving = true;
     try {
       const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
       const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
@@ -97,6 +100,8 @@ export class SaveManager {
       this.lastLoaded = data;
     } catch (e) {
       console.error('[SaveManager] save failed:', e);
+    } finally {
+      this.saving = false;
     }
   }
 

@@ -24,6 +24,15 @@ export class BattleScene extends Phaser.Scene {
   private playerHpText!: Phaser.GameObjects.Text;
   private enemyHpText!: Phaser.GameObjects.Text;
 
+  // Sprites for cinematic rendering
+  private playerSprite: Phaser.GameObjects.Sprite | null = null;
+  private enemySprite: Phaser.GameObjects.Sprite | null = null;
+
+  // Boss phase system
+  private bossPhase = 0;
+  private bossPhaseThresholds = [0.75, 0.5, 0.25];
+  private bossPhaseDialogues: string[][] = [];
+
   private enemyId = 'doubt';
   private isAnimating = false;
 
@@ -128,68 +137,116 @@ export class BattleScene extends Phaser.Scene {
   private createEnemyDisplay(enemy: EnemyDef, state: CombatState): void {
     this.enemyContainer = this.add.container(GAME_WIDTH / 2, 60).setDepth(10);
 
-    const gfx = this.add.graphics();
-    gfx.fillStyle(enemy.iconColor, 0.4);
-    gfx.fillCircle(0, 0, 30);
-    gfx.lineStyle(2, enemy.iconColor, 0.8);
-    gfx.strokeCircle(0, 0, 30);
+    // Try to use a real sprite; fall back to procedural silhouette
+    const spriteKey = this.textures.exists(enemy.id)
+      ? enemy.id
+      : (this.textures.exists(`${enemy.id}_gen`) ? `${enemy.id}_gen` : null);
 
-    if (enemy.isBoss) {
-      gfx.lineStyle(1, 0xff0000, 0.4);
-      gfx.strokeCircle(0, 0, 35);
+    const bossScale = enemy.isBoss ? 2.5 : 1.8;
+
+    if (spriteKey) {
+      this.enemySprite = this.add.sprite(0, 0, spriteKey, 0)
+        .setScale(bossScale)
+        .setFlipX(true);
+      const animKey = `${spriteKey}_idle_down`;
+      if (this.anims.exists(animKey)) this.enemySprite.play(animKey, true);
+      this.enemyContainer.add(this.enemySprite);
+    } else {
+      // Procedural silhouette (existing style)
+      const gfx = this.add.graphics();
+      const baseScale = enemy.isBoss ? 1.4 : 1.0;
+      gfx.fillStyle(enemy.iconColor, 0.4);
+      gfx.fillCircle(0, 0, 30 * baseScale);
+      gfx.lineStyle(2, enemy.iconColor, 0.8);
+      gfx.strokeCircle(0, 0, 30 * baseScale);
+      if (enemy.isBoss) {
+        gfx.lineStyle(1.5, 0xff0000, 0.5);
+        gfx.strokeCircle(0, 0, 42);
+      }
+      gfx.fillStyle(enemy.iconColor, 0.9);
+      gfx.fillCircle(0, -6 * baseScale, 9 * baseScale);
+      gfx.fillRect(-7 * baseScale, 6 * baseScale, 14 * baseScale, 18 * baseScale);
+      for (let i = 0; i < 3; i++) {
+        const angle = (i / 3) * Math.PI - Math.PI / 2;
+        gfx.fillStyle(enemy.iconColor, 0.3);
+        gfx.fillCircle(Math.cos(angle) * 22 * baseScale, Math.sin(angle) * 22 * baseScale, 5 * baseScale);
+      }
+      this.enemyContainer.add(gfx);
     }
 
-    gfx.fillStyle(enemy.iconColor, 0.8);
-    gfx.fillCircle(0, -5, 8);
-    gfx.fillRect(-6, 5, 12, 15);
-
-    for (let i = 0; i < 3; i++) {
-      const angle = (i / 3) * Math.PI - Math.PI / 2;
-      gfx.fillStyle(enemy.iconColor, 0.3);
-      gfx.fillCircle(Math.cos(angle) * 20, Math.sin(angle) * 20, 4);
-    }
-
-    this.enemyContainer.add(gfx);
+    // Enemy aura (boss gets bigger aura)
+    const auraGfx = this.add.graphics();
+    const auraR = enemy.isBoss ? 48 : 32;
+    auraGfx.fillStyle(enemy.iconColor, 0.06);
+    auraGfx.fillCircle(0, 0, auraR);
+    this.enemyContainer.addAt(auraGfx, 0);
 
     const ko = this.gameManager.language === 'ko';
-    const nameText = this.add.text(0, -48, ko ? enemy.nameKo : enemy.nameEn,
+    const nameText = this.add.text(0, -52, ko ? enemy.nameKo : enemy.nameEn,
       DesignSystem.dangerTextStyle(DesignSystem.FONT_SIZE.SM),
     ).setOrigin(0.5);
     this.enemyContainer.add(nameText);
 
+    // Boss badge
+    if (enemy.isBoss) {
+      const bossBadge = this.add.text(0, -64,
+        ko ? '【 BOSS 】' : '【 BOSS 】',
+        DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, '#ff4444'),
+      ).setOrigin(0.5);
+      this.enemyContainer.add(bossBadge);
+    }
+
     const hpBar = DesignSystem.createProgressBar(
-      this, -50, 38, 100, 6, enemy.iconColor, 0x222222, state.enemyHp / state.enemyMaxHp,
+      this, -55, 42, 110, 6, enemy.iconColor, 0x222222, state.enemyHp / state.enemyMaxHp,
     );
     this.enemyHpBar = hpBar;
     this.enemyContainer.add([hpBar.bg, hpBar.fill]);
 
-    this.enemyHpText = this.add.text(0, 48, `${state.enemyHp}/${state.enemyMaxHp}`,
+    this.enemyHpText = this.add.text(0, 52, `${state.enemyHp}/${state.enemyMaxHp}`,
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5);
     this.enemyContainer.add(this.enemyHpText);
 
     if (enemy.isBoss) {
       this.tweens.add({
-        targets: this.enemyContainer, scaleX: 1.02, scaleY: 1.02,
-        duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        targets: this.enemyContainer, scaleX: 1.03, scaleY: 1.03,
+        duration: 2000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
       });
+      // Set up boss phase dialogues
+      const languageIsBossKo = ko;
+      this.bossPhaseDialogues = enemy.id === 'apollyon' ? [
+        [languageIsBossKo ? '\"내 영역에서 도망칠 수 없다!\"' : '"You cannot escape my domain!"'],
+        [languageIsBossKo ? '\"너의 믿음은 아무것도 아니다!\"' : '"Your faith is nothing!"'],
+        [languageIsBossKo ? '\"이제 끝이다, 순례자여!\"' : '"This is the end, pilgrim!"'],
+      ] : [
+        [languageIsBossKo ? '\"아직도 희망을 품느냐?\"' : '"You still dare to hope?"'],
+        [languageIsBossKo ? '\"절망은 영원하다!\"' : '"Despair is eternal!"'],
+        [languageIsBossKo ? '\"굴복하라!\"' : '"Submit!"'],
+      ];
     }
   }
 
   private createPlayerDisplay(state: CombatState): void {
     this.playerContainer = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 80).setDepth(10);
 
+    // Player sprite
+    const pTexKey = this.textures.exists('christian_gen') ? 'christian_gen' : 'christian';
+    this.playerSprite = this.add.sprite(0, -28, pTexKey, 0).setScale(1.8);
+    const idleAnim = `${pTexKey}_idle_down`;
+    if (this.anims.exists(idleAnim)) this.playerSprite.play(idleAnim, true);
+    this.playerContainer.add(this.playerSprite);
+
     const ko = this.gameManager.language === 'ko';
-    const label = this.add.text(0, -16, ko ? '크리스천' : 'Christian',
-      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
+    const label = this.add.text(0, -2, ko ? '크리스천 / Christian' : 'Christian',
+      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5);
 
     const hpBar = DesignSystem.createProgressBar(
-      this, -50, -4, 100, 6, COLORS.STAT.FAITH, 0x222222, state.playerHp / state.playerMaxHp,
+      this, -55, 8, 110, 6, COLORS.STAT.FAITH, 0x222222, state.playerHp / state.playerMaxHp,
     );
     this.playerHpBar = hpBar;
 
-    this.playerHpText = this.add.text(0, 6, `HP: ${state.playerHp}/${state.playerMaxHp}`,
+    this.playerHpText = this.add.text(0, 18, `HP: ${state.playerHp}/${state.playerMaxHp}`,
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5);
 
@@ -355,22 +412,62 @@ export class BattleScene extends Phaser.Scene {
 
   private animatePlayerAction(icon: string): Promise<void> {
     return new Promise(resolve => {
-      const effect = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2, icon, {
-        fontSize: '24px',
+      // Lunge player sprite toward enemy
+      if (this.playerSprite) {
+        this.tweens.add({
+          targets: this.playerSprite,
+          y: this.playerSprite.y - 12,
+          duration: 120,
+          ease: 'Back.easeOut',
+          yoyo: true,
+        });
+        this.tweens.add({
+          targets: this.playerSprite,
+          scaleX: 2.0,
+          duration: 80,
+          yoyo: true,
+        });
+      }
+
+      // Icon effect
+      const effect = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20, icon, {
+        fontSize: '20px',
       }).setOrigin(0.5).setDepth(300).setAlpha(0);
 
       this.tweens.add({
         targets: effect,
-        alpha: 1, y: GAME_HEIGHT / 2 - 20, scaleX: 1.5, scaleY: 1.5,
-        duration: 300, ease: 'Back.easeOut',
+        alpha: 1,
+        y: GAME_HEIGHT / 2 - 10,
+        scaleX: 1.4,
+        scaleY: 1.4,
+        duration: 250,
+        ease: 'Back.easeOut',
         onComplete: () => {
           this.tweens.add({
             targets: effect,
-            alpha: 0, y: GAME_HEIGHT / 2 - 40,
+            alpha: 0,
+            y: GAME_HEIGHT / 2 - 30,
             duration: 200,
             onComplete: () => { effect.destroy(); resolve(); },
           });
         },
+      });
+
+      // Slash arc graphic
+      const slash = this.add.graphics().setDepth(299);
+      const cx = GAME_WIDTH / 2;
+      const cy = GAME_HEIGHT * 0.48 - 10;
+      slash.lineStyle(2, 0xffd700, 0.7);
+      slash.beginPath();
+      slash.arc(cx - 10, cy, 28, -0.6, 0.6);
+      slash.strokePath();
+
+      this.tweens.add({
+        targets: slash,
+        alpha: 0,
+        x: 8,
+        duration: 300,
+        onComplete: () => slash.destroy(),
       });
     });
   }
@@ -382,18 +479,146 @@ export class BattleScene extends Phaser.Scene {
     this.enemyHpText.setText(`${state.enemyHp}/${state.enemyMaxHp}`);
     this.updateLog(state);
 
-    if (state.enemyHp < state.enemyMaxHp * 0.3) {
-      this.cameras.main.shake(100, 0.005);
+    // Player hurt reaction
+    const lastEntry = state.log[state.log.length - 1];
+    if (lastEntry?.type === 'enemy') {
+      this.flashSprite(this.playerSprite, 0xff4444);
     }
+    // Enemy hurt reaction
+    if (lastEntry?.type === 'player') {
+      this.flashSprite(this.enemySprite, 0xffffff);
+    }
+
+    // Low HP camera shake escalation
+    const hpRatio = state.enemyHp / state.enemyMaxHp;
+    if (hpRatio < 0.3) {
+      this.cameras.main.shake(80, 0.003);
+    }
+
+    // Boss phase transitions
+    this.checkBossPhase(state);
+  }
+
+  private flashSprite(sprite: Phaser.GameObjects.Sprite | null, color: number): void {
+    if (!sprite) return;
+    sprite.setTint(color);
+    this.time.delayedCall(120, () => sprite.clearTint());
+  }
+
+  private checkBossPhase(state: CombatState): void {
+    if (this.bossPhaseDialogues.length === 0) return;
+    const hpRatio = state.enemyHp / state.enemyMaxHp;
+
+    for (let p = this.bossPhase; p < this.bossPhaseThresholds.length; p++) {
+      if (hpRatio <= this.bossPhaseThresholds[p]) {
+        this.bossPhase = p + 1;
+        this.triggerBossPhase(p);
+        break;
+      }
+    }
+  }
+
+  private triggerBossPhase(phaseIndex: number): void {
+    const lines = this.bossPhaseDialogues[phaseIndex];
+    if (!lines || lines.length === 0) return;
+    const line = lines[0];
+
+    // Screen shake + red flash
+    this.cameras.main.shake(300, 0.015);
+    const flash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x440000, 0.4)
+      .setDepth(400);
+    this.tweens.add({ targets: flash, alpha: 0, duration: 500, onComplete: () => flash.destroy() });
+
+    // Boss escalation: grow enemy container
+    this.tweens.add({
+      targets: this.enemyContainer,
+      scaleX: 1 + phaseIndex * 0.08,
+      scaleY: 1 + phaseIndex * 0.08,
+      duration: 400,
+      ease: 'Back.easeOut',
+    });
+
+    // Boss speech bubble
+    const bubble = this.add.container(GAME_WIDTH / 2, 20).setDepth(400).setAlpha(0);
+    const bg = this.add.graphics();
+    bg.fillStyle(0x1a0808, 0.92);
+    bg.fillRoundedRect(-100, 0, 200, 28, 5);
+    bg.lineStyle(1, 0xff4444, 0.6);
+    bg.strokeRoundedRect(-100, 0, 200, 28, 5);
+    const speechText = this.add.text(0, 14, line, {
+      fontSize: '4px',
+      color: '#ff8888',
+      fontFamily: 'Silkscreen',
+      wordWrap: { width: 190 },
+      align: 'center',
+    }).setOrigin(0.5);
+    bubble.add([bg, speechText]);
+
+    this.tweens.add({
+      targets: bubble, alpha: 1, duration: 300,
+      onComplete: () => {
+        this.time.delayedCall(2500, () => {
+          this.tweens.add({
+            targets: bubble, alpha: 0, duration: 400,
+            onComplete: () => bubble.destroy(true),
+          });
+        });
+      },
+    });
   }
 
   private async endBattle(state: CombatState): Promise<void> {
     const ko = this.gameManager.language === 'ko';
 
-    await new Promise<void>(resolve => this.time.delayedCall(800, resolve));
+    await new Promise<void>(resolve => this.time.delayedCall(600, resolve));
 
     if (state.victory) {
       this.getAudio()?.procedural?.playChapterComplete();
+
+      // Enemy dissolve effect
+      if (this.enemyContainer) {
+        this.tweens.add({
+          targets: this.enemyContainer,
+          alpha: 0,
+          scaleX: 0.3,
+          scaleY: 0.3,
+          y: this.enemyContainer.y - 20,
+          duration: 600,
+          ease: 'Sine.easeIn',
+        });
+        // Burst particles at enemy position
+        for (let i = 0; i < 8; i++) {
+          const angle = (i / 8) * Math.PI * 2;
+          const dot = this.add.circle(
+            this.enemyContainer.x + Math.cos(angle) * 10,
+            this.enemyContainer.y + Math.sin(angle) * 10,
+            2, 0xffd700, 0.8,
+          ).setDepth(350);
+          this.tweens.add({
+            targets: dot,
+            x: dot.x + Math.cos(angle) * 30,
+            y: dot.y + Math.sin(angle) * 30,
+            alpha: 0,
+            duration: 500,
+            onComplete: () => dot.destroy(),
+          });
+        }
+      }
+
+      await new Promise<void>(resolve => this.time.delayedCall(500, resolve));
+
+      // Celebrate player sprite
+      if (this.playerSprite) {
+        this.tweens.add({
+          targets: this.playerSprite,
+          y: this.playerSprite.y - 10,
+          duration: 150,
+          ease: 'Sine.easeOut',
+          yoyo: true,
+          repeat: 2,
+        });
+      }
+
       const victoryText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20,
         ko ? '✝ 승리!' : '✝ Victory!',
         DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XXL),
@@ -403,16 +628,38 @@ export class BattleScene extends Phaser.Scene {
         targets: victoryText, alpha: 1, scaleX: 1.2, scaleY: 1.2,
         duration: 500, ease: 'Back.easeOut',
       });
+
+      // Gold sparkle ring
+      const sparkRing = this.add.graphics().setDepth(499);
+      this.tweens.add({
+        targets: { t: 0 },
+        t: 1,
+        duration: 800,
+        onUpdate: (tween) => {
+          sparkRing.clear();
+          const t2 = tween.getValue() ?? 0;
+          sparkRing.lineStyle(1.5, 0xffd700, (1 - t2) * 0.5);
+          sparkRing.strokeCircle(GAME_WIDTH / 2, GAME_HEIGHT / 2, t2 * 60);
+        },
+        onComplete: () => sparkRing.destroy(),
+      });
     } else {
       this.getAudio()?.procedural?.playStatLoss();
+
+      // White flash — grace
+      const graceFlash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xffffff, 0.7)
+        .setDepth(490);
+      this.tweens.add({
+        targets: graceFlash, alpha: 0, duration: 1200,
+        onComplete: () => graceFlash.destroy(),
+      });
+
       const graceText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20,
         ko ? '은혜로 다시 일어선다...' : 'Grace lifts you up again...',
         DesignSystem.textStyle(DesignSystem.FONT_SIZE.LG, '#aaaaff'),
       ).setOrigin(0.5).setDepth(500).setAlpha(0);
 
-      this.tweens.add({
-        targets: graceText, alpha: 1, duration: 800,
-      });
+      this.tweens.add({ targets: graceText, alpha: 1, duration: 800 });
     }
 
     this.time.delayedCall(2000, async () => {
