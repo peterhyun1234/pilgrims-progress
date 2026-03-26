@@ -269,9 +269,9 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         sprite: 'evangelist',
         x: 280, y: 160,
         chapter: 1,
-        // Patrol slightly left-right to appear busy
         patrolPath: [{ x: 265, y: 160 }, { x: 295, y: 160 }],
         patrolSpeed: 12,
+        behavior: 'gesture',
       },
       {
         id: 'obstinate',
@@ -483,6 +483,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         sprite: 'interpreter',
         x: 240, y: 200,
         chapter: 5,
+        behavior: 'pray',
       },
     ],
     exits: [
@@ -563,6 +564,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         chapter: 7,
         patrolPath: [{ x: 260, y: 320 }, { x: 350, y: 310 }],
         patrolSpeed: 30,
+        behavior: 'pace',
       },
       {
         id: 'mistrust',
@@ -573,6 +575,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         chapter: 7,
         patrolPath: [{ x: 440, y: 300 }, { x: 520, y: 280 }],
         patrolSpeed: 28,
+        behavior: 'pace',
       },
       {
         id: 'watchful',
@@ -581,6 +584,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         sprite: 'watchful',
         x: 1500, y: 300,
         chapter: 7,
+        behavior: 'guard',
       },
       {
         id: 'prudence',
@@ -590,6 +594,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         x: 1800, y: 280,
         chapter: 7,
         unlockedAt: 'watchful',
+        behavior: 'read',
       },
       {
         id: 'piety',
@@ -599,6 +604,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         x: 2000, y: 310,
         chapter: 7,
         unlockedAt: 'watchful',
+        behavior: 'pray',
       },
       {
         id: 'charity',

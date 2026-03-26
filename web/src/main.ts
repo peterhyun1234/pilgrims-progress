@@ -10,6 +10,7 @@ import { GameScene } from './scenes/GameScene';
 import { BattleScene } from './scenes/BattleScene';
 import { CutsceneScene } from './scenes/CutsceneScene';
 import { SettingsScene } from './scenes/SettingsScene';
+import { EndingScene } from './scenes/EndingScene';
 
 const config: Phaser.Types.Core.GameConfig = {
   type: Phaser.AUTO,
@@ -45,6 +46,7 @@ const config: Phaser.Types.Core.GameConfig = {
     BattleScene,
     CutsceneScene,
     SettingsScene,
+    EndingScene,
   ],
   backgroundColor: '#0A0814',
 };

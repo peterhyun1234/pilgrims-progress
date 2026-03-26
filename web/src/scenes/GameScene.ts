@@ -42,6 +42,8 @@ import { SaveManager } from '../save/SaveManager';
 import { GamePlayState } from '../core/GamePlayState';
 import { CutsceneEngine } from './CutsceneEngine';
 import { CUTSCENE_REGISTRY } from '../narrative/data/cutsceneDefinitions';
+import { EnvironmentAnimations } from '../fx/EnvironmentAnimations';
+import { Companion } from '../entities/Companion';
 
 export class GameScene extends Phaser.Scene {
   private inputManager!: InputManager;
@@ -98,6 +100,9 @@ export class GameScene extends Phaser.Scene {
   private exitHintCooldown = 0;
   /** Cutscene engine for key emotional scenes. */
   private cutsceneEngine!: CutsceneEngine;
+  private environmentAnimations!: EnvironmentAnimations;
+  /** Active companion (Faithful Ch9, Hopeful Ch11+). */
+  private companion: Companion | null = null;
 
   constructor() {
     super({ key: SCENE_KEYS.GAME });
@@ -137,6 +142,7 @@ export class GameScene extends Phaser.Scene {
     ServiceLocator.register(SERVICE_KEYS.NARRATIVE_DIRECTOR, this.narrativeDirector);
 
     this.cutsceneEngine = new CutsceneEngine(this);
+    this.environmentAnimations = new EnvironmentAnimations(this);
 
     this.screenShake = new ScreenShake(this);
     this.particleManager = new ParticleManager(this);
@@ -158,6 +164,7 @@ export class GameScene extends Phaser.Scene {
     }
 
     const chapterConfig = this.chapterManager.loadChapter(this.gameManager.currentChapter);
+    this.environmentAnimations.init(chapterConfig);
 
     this.player = new Player(this, chapterConfig.spawn.x, chapterConfig.spawn.y);
     this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
@@ -245,6 +252,19 @@ export class GameScene extends Phaser.Scene {
 
   private applyChapterModifiers(config: ChapterConfig): void {
     this.chapterSpeedMod = config.theme.playerSpeedMod ?? 1.0;
+  }
+
+  // ── Companion ─────────────────────────────────────────────────────────────
+
+  private spawnChapterCompanion(chapter: number, x: number, y: number): void {
+    this.companion?.destroy();
+    this.companion = null;
+
+    if (chapter === 9) {
+      this.companion = Companion.createFaithful(this, x, y);
+    } else if (chapter >= 11 && chapter <= 12) {
+      this.companion = Companion.createHopeful(this, x, y);
+    }
   }
 
   // ── Map objects ──────────────────────────────────────────────────────────
@@ -1099,11 +1119,11 @@ export class GameScene extends Phaser.Scene {
         this.npcStateManager.setPhase('shining_ones', 'available');
       }
       if (cutsceneId === 'celestial_arrival') {
-        // Game complete — transition to menu after a long fade
+        // Game complete — transition to EndingScene
         this.time.delayedCall(3000, () => {
           void DesignSystem.fadeOut(this, 1500).then(() => {
             this.shutdown();
-            this.scene.start(SCENE_KEYS.MENU);
+            this.scene.start(SCENE_KEYS.ENDING);
           });
         });
       }
@@ -1223,6 +1243,7 @@ export class GameScene extends Phaser.Scene {
     // Note: do NOT clear triggeredEvents — they persist globally
 
     const config = this.chapterManager.loadChapter(chapter);
+    this.environmentAnimations.init(config);
 
     const colliders = this.tileMapManager.getColliders();
     if (colliders) {
@@ -1241,6 +1262,7 @@ export class GameScene extends Phaser.Scene {
     this.spawnMapObjects(config);
     this.applyChapterModifiers(config);
     this.tutorialSystem.showForChapter(chapter);
+    this.spawnChapterCompanion(chapter, config.spawn.x + 40, config.spawn.y);
 
     const locName = this.chapterManager.getLocationName?.()
       ?? config.locationName
@@ -1311,6 +1333,11 @@ export class GameScene extends Phaser.Scene {
     this.miniMap.update(this.player.sprite.x, this.player.sprite.y, this.npcs);
     this.particleManager.update(delta);
     this.lightingManager.update();
+    this.environmentAnimations.update(delta);
+    this.companion?.update(
+      this.player.sprite.x, this.player.sprite.y,
+      this.player.sprite.flipX, delta,
+    );
     this.checkMapEvents();
     this.checkExits();
     this.tutorialSystem.checkStuck(this.player.sprite.x, this.player.sprite.y, delta);
@@ -1387,6 +1414,9 @@ export class GameScene extends Phaser.Scene {
     this.transitionEffects?.destroy();
     this.debugPanel?.destroy();
     this.cutsceneEngine?.destroy();
+    this.environmentAnimations?.destroy();
+    this.companion?.destroy();
+    this.companion = null;
     this.pauseBtn?.destroy(true);
     this.ambientParticles?.destroy();
     this.itemSprites.forEach(s => s.destroy(true));
