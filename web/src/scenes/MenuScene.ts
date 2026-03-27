@@ -278,7 +278,7 @@ export class MenuScene extends Phaser.Scene {
       .on('pointerover', function(this: Phaser.GameObjects.Text) { this.setColor('#d4a853'); })
       .on('pointerout', function(this: Phaser.GameObjects.Text) { this.setColor('#3a3028'); });
 
-    this.add.text(W - 8, H - 8, 'v0.5.0', {
+    this.add.text(W - 8, H - 8, 'v1.0.0', {
       fontSize: '6px', color: '#2a2218', fontFamily: "'Silkscreen', monospace",
     }).setOrigin(1, 1).setDepth(10);
   }
