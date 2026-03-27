@@ -6,6 +6,7 @@ import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
 import { GameEvent, NpcPhase, NpcPhaseChangedPayload } from '../core/GameEvents';
 import { StatType } from '../core/GameEvents';
+import { CharacterSpriteFactory } from './CharacterSpriteFactory';
 
 /** Character-specific idle behaviors beyond simple bob. */
 export type NPCBehavior =
@@ -65,9 +66,17 @@ export class NPC extends Entity {
   private patrolIndex = 0;
 
   constructor(scene: Phaser.Scene, config: NPCConfig) {
-    // Use generated 32×32 sprite if available, fallback to legacy PNG
+    // Use generated 32×32 sprite if available; lazy-generate if missing
     const genKey = `${config.id}_gen`;
-    const texKey = scene.textures.exists(genKey) ? genKey : config.sprite;
+    let texKey: string;
+    if (scene.textures.exists(genKey)) {
+      texKey = genKey;
+    } else if (scene.textures.exists(config.sprite)) {
+      texKey = config.sprite;
+    } else {
+      // Lazy-generate character sprite on first use (in case PreloadScene was skipped)
+      texKey = CharacterSpriteFactory.generate(scene, config.id);
+    }
     super(scene, config.x, config.y, texKey, config.frame ?? 0);
     this.npcId = config.id;
     this.nameKo = config.nameKo;
@@ -210,8 +219,11 @@ export class NPC extends Entity {
     }
 
     this.glowGraphics = this.scene.add.graphics().setDepth(7);
-    this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.18);
-    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 22);
+    // Initial draw — updated each frame in update()
+    this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.12);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 28);
+    this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.28);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 18);
   }
 
   hidePrompt(): void {
@@ -300,9 +312,14 @@ export class NPC extends Entity {
     }
     if (this.glowGraphics) {
       this.glowGraphics.clear();
-      const pulse = 0.12 + Math.sin(t * 2) * 0.08;
+      // Stronger, more visible NPC glow with double-layer for bloom effect
+      const pulse = 0.22 + Math.sin(t * 2) * 0.12;
+      // Outer soft ring
+      this.glowGraphics.fillStyle(COLORS.UI.GOLD, pulse * 0.4);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 28);
+      // Inner bright ring
       this.glowGraphics.fillStyle(COLORS.UI.GOLD, pulse);
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 22);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 18);
     }
   }
 

@@ -315,6 +315,19 @@ export class CharacterSpriteFactory {
       g.fillRoundedRect(burdenX, bodyY - 3, 8, 7, 2);
       g.lineStyle(1, 0x6b5b4f, 0.6);
       g.strokeRoundedRect(burdenX, bodyY - 3, 8, 7, 2);
+      // Burden rope/strap highlight
+      g.lineStyle(1, 0x6b5b4f, 0.4);
+      g.lineBetween(cx, bodyY, burdenX + 4, bodyY - 2);
+    }
+
+    // === Cross badge on Christian's chest (front/right views) ===
+    if (config.id === 'christian' && (dir === 'down' || dir === 'right')) {
+      const badgeX = dir === 'right' ? cx + 1 : cx - 1;
+      const badgeY = bodyY + 3;
+      // Bright gold cross — 3px vertical, 3px horizontal crossing at center
+      g.fillStyle(0xffd080, 0.95);
+      g.fillRect(badgeX, badgeY, 1, 3);       // vertical bar
+      g.fillRect(badgeX - 1, badgeY + 1, 3, 1); // horizontal bar
     }
   }
 

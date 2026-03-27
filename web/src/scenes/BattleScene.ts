@@ -252,12 +252,46 @@ export class BattleScene extends Phaser.Scene {
   private createPlayerDisplay(state: CombatState): void {
     this.playerContainer = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 80).setDepth(10);
 
-    // Player sprite
-    const pTexKey = this.textures.exists('christian_gen') ? 'christian_gen' : 'christian';
-    this.playerSprite = this.add.sprite(0, -28, pTexKey, 0).setScale(1.8);
-    const idleAnim = `${pTexKey}_idle_down`;
-    if (this.anims.exists(idleAnim)) this.playerSprite.play(idleAnim, true);
-    this.playerContainer.add(this.playerSprite);
+    // Player sprite — use generated texture if available, otherwise procedural silhouette
+    const pTexKey = this.textures.exists('christian_gen') ? 'christian_gen'
+      : this.textures.exists('christian') ? 'christian' : null;
+
+    if (pTexKey) {
+      this.playerSprite = this.add.sprite(0, -28, pTexKey, 0).setScale(1.8);
+      const idleAnim = `${pTexKey}_idle_down`;
+      if (this.anims.exists(idleAnim)) this.playerSprite.play(idleAnim, true);
+      this.playerContainer.add(this.playerSprite);
+    } else {
+      // Procedural pilgrim silhouette (pixel art style)
+      const gfx = this.add.graphics();
+      const bs = 1.4;
+      // Outer glow (faith/holy aura)
+      gfx.fillStyle(0xd4a853, 0.10);
+      gfx.fillEllipse(0, -16, 48 * bs, 40 * bs);
+      // Body shadow
+      gfx.fillStyle(0x000000, 0.5);
+      gfx.fillEllipse(0, -4 * bs, 22 * bs, 28 * bs);
+      // Cloak / body
+      gfx.fillStyle(0x3a4a6a, 0.9);
+      gfx.fillEllipse(0, -4 * bs, 18 * bs, 24 * bs);
+      // Head
+      gfx.fillStyle(0x000000, 0.6);
+      gfx.fillCircle(0, -16 * bs, 10 * bs);
+      gfx.fillStyle(0xc8a878, 0.85);
+      gfx.fillCircle(0, -16 * bs, 8 * bs);
+      // Eyes (determined look)
+      gfx.fillStyle(0x3366cc, 1);
+      gfx.fillRect(-3 * bs, -17 * bs, 2 * bs, 2 * bs);
+      gfx.fillRect(1 * bs, -17 * bs, 2 * bs, 2 * bs);
+      // Cross badge on chest (Christian's identifying mark)
+      gfx.fillStyle(0xffd080, 0.9);
+      gfx.fillRect(-1, -6 * bs, 2, 6 * bs);
+      gfx.fillRect(-3, -4 * bs, 6, 2);
+      // Staff
+      gfx.lineStyle(2, 0x8b6a40, 1);
+      gfx.lineBetween(10 * bs, -14 * bs, 12 * bs, 10 * bs);
+      this.playerContainer.add(gfx);
+    }
 
     const ko = this.gameManager.language === 'ko';
     const label = this.add.text(0, -2, ko ? '크리스천 / Christian' : 'Christian',

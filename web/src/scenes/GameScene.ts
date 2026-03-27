@@ -639,14 +639,17 @@ export class GameScene extends Phaser.Scene {
     const conv = ko ? langConv.ko : langConv.en;
     const talkCount = this.npcStateManager.getTalkCount(npcId);
 
-    // Completed/idle phase: show repeated lines only (no stat grants)
-    if ((phase === 'completed' || phase === 'idle') && conv.repeated && conv.repeated.length > 0) {
+    // After first full conversation: show repeated lines only, never grant stats again
+    const isReturning = (phase === 'completed' || phase === 'idle' || talkCount > 0);
+    if (isReturning && conv.repeated && conv.repeated.length > 0) {
+      // Strip all stat grants from repeated dialogue — one-time rewards only
       const idleConv: Conversation = { lines: conv.repeated.map(l => ({ ...l, stat: undefined, amount: undefined })) };
       this.runConversation(npcId, name, idleConv);
-    } else if (talkCount > 0 && conv.repeated && conv.repeated.length > 0) {
-      this.runConversation(npcId, name, { lines: conv.repeated });
-    } else {
+    } else if (!isReturning) {
       this.runConversation(npcId, name, conv);
+    } else {
+      // Completed NPC with no repeated lines — show a brief acknowledgment
+      this.runConversation(npcId, name, { lines: [{ text: '...', emotion: 'neutral' }] });
     }
   }
 
