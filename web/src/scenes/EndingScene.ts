@@ -80,21 +80,7 @@ export class EndingScene extends Phaser.Scene {
   }
 
   private getEndingTier(): EndingTier {
-    const save = ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)
-      ? ServiceLocator.get<import('../save/SaveManager').SaveManager>(SERVICE_KEYS.SAVE_MANAGER).getLastLoaded()
-      : null;
-
-    const faith = save?.stats?.faith ?? 30;
-    const courage = save?.stats?.courage ?? 20;
-    const wisdom = save?.stats?.wisdom ?? 15;
-    const grace = save?.hiddenStats?.graceCounter ?? 0;
-
-    const score = faith * 0.4 + courage * 0.3 + wisdom * 0.3 + Math.min(grace * 2, 10);
-
-    if (score >= 80 && faith >= 80) return 'glory';
-    if (score >= 50 && faith >= 40) return 'humble';
-    if (grace >= 3) return 'grace';
-    return 'barely';
+    return this.gameManager.stats.getEndingTier() as EndingTier;
   }
 
   private createStarfield(theme: TierTheme): void {
@@ -288,16 +274,15 @@ export class EndingScene extends Phaser.Scene {
     divider.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
     divider.lineBetween(cx - 80, statsY - 20, cx + 80, statsY - 20);
 
-    const save = ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)
-      ? ServiceLocator.get<import('../save/SaveManager').SaveManager>(SERVICE_KEYS.SAVE_MANAGER).getLastLoaded()
-      : null;
+    const liveStats = this.gameManager.stats.getAll();
+    const grace = this.gameManager.stats.getHidden().graceCounter ?? 0;
 
     const statLines = ko ? [
-      `믿음: ${save?.stats?.faith ?? '?'} / 용기: ${save?.stats?.courage ?? '?'} / 지혜: ${save?.stats?.wisdom ?? '?'}`,
-      `은혜 회복: ${save?.hiddenStats?.graceCounter ?? 0}회 / 챕터: ${this.gameManager.currentChapter}/12`,
+      `믿음: ${liveStats.faith} / 용기: ${liveStats.courage} / 지혜: ${liveStats.wisdom}`,
+      `은혜 회복: ${grace}회 / 챕터: ${this.gameManager.currentChapter}/12`,
     ] : [
-      `Faith: ${save?.stats?.faith ?? '?'} / Courage: ${save?.stats?.courage ?? '?'} / Wisdom: ${save?.stats?.wisdom ?? '?'}`,
-      `Grace recovered: ${save?.hiddenStats?.graceCounter ?? 0}× / Chapters: ${this.gameManager.currentChapter}/12`,
+      `Faith: ${liveStats.faith} / Courage: ${liveStats.courage} / Wisdom: ${liveStats.wisdom}`,
+      `Grace recovered: ${grace}× / Chapters: ${this.gameManager.currentChapter}/12`,
     ];
 
     statLines.forEach((line, i) => {
