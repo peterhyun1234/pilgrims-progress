@@ -22,6 +22,7 @@ export class AutoSave {
     if (this.saveDebounce) clearTimeout(this.saveDebounce);
     this.saveDebounce = setTimeout(() => {
       this.saveManager.save();
+      this.eventBus.emit(GameEvent.AUTO_SAVE);
       this.saveDebounce = null;
     }, 500);
   }

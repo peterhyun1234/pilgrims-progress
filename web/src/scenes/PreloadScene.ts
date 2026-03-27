@@ -45,10 +45,19 @@ export class PreloadScene extends Phaser.Scene {
     const cy = GAME_HEIGHT / 2;
     const barW = 200;
     const barH = 7;
-    const barY = cy + 22;
+    const barY = cy + 8;
 
-    this.add.text(cx, cy - 12, "PILGRIM'S PROGRESS",
+    // Decorative cross
+    this.add.text(cx, cy - 44, '✝', {
+      fontSize: '14px', color: '#d4a853', fontFamily: 'serif',
+    }).setOrigin(0.5).setAlpha(0.7);
+
+    this.add.text(cx, cy - 28, "PILGRIM'S PROGRESS",
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XL),
+    ).setOrigin(0.5);
+
+    this.add.text(cx, cy - 14, '천로역정',
+      DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#7a6a54'),
     ).setOrigin(0.5);
 
     this.progressBar = this.add.graphics();

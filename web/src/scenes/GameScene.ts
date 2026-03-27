@@ -930,7 +930,10 @@ export class GameScene extends Phaser.Scene {
     this.eventBus.on(GameEvent.BATTLE_END, this.onBattleEnd);
     this.eventBus.on(GameEvent.BURDEN_RELEASED, this.onBurdenReleased);
     this.eventBus.on('cutscene:stat_change', this.onCutsceneStatChange);
+    this.eventBus.on(GameEvent.AUTO_SAVE, this.onAutoSave);
   }
+
+  private onAutoSave = () => { this.showSaveIndicator(); };
 
   private onCutsceneStatChange = (payload: { stat: string; amount: number } | undefined) => {
     if (!payload) return;
@@ -953,6 +956,7 @@ export class GameScene extends Phaser.Scene {
     this.eventBus.off(GameEvent.BATTLE_END, this.onBattleEnd);
     this.eventBus.off(GameEvent.BURDEN_RELEASED, this.onBurdenReleased);
     this.eventBus.off('cutscene:stat_change', this.onCutsceneStatChange);
+    this.eventBus.off(GameEvent.AUTO_SAVE, this.onAutoSave);
   }
 
   // ── Location title ───────────────────────────────────────────────────────
@@ -962,6 +966,9 @@ export class GameScene extends Phaser.Scene {
 
     const ko = this.gameManager.language === 'ko';
     const chapter = this.gameManager.currentChapter;
+    // Full i18n chapter string e.g. "제7장: 아름다운 궁전" → prefix is "제7장"
+    const fullChapterTitle = this.gameManager.i18n.t(`chapter.${chapter}`);
+    const chapterPrefix = fullChapterTitle.split(':')[0].trim();
     const verse = CHAPTER_VERSES[chapter];
 
     const container = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 10)
@@ -988,7 +995,7 @@ export class GameScene extends Phaser.Scene {
     container.add([bg, line, text]);
 
     if (verse) {
-      const chapLabel = ko ? `제 ${chapter} 장` : `Chapter ${chapter}`;
+      const chapLabel = chapterPrefix;
       const chapFontSize = ko ? DesignSystem.FONT_SIZE.XS : 6;
       const chapText = this.add.text(0, -panelH / 2 + (ko ? 7 : 5), chapLabel, {
         fontFamily: DesignSystem.getFontFamily(),
@@ -1224,8 +1231,8 @@ export class GameScene extends Phaser.Scene {
   // ── Chapter transitions ──────────────────────────────────────────────────
 
   private showSaveIndicator(): void {
-    const ko = this.gameManager.language === 'ko';
-    const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 16, ko ? '● 저장됨' : '● Saved',
+    const label = '✝ ' + this.gameManager.i18n.t('save.saved');
+    const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 16, label,
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5).setDepth(400).setScrollFactor(0).setAlpha(0);
     this.tweens.add({

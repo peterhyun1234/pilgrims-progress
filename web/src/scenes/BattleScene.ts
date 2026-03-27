@@ -257,12 +257,12 @@ export class BattleScene extends Phaser.Scene {
   private createActionMenu(): void {
     this.actionMenu = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 30).setDepth(100);
 
-    const ko = this.gameManager.language === 'ko';
+    const i18n = this.gameManager.i18n;
     const actions = [
-      { label: ko ? '🙏 기도' : '🙏 Pray', action: () => this.onPray(), color: 0x2a4a2a },
-      { label: ko ? '🛡 방어' : '🛡 Defend', action: () => this.onDefend(), color: 0x2a3a5a },
-      { label: ko ? '✦ 스킬' : '✦ Skills', action: () => this.showSkillPanel(), color: 0x3a2a5a },
-      { label: ko ? '📦 아이템' : '📦 Items', action: () => this.onUseItem(), color: 0x4a3a2a },
+      { label: `🙏 ${i18n.t('battle.pray')}`, action: () => this.onPray(), color: 0x2a4a2a },
+      { label: `🛡 ${i18n.t('battle.defend')}`, action: () => this.onDefend(), color: 0x2a3a5a },
+      { label: `✦ ${i18n.t('battle.skill')}`, action: () => this.showSkillPanel(), color: 0x3a2a5a },
+      { label: `📦 ${i18n.t('battle.item')}`, action: () => this.onUseItem(), color: 0x4a3a2a },
     ];
 
     const btnW = 80;
@@ -315,20 +315,21 @@ export class BattleScene extends Phaser.Scene {
     const state = this.combatSystem.getState();
     if (!state) return;
 
+    const i18n = this.gameManager.i18n;
     const ko = this.gameManager.language === 'ko';
     this.skillPanel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2).setDepth(200).setAlpha(0);
 
     const bg = DesignSystem.createPanel(this, -130, -60, 260, 175);
     this.skillPanel.add(bg);
 
-    const title = this.add.text(0, -48, ko ? '스킬 선택' : 'Select Skill',
+    const title = this.add.text(0, -48, i18n.t('battle.selectSkill'),
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
     ).setOrigin(0.5);
     this.skillPanel.add(title);
 
     const skills = state.availableSkills;
     if (skills.length === 0) {
-      const noSkill = this.add.text(0, 0, ko ? '사용 가능한 스킬 없음' : 'No skills available',
+      const noSkill = this.add.text(0, 0, i18n.t('battle.noSkills'),
         DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
       ).setOrigin(0.5);
       this.skillPanel.add(noSkill);
@@ -346,7 +347,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     const closeBtn = DesignSystem.createButton(
-      this, 0, 90, 80, 24, ko ? '닫기' : 'Close',
+      this, 0, 90, 80, 24, i18n.t('battle.close'),
       () => { this.skillPanel?.destroy(true); this.skillPanel = null; },
       { fontSize: DesignSystem.FONT_SIZE.XS, bgColor: 0x3a1a1a },
     );
@@ -574,7 +575,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private async endBattle(state: CombatState): Promise<void> {
-    const ko = this.gameManager.language === 'ko';
+    const i18n = this.gameManager.i18n;
 
     await new Promise<void>(resolve => this.time.delayedCall(600, resolve));
 
@@ -626,7 +627,7 @@ export class BattleScene extends Phaser.Scene {
       }
 
       const victoryText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20,
-        ko ? '✝ 승리!' : '✝ Victory!',
+        `✝ ${i18n.t('battle.victory')}`,
         DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XXL),
       ).setOrigin(0.5).setDepth(500).setAlpha(0);
 
@@ -661,7 +662,7 @@ export class BattleScene extends Phaser.Scene {
       });
 
       const graceText = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 20,
-        ko ? '은혜로 다시 일어선다...' : 'Grace lifts you up again...',
+        i18n.t('battle.graceLift'),
         DesignSystem.textStyle(DesignSystem.FONT_SIZE.LG, '#aaaaff'),
       ).setOrigin(0.5).setDepth(500).setAlpha(0);
 

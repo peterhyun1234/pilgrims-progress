@@ -1,5 +1,9 @@
 import Phaser from 'phaser';
 import UIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin.js';
+import { ErrorBoundary } from './core/ErrorBoundary';
+
+// Install global error recovery before anything else
+ErrorBoundary.install();
 import { GAME_WIDTH, GAME_HEIGHT } from './config';
 import { BootScene } from './scenes/BootScene';
 import { PreloadScene } from './scenes/PreloadScene';
