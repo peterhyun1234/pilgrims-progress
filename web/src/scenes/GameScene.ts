@@ -608,8 +608,8 @@ export class GameScene extends Phaser.Scene {
     const npc = this.npcs.find(n => n.npcId === npcId);
     if (!npc) return;
     const bubble = this.add.text(npc.sprite.x, npc.sprite.y - 22, '...', {
-      fontSize: '7px',
-      color: '#888877',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+      color: '#9a9a88',
       fontFamily: 'monospace',
       stroke: '#000000',
       strokeThickness: 2,
@@ -1202,7 +1202,7 @@ export class GameScene extends Phaser.Scene {
     const msg = ko ? '아직 할 일이 남은 것 같습니다...' : 'Something feels unfinished...';
     const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 28, msg, {
       fontFamily: DesignSystem.getFontFamily(),
-      fontSize: '7px',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
       color: '#a89b8c',
       stroke: '#000000',
       strokeThickness: 2,

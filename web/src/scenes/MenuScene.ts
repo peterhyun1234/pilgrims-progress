@@ -235,7 +235,7 @@ export class MenuScene extends Phaser.Scene {
 
     // Main title
     const title = this.add.text(cx, 42, gm.i18n.t('game.title'), {
-      fontSize: ko ? '16px' : '14px',
+      fontSize: `${ko ? DesignSystem.FONT_SIZE.LG : DesignSystem.FONT_SIZE.BASE}px`,
       color: '#e8dfc8',
       fontFamily: DesignSystem.getFontFamily(),
       fontStyle: 'bold',
@@ -271,12 +271,12 @@ export class MenuScene extends Phaser.Scene {
 
     // — Bottom info bar —
     this.add.text(12, H - 10, '⛶', {
-      fontSize: '12px', color: '#3a3028', fontFamily: 'serif',
+      fontSize: '12px', color: '#7a6858', fontFamily: 'serif',
     }).setOrigin(0, 1).setDepth(10)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => MenuScene.toggleFullscreen())
       .on('pointerover', function(this: Phaser.GameObjects.Text) { this.setColor('#d4a853'); })
-      .on('pointerout', function(this: Phaser.GameObjects.Text) { this.setColor('#3a3028'); });
+      .on('pointerout', function(this: Phaser.GameObjects.Text) { this.setColor('#7a6858'); });
 
     this.add.text(W - 8, H - 8, 'v1.0.0', {
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#5a5040', fontFamily: DesignSystem.getFontFamily(),
