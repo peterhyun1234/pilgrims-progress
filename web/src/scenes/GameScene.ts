@@ -623,12 +623,22 @@ export class GameScene extends Phaser.Scene {
   }
 
   private showFallbackDialogue(npcId: string): void {
+    // Prevent re-entry while a dialogue is already active
+    if (this.gameManager.isState(GameState.DIALOGUE)) return;
+
     const npc = this.npcs.find(n => n.npcId === npcId);
     if (!npc) return;
 
     const ko = this.gameManager.language === 'ko';
     const name = ko ? npc.nameKo : npc.nameEn;
+
+    // talkCount > 0 means endTalk was called at least once (full prior conversation completed).
+    // phase === 'completed'/'idle' also covers NPCs that completed via Ink dialogue.
+    // Note: startDialogue always calls beginTalk before showFallbackDialogue, so phase
+    // will already be 'active' here — we do NOT call beginTalk again.
     const phase = this.npcStateManager.getPhase(npcId);
+    const talkCount = this.npcStateManager.getTalkCount(npcId);
+    const isReturning = (phase === 'completed' || phase === 'idle' || talkCount > 0);
 
     const langConv = FALLBACK_DIALOGUES[npcId];
     if (!langConv) {
@@ -637,10 +647,6 @@ export class GameScene extends Phaser.Scene {
     }
 
     const conv = ko ? langConv.ko : langConv.en;
-    const talkCount = this.npcStateManager.getTalkCount(npcId);
-
-    // After first full conversation: show repeated lines only, never grant stats again
-    const isReturning = (phase === 'completed' || phase === 'idle' || talkCount > 0);
     if (isReturning && conv.repeated && conv.repeated.length > 0) {
       // Strip all stat grants from repeated dialogue — one-time rewards only
       const idleConv: Conversation = { lines: conv.repeated.map(l => ({ ...l, stat: undefined, amount: undefined })) };
