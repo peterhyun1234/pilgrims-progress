@@ -69,14 +69,19 @@ export class TileMapManager {
     this.groundLayer.fillStyle(base, 1);
     this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
+    // Subtle random shading variation
     if ((hash & 0xf) < 3) {
       this.groundLayer.fillStyle(0x000000, 0.08 + ((hash >> 4) & 3) * 0.02);
       this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
     }
     if ((hash & 0x1f) < 2) {
-      this.groundLayer.fillStyle(0xffffff, 0.05);
+      this.groundLayer.fillStyle(0xffffff, 0.07);
       this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
     }
+
+    // Tile edge border — thin dark line on right+bottom gives 3D depth
+    this.groundLayer.lineStyle(0.5, 0x000000, 0.18);
+    this.groundLayer.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
   }
 
   private drawWallTile(x: number, y: number, theme: ChapterTheme): void {
@@ -873,17 +878,23 @@ export class TileMapManager {
 
   private drawPathway(config: ChapterConfig): void {
     if (!this.decorLayer) return;
-    const pathColor = config.theme.pathColor;
+    // Use a brighter path color blended from theme + gold so it's always visible
+    const themeColor = config.theme.pathColor;
+    const goldColor = 0xd4a853;
 
     for (let i = 0; i < 30; i++) {
       const t = i / 30;
       const px = config.spawn.x + Math.sin(t * 3) * 6;
       const py = config.spawn.y - i * (config.mapHeight / 30);
-      const w = 10 + Math.sin(i * 0.3) * 3;
+      const w = 12 + Math.sin(i * 0.3) * 3;
 
       if (py < 0) break;
-      this.decorLayer.fillStyle(pathColor, 0.18 + t * 0.08);
-      this.decorLayer.fillEllipse(px, py, w, 5);
+      // Draw theme-colored base track
+      this.decorLayer.fillStyle(themeColor, 0.5 + t * 0.2);
+      this.decorLayer.fillEllipse(px, py, w, 7);
+      // Draw gold shine overlay on top — makes path stand out
+      this.decorLayer.fillStyle(goldColor, 0.18 + t * 0.12);
+      this.decorLayer.fillEllipse(px, py, w - 4, 4);
     }
 
     (config.exits ?? []).forEach(exit => {
@@ -894,8 +905,8 @@ export class TileMapManager {
         const t = i / 10;
         const px = ex + (1 - t) * Math.sin(t * 2) * 4;
         const py = ey - (1 - t) * i * 12;
-        this.decorLayer!.fillStyle(pathColor, 0.06 + t * 0.06);
-        this.decorLayer!.fillEllipse(px, py, 8, 4);
+        this.decorLayer!.fillStyle(goldColor, 0.12 + t * 0.12);
+        this.decorLayer!.fillEllipse(px, py, 9, 5);
       }
     });
   }
@@ -906,15 +917,15 @@ export class TileMapManager {
       const cx = exit.x + exit.width / 2;
       const cy = exit.y + exit.height / 2;
 
-      this.objectLayer!.fillStyle(0xd4a853, 0.06);
+      this.objectLayer!.fillStyle(0xd4a853, 0.18);
       this.objectLayer!.fillEllipse(cx, cy, exit.width + 10, exit.height + 10);
 
       for (let i = 0; i < 3; i++) {
-        this.objectLayer!.lineStyle(0.5, 0xd4a853, 0.08 - i * 0.02);
+        this.objectLayer!.lineStyle(1, 0xd4a853, 0.22 - i * 0.06);
         this.objectLayer!.strokeEllipse(cx, cy, exit.width + 6 + i * 8, exit.height + 6 + i * 8);
       }
 
-      this.objectLayer!.fillStyle(0xd4a853, 0.3);
+      this.objectLayer!.fillStyle(0xd4a853, 0.7);
       this.objectLayer!.fillTriangle(cx, cy - 12, cx - 4, cy - 6, cx + 4, cy - 6);
     });
   }

@@ -984,50 +984,65 @@ export class GameScene extends Phaser.Scene {
       .setDepth(300).setScrollFactor(0).setAlpha(0);
 
     const panelW = GAME_WIDTH - 40;
-    const panelH = verse ? (ko ? 76 : 60) : 32;
+    // Fixed heights with clear vertical zones: chap label + divider + title + verse + ref
+    const panelH = verse ? (ko ? 86 : 72) : 36;
     const bg = this.add.graphics();
-    bg.fillStyle(0x000000, 0.75);
+    bg.fillStyle(0x000000, 0.82);
     bg.fillRect(-panelW / 2, -panelH / 2, panelW, panelH);
-    bg.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
+    bg.lineStyle(0.8, COLORS.UI.GOLD, 0.35);
     bg.strokeRect(-panelW / 2, -panelH / 2, panelW, panelH);
 
+    // Decorative top / bottom rule lines (inset slightly)
     const line = this.add.graphics();
-    line.lineStyle(0.5, COLORS.UI.GOLD, 0.4);
-    line.lineBetween(-panelW / 2 + 10, -panelH / 2 + 2, panelW / 2 - 10, -panelH / 2 + 2);
-    line.lineBetween(-panelW / 2 + 10, panelH / 2 - 2, panelW / 2 - 10, panelH / 2 - 2);
+    line.lineStyle(0.5, COLORS.UI.GOLD, 0.25);
+    line.lineBetween(-panelW / 2 + 20, -panelH / 2 + 3, panelW / 2 - 20, -panelH / 2 + 3);
+    line.lineBetween(-panelW / 2 + 20, panelH / 2 - 3, panelW / 2 - 20, panelH / 2 - 3);
 
-    const nameY = verse ? -panelH / 2 + (ko ? 18 : 14) : 0;
-    const text = this.add.text(0, nameY, name,
-      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.LG),
-    ).setOrigin(0.5);
-
-    container.add([bg, line, text]);
+    container.add([bg, line]);
 
     if (verse) {
+      // Layout: [top=0] chap label (XS) → +13 divider → +6 title (BASE) → +20 verse (XS) → +14 ref (XS)
       const chapLabel = chapterPrefix;
-      const chapFontSize = ko ? DesignSystem.FONT_SIZE.XS : 6;
-      const chapText = this.add.text(0, -panelH / 2 + (ko ? 7 : 5), chapLabel, {
+      const chapText = this.add.text(0, -panelH / 2 + 8, chapLabel, {
         fontFamily: DesignSystem.getFontFamily(),
-        fontSize: `${chapFontSize}px`,
-        color: '#888877',
+        fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+        color: '#a09070',
       }).setOrigin(0.5);
+
+      // Thin divider under chap label
+      const midLine = this.add.graphics();
+      midLine.lineStyle(0.5, COLORS.UI.GOLD, 0.2);
+      midLine.lineBetween(-60, -panelH / 2 + 16, 60, -panelH / 2 + 16);
+
+      // Title — BASE size (not LG to prevent overlap)
+      const titleFontSize = ko ? DesignSystem.FONT_SIZE.BASE : DesignSystem.FONT_SIZE.SM;
+      const titleY = -panelH / 2 + (ko ? 28 : 26);
+      const text = this.add.text(0, titleY, name,
+        DesignSystem.goldTextStyle(titleFontSize),
+      ).setOrigin(0.5);
 
       const verseText = ko ? verse.ko : verse.en;
       const refText = ko ? verse.refKo : verse.refEn;
-      const verseFontSize = ko ? DesignSystem.FONT_SIZE.XS : 6;
-      const vt = this.add.text(0, nameY + (ko ? 18 : 16), `"${verseText}"`, {
+      const verseFontSize = DesignSystem.FONT_SIZE.XS;
+      const vt = this.add.text(0, titleY + (ko ? 18 : 16), `"${verseText}"`, {
         fontFamily: DesignSystem.getFontFamily(),
         fontSize: `${verseFontSize}px`,
         color: '#c8b898',
-        wordWrap: { width: panelW - 40 },
+        wordWrap: { width: panelW - 60 },
         align: 'center',
       }).setOrigin(0.5);
-      const rt = this.add.text(0, panelH / 2 - (ko ? 9 : 7), `— ${refText}`, {
+      const rt = this.add.text(0, panelH / 2 - 9, `— ${refText}`, {
         fontFamily: DesignSystem.getFontFamily(),
         fontSize: `${verseFontSize}px`,
         color: '#888870',
       }).setOrigin(0.5);
-      container.add([chapText, vt, rt]);
+      container.add([chapText, midLine, text, vt, rt]);
+    } else {
+      // No verse — just the location name centred
+      const text = this.add.text(0, 0, name,
+        DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.BASE),
+      ).setOrigin(0.5);
+      container.add(text);
     }
 
     this.locationTitle = container;

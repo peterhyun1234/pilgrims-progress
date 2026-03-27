@@ -25,7 +25,7 @@ const TIER_THEMES: Record<EndingTier, TierTheme> = {
     titleKo: '영광의 도착', titleEn: 'Glorious Arrival',
     subtitleKo: '빛나는 관을 쓰고 천성에 입성하였도다',
     subtitleEn: 'Crowned in glory, the gates stood wide open',
-    bgTint: 0xffd700, lightColor: 0xffd700, lightAlpha: 0.08,
+    bgTint: 0xffd700, lightColor: 0xffd700, lightAlpha: 0.38,
     particleColor: 0xffd700, particleCount: 40,
     titleColor: '#ffd700',
   },
@@ -33,7 +33,7 @@ const TIER_THEMES: Record<EndingTier, TierTheme> = {
     titleKo: '겸손한 도착', titleEn: 'A Humble Arrival',
     subtitleKo: '조용한 발걸음으로, 그러나 흔들리지 않는 믿음으로',
     subtitleEn: 'With quiet steps, yet unwavering faith',
-    bgTint: 0xddbb66, lightColor: 0xeedd88, lightAlpha: 0.06,
+    bgTint: 0xddbb66, lightColor: 0xeedd88, lightAlpha: 0.26,
     particleColor: 0xeedd88, particleCount: 25,
     titleColor: '#eedd88',
   },
@@ -41,7 +41,7 @@ const TIER_THEMES: Record<EndingTier, TierTheme> = {
     titleKo: '간신히 도착', titleEn: 'Arrived at Last',
     subtitleKo: '지친 발걸음이었으나, 마침내 이른 곳',
     subtitleEn: 'Exhausted, yet the journey is complete',
-    bgTint: 0x998866, lightColor: 0xccbb99, lightAlpha: 0.04,
+    bgTint: 0x998866, lightColor: 0xccbb99, lightAlpha: 0.18,
     particleColor: 0xccbb99, particleCount: 15,
     titleColor: '#ccbb99',
   },
@@ -49,7 +49,7 @@ const TIER_THEMES: Record<EndingTier, TierTheme> = {
     titleKo: '은혜의 도착', titleEn: 'Saved by Grace',
     subtitleKo: '넘어질 때마다 손을 내밀어 주신 분이 계셨다',
     subtitleEn: 'Every fall was met by a hand reaching down',
-    bgTint: 0xaa88dd, lightColor: 0xddbbff, lightAlpha: 0.06,
+    bgTint: 0xaa88dd, lightColor: 0xddbbff, lightAlpha: 0.28,
     particleColor: 0xddbbff, particleCount: 30,
     titleColor: '#ddbbff',
   },
@@ -104,13 +104,17 @@ export class EndingScene extends Phaser.Scene {
       bg.fillStyle(0xffffff, brightness);
       bg.fillCircle(sx, sy, size);
     }
-    // Holy light beam — color varies by tier
+    // Holy light beam — wide outer shaft
+    bg.fillStyle(theme.lightColor, theme.lightAlpha * 0.45);
+    bg.fillTriangle(GAME_WIDTH / 2 - 80, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.75, GAME_WIDTH / 2 + 80, 0);
+    // Inner bright core
     bg.fillStyle(theme.lightColor, theme.lightAlpha);
-    bg.fillTriangle(GAME_WIDTH / 2 - 60, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.7, GAME_WIDTH / 2 + 60, 0);
-    bg.fillStyle(theme.lightColor, theme.lightAlpha * 0.5);
-    bg.fillTriangle(GAME_WIDTH / 2 - 30, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.5, GAME_WIDTH / 2 + 30, 0);
+    bg.fillTriangle(GAME_WIDTH / 2 - 40, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.6, GAME_WIDTH / 2 + 40, 0);
+    // Tight inner glow
+    bg.fillStyle(theme.lightColor, theme.lightAlpha * 1.3 > 0.6 ? 0.6 : theme.lightAlpha * 1.3);
+    bg.fillTriangle(GAME_WIDTH / 2 - 16, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.4, GAME_WIDTH / 2 + 16, 0);
     // Tier-specific tint overlay
-    bg.fillStyle(theme.bgTint, 0.03);
+    bg.fillStyle(theme.bgTint, 0.06);
     bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
   }
 

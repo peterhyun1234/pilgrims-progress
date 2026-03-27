@@ -8,8 +8,8 @@ export class AudioManager {
   private eventBus: EventBus;
   private bgm: Howl | null = null;
   private sfxCache: Map<string, Howl> = new Map();
-  private bgmVolume = 0.5;
-  private sfxVolume = 0.7;
+  private bgmVolume = 0.2;
+  private sfxVolume = 0.3;
   private audioUnlocked = false;
   readonly procedural: ProceduralAudio;
   readonly ambient: AmbientAudioEngine;

@@ -49,14 +49,14 @@ export class LanguageScene extends Phaser.Scene {
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.SM),
     ).setOrigin(0.5).setDepth(6);
 
-    DesignSystem.createButton(this, cx, cy + 12, 160, 34,
+    DesignSystem.createButton(this, cx, cy + 4, 160, 34,
       '한국어', () => this.selectLanguage('ko'),
       { fontSize: DesignSystem.FONT_SIZE.BASE },
-    );
-    DesignSystem.createButton(this, cx, cy + 52, 160, 34,
+    ).setDepth(7);
+    DesignSystem.createButton(this, cx, cy + 42, 160, 34,
       'English', () => this.selectLanguage('en'),
       { fontSize: DesignSystem.FONT_SIZE.BASE },
-    );
+    ).setDepth(7);
   }
 
   private buildBackground(cx: number, _cy: number): void {

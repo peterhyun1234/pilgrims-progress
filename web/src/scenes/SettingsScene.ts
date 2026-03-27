@@ -7,8 +7,8 @@ import { DesignSystem } from '../ui/DesignSystem';
 import { AudioManager } from '../audio/AudioManager';
 
 export class SettingsScene extends Phaser.Scene {
-  private bgmVolume = 0.5;
-  private sfxVolume = 0.7;
+  private bgmVolume = 0.2;
+  private sfxVolume = 0.3;
   private fromScene = 'MenuScene';
 
   constructor() {
