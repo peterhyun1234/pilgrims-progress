@@ -70,11 +70,11 @@ export class TileMapManager {
     this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
     if ((hash & 0xf) < 3) {
-      this.groundLayer.fillStyle(0x000000, 0.04 + ((hash >> 4) & 3) * 0.01);
+      this.groundLayer.fillStyle(0x000000, 0.08 + ((hash >> 4) & 3) * 0.02);
       this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
     }
     if ((hash & 0x1f) < 2) {
-      this.groundLayer.fillStyle(0xffffff, 0.025);
+      this.groundLayer.fillStyle(0xffffff, 0.05);
       this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
     }
   }
@@ -882,7 +882,7 @@ export class TileMapManager {
       const w = 10 + Math.sin(i * 0.3) * 3;
 
       if (py < 0) break;
-      this.decorLayer.fillStyle(pathColor, 0.1 + t * 0.04);
+      this.decorLayer.fillStyle(pathColor, 0.18 + t * 0.08);
       this.decorLayer.fillEllipse(px, py, w, 5);
     }
 

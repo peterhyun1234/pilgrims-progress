@@ -53,7 +53,7 @@ export const COLORS = {
     BG_PRIMARY: 0xf5e6d3,
     BG_SECONDARY: 0xe8d5bc,
     TEXT_PRIMARY: 0x3b2f2f,
-    TEXT_SECONDARY: 0x6b5b4f,
+    TEXT_SECONDARY: 0xc8b8a0,
     ACCENT: 0xd4a853,
   },
   DARK: {
@@ -83,7 +83,7 @@ export const COLORS = {
     PANEL: 0x1a1428,
     PANEL_BORDER: 0xa68d50,
     TEXT_WHITE: 0xffffff,
-    TEXT_MUTED: 0x8c8070,
+    TEXT_MUTED: 0xb0a898,
     SUCCESS: 0x4a7c59,
     DANGER: 0x8b3a3a,
     BUTTON_DEFAULT: 0x1e1830,

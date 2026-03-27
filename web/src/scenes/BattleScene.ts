@@ -89,15 +89,15 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Distant red-orange supernatural glow (the enemy's domain)
-    sky.fillStyle(0x880000, 0.05);
+    sky.fillStyle(0x880000, 0.12);
     sky.fillEllipse(W / 2, ground * 0.7, W * 0.8, ground * 0.5);
-    sky.fillStyle(0xcc2200, 0.03);
+    sky.fillStyle(0xcc2200, 0.08);
     sky.fillEllipse(W / 2, ground * 0.8, W * 0.5, ground * 0.3);
 
     // Stars / supernatural lights
     for (let i = 0; i < 30; i++) {
       const hash = (i * 137 * 31) & 0xffff;
-      sky.fillStyle(0xffffff, 0.08 + (hash % 8) * 0.03);
+      sky.fillStyle(0xffffff, 0.15 + (hash % 8) * 0.04);
       sky.fillCircle(hash % W, (hash * 3) % (ground * 0.7), 0.5 + (hash % 2) * 0.3);
     }
 
@@ -118,7 +118,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Subtle grid in ground
-    gr.lineStyle(0.3, 0x333355, 0.15);
+    gr.lineStyle(0.3, 0x333355, 0.25);
     for (let x2 = 20; x2 < W; x2 += 20) {
       gr.lineBetween(x2, ground, x2 - 10, H);
     }
@@ -153,32 +153,54 @@ export class BattleScene extends Phaser.Scene {
       if (this.anims.exists(animKey)) this.enemySprite.play(animKey, true);
       this.enemyContainer.add(this.enemySprite);
     } else {
-      // Procedural silhouette (existing style)
+      // Procedural menacing silhouette
       const gfx = this.add.graphics();
-      const baseScale = enemy.isBoss ? 1.4 : 1.0;
-      gfx.fillStyle(enemy.iconColor, 0.4);
-      gfx.fillCircle(0, 0, 30 * baseScale);
-      gfx.lineStyle(2, enemy.iconColor, 0.8);
-      gfx.strokeCircle(0, 0, 30 * baseScale);
+      const bs = enemy.isBoss ? 1.4 : 1.0;
+      // Outer dark aura
+      gfx.fillStyle(enemy.iconColor, 0.12);
+      gfx.fillEllipse(0, 0, 70 * bs, 60 * bs);
+      // Body shadow layers
+      gfx.fillStyle(0x000000, 0.7);
+      gfx.fillEllipse(0, 4 * bs, 28 * bs, 36 * bs);
+      gfx.fillStyle(enemy.iconColor, 0.5);
+      gfx.fillEllipse(0, 4 * bs, 24 * bs, 32 * bs);
+      // Head
+      gfx.fillStyle(0x000000, 0.8);
+      gfx.fillCircle(0, -14 * bs, 11 * bs);
+      gfx.fillStyle(enemy.iconColor, 0.6);
+      gfx.fillCircle(0, -14 * bs, 9 * bs);
+      // Glowing eyes
+      gfx.fillStyle(0xff3333, 0.9);
+      gfx.fillCircle(-4 * bs, -15 * bs, 2 * bs);
+      gfx.fillCircle(4 * bs, -15 * bs, 2 * bs);
+      gfx.fillStyle(0xffaaaa, 1);
+      gfx.fillCircle(-4 * bs, -15 * bs, 1 * bs);
+      gfx.fillCircle(4 * bs, -15 * bs, 1 * bs);
+      // Boss horns/crown
       if (enemy.isBoss) {
-        gfx.lineStyle(1.5, 0xff0000, 0.5);
+        gfx.fillStyle(enemy.iconColor, 0.8);
+        gfx.fillTriangle(-8, -24, -4, -18, -12, -18);
+        gfx.fillTriangle(8, -24, 4, -18, 12, -18);
+        gfx.lineStyle(2, 0xff0000, 0.6);
         gfx.strokeCircle(0, 0, 42);
       }
-      gfx.fillStyle(enemy.iconColor, 0.9);
-      gfx.fillCircle(0, -6 * baseScale, 9 * baseScale);
-      gfx.fillRect(-7 * baseScale, 6 * baseScale, 14 * baseScale, 18 * baseScale);
-      for (let i = 0; i < 3; i++) {
-        const angle = (i / 3) * Math.PI - Math.PI / 2;
-        gfx.fillStyle(enemy.iconColor, 0.3);
-        gfx.fillCircle(Math.cos(angle) * 22 * baseScale, Math.sin(angle) * 22 * baseScale, 5 * baseScale);
-      }
+      // Clawed arms
+      gfx.lineStyle(2, enemy.iconColor, 0.6);
+      gfx.lineBetween(-12 * bs, 0, -22 * bs, -8 * bs);
+      gfx.lineBetween(12 * bs, 0, 22 * bs, -8 * bs);
+      // Claw tips
+      gfx.lineStyle(1.5, enemy.iconColor, 0.8);
+      gfx.lineBetween(-22 * bs, -8 * bs, -26 * bs, -12 * bs);
+      gfx.lineBetween(-22 * bs, -8 * bs, -24 * bs, -4 * bs);
+      gfx.lineBetween(22 * bs, -8 * bs, 26 * bs, -12 * bs);
+      gfx.lineBetween(22 * bs, -8 * bs, 24 * bs, -4 * bs);
       this.enemyContainer.add(gfx);
     }
 
     // Enemy aura (boss gets bigger aura)
     const auraGfx = this.add.graphics();
     const auraR = enemy.isBoss ? 48 : 32;
-    auraGfx.fillStyle(enemy.iconColor, 0.06);
+    auraGfx.fillStyle(enemy.iconColor, 0.18);
     auraGfx.fillCircle(0, 0, auraR);
     this.enemyContainer.addAt(auraGfx, 0);
 
@@ -265,15 +287,15 @@ export class BattleScene extends Phaser.Scene {
       { label: `📦 ${i18n.t('battle.item')}`, action: () => this.onUseItem(), color: 0x4a3a2a },
     ];
 
-    const btnW = 80;
+    const btnW = 88;
     const gap = 6;
     const totalW = actions.length * btnW + (actions.length - 1) * gap;
     const startX = -totalW / 2 + btnW / 2;
 
     actions.forEach((a, i) => {
       const btn = DesignSystem.createButton(
-        this, startX + i * (btnW + gap), 0, btnW, 28, a.label, a.action,
-        { fontSize: DesignSystem.FONT_SIZE.XS, bgColor: a.color, hoverColor: a.color + 0x111111 },
+        this, startX + i * (btnW + gap), 0, btnW, 34, a.label, a.action,
+        { fontSize: DesignSystem.FONT_SIZE.SM, bgColor: a.color, hoverColor: a.color + 0x111111 },
       );
       this.actionMenu.add(btn);
     });
@@ -549,14 +571,14 @@ export class BattleScene extends Phaser.Scene {
     const bubble = this.add.container(GAME_WIDTH / 2, 20).setDepth(400).setAlpha(0);
     const bg = this.add.graphics();
     bg.fillStyle(0x1a0808, 0.92);
-    bg.fillRoundedRect(-100, 0, 200, 28, 5);
+    bg.fillRoundedRect(-160, 0, 320, 36, 5);
     bg.lineStyle(1, 0xff4444, 0.6);
-    bg.strokeRoundedRect(-100, 0, 200, 28, 5);
-    const speechText = this.add.text(0, 14, line, {
-      fontSize: '4px',
+    bg.strokeRoundedRect(-160, 0, 320, 36, 5);
+    const speechText = this.add.text(0, 18, line, {
+      fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
       color: '#ff8888',
-      fontFamily: 'Silkscreen',
-      wordWrap: { width: 190 },
+      fontFamily: DesignSystem.getFontFamily(),
+      wordWrap: { width: 300 },
       align: 'center',
     }).setOrigin(0.5);
     bubble.add([bg, speechText]);

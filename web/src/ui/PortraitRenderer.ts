@@ -12,7 +12,7 @@ export class PortraitRenderer {
   getPortrait(
     characterId: string,
     emotion: PortraitEmotion = 'neutral',
-    size = 56,
+    size = 64,
   ): Phaser.GameObjects.RenderTexture | null {
     const config = PORTRAIT_CONFIGS[characterId];
     if (!config) return null;
@@ -248,18 +248,18 @@ export class PortraitRenderer {
     cx: number, cy: number, r: number, size: number,
   ): void {
     if (emotion.blush) {
-      g.fillStyle(0xff6688, 0.2);
+      g.fillStyle(0xff6688, 0.35);
       g.fillCircle(cx - r * 0.5, cy + r * 0.2, r * 0.2);
       g.fillCircle(cx + r * 0.5, cy + r * 0.2, r * 0.2);
     }
 
     if (emotion.tearDrop) {
-      g.fillStyle(0x6699cc, 0.7);
+      g.fillStyle(0x6699cc, 0.85);
       g.fillEllipse(cx + r * 0.55, cy + r * 0.2, r * 0.1, r * 0.2);
     }
 
     if (emotion.sparkle) {
-      g.fillStyle(0xffd700, 0.6);
+      g.fillStyle(0xffd700, 0.8);
       const sparkles = [[size * 0.1, size * 0.15], [size * 0.85, size * 0.1], [size * 0.9, size * 0.85]];
       sparkles.forEach(([sx, sy]) => {
         const sr = r * 0.12;

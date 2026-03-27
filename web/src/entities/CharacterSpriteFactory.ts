@@ -132,13 +132,21 @@ export class CharacterSpriteFactory {
       // Walk cycle
       const phase = (frame / 6) * Math.PI * 2;
       bobY = Math.abs(Math.sin(phase)) * -1.5;
-      legOffset = Math.sin(phase) * 3;
-      armSwing = Math.sin(phase) * 2;
+      legOffset = Math.sin(phase) * 4;
+      armSwing = Math.sin(phase) * 3;
     }
 
     // === Shadow ===
-    g.fillStyle(0x000000, 0.2);
-    g.fillEllipse(cx, oy + 29, 12, 4);
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(cx, oy + 29, 13, 4);
+
+    // === Dark outline pass (drawn first, slightly larger than body) ===
+    const outlineColor = 0x111111;
+    g.fillStyle(outlineColor, 0.7);
+    // Head outline
+    g.fillCircle(cx, oy + 10 + bobY, 7);
+    // Body outline
+    g.fillRoundedRect(cx - 6, oy + 14 + bobY, 12, 13, 2);
 
     // === Feet / Legs ===
     const footY = oy + 26 + bobY;

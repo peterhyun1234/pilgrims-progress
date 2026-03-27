@@ -1,5 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
-import { FONT_FAMILY } from './DesignSystem';
+import { DesignSystem, FONT_FAMILY } from './DesignSystem';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
 
@@ -63,8 +63,8 @@ export class TutorialOverlay {
     const stepLabel = `${index + 1} / ${STEPS.length}`;
     const stepTxt = this.scene.add.text(cx + panelW / 2 - 6, cy - panelH / 2 + 6, stepLabel, {
       fontFamily: "'Silkscreen', monospace",
-      fontSize: '6px',
-      color: '#666655',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+      color: '#888877',
     }).setOrigin(1, 0);
 
     // Key icon (big)

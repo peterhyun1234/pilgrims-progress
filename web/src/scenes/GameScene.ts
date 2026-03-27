@@ -353,9 +353,9 @@ export class GameScene extends Phaser.Scene {
     board.fillStyle(0xd4a853, 0.8);
     board.fillRoundedRect(-20, -14, 40, 12, 2);
     const txt = this.add.text(0, -9, label, {
-      fontSize: '5px',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
       color: '#1a1428',
-      fontFamily: 'monospace',
+      fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5);
     c.add([pole, board, txt]);
     this.mapObjectSprites[obj.id] = c;
@@ -825,7 +825,7 @@ export class GameScene extends Phaser.Scene {
     const py = this.player.sprite.y - 14;
     const txt = this.add.text(px, py, `${sign}${amount} ${label}`, {
       fontFamily: DesignSystem.getFontFamily(),
-      fontSize: '6px',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
       color: `#${color.toString(16).padStart(6, '0')}`,
       stroke: '#000000',
       strokeThickness: 2,

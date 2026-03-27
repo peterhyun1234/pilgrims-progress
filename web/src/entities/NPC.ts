@@ -152,7 +152,7 @@ export class NPC extends Entity {
     this.completedBadge = this.scene.add.text(
       this.sprite.x, this.sprite.y - 20,
       '✓', {
-        fontSize: '6px',
+        fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
         color: '#4a7c59',
         fontFamily: FONT_FAMILY,
         stroke: '#000000',
@@ -210,8 +210,8 @@ export class NPC extends Entity {
     }
 
     this.glowGraphics = this.scene.add.graphics().setDepth(7);
-    this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.06);
-    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 20);
+    this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.18);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 22);
   }
 
   hidePrompt(): void {
@@ -300,9 +300,9 @@ export class NPC extends Entity {
     }
     if (this.glowGraphics) {
       this.glowGraphics.clear();
-      const pulse = 0.04 + Math.sin(t * 2) * 0.02;
+      const pulse = 0.12 + Math.sin(t * 2) * 0.08;
       this.glowGraphics.fillStyle(COLORS.UI.GOLD, pulse);
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 20);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 22);
     }
   }
 

@@ -25,9 +25,9 @@ export class HUD {
   private statsManager: StatsManager;
   private eventBus: EventBus;
 
-  private static readonly BAR_WIDTH = 56;
-  private static readonly BAR_HEIGHT = 6;
-  private static readonly BAR_GAP = 14;
+  private static readonly BAR_WIDTH = 72;
+  private static readonly BAR_HEIGHT = 8;
+  private static readonly BAR_GAP = 16;
   private static readonly PADDING = 7;
 
   constructor(scene: Phaser.Scene) {
@@ -44,9 +44,9 @@ export class HUD {
   private createBackground(): void {
     const bg = this.scene.add.graphics();
     bg.fillStyle(0x0a0814, 0.65);
-    bg.fillRoundedRect(2, 2, 134, 68, 4);
-    bg.lineStyle(0.5, 0xd4a853, 0.1);
-    bg.strokeRoundedRect(2, 2, 134, 68, 4);
+    bg.fillRoundedRect(2, 2, 156, 78, 4);
+    bg.lineStyle(0.5, 0xd4a853, 0.3);
+    bg.strokeRoundedRect(2, 2, 156, 78, 4);
     this.container.add(bg);
   }
 

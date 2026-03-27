@@ -87,14 +87,15 @@ export class SettingsScene extends Phaser.Scene {
     this.add.text(cx - 140, y, gm.i18n.t('settings.reduceMotion'),
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a898'),
     );
-    let motionReduced = false;
-    const motionTxt = this.add.text(cx + 30, y, 'OFF',
-      DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#6b5b4f'),
+    let motionReduced = gm.reduceMotion;
+    const motionTxt = this.add.text(cx + 30, y, motionReduced ? 'ON' : 'OFF',
+      DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, motionReduced ? '#66cc66' : '#b0a898'),
     ).setInteractive({ useHandCursor: true });
     motionTxt.on('pointerdown', () => {
       motionReduced = !motionReduced;
+      gm.reduceMotion = motionReduced;
       motionTxt.setText(motionReduced ? 'ON' : 'OFF');
-      motionTxt.setColor(motionReduced ? '#66cc66' : '#6b5b4f');
+      motionTxt.setColor(motionReduced ? '#66cc66' : '#b0a898');
     });
 
     y += 32;
@@ -105,13 +106,15 @@ export class SettingsScene extends Phaser.Scene {
     const modeLabels = ko
       ? ['없음', '적색맹', '녹색맹', '청색맹']
       : ['none', 'protanopia', 'deuteranopia', 'tritanopia'];
-    let modeIdx = 0;
-    const modeTxt = this.add.text(cx + 30, y, modeLabels[0],
-      DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#6b5b4f'),
+    let modeIdx = gm.colorblindMode ? 1 : 0;
+    const modeTxt = this.add.text(cx + 30, y, modeLabels[modeIdx],
+      DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, modeIdx > 0 ? '#66cc66' : '#b0a898'),
     ).setInteractive({ useHandCursor: true });
     modeTxt.on('pointerdown', () => {
       modeIdx = (modeIdx + 1) % modes.length;
+      gm.colorblindMode = modeIdx > 0;
       modeTxt.setText(modeLabels[modeIdx]);
+      modeTxt.setColor(modeIdx > 0 ? '#66cc66' : '#b0a898');
     });
 
     y += 44;

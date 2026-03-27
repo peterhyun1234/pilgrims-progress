@@ -42,10 +42,10 @@ export class DialogueBox {
   private advanceHandler: (() => void) | null = null;
 
   private static readonly BOX_W = 430;
-  private static readonly BOX_H = 80;
+  private static readonly BOX_H = 90;
   private static readonly BOX_X = (GAME_WIDTH - 430) / 2;
   private static readonly BOX_Y = GAME_HEIGHT - 92;
-  private static readonly PORTRAIT_S = 56;
+  private static readonly PORTRAIT_S = 64;
   private static readonly TEXT_X = 68;
 
   constructor(scene: Phaser.Scene) {
@@ -310,12 +310,12 @@ export class DialogueBox {
 
     const moodColors: Record<PortraitEmotion, { color: number; alpha: number }> = {
       neutral: { color: 0x1a1428, alpha: 0 },
-      happy: { color: 0xffd700, alpha: 0.03 },
-      angry: { color: 0xff0000, alpha: 0.04 },
-      sad: { color: 0x2244aa, alpha: 0.04 },
-      fearful: { color: 0x440066, alpha: 0.05 },
-      surprised: { color: 0xff8800, alpha: 0.03 },
-      determined: { color: 0x44aa44, alpha: 0.03 },
+      happy: { color: 0xffd700, alpha: 0.10 },
+      angry: { color: 0xff0000, alpha: 0.10 },
+      sad: { color: 0x2244aa, alpha: 0.10 },
+      fearful: { color: 0x440066, alpha: 0.12 },
+      surprised: { color: 0xff8800, alpha: 0.08 },
+      determined: { color: 0x44aa44, alpha: 0.08 },
     };
 
     const mood = moodColors[this.emotionState];
@@ -352,7 +352,7 @@ export class DialogueBox {
     if (isHeavy) this.showDimOverlay();
 
     const { BOX_X: bx, BOX_Y: by, BOX_W: bw } = DialogueBox;
-    const choiceH = 22;
+    const choiceH = 28;
     const gap = 5;
     const total = payload.choices.length * (choiceH + gap);
     const startY = by - total - 6;
@@ -376,7 +376,7 @@ export class DialogueBox {
           && (ServiceLocator.get<import('../core/StatsManager').StatsManager>(SERVICE_KEYS.STATS_MANAGER)
             .get(choice.requiredStat as import('../core/GameEvents').StatType) < (choice.requiredValue ?? 0));
         const prefix = isLocked ? '🔒 ' : (choice.isHidden ? '★ ' : `${i + 1}. `);
-        const textColor = isLocked ? '#555555' : (choice.isHidden ? '#d4a853' : '#d0c8b8');
+        const textColor = isLocked ? '#887766' : (choice.isHidden ? '#d4a853' : '#d0c8b8');
         const txt = this.scene.add.text(w / 2, choiceH / 2, prefix + choice.text,
           DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, textColor),
         ).setOrigin(0.5).setAlpha(isLocked ? 0.5 : 1);

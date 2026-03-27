@@ -5,15 +5,56 @@ import { GameManager } from '../core/GameManager';
 import { DesignSystem, FONT_FAMILY } from '../ui/DesignSystem';
 import { AudioManager } from '../audio/AudioManager';
 
-/**
- * EndingScene — displayed after the player completes Ch12 (Celestial City arrival).
- *
- * Sections:
- *  1. Fade from white → starfield
- *  2. Epilogue text scroll (journey summary, Revelation 21:4)
- *  3. Journey statistics (playtime, Bible cards, NPC meetings, battles)
- *  4. Thank-you message + Return to main menu button
- */
+type EndingTier = 'glory' | 'humble' | 'barely' | 'grace';
+
+interface TierTheme {
+  titleKo: string;
+  titleEn: string;
+  subtitleKo: string;
+  subtitleEn: string;
+  bgTint: number;
+  lightColor: number;
+  lightAlpha: number;
+  particleColor: number;
+  particleCount: number;
+  titleColor: string;
+}
+
+const TIER_THEMES: Record<EndingTier, TierTheme> = {
+  glory: {
+    titleKo: '영광의 도착', titleEn: 'Glorious Arrival',
+    subtitleKo: '빛나는 관을 쓰고 천성에 입성하였도다',
+    subtitleEn: 'Crowned in glory, the gates stood wide open',
+    bgTint: 0xffd700, lightColor: 0xffd700, lightAlpha: 0.08,
+    particleColor: 0xffd700, particleCount: 40,
+    titleColor: '#ffd700',
+  },
+  humble: {
+    titleKo: '겸손한 도착', titleEn: 'A Humble Arrival',
+    subtitleKo: '조용한 발걸음으로, 그러나 흔들리지 않는 믿음으로',
+    subtitleEn: 'With quiet steps, yet unwavering faith',
+    bgTint: 0xddbb66, lightColor: 0xeedd88, lightAlpha: 0.06,
+    particleColor: 0xeedd88, particleCount: 25,
+    titleColor: '#eedd88',
+  },
+  barely: {
+    titleKo: '간신히 도착', titleEn: 'Arrived at Last',
+    subtitleKo: '지친 발걸음이었으나, 마침내 이른 곳',
+    subtitleEn: 'Exhausted, yet the journey is complete',
+    bgTint: 0x998866, lightColor: 0xccbb99, lightAlpha: 0.04,
+    particleColor: 0xccbb99, particleCount: 15,
+    titleColor: '#ccbb99',
+  },
+  grace: {
+    titleKo: '은혜의 도착', titleEn: 'Saved by Grace',
+    subtitleKo: '넘어질 때마다 손을 내밀어 주신 분이 계셨다',
+    subtitleEn: 'Every fall was met by a hand reaching down',
+    bgTint: 0xaa88dd, lightColor: 0xddbbff, lightAlpha: 0.06,
+    particleColor: 0xddbbff, particleCount: 30,
+    titleColor: '#ddbbff',
+  },
+};
+
 export class EndingScene extends Phaser.Scene {
   private gameManager!: GameManager;
 
@@ -23,12 +64,14 @@ export class EndingScene extends Phaser.Scene {
 
   create(): void {
     this.gameManager = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    const tier = this.getEndingTier();
+    const theme = TIER_THEMES[tier];
 
     this.cameras.main.setBackgroundColor(0x000000);
-    this.createStarfield();
-    this.runEpilogueSequence();
+    this.createStarfield(theme);
+    this.createParticles(theme);
+    this.runEpilogueSequence(tier, theme);
 
-    // Celestial arrival soundscape
     if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
       const audioMgr = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
       audioMgr.ambient.init(12);
@@ -36,9 +79,26 @@ export class EndingScene extends Phaser.Scene {
     }
   }
 
-  private createStarfield(): void {
+  private getEndingTier(): EndingTier {
+    const save = ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)
+      ? ServiceLocator.get<import('../save/SaveManager').SaveManager>(SERVICE_KEYS.SAVE_MANAGER).getLastLoaded()
+      : null;
+
+    const faith = save?.stats?.faith ?? 30;
+    const courage = save?.stats?.courage ?? 20;
+    const wisdom = save?.stats?.wisdom ?? 15;
+    const grace = save?.hiddenStats?.graceCounter ?? 0;
+
+    const score = faith * 0.4 + courage * 0.3 + wisdom * 0.3 + Math.min(grace * 2, 10);
+
+    if (score >= 80 && faith >= 80) return 'glory';
+    if (score >= 50 && faith >= 40) return 'humble';
+    if (grace >= 3) return 'grace';
+    return 'barely';
+  }
+
+  private createStarfield(theme: TierTheme): void {
     const bg = this.add.graphics().setDepth(0);
-    // Deep space gradient
     const strips = 20;
     for (let i = 0; i < strips; i++) {
       const t = i / strips;
@@ -58,17 +118,52 @@ export class EndingScene extends Phaser.Scene {
       bg.fillStyle(0xffffff, brightness);
       bg.fillCircle(sx, sy, size);
     }
-    // Holy light beam from top
-    bg.fillStyle(0xffd700, 0.04);
+    // Holy light beam — color varies by tier
+    bg.fillStyle(theme.lightColor, theme.lightAlpha);
     bg.fillTriangle(GAME_WIDTH / 2 - 60, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.7, GAME_WIDTH / 2 + 60, 0);
-    bg.fillStyle(0xffeedd, 0.02);
+    bg.fillStyle(theme.lightColor, theme.lightAlpha * 0.5);
     bg.fillTriangle(GAME_WIDTH / 2 - 30, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.5, GAME_WIDTH / 2 + 30, 0);
+    // Tier-specific tint overlay
+    bg.fillStyle(theme.bgTint, 0.03);
+    bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
   }
 
-  private runEpilogueSequence(): void {
+  private createParticles(theme: TierTheme): void {
+    const gfx = this.add.graphics().setDepth(5);
+    const particles: { x: number; y: number; vy: number; size: number; alpha: number; phase: number }[] = [];
+
+    for (let i = 0; i < theme.particleCount; i++) {
+      particles.push({
+        x: Math.random() * GAME_WIDTH,
+        y: Math.random() * GAME_HEIGHT,
+        vy: -(0.1 + Math.random() * 0.3),
+        size: 0.5 + Math.random() * 1.2,
+        alpha: 0.1 + Math.random() * 0.4,
+        phase: Math.random() * Math.PI * 2,
+      });
+    }
+
+    this.time.addEvent({
+      delay: 33,
+      loop: true,
+      callback: () => {
+        gfx.clear();
+        const t = this.time.now * 0.001;
+        particles.forEach(p => {
+          p.y += p.vy;
+          p.x += Math.sin(t + p.phase) * 0.2;
+          if (p.y < -5) { p.y = GAME_HEIGHT + 5; p.x = Math.random() * GAME_WIDTH; }
+          const a = p.alpha * (0.6 + Math.sin(t * 2 + p.phase) * 0.4);
+          gfx.fillStyle(theme.particleColor, a);
+          gfx.fillCircle(p.x, p.y, p.size);
+        });
+      },
+    });
+  }
+
+  private runEpilogueSequence(tier: EndingTier, theme: TierTheme): void {
     const ko = this.gameManager.language === 'ko';
 
-    // Initial white flash fade
     const flash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xffffff, 1)
       .setDepth(100);
     this.tweens.add({
@@ -78,38 +173,29 @@ export class EndingScene extends Phaser.Scene {
       ease: 'Sine.easeIn',
       onComplete: () => {
         flash.destroy();
-        this.showEpilogueText(ko);
+        this.showEpilogueText(ko, tier, theme);
       },
     });
   }
 
-  private showEpilogueText(ko: boolean): void {
+  private showEpilogueText(ko: boolean, tier: EndingTier, theme: TierTheme): void {
     const cx = GAME_WIDTH / 2;
+    const FS = DesignSystem.FONT_SIZE;
 
-    const epilogueLines = ko ? [
-      { text: '순례의 끝', color: '#ffd700', size: 10 },
-      { text: '', color: '#888888', size: 5 },
-      { text: '크리스천은 마침내 천성에 도착했다.', color: '#e8e0d0', size: 5 },
-      { text: '긴 여정, 수많은 시련, 그리고 믿음의 싸움 끝에', color: '#b0a898', size: 5 },
-      { text: '그가 바라던 곳에 이른 것이다.', color: '#b0a898', size: 5 },
-      { text: '', color: '#888888', size: 5 },
-      { text: '"하나님이 그들의 눈에서 모든 눈물을 씻어 주실 것이요"', color: '#d4a853', size: 5 },
-      { text: '"다시는 사망이 없고 애통하는 것이나"', color: '#d4a853', size: 5 },
-      { text: '"곡하는 것이나 아픈 것이 다시 있지 아니하리니"', color: '#d4a853', size: 5 },
-      { text: '"처음 것들이 다 지나갔음이러라."', color: '#d4a853', size: 5 },
-      { text: '— 요한계시록 21:4', color: '#888888', size: 4 },
-    ] : [
-      { text: "The Pilgrim's Journey", color: '#ffd700', size: 10 },
-      { text: '', color: '#888888', size: 5 },
-      { text: 'Christian had arrived at last.', color: '#e8e0d0', size: 5 },
-      { text: 'After every trial, every valley and mountain,', color: '#b0a898', size: 5 },
-      { text: 'the gates of the Celestial City stood open.', color: '#b0a898', size: 5 },
-      { text: '', color: '#888888', size: 5 },
-      { text: '"God shall wipe away all tears from their eyes;"', color: '#d4a853', size: 5 },
-      { text: '"and there shall be no more death,"', color: '#d4a853', size: 5 },
-      { text: '"neither sorrow, nor crying,"', color: '#d4a853', size: 5 },
-      { text: '"neither shall there be any more pain."', color: '#d4a853', size: 5 },
-      { text: '— Revelation 21:4', color: '#888888', size: 4 },
+    // Tier-specific title and subtitle
+    const title = ko ? theme.titleKo : theme.titleEn;
+    const subtitle = ko ? theme.subtitleKo : theme.subtitleEn;
+
+    // Scripture varies by tier
+    const scriptures = this.getScripture(tier, ko);
+
+    const epilogueLines = [
+      { text: title, color: theme.titleColor, size: FS.XL },
+      { text: subtitle, color: '#c8b8a0', size: FS.XS },
+      { text: '', color: '#888888', size: FS.XS },
+      ...this.getNarrativeLines(tier, ko, FS),
+      { text: '', color: '#888888', size: FS.XS },
+      ...scriptures,
     ];
 
     const totalHeight = epilogueLines.reduce((acc, l) => acc + (l.size + 6), 0);
@@ -123,28 +209,85 @@ export class EndingScene extends Phaser.Scene {
         color: line.color,
         fontFamily: FONT_FAMILY,
         align: 'center',
+        wordWrap: { width: GAME_WIDTH - 40 },
       }).setOrigin(0.5).setAlpha(0).setDepth(10);
 
       this.time.delayedCall(delay, () => {
         this.tweens.add({ targets: txt, alpha: 1, duration: 800, ease: 'Sine.easeIn' });
       });
-      delay += 600;
+      delay += 500;
     });
 
-    // After all lines shown, show stats then return button
     this.time.delayedCall(delay + 1000, () => this.showStats(ko));
+  }
+
+  private getNarrativeLines(tier: EndingTier, ko: boolean, FS: typeof DesignSystem.FONT_SIZE) {
+    const narratives: Record<EndingTier, { ko: string[]; en: string[] }> = {
+      glory: {
+        ko: ['크리스천은 영광 중에 천성에 입성하였다.', '긴 싸움 끝에 빛나는 면류관이 그를 기다렸고,', '온 천군이 환호하며 맞이하였도다.'],
+        en: ['Christian entered the Celestial City in glory.', 'After every battle, a crown of light awaited,', 'and all of heaven rejoiced at his coming.'],
+      },
+      humble: {
+        ko: ['크리스천은 조용히 천성의 문을 지나갔다.', '화려하지 않았으나 흔들리지 않는 발걸음이었고,', '문지기들이 따뜻이 맞아주었도다.'],
+        en: ['Christian passed through the gates quietly.', 'No fanfare, but his steps never wavered,', 'and the gatekeepers welcomed him warmly.'],
+      },
+      barely: {
+        ko: ['크리스천은 마침내 천성에 도착했다.', '지치고 상처투성이었으나,', '그가 바라던 곳에 이른 것이다.'],
+        en: ['Christian had arrived at last.', 'Battered and weary, yet standing,', 'the gates of the Celestial City stood open.'],
+      },
+      grace: {
+        ko: ['크리스천은 넘어질 때마다 은혜의 손에 이끌려', '마침내 천성에 도착했다.', '그의 힘이 아니라 은혜가 그를 이끈 여정이었도다.'],
+        en: ['Lifted by grace at every fall,', 'Christian arrived at the Celestial City.', 'Not by his strength, but by grace alone.'],
+      },
+    };
+    const lines = ko ? narratives[tier].ko : narratives[tier].en;
+    return lines.map((text, i) => ({
+      text,
+      color: i === 0 ? '#e8e0d0' : '#c8b8a0',
+      size: FS.SM,
+    }));
+  }
+
+  private getScripture(tier: EndingTier, ko: boolean) {
+    const FS = DesignSystem.FONT_SIZE;
+    const scriptures: Record<EndingTier, { ko: string[]; en: string[]; ref: string }> = {
+      glory: {
+        ko: ['"이제 후로는 나를 위하여 의의 면류관이 예비되었으니"'],
+        en: ['"Now there is in store for me the crown of righteousness"'],
+        ref: ko ? '— 디모데후서 4:8' : '— 2 Timothy 4:8',
+      },
+      humble: {
+        ko: ['"잘하였도다 착하고 충성된 종아"'],
+        en: ['"Well done, good and faithful servant"'],
+        ref: ko ? '— 마태복음 25:23' : '— Matthew 25:23',
+      },
+      barely: {
+        ko: ['"하나님이 그들의 눈에서 모든 눈물을 씻어 주실 것이요"', '"다시는 사망이 없고 애통하는 것이나"', '"아픈 것이 다시 있지 아니하리니"'],
+        en: ['"God shall wipe away all tears from their eyes;"', '"and there shall be no more death,"', '"neither shall there be any more pain."'],
+        ref: ko ? '— 요한계시록 21:4' : '— Revelation 21:4',
+      },
+      grace: {
+        ko: ['"너는 내 은혜가 네게 족하도다"', '"이는 내 능력이 약한 데서 온전하여짐이라"'],
+        en: ['"My grace is sufficient for you,"', '"for my power is made perfect in weakness."'],
+        ref: ko ? '— 고린도후서 12:9' : '— 2 Corinthians 12:9',
+      },
+    };
+    const s = scriptures[tier];
+    const lines = ko ? s.ko : s.en;
+    return [
+      ...lines.map(text => ({ text, color: '#d4a853', size: FS.SM })),
+      { text: s.ref, color: '#b0a898', size: FS.XS },
+    ];
   }
 
   private showStats(ko: boolean): void {
     const cx = GAME_WIDTH / 2;
     const statsY = GAME_HEIGHT - 80;
 
-    // Divider
     const divider = this.add.graphics().setDepth(10);
     divider.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
     divider.lineBetween(cx - 80, statsY - 20, cx + 80, statsY - 20);
 
-    // Stats panel
     const save = ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)
       ? ServiceLocator.get<import('../save/SaveManager').SaveManager>(SERVICE_KEYS.SAVE_MANAGER).getLastLoaded()
       : null;
@@ -158,26 +301,25 @@ export class EndingScene extends Phaser.Scene {
     ];
 
     statLines.forEach((line, i) => {
-      const statTxt = this.add.text(cx, statsY + i * 12, line, {
-        fontSize: '4px',
-        color: '#888877',
+      const statTxt = this.add.text(cx, statsY + i * 16, line, {
+        fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
+        color: '#b0a898',
         fontFamily: FONT_FAMILY,
         align: 'center',
       }).setOrigin(0.5).setAlpha(0).setDepth(10);
       this.tweens.add({ targets: statTxt, alpha: 1, duration: 600 });
     });
 
-    // Return to menu button
     this.time.delayedCall(1500, () => {
       const menuLabel = this.gameManager.i18n.t('ending.return');
       const btn = DesignSystem.createButton(
-        this, cx, statsY + 30, 150, 22, menuLabel,
+        this, cx, statsY + 40, 150, 30, menuLabel,
         () => {
           void DesignSystem.fadeOut(this, 800).then(() => {
             this.scene.start(SCENE_KEYS.MENU);
           });
         },
-        { fontSize: DesignSystem.FONT_SIZE.XS, bgColor: 0x2a1a06 },
+        { fontSize: DesignSystem.FONT_SIZE.SM, bgColor: 0x2a1a06 },
       );
       btn.setAlpha(0);
       btn.setDepth(20);

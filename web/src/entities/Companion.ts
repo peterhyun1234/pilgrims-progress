@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { FONT_FAMILY } from '../ui/DesignSystem';
+import { DesignSystem, FONT_FAMILY } from '../ui/DesignSystem';
 
 /**
  * Companion — an NPC that follows the player during specific chapters.
@@ -147,7 +147,7 @@ export class Companion {
     const hex = `#${color.toString(16).padStart(6, '0')}`;
     const emote = this.scene.add.text(
       this.sprite.x, this.sprite.y - 22, icon, {
-        fontSize: '6px', color: hex, fontFamily: FONT_FAMILY, fontStyle: 'bold',
+        fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: hex, fontFamily: FONT_FAMILY, fontStyle: 'bold',
       },
     ).setOrigin(0.5).setDepth(14);
 
@@ -174,7 +174,7 @@ export class Companion {
     bg.strokeRoundedRect(-maxW / 2 - 4, -18, maxW + 8, 22, 5);
 
     const textObj = this.scene.add.text(0, -8, line, {
-      fontSize: '4px',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
       color: '#e8e0d0',
       fontFamily: FONT_FAMILY,
       align: 'center',

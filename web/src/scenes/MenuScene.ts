@@ -150,11 +150,11 @@ export class MenuScene extends Phaser.Scene {
     g.clear();
     // Radial glow layers
     const colors = [
-      { r: 100, a: 0.04 },
-      { r: 65,  a: 0.07 },
-      { r: 40,  a: 0.10 },
-      { r: 22,  a: 0.15 },
-      { r: 12,  a: 0.20 },
+      { r: 100, a: 0.08 },
+      { r: 65,  a: 0.14 },
+      { r: 40,  a: 0.20 },
+      { r: 22,  a: 0.30 },
+      { r: 12,  a: 0.40 },
     ];
     for (const { r, a } of colors) {
       g.fillStyle(0xffd4a0, a);
@@ -245,7 +245,7 @@ export class MenuScene extends Phaser.Scene {
 
     // Subtitle
     const subtitle = this.add.text(cx, 57, gm.i18n.t('game.subtitle'), {
-      fontSize: '6px', color: '#6a5a44', fontFamily: "'Silkscreen', monospace",
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: subtitle, alpha: 0.7, duration: 700, delay: 500 });
 
@@ -261,9 +261,9 @@ export class MenuScene extends Phaser.Scene {
 
     // — Bible verse —
     const verse = this.add.text(cx, 78, '"좁은 문으로 들어가라"  마 7:13', {
-      fontSize: '6px', color: '#4a3f2f', fontFamily: "'Silkscreen', monospace",
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#c8b070', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5).setDepth(10).setAlpha(0);
-    this.tweens.add({ targets: verse, alpha: 0.65, duration: 800, delay: 1200 });
+    this.tweens.add({ targets: verse, alpha: 0.9, duration: 800, delay: 1200 });
 
     // — Button panel (lower section, below horizon) —
     const btnAreaY = H * 0.58;
@@ -279,14 +279,14 @@ export class MenuScene extends Phaser.Scene {
       .on('pointerout', function(this: Phaser.GameObjects.Text) { this.setColor('#3a3028'); });
 
     this.add.text(W - 8, H - 8, 'v1.0.0', {
-      fontSize: '6px', color: '#2a2218', fontFamily: "'Silkscreen', monospace",
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#5a5040', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(1, 1).setDepth(10);
   }
 
   private buildButtonPanel(cx: number, topY: number, ko: boolean): void {
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const btnW = 160;
-    const btnH = 26;
+    const btnH = 32;
     const gap = 8;
 
     // Semi-transparent panel behind buttons
@@ -306,7 +306,7 @@ export class MenuScene extends Phaser.Scene {
       const borderColor = opts?.accent ? 0x4a8a4a : 0xd4a853;
       bg.fillStyle(defColor, 0.92);
       bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
-      bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.2);
+      bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.4);
       bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
 
       const txt = this.add.text(0, 0, label, {
@@ -335,7 +335,7 @@ export class MenuScene extends Phaser.Scene {
         bg.clear();
         bg.fillStyle(defColor, 0.92);
         bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
-        bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.2);
+        bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.4);
         bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
         txt.setColor(opts?.accent ? '#8ad88a' : '#c8bfaa');
       });
@@ -375,7 +375,7 @@ export class MenuScene extends Phaser.Scene {
         y: Math.random() * GAME_HEIGHT,
         vx: (Math.random() - 0.5) * 0.06,
         vy: isEmber ? (0.04 + Math.random() * 0.15) : -(0.04 + Math.random() * 0.18),
-        alpha: isEmber ? (0.04 + Math.random() * 0.1) : (0.05 + Math.random() * 0.18),
+        alpha: isEmber ? (0.1 + Math.random() * 0.2) : (0.1 + Math.random() * 0.3),
         size: isEmber ? (0.3 + Math.random() * 0.8) : (0.4 + Math.random() * 1.2),
         phase: Math.random() * Math.PI * 2,
         color: isEmber ? 0xff6622 : 0xd4a853,
@@ -439,7 +439,7 @@ export class MenuScene extends Phaser.Scene {
         const chapLabel = ko ? `제 ${saveData.chapter}장` : `Ch.${saveData.chapter}`;
         const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
         this.add.text(GAME_WIDTH / 2, continueBtnY + 18, `${chapLabel}  ·  ${faithLabel}`, {
-          fontSize: '6px', color: '#3a3028', fontFamily: "'Silkscreen', monospace",
+          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#8a7a68', fontFamily: DesignSystem.getFontFamily(),
         }).setOrigin(0.5).setDepth(12);
 
         const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
