@@ -676,6 +676,10 @@ export class GameScene extends Phaser.Scene {
 
     let lineQueue: ConvLine[] = [...conv.lines];
     let choicePhase = false;
+    /** Guard: prevents the same dialogue-choice event from being processed twice */
+    let choiceHandled = false;
+    /** True once a choice has been selected — prevents re-showing choices after response lines */
+    let choicesConsumed = false;
 
     const applyLine = (line: ConvLine) => {
       if (line.stat && line.amount !== undefined) {
@@ -699,7 +703,8 @@ export class GameScene extends Phaser.Scene {
       if (lineQueue.length > 0) {
         choicePhase = false;
         applyLine(lineQueue.shift()!);
-      } else if (!choicePhase && conv.choices && conv.choices.length > 0) {
+      } else if (!choicePhase && !choicesConsumed && conv.choices && conv.choices.length > 0) {
+        // Show choices exactly once — after initial lines, before they're consumed
         choicePhase = true;
         this.eventBus.emit(GameEvent.DIALOGUE_CHOICE, {
           choices: conv.choices.map((c, i) => ({
@@ -719,6 +724,9 @@ export class GameScene extends Phaser.Scene {
       if (index === -1) {
         if (!choicePhase) showNextOrEnd();
       } else {
+        if (choiceHandled) return;   // ← double-fire guard
+        choiceHandled = true;
+        choicesConsumed = true;      // ← mark choices as used (no re-show after response lines)
         const choice = conv.choices?.[index];
         if (!choice) { end(); return; }
         if (choice.requires && sm.get(choice.requires.stat) < choice.requires.min) return;

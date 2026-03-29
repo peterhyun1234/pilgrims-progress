@@ -29,6 +29,8 @@ export class DialogueBox {
   private choiceContainers: Phaser.GameObjects.Container[] = [];
   private dimOverlay: Phaser.GameObjects.Rectangle | null = null;
   private choiceKeyHandlers: (() => void)[] = [];
+  /** Prevents duplicate choice selection (spam-click guard) */
+  private _choiceLocked = false;
 
   private eventBus: EventBus;
   private isVisible = false;
@@ -442,6 +444,15 @@ export class DialogueBox {
           txt.setText(txt.text.replace(/^▶ /, ''));
         });
         hz.on('pointerdown', () => {
+          if (this._choiceLocked) return;   // ← spam-click guard
+          if (isLocked) return;             // ← stat-locked choice
+          this._choiceLocked = true;
+          // Immediately disable all choice hitboxes visually
+          this.choiceContainers.forEach(cc => {
+            cc.getAll().forEach(child => {
+              if (child instanceof Phaser.GameObjects.Rectangle) child.disableInteractive();
+            });
+          });
           this.scene.tweens.add({
             targets: c, scaleX: 1.02, scaleY: 1.02, duration: 50, yoyo: true,
             onComplete: () => {
@@ -476,6 +487,7 @@ export class DialogueBox {
   }
 
   private clearChoices(): void {
+    this._choiceLocked = false;   // ← reset lock for next dialogue
     this.choiceContainers.forEach(c => c.destroy(true));
     this.choiceContainers = [];
     this.hideDimOverlay();

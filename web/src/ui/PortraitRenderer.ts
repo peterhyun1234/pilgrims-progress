@@ -35,8 +35,9 @@ export class PortraitRenderer {
     const rt = this.scene.add.renderTexture(0, 0, size, size).setVisible(false).setOrigin(0, 0);
     const g = this.scene.add.graphics();
     const cx = size / 2;
-    const cy = size / 2;
-    const headR = size * 0.32;
+    // Head sits in upper 60% of frame — more room for clothing below
+    const cy = size * 0.40;
+    const headR = size * 0.28;
 
     g.fillStyle(0x1a1428, 1);
     g.fillRect(0, 0, size, size);
@@ -61,21 +62,34 @@ export class PortraitRenderer {
     config: PortraitConfig,
     cx: number, cy: number, r: number,
   ): void {
-    g.fillStyle(config.skinTone, 1);
+    // Chin/jaw shadow for depth
+    g.fillStyle(this.darken(config.skinTone, 0.2), 0.3);
+    g.fillEllipse(cx, cy + r * 0.75, r * 1.6, r * 0.5);
 
+    // Main face
+    g.fillStyle(config.skinTone, 1);
     switch (config.headShape) {
       case 'square':
-        g.fillRoundedRect(cx - r, cy - r * 0.9, r * 2, r * 2, r * 0.3);
+        g.fillRoundedRect(cx - r, cy - r * 0.9, r * 2, r * 2, r * 0.25);
         break;
       case 'oval':
-        g.fillEllipse(cx, cy, r * 1.8, r * 2.1);
+        g.fillEllipse(cx, cy - r * 0.05, r * 1.7, r * 2.05);
         break;
-      default:
-        g.fillCircle(cx, cy, r);
+      default:  // round
+        g.fillRoundedRect(cx - r * 0.95, cy - r * 0.9, r * 1.9, r * 1.95, r * 0.5);
     }
 
-    g.fillStyle(this.lighten(config.skinTone, 0.15), 0.3);
-    g.fillCircle(cx - r * 0.3, cy - r * 0.3, r * 0.4);
+    // Forehead highlight
+    g.fillStyle(this.lighten(config.skinTone, 0.12), 0.28);
+    g.fillEllipse(cx - r * 0.2, cy - r * 0.5, r * 0.9, r * 0.55);
+
+    // Nose bridge (2px dot cluster)
+    g.fillStyle(this.darken(config.skinTone, 0.18), 0.6);
+    g.fillRect(cx - 1, cy + r * 0.08, 2, 3);
+    // Nostrils
+    g.fillStyle(this.darken(config.skinTone, 0.25), 0.55);
+    g.fillCircle(cx - r * 0.16, cy + r * 0.24, r * 0.07);
+    g.fillCircle(cx + r * 0.16, cy + r * 0.24, r * 0.07);
   }
 
   private drawHair(
@@ -96,12 +110,19 @@ export class PortraitRenderer {
         g.fillRect(cx - r * 1.1, cy - r * 0.2, r * 0.4, r * 1.6);
         g.fillRect(cx + r * 0.7, cy - r * 0.2, r * 0.4, r * 1.6);
         break;
-      case 'hooded':
-        g.fillEllipse(cx, cy - r * 0.3, r * 2.4, r * 2);
-        g.fillRect(cx - r * 1.2, cy, r * 2.4, r * 0.8);
-        g.fillStyle(this.darken(config.hairColor, 0.3), 0.6);
-        g.fillEllipse(cx, cy - r * 0.1, r * 1.8, r * 1.6);
+      case 'hooded': {
+        // Outer hood fabric
+        g.fillStyle(config.hairColor, 1);
+        g.fillEllipse(cx, cy - r * 0.35, r * 2.5, r * 2.1);
+        g.fillRect(cx - r * 1.2, cy, r * 2.4, r * 0.9);
+        // Inner shadow of hood creates face opening
+        g.fillStyle(this.darken(config.hairColor, 0.35), 0.7);
+        g.fillEllipse(cx, cy - r * 0.12, r * 1.85, r * 1.7);
+        // Face-opening highlight (warm glow from inside hood)
+        g.fillStyle(this.lighten(config.skinTone, 0.05), 0.15);
+        g.fillEllipse(cx, cy, r * 1.3, r * 1.25);
         break;
+      }
       case 'wild':
         for (let i = 0; i < 8; i++) {
           const angle = (i / 8) * Math.PI * 2 - Math.PI * 0.5;
@@ -123,35 +144,46 @@ export class PortraitRenderer {
     emotion: EmotionFeatures,
     cx: number, cy: number, r: number,
   ): void {
-    const eyeSpacing = r * 0.45;
-    const eyeY = cy - r * 0.1;
-    const eyeR = r * 0.15 * emotion.eyeScale;
+    const eyeSpacing = r * 0.42;
+    const eyeY = cy - r * 0.2;   // Higher up relative to head center
+    const eyeR = r * 0.105 * emotion.eyeScale;  // Smaller eyes (was 0.15)
 
     [-1, 1].forEach(side => {
       const ex = cx + side * eyeSpacing;
 
-      g.fillStyle(0xffffff, 1);
-      g.fillEllipse(ex, eyeY, eyeR * 2.2, eyeR * 2);
+      // Eyelid crease shadow
+      g.fillStyle(this.darken(config.skinTone, 0.15), 0.35);
+      g.fillEllipse(ex, eyeY - eyeR * 0.4, eyeR * 2.6, eyeR * 1.3);
 
+      // Sclera (warm white, not pure)
+      g.fillStyle(0xf5f0e8, 1);
+      g.fillEllipse(ex, eyeY, eyeR * 2.0, eyeR * 1.6);
+
+      // Iris
       g.fillStyle(config.eyeColor, 1);
-      g.fillCircle(ex, eyeY, eyeR * 0.8);
+      g.fillCircle(ex, eyeY, eyeR * 0.85);
 
-      g.fillStyle(0x111111, 1);
-      g.fillCircle(ex, eyeY, eyeR * 0.4);
+      // Pupil
+      g.fillStyle(0x0d0d0d, 1);
+      g.fillCircle(ex, eyeY, eyeR * 0.42);
 
-      g.fillStyle(0xffffff, 0.8);
-      g.fillCircle(ex - eyeR * 0.2, eyeY - eyeR * 0.3, eyeR * 0.25);
+      // Specular highlight
+      g.fillStyle(0xffffff, 0.9);
+      g.fillCircle(ex - eyeR * 0.22, eyeY - eyeR * 0.28, eyeR * 0.22);
 
-      if (emotion.eyebrowAngle !== 0) {
-        g.lineStyle(1.5, this.darken(config.hairColor, 0.2), 0.9);
-        const browY = eyeY - eyeR * 1.8;
-        const browLen = eyeR * 1.5;
-        const angleOff = emotion.eyebrowAngle * side;
-        g.lineBetween(
-          ex - browLen, browY + angleOff * browLen,
-          ex + browLen, browY - angleOff * browLen,
-        );
-      }
+      // Top eyelash line
+      g.lineStyle(1.3, this.darken(config.hairColor ?? 0x333333, 0.05), 0.88);
+      g.lineBetween(ex - eyeR * 0.9, eyeY - eyeR * 0.75, ex + eyeR * 0.9, eyeY - eyeR * 0.75);
+
+      // Eyebrow (always draw, not just when angled)
+      const browY = eyeY - eyeR * 2.4;
+      const browLen = eyeR * 1.4;
+      const angleOff = emotion.eyebrowAngle * side * browLen;
+      g.lineStyle(1.6, this.darken(config.hairColor ?? 0x333333, 0.05), 0.95);
+      g.lineBetween(
+        ex - browLen, browY + angleOff,
+        ex + browLen, browY - angleOff,
+      );
     });
   }
 
@@ -191,14 +223,29 @@ export class PortraitRenderer {
     config: PortraitConfig,
     cx: number, cy: number, r: number, size: number,
   ): void {
+    const clothY = cy + r * 0.78;
+    const clothH = size - clothY;
+    // Main clothing fill (trapezoidal using rects)
     g.fillStyle(config.clothingColor, 1);
-    g.fillRect(cx - r * 1.2, cy + r * 0.7, r * 2.4, size - cy - r * 0.7);
+    g.fillRect(cx - r * 1.25, clothY, r * 2.5, clothH);
 
-    g.fillStyle(config.clothingAccent, 0.6);
-    g.fillRect(cx - r * 0.15, cy + r * 0.7, r * 0.3, size - cy - r * 0.7);
+    // Shoulder curve (darker to imply 3D)
+    g.fillStyle(this.darken(config.clothingColor, 0.18), 0.55);
+    g.fillEllipse(cx, clothY + r * 0.05, r * 2.5, r * 0.45);
 
-    g.lineStyle(1, config.clothingAccent, 0.4);
-    g.lineBetween(cx - r * 1.2, cy + r * 0.7, cx + r * 1.2, cy + r * 0.7);
+    // Chest fold lines (vertical shading stripes)
+    g.lineStyle(0.8, this.darken(config.clothingColor, 0.22), 0.4);
+    [-r * 0.5, r * 0.5].forEach(ox => {
+      g.lineBetween(cx + ox, clothY + r * 0.1, cx + ox, size - 2);
+    });
+
+    // Center accent strip (collar, buttons, or decoration)
+    g.fillStyle(config.clothingAccent, 0.55);
+    g.fillRect(cx - r * 0.12, clothY, r * 0.24, clothH);
+
+    // Collar line
+    g.lineStyle(1, config.clothingAccent, 0.5);
+    g.lineBetween(cx - r * 1.2, clothY, cx + r * 1.2, clothY);
   }
 
   private drawAccessory(

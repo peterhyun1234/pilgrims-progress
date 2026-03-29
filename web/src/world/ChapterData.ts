@@ -88,7 +88,7 @@ export interface TerrainZone {
 const THEMES: Record<number, ChapterTheme> = {
   1: {
     groundBase: 0x6a5e4e,
-    groundVariant: 0x5a4e40,
+    groundVariant: 0x625949,   // ±6-7 diff — subtle scatter, no checkerboard
     wallColor: 0x3a3028,
     wallTop: 0x4a4038,
     decorColors: [0x756a5a, 0x806e5c, 0x6a6050],
@@ -101,7 +101,7 @@ const THEMES: Record<number, ChapterTheme> = {
   },
   2: {
     groundBase: 0x4a5a46,
-    groundVariant: 0x3a4a38,
+    groundVariant: 0x455542,
     wallColor: 0x2a3528,
     wallTop: 0x354030,
     decorColors: [0x4a6848, 0x3e5c3c, 0x5a7055],
@@ -126,7 +126,7 @@ const THEMES: Record<number, ChapterTheme> = {
   },
   4: {
     groundBase: 0x6e6e68,
-    groundVariant: 0x5e5e58,
+    groundVariant: 0x686864,
     wallColor: 0x484844,
     wallTop: 0x585858,
     decorColors: [0x7a7a74, 0x6e6e68, 0x848480],
@@ -150,7 +150,7 @@ const THEMES: Record<number, ChapterTheme> = {
   },
   6: {
     groundBase: 0x728068,
-    groundVariant: 0x627058,
+    groundVariant: 0x6c7a63,
     wallColor: 0x485840,
     wallTop: 0x5a6850,
     decorColors: [0x99bb77, 0xd4a853, 0xffeedd],
@@ -164,7 +164,7 @@ const THEMES: Record<number, ChapterTheme> = {
   // ─── Ch7: Beautiful Palace ─────────────────────────────────────────────
   7: {
     groundBase: 0x625878,
-    groundVariant: 0x524868,
+    groundVariant: 0x5c5373,
     wallColor: 0x3c2e50,
     wallTop: 0x4c3e60,
     decorColors: [0x7a6a8a, 0x8a7898, 0x685878],
@@ -179,7 +179,7 @@ const THEMES: Record<number, ChapterTheme> = {
   // ─── Ch8: Valley of Humiliation ───────────────────────────────────────
   8: {
     groundBase: 0x2e2838,
-    groundVariant: 0x221e2c,
+    groundVariant: 0x2a2534,
     wallColor: 0x181220,
     wallTop: 0x241c2e,
     decorColors: [0x3a2e44, 0x2e2438, 0x3a2a3c],
@@ -195,7 +195,7 @@ const THEMES: Record<number, ChapterTheme> = {
   // ─── Ch9: Valley of Death's Shadow ────────────────────────────────────
   9: {
     groundBase: 0x1e1a22,
-    groundVariant: 0x16121a,
+    groundVariant: 0x1b171f,
     wallColor: 0x100c14,
     wallTop: 0x1a161e,
     decorColors: [0x28202e, 0x201826, 0x24182c],
@@ -211,7 +211,7 @@ const THEMES: Record<number, ChapterTheme> = {
   // ─── Ch10: Vanity Fair ────────────────────────────────────────────────
   10: {
     groundBase: 0x3a3850,
-    groundVariant: 0x2e2c44,
+    groundVariant: 0x35334c,
     wallColor: 0x222030,
     wallTop: 0x302e42,
     decorColors: [0x6655aa, 0x8855bb, 0xbb77aa],
@@ -225,7 +225,7 @@ const THEMES: Record<number, ChapterTheme> = {
   // ─── Ch11: Doubting Castle ────────────────────────────────────────────
   11: {
     groundBase: 0x282434,
-    groundVariant: 0x1e1a28,
+    groundVariant: 0x232030,
     wallColor: 0x181420,
     wallTop: 0x262230,
     decorColors: [0x30304a, 0x282838, 0x382e44],
@@ -241,7 +241,7 @@ const THEMES: Record<number, ChapterTheme> = {
   // ─── Ch12: Celestial City ─────────────────────────────────────────────
   12: {
     groundBase: 0x524278,
-    groundVariant: 0x624e88,
+    groundVariant: 0x594880,
     wallColor: 0x3c2c5a,
     wallTop: 0x4e3c6e,
     decorColors: [0xd4a853, 0xffd700, 0xffeedd],
