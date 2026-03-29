@@ -829,6 +829,20 @@ export class GameScene extends Phaser.Scene {
       duration: 1500,
     });
     this.spawnStatFloat(statLabel, payload.amount, DesignSystem.STAT_COLORS[payload.stat]);
+
+    // Phase 6A: track maxFaith highscore in localStorage
+    if (payload.stat === 'faith' && isPositive) {
+      const current = payload.newValue;
+      const stored = parseInt(localStorage.getItem('pp_highscore_faith') ?? '0', 10);
+      if (current > stored) {
+        localStorage.setItem('pp_highscore_faith', String(current));
+      }
+    }
+
+    // Phase 5B: faithGlow effect when faith increases
+    if (payload.stat === 'faith' && isPositive && this.player) {
+      this.particleManager.faithGlow(this.player.sprite.x, this.player.sprite.y);
+    }
   };
 
   private spawnStatFloat(label: string, amount: number, color: number): void {
@@ -876,8 +890,14 @@ export class GameScene extends Phaser.Scene {
       ease: 'Sine.easeOut',
     });
 
-    // Resume NPC patrol
+    // Phase 5C: briefly flash NPC with golden tint then restore
     if (this.activeDialogueNpc) {
+      const npcSprite = this.activeDialogueNpc.sprite;
+      if (npcSprite) {
+        npcSprite.setTint(0xffd080);
+        this.time.delayedCall(220, () => npcSprite.clearTint());
+      }
+      // Resume NPC patrol
       this.activeDialogueNpc.resumePatrol();
       this.activeDialogueNpc = null;
     }
@@ -1247,10 +1267,12 @@ export class GameScene extends Phaser.Scene {
 
   private startBattle(enemyId: string): void {
     this.scene.pause();
+    this.scene.setVisible(false);
     this.scene.launch(SCENE_KEYS.BATTLE, { enemyId });
 
     const battleEndHandler = () => {
       this.eventBus.off(GameEvent.BATTLE_END, battleEndHandler);
+      this.scene.setVisible(true);
       this.scene.resume();
     };
     this.eventBus.on(GameEvent.BATTLE_END, battleEndHandler);
@@ -1371,12 +1393,27 @@ export class GameScene extends Phaser.Scene {
     const camR = cam.scrollX + cam.width + margin;
     const camT = cam.scrollY - margin;
     const camB = cam.scrollY + cam.height + margin;
+    const playerX = this.player.sprite.x;
+    const playerY = this.player.sprite.y;
     this.npcs.forEach(npc => {
       const nx = npc.sprite.x;
       const ny = npc.sprite.y;
       if (nx >= camL && nx <= camR && ny >= camT && ny <= camB) {
         npc.sprite.setVisible(true);
         npc.update();
+        // Phase 5C: shimmer effect when player walks within 50px of NPC
+        const dist = Math.sqrt((nx - playerX) ** 2 + (ny - playerY) ** 2);
+        if (dist < 50) {
+          const t = this.time.now * 0.003;
+          const shimmerAlpha = 0.3 + Math.sin(t + nx * 0.1) * 0.2;
+          npc.sprite.setTint(Phaser.Display.Color.GetColor(
+            Math.round(0xff + (0xd4 - 0xff) * shimmerAlpha),
+            Math.round(0xff + (0xa8 - 0xff) * shimmerAlpha),
+            0xff,
+          ));
+        } else {
+          npc.sprite.clearTint();
+        }
       } else {
         npc.sprite.setVisible(false);
       }

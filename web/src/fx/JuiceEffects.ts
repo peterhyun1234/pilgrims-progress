@@ -299,6 +299,106 @@ export class JuiceEffects {
     audio?.procedural?.playHit();
   };
 
+  // ─── Phase 5A additions ────────────────────────────────────────────
+
+  /**
+   * Brief full-screen color flash overlay.
+   * @param color  - hex color for the flash
+   * @param duration - fade-out duration in ms
+   */
+  flashScreen(color = 0xffffff, duration = 150): void {
+    this.impactFlash(color, 0.45, duration);
+  }
+
+  /**
+   * Floating damage number that rises and fades.
+   * @param x/y  - world position
+   * @param amount - numeric damage value
+   * @param color  - hex color
+   */
+  damageNumber(x: number, y: number, amount: number, color = 0xff4444): void {
+    const colorHex = '#' + color.toString(16).padStart(6, '0');
+    const sign = amount > 0 ? '+' : '';
+    const txt = this.scene.add.text(x, y - 8, `${sign}${amount}`, {
+      fontSize: '11px',
+      color: colorHex,
+      fontFamily: "'Silkscreen', monospace",
+      fontStyle: 'bold',
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 0, stroke: true, fill: true },
+    }).setOrigin(0.5).setDepth(200);
+
+    this.scene.tweens.add({
+      targets: txt,
+      y: y - 28,
+      alpha: 0,
+      scaleX: 1.3,
+      scaleY: 1.3,
+      duration: 700,
+      ease: 'Quad.easeOut',
+      onComplete: () => txt.destroy(),
+    });
+  }
+
+  /**
+   * 6-8 tiny particles explode outward then fade.
+   * @param x/y    - world position
+   * @param color  - hex particle color
+   */
+  spawnPickupParticles(x: number, y: number, color = 0xd4a853): void {
+    const count = 6 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2 + Math.random() * 0.3;
+      const speed = 12 + Math.random() * 16;
+      const p = this.scene.add.circle(x, y, 1.5 + Math.random(), color, 0.9)
+        .setDepth(99);
+      this.scene.tweens.add({
+        targets: p,
+        x: x + Math.cos(angle) * speed,
+        y: y + Math.sin(angle) * speed - 6,
+        alpha: 0,
+        scaleX: 0.1,
+        scaleY: 0.1,
+        duration: 350 + Math.random() * 200,
+        ease: 'Quad.easeOut',
+        delay: i * 20,
+        onComplete: () => p.destroy(),
+      });
+    }
+  }
+
+  /**
+   * "xN COMBO!" text with scale-in animation.
+   * @param x/y   - world position
+   * @param count - combo multiplier (shown as x2, x3 etc.)
+   */
+  comboText(x: number, y: number, count: number): void {
+    if (count < 2) return;
+    const label = `x${count} COMBO!`;
+    const txt = this.scene.add.text(x, y, label, {
+      fontSize: '12px',
+      color: '#ffdd44',
+      fontFamily: "'Silkscreen', monospace",
+      fontStyle: 'bold',
+      shadow: { offsetX: 1, offsetY: 1, color: '#aa6600', blur: 0, stroke: true, fill: true },
+    }).setOrigin(0.5).setDepth(201).setScale(0).setAlpha(0);
+
+    this.scene.tweens.add({
+      targets: txt,
+      scaleX: 1.2, scaleY: 1.2, alpha: 1,
+      duration: 200,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.scene.time.delayedCall(600, () => {
+          this.scene.tweens.add({
+            targets: txt, alpha: 0, y: y - 16,
+            duration: 300, ease: 'Quad.easeIn',
+            onComplete: () => txt.destroy(),
+          });
+        });
+      },
+    });
+  }
+
   // ─── Static helpers ───────────────────────────────────────────────
 
   /** Enhanced squash/stretch with overshoot */

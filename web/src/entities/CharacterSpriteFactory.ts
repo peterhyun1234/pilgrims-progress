@@ -309,6 +309,9 @@ export class CharacterSpriteFactory {
           // Staff body (wooden brown)
           g.lineStyle(2, 0x8b6040, 1);
           g.lineBetween(staffX, bodyY - 2, staffX, oy + 28);
+          // Staff highlight edge
+          g.lineStyle(1, 0xc09060, 0.4);
+          g.lineBetween(staffX - 1, bodyY - 2, staffX - 1, oy + 28);
           // Staff top knob highlight
           g.fillStyle(accColor, 0.9);
           g.fillCircle(staffX, bodyY - 2, 1.5);
@@ -320,8 +323,17 @@ export class CharacterSpriteFactory {
         }
         case 'scroll': {
           const scrollX = dir === 'right' ? cx + 8 : cx - 10;
+          // Scroll body
           g.fillStyle(accColor, 1);
-          g.fillRoundedRect(scrollX, bodyY + 3, 4, 6, 1);
+          g.fillRoundedRect(scrollX, bodyY + 3, 5, 7, 1);
+          // Scroll end caps
+          g.fillStyle(this.darken(accColor, 0.7), 1);
+          g.fillRect(scrollX, bodyY + 3, 5, 1);
+          g.fillRect(scrollX, bodyY + 9, 5, 1);
+          // Page line hint
+          g.lineStyle(0.5, 0x000000, 0.3);
+          g.lineBetween(scrollX + 1, bodyY + 5, scrollX + 4, bodyY + 5);
+          g.lineBetween(scrollX + 1, bodyY + 7, scrollX + 4, bodyY + 7);
           break;
         }
         case 'crown':
@@ -330,6 +342,11 @@ export class CharacterSpriteFactory {
           g.fillTriangle(cx - 5, headY - 3, cx - 5, headY - 6, cx - 3, headY - 3);
           g.fillTriangle(cx, headY - 3, cx, headY - 7, cx + 2, headY - 3);
           g.fillTriangle(cx + 5, headY - 3, cx + 5, headY - 6, cx + 3, headY - 3);
+          // Gem highlights
+          g.fillStyle(0xff8888, 0.8);
+          g.fillRect(cx - 4, headY - 5, 1, 1);
+          g.fillStyle(0x88ff88, 0.8);
+          g.fillRect(cx + 1, headY - 6, 1, 1);
           break;
         case 'chains': {
           g.lineStyle(1, 0x888888, 0.5);
@@ -337,26 +354,88 @@ export class CharacterSpriteFactory {
           for (let i = 0; i < 3; i++) {
             g.strokeCircle(cx - 4 + i * 4, chainY + 2 + (i % 2), 1.5);
           }
+          // Connecting chain links
+          g.lineStyle(0.5, 0x666666, 0.4);
+          g.lineBetween(cx - 4, chainY + 2, cx, chainY + 3);
+          g.lineBetween(cx, chainY + 3, cx + 4, chainY + 2);
           break;
         }
-        case 'hat':
+        case 'hat': {
+          // Wide-brimmed pilgrim hat
+          // Brim (wide)
+          g.fillStyle(this.darken(accColor, 0.8), 1);
+          g.fillRoundedRect(cx - 8, headY - 3, 16, 3, 1);
+          // Hat crown (tall)
           g.fillStyle(accColor, 1);
-          g.fillRoundedRect(cx - 7, headY - 4, 14, 3, 1);
-          g.fillRoundedRect(cx - 5, headY - 7, 10, 4, 2);
+          g.fillRoundedRect(cx - 5, headY - 9, 10, 7, 2);
+          // Hat highlight
+          g.fillStyle(0xffffff, 0.12);
+          g.fillRect(cx - 4, headY - 8, 3, 5);
+          // Hat band
+          g.fillStyle(this.darken(accColor, 0.6), 0.8);
+          g.fillRect(cx - 5, headY - 4, 10, 1);
           break;
+        }
       }
+    }
+
+    // === Character-specific enhancements ===
+    // Evangelist: pointing hand (stern authority) + grey beard
+    if (config.id === 'evangelist' && dir === 'down') {
+      // Grey beard
+      g.fillStyle(0xaaaaaa, 0.9);
+      g.fillRoundedRect(cx - 3, headY + headH - 2, 6, 5, 2);
+      g.fillStyle(0x888888, 0.5);
+      g.fillRect(cx - 2, headY + headH + 1, 4, 2);
+      // Pointing arm
+      if (anim === 'idle' || frame < 3) {
+        g.fillStyle(colors.clothing, 1);
+        g.fillRect(cx + 6, bodyY + 1, 3, 6);
+        // Extended pointing finger
+        g.fillStyle(colors.skin, 1);
+        g.fillRect(cx + 9, bodyY + 2, 4, 2);
+      }
+    }
+
+    // Interpreter: round hat extra + magnifying lens prop
+    if (config.id === 'interpreter' && dir !== 'up') {
+      // Rounder hat dome
+      g.fillStyle(0x8b7355, 0.9);
+      g.fillCircle(cx, headY - 4, 6);
+      g.fillStyle(0x9b8365, 0.5);
+      g.fillCircle(cx - 1, headY - 5, 3);
+    }
+
+    // Faithful: brown cloak tint differentiation (already via clothing color, add hood)
+    if (config.id === 'faithful' && config.hairStyle === 'hooded') {
+      // Darker cloak border for contrast
+      g.lineStyle(1, this.darken(colors.clothing, 0.5), 0.5);
+      g.strokeRoundedRect(cx - 6, bodyY, 12, bodyH, 2);
     }
 
     // === Burden (Christian-specific) ===
     if (config.id === 'christian' && dir !== 'left') {
-      const burdenX = dir === 'right' ? cx - 6 : cx + 2;
-      g.fillStyle(0x8b7355, 0.8);
-      g.fillRoundedRect(burdenX, bodyY - 3, 8, 7, 2);
-      g.lineStyle(1, 0x6b5b4f, 0.6);
-      g.strokeRoundedRect(burdenX, bodyY - 3, 8, 7, 2);
-      // Burden rope/strap highlight
-      g.lineStyle(1, 0x6b5b4f, 0.4);
-      g.lineBetween(cx, bodyY, burdenX + 4, bodyY - 2);
+      const burdenX = dir === 'right' ? cx - 7 : cx + 2;
+      const burdenW = 9;
+      const burdenH = 10;
+      // Drop shadow
+      g.fillStyle(0x000000, 0.25);
+      g.fillRoundedRect(burdenX + 1, bodyY - 4, burdenW, burdenH, 2);
+      // Sack body
+      g.fillStyle(0x8b7355, 0.9);
+      g.fillRoundedRect(burdenX, bodyY - 5, burdenW, burdenH, 2);
+      // Sack highlight (left-top)
+      g.fillStyle(0xb09070, 0.4);
+      g.fillRoundedRect(burdenX + 1, bodyY - 4, 3, 4, 1);
+      // Sack border
+      g.lineStyle(1, 0x5b4a3a, 0.7);
+      g.strokeRoundedRect(burdenX, bodyY - 5, burdenW, burdenH, 2);
+      // Rope tie at top
+      g.fillStyle(0x4a3a2a, 0.9);
+      g.fillRect(burdenX + 2, bodyY - 5, burdenW - 4, 2);
+      // Burden rope/strap
+      g.lineStyle(1.5, 0x5a4a3a, 0.6);
+      g.lineBetween(cx, bodyY - 1, burdenX + burdenW / 2, bodyY - 5);
     }
 
     // === Cross badge on Christian's chest (front/right views) ===

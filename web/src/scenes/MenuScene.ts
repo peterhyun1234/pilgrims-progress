@@ -31,6 +31,7 @@ export class MenuScene extends Phaser.Scene {
     this.buildBackground();
     this.createParticles();
     this.buildUI(cx, ko);
+    this.addMenuPolish();
     DesignSystem.fadeIn(this, 800);
   }
 
@@ -243,13 +244,13 @@ export class MenuScene extends Phaser.Scene {
       yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
 
-    // Main title
+    // Main title with stronger golden glow + drop shadow
     const title = this.add.text(cx, 42, gm.i18n.t('game.title'), {
       fontSize: `${ko ? DesignSystem.FONT_SIZE.LG : DesignSystem.FONT_SIZE.BASE}px`,
-      color: '#e8dfc8',
+      color: '#f0e8d0',
       fontFamily: DesignSystem.getFontFamily(),
       fontStyle: 'bold',
-      shadow: { offsetX: 0, offsetY: 0, color: '#d4a853', blur: 4, stroke: false, fill: true },
+      shadow: { offsetX: 1, offsetY: 2, color: '#d4a853', blur: 6, stroke: true, fill: true },
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: title, alpha: 1, y: 44, duration: 900, delay: 200, ease: 'Back.easeOut' });
 
@@ -371,6 +372,100 @@ export class MenuScene extends Phaser.Scene {
     });
 
     this.checkSaveExists(topY + btnH + gap, ko);
+  }
+
+  // ── Menu Polish (Phase 4C) ─────────────────────────────────────────────
+
+  private addMenuPolish(): void {
+    const W = GAME_WIDTH;
+    const mx = W * 0.78, my = GAME_HEIGHT * 0.16;
+
+    // Moon gentle pulse (scale 1.0 → 1.05 → 1.0 over 3s)
+    // We use a container to allow scaling around moon center
+    const moonContainer = this.add.container(mx, my).setDepth(-8);
+    const moonDisc = this.add.graphics();
+    moonDisc.fillStyle(0xeeddcc, 0.6);
+    moonDisc.fillCircle(0, 0, 11);
+    moonDisc.fillStyle(0xffeedd, 0.35);
+    moonDisc.fillCircle(0, 0, 8);
+    moonDisc.fillStyle(0xffffff, 0.2);
+    moonDisc.fillCircle(-1, -1, 5);
+    for (let i = 1; i <= 4; i++) {
+      moonDisc.fillStyle(0xddccbb, 0.04 / i);
+      moonDisc.fillCircle(0, 0, 11 + i * 6);
+    }
+    moonContainer.add(moonDisc);
+    this.tweens.add({
+      targets: moonContainer,
+      scaleX: 1.05, scaleY: 1.05,
+      duration: 3000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // Shooting stars — occasionally cross the sky
+    this.scheduleShootingStar();
+
+    // Add highscore display if available (Phase 6A)
+    const stored = localStorage.getItem('pp_highscore_faith');
+    if (stored) {
+      const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+      const ko = gm.language === 'ko';
+      const label = ko ? `최고 믿음: ${stored}` : `Best Faith: ${stored}`;
+      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.45 + 5, label, {
+        fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+        color: '#a09060',
+        fontFamily: DesignSystem.getFontFamily(),
+      }).setOrigin(0.5).setDepth(10).setAlpha(0.75);
+    }
+  }
+
+  private scheduleShootingStar(): void {
+    // Fire a shooting star every 4-8 seconds
+    const delay = 4000 + Math.random() * 4000;
+    this.time.delayedCall(delay, () => {
+      if (!this.scene.isActive()) return;
+      this.fireShootingStar();
+      this.scheduleShootingStar();
+    });
+  }
+
+  private fireShootingStar(): void {
+    const W = GAME_WIDTH;
+    const H = GAME_HEIGHT;
+    const HOR = H * 0.45;
+    // Random start position in upper sky
+    const startX = Math.random() * W * 0.6;
+    const startY = Math.random() * HOR * 0.5;
+    const angle = 0.5 + Math.random() * 0.4; // diagonal down-right
+    const length = 30 + Math.random() * 40;
+    const duration = 300 + Math.random() * 200;
+
+    const starGfx = this.add.graphics().setDepth(-7);
+    const starObj = { t: 0 };
+    this.tweens.add({
+      targets: starObj,
+      t: 1,
+      duration,
+      ease: 'Quad.easeIn',
+      onUpdate: () => {
+        starGfx.clear();
+        const progress = starObj.t;
+        const cx2 = startX + Math.cos(angle) * length * progress;
+        const cy2 = startY + Math.sin(angle) * length * progress;
+        const trailLen = length * 0.4;
+        // Trail gradient (fades toward head)
+        for (let s = 0; s < 5; s++) {
+          const sp = s / 5;
+          const tx = cx2 - Math.cos(angle) * trailLen * sp;
+          const ty = cy2 - Math.sin(angle) * trailLen * sp;
+          starGfx.fillStyle(0xffffff, (1 - sp) * 0.7 * (1 - progress));
+          starGfx.fillCircle(tx, ty, (1 - sp) * 1.5);
+        }
+      },
+      onComplete: () => starGfx.destroy(),
+    });
   }
 
   // ── Particles ─────────────────────────────────────────────────────────

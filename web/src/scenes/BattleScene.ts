@@ -270,6 +270,11 @@ export class BattleScene extends Phaser.Scene {
     ).setOrigin(0.5);
     this.enemyContainer.add(this.enemyHpText);
 
+    // Boss health bar at top of screen (Phase 6B)
+    if (enemy.isBoss && enemy.hp > 50) {
+      this.createBossTopBar(enemy, state);
+    }
+
     if (enemy.isBoss) {
       this.tweens.add({
         targets: this.enemyContainer, scaleX: 1.03, scaleY: 1.03,
@@ -287,6 +292,60 @@ export class BattleScene extends Phaser.Scene {
         [languageIsBossKo ? '\"굴복하라!\"' : '"Submit!"'],
       ];
     }
+  }
+
+  private bossTopBarFill: Phaser.GameObjects.Graphics | null = null;
+
+  private createBossTopBar(enemy: EnemyDef, state: CombatState): void {
+    const barW = GAME_WIDTH - 40;
+    const barH = 8;
+    const bx = 20;
+    const by = 4;
+    const topBarContainer = this.add.container(0, 0).setDepth(60);
+
+    const bg2 = this.add.graphics();
+    bg2.fillStyle(0x0a0814, 0.85);
+    bg2.fillRoundedRect(bx - 4, by - 2, barW + 8, barH + 12, 3);
+    bg2.lineStyle(0.5, enemy.iconColor, 0.3);
+    bg2.strokeRoundedRect(bx - 4, by - 2, barW + 8, barH + 12, 3);
+
+    const trackBg = this.add.graphics();
+    trackBg.fillStyle(0x222222, 0.8);
+    trackBg.fillRoundedRect(bx, by, barW, barH, 2);
+
+    const fillGfx = this.add.graphics();
+    const ratio = state.enemyHp / state.enemyMaxHp;
+    fillGfx.fillStyle(enemy.iconColor, 0.85);
+    fillGfx.fillRoundedRect(bx, by, Math.max(barW * ratio, 2), barH, 2);
+    fillGfx.fillStyle(0xffffff, 0.15);
+    fillGfx.fillRoundedRect(bx, by, Math.max(barW * ratio - 2, 1), 3, 1);
+    this.bossTopBarFill = fillGfx;
+
+    const ko = this.gameManager.language === 'ko';
+    const bossLabel = this.add.text(bx, by + barH + 1,
+      `⚠ ${ko ? enemy.nameKo : enemy.nameEn}`,
+      DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, '#' + enemy.iconColor.toString(16).padStart(6, '0')),
+    );
+
+    topBarContainer.add([bg2, trackBg, fillGfx, bossLabel]);
+    // Slide in from top
+    topBarContainer.setY(-20);
+    this.tweens.add({ targets: topBarContainer, y: 0, duration: 500, ease: 'Back.easeOut' });
+  }
+
+  private updateBossTopBar(state: CombatState): void {
+    if (!this.bossTopBarFill) return;
+    const barW = GAME_WIDTH - 40;
+    const bx = 20;
+    const by = 4;
+    const enemy = ENEMIES[this.enemyId];
+    if (!enemy) return;
+    const ratio = state.enemyHp / state.enemyMaxHp;
+    this.bossTopBarFill.clear();
+    this.bossTopBarFill.fillStyle(enemy.iconColor, 0.85);
+    this.bossTopBarFill.fillRoundedRect(bx, by, Math.max(barW * ratio, 2), 8, 2);
+    this.bossTopBarFill.fillStyle(0xffffff, 0.15);
+    this.bossTopBarFill.fillRoundedRect(bx, by, Math.max(barW * ratio - 2, 1), 3, 1);
   }
 
   private createPlayerDisplay(state: CombatState): void {
@@ -355,24 +414,76 @@ export class BattleScene extends Phaser.Scene {
     this.actionMenu = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 30).setDepth(100);
 
     const i18n = this.gameManager.i18n;
+    // SANABI-quality action buttons with icon + color hierarchy
     const actions = [
-      { label: `🙏 ${i18n.t('battle.pray')}`, action: () => this.onPray(), color: 0x2a4a2a },
-      { label: `🛡 ${i18n.t('battle.defend')}`, action: () => this.onDefend(), color: 0x2a3a5a },
-      { label: `✦ ${i18n.t('battle.skill')}`, action: () => this.showSkillPanel(), color: 0x3a2a5a },
-      { label: `📦 ${i18n.t('battle.item')}`, action: () => this.onUseItem(), color: 0x4a3a2a },
+      { label: i18n.t('battle.pray'),   icon: '✝', action: () => this.onPray(),        bgColor: 0x2a4a18, borderColor: 0xd4a853, textColor: '#ffe88a' },
+      { label: i18n.t('battle.defend'), icon: '🛡', action: () => this.onDefend(),      bgColor: 0x182a4a, borderColor: 0x7799cc, textColor: '#aaccff' },
+      { label: i18n.t('battle.skill'),  icon: '✦', action: () => this.showSkillPanel(), bgColor: 0x2a1a4a, borderColor: 0xaa66dd, textColor: '#cc99ff' },
+      { label: i18n.t('battle.item'),   icon: '⚗', action: () => this.onUseItem(),      bgColor: 0x3a2210, borderColor: 0x997755, textColor: '#ccaa88' },
     ];
 
     const btnW = 88;
-    const gap = 6;
+    const gap = 5;
     const totalW = actions.length * btnW + (actions.length - 1) * gap;
     const startX = -totalW / 2 + btnW / 2;
 
     actions.forEach((a, i) => {
-      const btn = DesignSystem.createButton(
-        this, startX + i * (btnW + gap), 0, btnW, 34, a.label, a.action,
-        { fontSize: DesignSystem.FONT_SIZE.SM, bgColor: a.color, hoverColor: a.color + 0x111111 },
-      );
-      this.actionMenu.add(btn);
+      const bx = startX + i * (btnW + gap);
+      const container = this.add.container(bx, 0);
+
+      // Button background with rounded rect
+      const bg = this.add.graphics();
+      bg.fillStyle(a.bgColor, 0.95);
+      bg.fillRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+      bg.lineStyle(1, a.borderColor, 0.55);
+      bg.strokeRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+      // Top highlight strip
+      bg.fillStyle(0xffffff, 0.06);
+      bg.fillRoundedRect(-btnW / 2 + 1, -16, btnW - 2, 8, 3);
+
+      // Icon (left side)
+      const iconTxt = this.add.text(-btnW / 2 + 8, 0, a.icon, {
+        fontSize: '11px', color: a.textColor, fontFamily: 'serif',
+      }).setOrigin(0, 0.5);
+
+      // Label text (centered-right)
+      const labelTxt = this.add.text(4, 0, a.label, {
+        fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
+        color: a.textColor,
+        fontFamily: DesignSystem.getFontFamily(),
+      }).setOrigin(0, 0.5);
+
+      // Hit area
+      const hit = this.add.rectangle(0, 0, btnW, 34, 0, 0)
+        .setInteractive({ useHandCursor: true });
+
+      hit.on('pointerover', () => {
+        bg.clear();
+        bg.fillStyle(a.bgColor + 0x181818, 0.98);
+        bg.fillRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+        bg.lineStyle(1.5, a.borderColor, 0.9);
+        bg.strokeRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+        bg.fillStyle(a.borderColor, 0.12);
+        bg.fillRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+        labelTxt.setColor('#ffffff');
+      });
+      hit.on('pointerout', () => {
+        bg.clear();
+        bg.fillStyle(a.bgColor, 0.95);
+        bg.fillRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+        bg.lineStyle(1, a.borderColor, 0.55);
+        bg.strokeRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+        bg.fillStyle(0xffffff, 0.06);
+        bg.fillRoundedRect(-btnW / 2 + 1, -16, btnW - 2, 8, 3);
+        labelTxt.setColor(a.textColor);
+      });
+      hit.on('pointerdown', () => {
+        this.tweens.add({ targets: container, scaleX: 0.94, scaleY: 0.94, duration: 60, yoyo: true });
+        this.time.delayedCall(70, a.action);
+      });
+
+      container.add([bg, iconTxt, labelTxt, hit]);
+      this.actionMenu.add(container);
     });
   }
 
@@ -580,6 +691,7 @@ export class BattleScene extends Phaser.Scene {
     this.playerHpText.setText(`HP: ${state.playerHp}/${state.playerMaxHp}`);
     this.enemyHpText.setText(`${state.enemyHp}/${state.enemyMaxHp}`);
     this.updateLog(state);
+    this.updateBossTopBar(state);
 
     // Player hurt reaction
     const lastEntry = state.log[state.log.length - 1];
@@ -736,6 +848,35 @@ export class BattleScene extends Phaser.Scene {
         duration: 500, ease: 'Back.easeOut',
       });
 
+      // Phase 6B: floating stat gain text
+      const ko = this.gameManager.language === 'ko';
+      const statGains = [
+        { label: ko ? '+5 믿음' : '+5 Faith', color: 0xd4a853, delay: 600 },
+        { label: ko ? '+3 용기' : '+3 Courage', color: 0x88aaff, delay: 900 },
+      ];
+      statGains.forEach(sg => {
+        this.time.delayedCall(sg.delay, () => {
+          const floatTxt = this.add.text(
+            GAME_WIDTH / 2 + (Math.random() - 0.5) * 60,
+            GAME_HEIGHT / 2 + 10,
+            sg.label,
+            { fontSize: `${DesignSystem.FONT_SIZE.SM}px`, color: '#' + sg.color.toString(16).padStart(6, '0'),
+              fontFamily: DesignSystem.getFontFamily(), fontStyle: 'bold' },
+          ).setOrigin(0.5).setDepth(501).setAlpha(0);
+          this.tweens.add({
+            targets: floatTxt, alpha: 1, y: floatTxt.y - 24,
+            duration: 800, ease: 'Sine.easeOut',
+            onComplete: () => this.tweens.add({
+              targets: floatTxt, alpha: 0, duration: 400,
+              onComplete: () => floatTxt.destroy(),
+            }),
+          });
+        });
+      });
+
+      // Phase 6B: fanfare chord via Web Audio
+      this.playVictoryFanfare();
+
       // Gold sparkle ring
       const sparkRing = this.add.graphics().setDepth(499);
       this.tweens.add({
@@ -796,6 +937,28 @@ export class BattleScene extends Phaser.Scene {
       yoyo: true, repeat: 1,
     });
   };
+
+  private playVictoryFanfare(): void {
+    try {
+      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+        gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
+        gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + i * 0.12 + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.6);
+        osc.start(ctx.currentTime + i * 0.12);
+        osc.stop(ctx.currentTime + i * 0.12 + 0.7);
+      });
+    } catch (_e) {
+      // Web Audio not available — silent fallback
+    }
+  }
 
   private setupBattleEvents(): void {
     this.eventBus.on(GameEvent.PLAYER_DAMAGED, this.onPlayerDamaged);

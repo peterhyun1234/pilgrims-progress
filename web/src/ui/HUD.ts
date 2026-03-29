@@ -25,7 +25,7 @@ export class HUD {
   private statsManager: StatsManager;
   private eventBus: EventBus;
 
-  private static readonly BAR_WIDTH = 72;
+  private static readonly BAR_WIDTH = 80;
   private static readonly BAR_HEIGHT = 8;
   private static readonly BAR_GAP = 16;
   private static readonly PADDING = 7;
@@ -43,15 +43,18 @@ export class HUD {
 
   private createBackground(): void {
     const bg = this.scene.add.graphics();
-    // Slightly more opaque panel
-    bg.fillStyle(0x0a0814, 0.78);
-    bg.fillRoundedRect(2, 2, 156, 78, 4);
+    // Wider panel: 170px to show full bar labels
+    bg.fillStyle(0x0a0814, 0.82);
+    bg.fillRoundedRect(2, 2, 170, 78, 4);
     // Outer border
-    bg.lineStyle(1, 0xd4a853, 0.5);
-    bg.strokeRoundedRect(2, 2, 156, 78, 4);
+    bg.lineStyle(1, 0xd4a853, 0.55);
+    bg.strokeRoundedRect(2, 2, 170, 78, 4);
     // Inner gold border line
     bg.lineStyle(0.5, 0xd4a853, 0.2);
-    bg.strokeRoundedRect(4, 4, 152, 74, 3);
+    bg.strokeRoundedRect(4, 4, 166, 74, 3);
+    // Top highlight strip
+    bg.fillStyle(0xffffff, 0.03);
+    bg.fillRoundedRect(3, 3, 168, 10, 3);
     this.container.add(bg);
   }
 
@@ -193,7 +196,8 @@ export class HUD {
     const cx = 240; // GAME_WIDTH / 2
     const cardY = 40;
 
-    const card = this.scene.add.container(cx, cardY - 20)
+    // Slide down from y=-30 over 400ms as per spec
+    const card = this.scene.add.container(cx, cardY - 30)
       .setDepth(150).setScrollFactor(0).setAlpha(0);
 
     // Background
@@ -222,10 +226,10 @@ export class HUD {
 
     card.add([bg, chText, locText]);
 
-    // Animate in
+    // Slide down from y=-30 to cardY over 400ms
     this.scene.tweens.add({
       targets: card, alpha: 1, y: cardY,
-      duration: 600, ease: 'Back.easeOut',
+      duration: 400, ease: 'Back.easeOut',
     });
 
     // Animate out after delay
@@ -271,6 +275,14 @@ export class HUD {
     const burden = this.statsManager.get('burden');
     if (burdenBar && burden >= 60) {
       const t = this.scene.time.now * 0.004;
+      // Red pulsing glow behind the bar at 60%+
+      const glowAlpha = 0.06 + Math.sin(t * 2) * 0.04;
+      burdenBar.fill.setAlpha(0.85); // reset before override below
+      // Draw red glow overlay on the track area
+      const trackGfx = this.scene.add.graphics().setScrollFactor(0).setDepth(99);
+      trackGfx.fillStyle(0xff2200, glowAlpha);
+      trackGfx.fillRoundedRect(burdenBar.container.x + 44, burdenBar.container.y - 1, HUD.BAR_WIDTH + 2, HUD.BAR_HEIGHT + 2, 2);
+      this.scene.time.delayedCall(50, () => trackGfx.destroy());
       if (burden >= 80) {
         // Shake + pulse fill color between red and dark-red
         const shake = Math.sin(t * 2) * 0.8;
