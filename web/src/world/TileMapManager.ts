@@ -65,7 +65,8 @@ export class TileMapManager {
     if (!this.groundLayer) return;
 
     const hash = ((x * 7 + y * 13) * 31) & 0xffff;
-    const base = hash % 2 === 0 ? theme.groundBase : theme.groundVariant;
+    // Use irregular distribution (~25% variant) instead of 50/50 checkerboard
+    const base = (hash % 7 < 2) ? theme.groundVariant : theme.groundBase;
     this.groundLayer.fillStyle(base, 1);
     this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
@@ -109,9 +110,7 @@ export class TileMapManager {
       }
     }
 
-    // Tile edge border — very subtle, just enough to break flat look
-    this.groundLayer.lineStyle(0.5, 0x000000, 0.06);
-    this.groundLayer.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+    // No tile grid lines — organic texture from detail elements is sufficient
   }
 
   private drawWallTile(x: number, y: number, theme: ChapterTheme): void {

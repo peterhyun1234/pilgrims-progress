@@ -172,43 +172,47 @@ export class EndingScene extends Phaser.Scene {
     const cx = GAME_WIDTH / 2;
     const FS = DesignSystem.FONT_SIZE;
 
-    // Tier-specific title and subtitle
     const title = ko ? theme.titleKo : theme.titleEn;
     const subtitle = ko ? theme.subtitleKo : theme.subtitleEn;
-
-    // Scripture varies by tier
     const scriptures = this.getScripture(tier, ko);
 
+    // No empty spacer lines — keep layout compact for 270px height
     const epilogueLines = [
       { text: title, color: theme.titleColor, size: FS.XL },
       { text: subtitle, color: '#c8b8a0', size: FS.XS },
-      { text: '', color: '#888888', size: FS.XS },
       ...this.getNarrativeLines(tier, ko, FS),
-      { text: '', color: '#888888', size: FS.XS },
       ...scriptures,
     ];
 
-    const totalHeight = epilogueLines.reduce((acc, l) => acc + (l.size + 6), 0);
-    const startY = GAME_HEIGHT / 2 - totalHeight / 2;
+    // Reserve space at bottom for stats+button (≈55px)
+    const BOTTOM_RESERVE = 55;
+    const availableH = GAME_HEIGHT - BOTTOM_RESERVE;
+    const lineSpacing = 4;
+    const totalHeight = epilogueLines.reduce((acc, l) => acc + l.size + lineSpacing, 0);
+    // Start from top-quarter if content is tall, otherwise centre in available area
+    const startY = Math.max(16, (availableH - totalHeight) / 2);
     let delay = 0;
+    let curY = startY;
 
-    epilogueLines.forEach((line, i) => {
-      const y = startY + epilogueLines.slice(0, i).reduce((acc, l) => acc + l.size + 6, 0);
-      const txt = this.add.text(cx, y + 20, line.text, {
+    epilogueLines.forEach(line => {
+      const y = curY;
+      curY += line.size + lineSpacing;
+      const txt = this.add.text(cx, y, line.text, {
         fontSize: `${line.size}px`,
         color: line.color,
         fontFamily: FONT_FAMILY,
         align: 'center',
         wordWrap: { width: GAME_WIDTH - 40 },
-      }).setOrigin(0.5).setAlpha(0).setDepth(10);
+      }).setOrigin(0.5, 0).setAlpha(0).setDepth(10);
 
       this.time.delayedCall(delay, () => {
-        this.tweens.add({ targets: txt, alpha: 1, duration: 800, ease: 'Sine.easeIn' });
+        this.tweens.add({ targets: txt, alpha: 1, duration: 700, ease: 'Sine.easeIn' });
       });
-      delay += 500;
+      delay += 420;
     });
 
-    this.time.delayedCall(delay + 1000, () => this.showStats(ko));
+    // Pass the bottom of last line so stats render below it cleanly
+    this.time.delayedCall(delay + 800, () => this.showStats(ko, curY));
   }
 
   private getNarrativeLines(tier: EndingTier, ko: boolean, FS: typeof DesignSystem.FONT_SIZE) {
@@ -270,39 +274,39 @@ export class EndingScene extends Phaser.Scene {
     ];
   }
 
-  private showStats(ko: boolean): void {
+  private showStats(ko: boolean, baseY: number): void {
     const cx = GAME_WIDTH / 2;
-    const statsY = GAME_HEIGHT - 80;
+    // Clamp so stats never go off-screen; leave 48px for button below
+    const statsY = Math.min(baseY + 10, GAME_HEIGHT - 48);
 
     const divider = this.add.graphics().setDepth(10);
     divider.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
-    divider.lineBetween(cx - 80, statsY - 20, cx + 80, statsY - 20);
+    divider.lineBetween(cx - 70, statsY - 6, cx + 70, statsY - 6);
 
     const liveStats = this.gameManager.stats.getAll();
     const grace = this.gameManager.stats.getHidden().graceCounter ?? 0;
 
     const statLines = ko ? [
-      `믿음: ${liveStats.faith} / 용기: ${liveStats.courage} / 지혜: ${liveStats.wisdom}`,
-      `은혜 회복: ${grace}회 / 챕터: ${this.gameManager.currentChapter}/12`,
+      `믿음 ${liveStats.faith} · 용기 ${liveStats.courage} · 지혜 ${liveStats.wisdom} · 은혜 ${grace}회`,
     ] : [
-      `Faith: ${liveStats.faith} / Courage: ${liveStats.courage} / Wisdom: ${liveStats.wisdom}`,
-      `Grace recovered: ${grace}× / Chapters: ${this.gameManager.currentChapter}/12`,
+      `Faith ${liveStats.faith} · Courage ${liveStats.courage} · Wisdom ${liveStats.wisdom} · Grace ×${grace}`,
     ];
 
     statLines.forEach((line, i) => {
-      const statTxt = this.add.text(cx, statsY + i * 16, line, {
-        fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
+      const statTxt = this.add.text(cx, statsY + i * 14, line, {
+        fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
         color: '#b0a898',
         fontFamily: FONT_FAMILY,
         align: 'center',
-      }).setOrigin(0.5).setAlpha(0).setDepth(10);
+      }).setOrigin(0.5, 0).setAlpha(0).setDepth(10);
       this.tweens.add({ targets: statTxt, alpha: 1, duration: 600 });
     });
 
-    this.time.delayedCall(1500, () => {
+    this.time.delayedCall(800, () => {
       const menuLabel = this.gameManager.i18n.t('ending.return');
+      const btnY = Math.min(statsY + 22, GAME_HEIGHT - 18);
       const btn = DesignSystem.createButton(
-        this, cx, statsY + 40, 150, 30, menuLabel,
+        this, cx, btnY, 150, 26, menuLabel,
         () => {
           void DesignSystem.fadeOut(this, 800).then(() => {
             this.scene.start(SCENE_KEYS.MENU);
