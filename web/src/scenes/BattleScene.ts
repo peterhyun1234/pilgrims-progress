@@ -35,14 +35,17 @@ export class BattleScene extends Phaser.Scene {
   private bossPhaseDialogues: string[][] = [];
 
   private enemyId = 'doubt';
+  private currentChapter = 1;
   private isAnimating = false;
+  private battleAuraGraphics: Phaser.GameObjects.Graphics | null = null;
 
   constructor() {
     super(SCENE_KEYS.BATTLE);
   }
 
-  init(data?: { enemyId?: string }): void {
+  init(data?: { enemyId?: string; chapter?: number }): void {
     this.enemyId = data?.enemyId ?? 'doubt';
+    this.currentChapter = data?.chapter ?? 1;
   }
 
   create(): void {
@@ -72,53 +75,116 @@ export class BattleScene extends Phaser.Scene {
     this.setupBattleEvents();
   }
 
+  /** Returns chapter-specific battle arena sky/ground palette: [skyTop, skyBot, glowColor, groundColor, dividerColor] */
+  private getBattlePalette(): [number, number, number, number, number] {
+    const ch = this.currentChapter;
+    // Ch1: dark ember | Ch2: murky swamp | Ch3: rocky dusk | Ch4: shadowed stone
+    // Ch5: golden dusk | Ch6: dark valley | Ch7: death valley (purple) | Ch8: apollyon (volcanic)
+    // Ch9: shadow (near-black) | Ch10: vanity fair (cold city) | Ch11: doubting castle (grey) | Ch12: celestial
+    const palettes: Record<number, [number, number, number, number, number]> = {
+      1:  [0x1a0c10, 0x2a1008, 0x882200, 0x060210, 0xcc4400],
+      2:  [0x0c1a10, 0x101c14, 0x224422, 0x060c08, 0x448844],
+      3:  [0x0a1a2a, 0x1a2a1a, 0x224444, 0x060e08, 0x4488aa],
+      4:  [0x140c1a, 0x1a1228, 0x442266, 0x060210, 0x8844cc],
+      5:  [0x1a1208, 0x2a1e08, 0x884400, 0x0e0804, 0xd4a853],
+      6:  [0x0a0c08, 0x101408, 0x224422, 0x040604, 0x446633],
+      7:  [0x080408, 0x0e060c, 0x440022, 0x040204, 0x880044],
+      8:  [0x120406, 0x1a0804, 0xcc2200, 0x080202, 0xff4400],
+      9:  [0x060206, 0x080406, 0x220011, 0x040104, 0x660033],
+      10: [0x101428, 0x1a2040, 0x223366, 0x080a14, 0x4466aa],
+      11: [0x0c0c14, 0x101020, 0x222244, 0x060608, 0x555588],
+      12: [0x1a1428, 0x2a2048, 0xaa6600, 0x100c1c, 0xffd700],
+    };
+    return palettes[ch] ?? palettes[1];
+  }
+
   private createBattleBackground(): void {
     const W = GAME_WIDTH, H = GAME_HEIGHT;
     const ground = H * 0.48;
 
-    // Sky: dark gradient
+    const [skyTop, skyBot, glowColor, groundColor, dividerColor] = this.getBattlePalette();
+
+    // Sky: chapter-tinted gradient
     const sky = this.add.graphics().setDepth(0);
     const strips = 16;
     for (let i = 0; i < strips; i++) {
       const t = i / strips;
-      const r = Math.round(0x08 + (0x18 - 0x08) * t);
-      const g2 = Math.round(0x04 + (0x06 - 0x04) * t);
-      const b = Math.round(0x12 + (0x08 - 0x12) * t);
+      const topR = (skyTop >> 16) & 0xff, topG = (skyTop >> 8) & 0xff, topB = skyTop & 0xff;
+      const botR = (skyBot >> 16) & 0xff, botG = (skyBot >> 8) & 0xff, botB = skyBot & 0xff;
+      const r = Math.round(topR + (botR - topR) * t);
+      const g2 = Math.round(topG + (botG - topG) * t);
+      const b = Math.round(topB + (botB - topB) * t);
       sky.fillStyle((r << 16) | (g2 << 8) | b, 1);
       sky.fillRect(0, Math.floor(t * ground), W, Math.ceil(ground / strips) + 1);
     }
 
-    // Distant red-orange supernatural glow (the enemy's domain)
-    sky.fillStyle(0x880000, 0.05);
-    sky.fillEllipse(W / 2, ground * 0.7, W * 0.8, ground * 0.5);
-    sky.fillStyle(0xcc2200, 0.03);
-    sky.fillEllipse(W / 2, ground * 0.8, W * 0.5, ground * 0.3);
+    // Chapter-specific supernatural glow
+    sky.fillStyle(glowColor, 0.07);
+    sky.fillEllipse(W / 2, ground * 0.7, W * 0.85, ground * 0.55);
+    sky.fillStyle(glowColor, 0.04);
+    sky.fillEllipse(W / 2, ground * 0.85, W * 0.5, ground * 0.3);
 
     // Stars / supernatural lights
     for (let i = 0; i < 30; i++) {
       const hash = (i * 137 * 31) & 0xffff;
-      sky.fillStyle(0xffffff, 0.08 + (hash % 8) * 0.03);
+      const starBrightness = this.currentChapter === 12 ? 0.25 : 0.08;
+      sky.fillStyle(0xffffff, starBrightness + (hash % 8) * 0.03);
       sky.fillCircle(hash % W, (hash * 3) % (ground * 0.7), 0.5 + (hash % 2) * 0.3);
     }
 
-    // Ground (dark earth plane)
+    // Chapter-specific background environment features
+    if (this.currentChapter === 7 || this.currentChapter === 8) {
+      // Bone/volcanic silhouettes
+      for (let i = 0; i < 5; i++) {
+        const hash = (i * 131 + this.currentChapter * 29) & 0xff;
+        const sx = (hash % (W - 40)) + 10;
+        const sh = 8 + (hash % 20);
+        sky.fillStyle(this.currentChapter === 8 ? 0x1a0804 : 0x0a0408, 0.5);
+        sky.fillTriangle(sx, ground, sx + sh / 2, ground - sh, sx + sh, ground);
+      }
+    } else if (this.currentChapter === 5) {
+      // Cross silhouette in background
+      sky.fillStyle(0x3a2a1a, 0.35);
+      sky.fillRect(W / 2 - 2, ground * 0.15, 4, 30);
+      sky.fillRect(W / 2 - 12, ground * 0.25, 24, 3);
+      // Golden glow from cross
+      sky.fillStyle(0xffd700, 0.05);
+      sky.fillCircle(W / 2, ground * 0.3, 30);
+    } else if (this.currentChapter === 12) {
+      // Celestial city silhouette
+      for (let b = 0; b < 5; b++) {
+        const hash = (b * 97 + 12 * 13) & 0xff;
+        const bx = W * 0.1 + b * (W * 0.18);
+        const bh = 25 + (hash % 20);
+        sky.fillStyle(0xffd700, 0.12);
+        sky.fillRect(bx, ground - bh, 12 + (hash % 10), bh);
+      }
+      // Radiant rays
+      sky.fillStyle(0xffd700, 0.04);
+      sky.fillTriangle(W / 2 - 60, 0, W / 2, ground * 0.5, W / 2 + 60, 0);
+    }
+
+    // Ground (chapter-tinted)
     const gr = this.add.graphics().setDepth(0);
     const groundStrips = 8;
     for (let i = 0; i < groundStrips; i++) {
-      gr.fillStyle(0x06020e + (i << 1), 1);
+      const baseR = (groundColor >> 16) & 0xff;
+      const baseG = (groundColor >> 8) & 0xff;
+      const baseB = groundColor & 0xff;
+      gr.fillStyle(((baseR + i) << 16) | ((baseG + i) << 8) | (baseB + i * 2), 1);
       gr.fillRect(0, ground + i * (H - ground) / groundStrips, W, (H - ground) / groundStrips + 1);
     }
 
-    // Ground line — gold divider
-    gr.lineStyle(0.8, COLORS.UI.GOLD, 0.25);
+    // Ground divider line — chapter-colored
+    gr.lineStyle(1, dividerColor, 0.35);
     gr.lineBetween(0, ground, W, ground);
-    gr.fillStyle(COLORS.UI.GOLD, 0.15);
+    gr.fillStyle(dividerColor, 0.15);
     for (let x = 0; x < W; x += 30) {
       gr.fillRect(x, ground - 0.5, 15, 1);
     }
 
     // Subtle grid in ground
-    gr.lineStyle(0.3, 0x333355, 0.15);
+    gr.lineStyle(0.3, 0x333355, 0.1);
     for (let x2 = 20; x2 < W; x2 += 20) {
       gr.lineBetween(x2, ground, x2 - 10, H);
     }
@@ -175,12 +241,52 @@ export class BattleScene extends Phaser.Scene {
       this.enemyContainer.add(gfx);
     }
 
-    // Enemy aura (boss gets bigger aura)
-    const auraGfx = this.add.graphics();
-    const auraR = enemy.isBoss ? 48 : 32;
-    auraGfx.fillStyle(enemy.iconColor, 0.06);
-    auraGfx.fillCircle(0, 0, auraR);
-    this.enemyContainer.addAt(auraGfx, 0);
+    // Battle aura — rotating colored ring animation
+    const auraBaseR = enemy.isBoss ? 48 : 34;
+    // Static base glow
+    const staticAura = this.add.graphics();
+    staticAura.fillStyle(enemy.iconColor, 0.07);
+    staticAura.fillCircle(0, 0, auraBaseR + 4);
+    staticAura.fillStyle(enemy.iconColor, 0.03);
+    staticAura.fillCircle(0, 0, auraBaseR + 14);
+    this.enemyContainer.addAt(staticAura, 0);
+
+    // Rotating aura ring — draw orbit dots, animate with tween
+    this.battleAuraGraphics = this.add.graphics().setDepth(11);
+    const auraColor = enemy.iconColor;
+    const auraRadius = auraBaseR;
+    const auraState = { angle: 0 };
+    this.tweens.add({
+      targets: auraState,
+      angle: Math.PI * 2,
+      duration: enemy.isBoss ? 1800 : 2800,
+      repeat: -1,
+      ease: 'Linear',
+      onUpdate: () => {
+        if (!this.battleAuraGraphics) return;
+        this.battleAuraGraphics.clear();
+        const cx = GAME_WIDTH / 2;
+        const cy = 60;
+        const dotCount = enemy.isBoss ? 8 : 5;
+        for (let d = 0; d < dotCount; d++) {
+          const a = auraState.angle + (d / dotCount) * Math.PI * 2;
+          const dx = cx + Math.cos(a) * auraRadius;
+          const dy = cy + Math.sin(a) * (auraRadius * 0.55);
+          const alpha = 0.35 + Math.sin(a * 2) * 0.2;
+          this.battleAuraGraphics.fillStyle(auraColor, Math.max(0.1, alpha));
+          this.battleAuraGraphics.fillCircle(dx, dy, enemy.isBoss ? 3 : 2);
+        }
+        // Counter-rotating inner ring
+        const innerCount = enemy.isBoss ? 5 : 3;
+        for (let d = 0; d < innerCount; d++) {
+          const a = -auraState.angle * 1.5 + (d / innerCount) * Math.PI * 2;
+          const dx = cx + Math.cos(a) * auraRadius * 0.65;
+          const dy = cy + Math.sin(a) * (auraRadius * 0.35);
+          this.battleAuraGraphics.fillStyle(auraColor, 0.2);
+          this.battleAuraGraphics.fillCircle(dx, dy, 1.5);
+        }
+      },
+    });
 
     const ko = this.gameManager.language === 'ko';
     const nameText = this.add.text(0, -52, ko ? enemy.nameKo : enemy.nameEn,
@@ -197,15 +303,22 @@ export class BattleScene extends Phaser.Scene {
       this.enemyContainer.add(bossBadge);
     }
 
+    // Enemy HP bar — prominent display with label
+    const ko2 = this.gameManager.language === 'ko';
+    const enemyHpLabel = this.add.text(-55, 38, ko2 ? '생명력' : 'HP',
+      DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, '#ff8888'),
+    );
+    this.enemyContainer.add(enemyHpLabel);
+
     const hpBar = DesignSystem.createProgressBar(
-      this, -55, 42, 110, 6, enemy.iconColor, 0x222222, state.enemyHp / state.enemyMaxHp,
+      this, -55, 46, 110, 8, enemy.iconColor, 0x1a0a0a, state.enemyHp / state.enemyMaxHp,
     );
     this.enemyHpBar = hpBar;
     this.enemyContainer.add([hpBar.bg, hpBar.fill]);
 
-    this.enemyHpText = this.add.text(0, 52, `${state.enemyHp}/${state.enemyMaxHp}`,
+    this.enemyHpText = this.add.text(55, 46, `${state.enemyHp}/${state.enemyMaxHp}`,
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
-    ).setOrigin(0.5);
+    ).setOrigin(1, 0);
     this.enemyContainer.add(this.enemyHpText);
 
     if (enemy.isBoss) {
@@ -238,42 +351,59 @@ export class BattleScene extends Phaser.Scene {
     this.playerContainer.add(this.playerSprite);
 
     const ko = this.gameManager.language === 'ko';
-    const label = this.add.text(0, -2, ko ? '크리스천 / Christian' : 'Christian',
+    const label = this.add.text(0, -2, ko ? '크리스천' : 'Christian',
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5);
 
+    // HP label (prominent)
+    const hpLabel = this.add.text(-55, 6, ko ? '생명력' : 'HP',
+      DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, '#88ccff'),
+    );
+
     const hpBar = DesignSystem.createProgressBar(
-      this, -55, 8, 110, 6, COLORS.STAT.FAITH, 0x222222, state.playerHp / state.playerMaxHp,
+      this, -55, 14, 110, 8, COLORS.STAT.FAITH, 0x1a1a2a, state.playerHp / state.playerMaxHp,
     );
     this.playerHpBar = hpBar;
 
-    this.playerHpText = this.add.text(0, 18, `HP: ${state.playerHp}/${state.playerMaxHp}`,
+    this.playerHpText = this.add.text(55, 14, `${state.playerHp}/${state.playerMaxHp}`,
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
-    ).setOrigin(0.5);
+    ).setOrigin(1, 0);
 
-    this.playerContainer.add([label, hpBar.bg, hpBar.fill, this.playerHpText]);
+    this.playerContainer.add([label, hpLabel, hpBar.bg, hpBar.fill, this.playerHpText]);
   }
 
   private createActionMenu(): void {
-    this.actionMenu = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 30).setDepth(100);
+    // 2×2 grid centered at bottom of screen
+    const gridCenterX = GAME_WIDTH / 2;
+    const gridCenterY = GAME_HEIGHT - 26;
+    this.actionMenu = this.add.container(gridCenterX, gridCenterY).setDepth(100);
 
     const i18n = this.gameManager.i18n;
     const actions = [
-      { label: `🙏 ${i18n.t('battle.pray')}`, action: () => this.onPray(), color: 0x2a4a2a },
-      { label: `🛡 ${i18n.t('battle.defend')}`, action: () => this.onDefend(), color: 0x2a3a5a },
-      { label: `✦ ${i18n.t('battle.skill')}`, action: () => this.showSkillPanel(), color: 0x3a2a5a },
-      { label: `📦 ${i18n.t('battle.item')}`, action: () => this.onUseItem(), color: 0x4a3a2a },
+      { label: `🙏 ${i18n.t('battle.pray')}`,   action: () => this.onPray(),        color: 0x1e3a1e },
+      { label: `🛡 ${i18n.t('battle.defend')}`,  action: () => this.onDefend(),      color: 0x1e2a4a },
+      { label: `✦ ${i18n.t('battle.skill')}`,    action: () => this.showSkillPanel(),color: 0x2a1e4a },
+      { label: `📦 ${i18n.t('battle.item')}`,    action: () => this.onUseItem(),     color: 0x3a2a1a },
     ];
 
-    const btnW = 80;
-    const gap = 6;
-    const totalW = actions.length * btnW + (actions.length - 1) * gap;
-    const startX = -totalW / 2 + btnW / 2;
+    // 2×2 grid layout
+    const btnW = 90;
+    const btnH = 22;
+    const gapX = 6;
+    const gapY = 5;
+    // positions: [col, row] → offsets from center
+    const positions = [
+      [-(btnW / 2 + gapX / 2), -(btnH / 2 + gapY / 2)], // top-left
+      [ (btnW / 2 + gapX / 2), -(btnH / 2 + gapY / 2)], // top-right
+      [-(btnW / 2 + gapX / 2),  (btnH / 2 + gapY / 2)], // bottom-left
+      [ (btnW / 2 + gapX / 2),  (btnH / 2 + gapY / 2)], // bottom-right
+    ];
 
     actions.forEach((a, i) => {
+      const [px, py] = positions[i];
       const btn = DesignSystem.createButton(
-        this, startX + i * (btnW + gap), 0, btnW, 28, a.label, a.action,
-        { fontSize: DesignSystem.FONT_SIZE.XS, bgColor: a.color, hoverColor: a.color + 0x111111 },
+        this, px, py, btnW, btnH, a.label, a.action,
+        { fontSize: DesignSystem.FONT_SIZE.XS, bgColor: a.color, hoverColor: a.color + 0x101010 },
       );
       this.actionMenu.add(btn);
     });
@@ -477,7 +607,7 @@ export class BattleScene extends Phaser.Scene {
   private updateDisplay(state: CombatState): void {
     this.playerHpBar.update(state.playerHp / state.playerMaxHp);
     this.enemyHpBar.update(state.enemyHp / state.enemyMaxHp);
-    this.playerHpText.setText(`HP: ${state.playerHp}/${state.playerMaxHp}`);
+    this.playerHpText.setText(`${state.playerHp}/${state.playerMaxHp}`);
     this.enemyHpText.setText(`${state.enemyHp}/${state.enemyMaxHp}`);
     this.updateLog(state);
 
@@ -708,5 +838,7 @@ export class BattleScene extends Phaser.Scene {
   private cleanupEvents(): void {
     this.eventBus.off(GameEvent.PLAYER_DAMAGED, this.onPlayerDamaged);
     this.eventBus.off(GameEvent.ENEMY_DAMAGED, this.onEnemyDamaged);
+    this.battleAuraGraphics?.destroy();
+    this.battleAuraGraphics = null;
   }
 }

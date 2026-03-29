@@ -47,12 +47,14 @@ export class NPC extends Entity {
   private prompt: Phaser.GameObjects.Container | null = null;
   private nameLabel: Phaser.GameObjects.Text | null = null;
   private completedBadge: Phaser.GameObjects.Text | null = null;
+  private questIndicator: Phaser.GameObjects.Graphics | null = null;
   private isPromptVisible = false;
   private baseY = 0;
   private baseYInit = false;
   private bobPhase: number;
   private glowGraphics: Phaser.GameObjects.Graphics | null = null;
   private currentPhase: NpcPhase = 'available';
+  private chapter: number;
 
   private behavior: NPCBehavior | undefined;
   private behaviorGraphics: Phaser.GameObjects.Graphics | null = null;
@@ -72,6 +74,7 @@ export class NPC extends Entity {
     this.npcId = config.id;
     this.nameKo = config.nameKo;
     this.nameEn = config.nameEn;
+    this.chapter = config.chapter;
     this.eventBus = EventBus.getInstance();
     this.bobPhase = Math.random() * Math.PI * 2;
     this.patrolSpeed = config.patrolSpeed ?? 20;
@@ -161,30 +164,60 @@ export class NPC extends Entity {
     ).setOrigin(0.5).setDepth(21);
   }
 
+  /** Returns chapter-specific NPC aura color. */
+  private getChapterAuraColor(): number {
+    if (this.chapter === 12) return 0xffd700; // Celestial: golden
+    if (this.chapter === 7)  return 0xff2200; // Valley of Death: ominous red
+    if (this.chapter === 10) return 0x66aaff; // Delectable Mts: soft blue
+    return COLORS.UI.GOLD;
+  }
+
   showPrompt(): void {
     if (this.isPromptVisible) return;
     if (this.currentPhase === 'locked') return;
     this.isPromptVisible = true;
 
+    const isIdlePhase = this.currentPhase === 'completed' || this.currentPhase === 'idle';
+    const isAvailable = this.currentPhase === 'available';
+
     this.prompt = this.scene.add.container(
       this.sprite.x, this.sprite.y + NPC_CONFIG.PROMPT_OFFSET_Y - 12,
     ).setDepth(20);
 
+    // Quest available: larger, more vibrant indicator
+    const bgW = isAvailable ? 22 : 18;
+    const bgH = isAvailable ? 18 : 14;
     const bg = this.scene.add.graphics();
-    bg.fillStyle(COLORS.UI.PANEL, 0.88);
-    bg.fillRoundedRect(-9, -7, 18, 14, 4);
-    bg.lineStyle(1, COLORS.UI.GOLD, 0.5);
-    bg.strokeRoundedRect(-9, -7, 18, 14, 4);
+    if (isAvailable) {
+      // Quest available: golden background with bright border
+      bg.fillStyle(0x1e1428, 0.92);
+      bg.fillRoundedRect(-bgW / 2, -bgH / 2, bgW, bgH, 5);
+      bg.lineStyle(1.5, 0xffd700, 0.85);
+      bg.strokeRoundedRect(-bgW / 2, -bgH / 2, bgW, bgH, 5);
+      // Outer glow ring
+      bg.lineStyle(1, 0xffd700, 0.25);
+      bg.strokeRoundedRect(-bgW / 2 - 2, -bgH / 2 - 2, bgW + 4, bgH + 4, 7);
+    } else if (isIdlePhase) {
+      bg.fillStyle(COLORS.UI.PANEL, 0.7);
+      bg.fillRoundedRect(-bgW / 2, -bgH / 2, bgW, bgH, 4);
+      bg.lineStyle(0.8, 0x555544, 0.4);
+      bg.strokeRoundedRect(-bgW / 2, -bgH / 2, bgW, bgH, 4);
+    } else {
+      bg.fillStyle(COLORS.UI.PANEL, 0.88);
+      bg.fillRoundedRect(-bgW / 2, -bgH / 2, bgW, bgH, 4);
+      bg.lineStyle(1, COLORS.UI.GOLD, 0.5);
+      bg.strokeRoundedRect(-bgW / 2, -bgH / 2, bgW, bgH, 4);
+    }
 
-    // Completed NPCs show a dot instead of pulsing '!'
-    const isIdlePhase = this.currentPhase === 'completed' || this.currentPhase === 'idle';
+    // Icon — larger for quest available, dot for completed
     const iconText = isIdlePhase ? '·' : '!';
-    const iconColor = isIdlePhase ? '#888877' : '#d4a853';
+    const iconColor = isAvailable ? '#ffd700' : (isIdlePhase ? '#888877' : '#d4a853');
+    const iconSize = isAvailable ? DesignSystem.FONT_SIZE.BASE : DesignSystem.FONT_SIZE.SM;
 
     const icon = this.scene.add.text(0, 0, iconText, {
-      fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
+      fontSize: `${iconSize}px`,
       color: iconColor, fontFamily: FONT_FAMILY, fontStyle: 'bold',
-      shadow: { offsetX: 0, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
+      shadow: { offsetX: 0, offsetY: 1, color: '#000000', blur: 2, stroke: true, fill: true },
     }).setOrigin(0.5);
 
     this.prompt.add([bg, icon]);
@@ -195,7 +228,7 @@ export class NPC extends Entity {
       this.sprite.x, this.sprite.y - 14,
       displayName, {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-        color: '#b0a898', fontFamily: FONT_FAMILY,
+        color: isAvailable ? '#d4c080' : '#b0a898', fontFamily: FONT_FAMILY,
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
       },
     ).setOrigin(0.5).setDepth(20);
@@ -205,13 +238,19 @@ export class NPC extends Entity {
       this.scene.tweens.add({
         targets: this.prompt,
         y: this.sprite.y + NPC_CONFIG.PROMPT_OFFSET_Y - 16,
-        duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        duration: isAvailable ? 500 : 700,
+        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
       });
     }
 
+    // Chapter-specific aura color
+    const auraColor = this.getChapterAuraColor();
+    const auraAlpha = this.chapter === 7 ? 0.08 : (this.chapter === 12 ? 0.1 : 0.06);
+    const auraRadius = isAvailable ? 24 : 18;
+
     this.glowGraphics = this.scene.add.graphics().setDepth(7);
-    this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.06);
-    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 20);
+    this.glowGraphics.fillStyle(auraColor, auraAlpha);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, auraRadius);
   }
 
   hidePrompt(): void {
@@ -223,6 +262,8 @@ export class NPC extends Entity {
     this.nameLabel = null;
     this.glowGraphics?.destroy();
     this.glowGraphics = null;
+    this.questIndicator?.destroy();
+    this.questIndicator = null;
   }
 
   interact(): void {
@@ -300,9 +341,13 @@ export class NPC extends Entity {
     }
     if (this.glowGraphics) {
       this.glowGraphics.clear();
-      const pulse = 0.04 + Math.sin(t * 2) * 0.02;
-      this.glowGraphics.fillStyle(COLORS.UI.GOLD, pulse);
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 20);
+      const auraColor = this.getChapterAuraColor();
+      const isAvailable = this.currentPhase === 'available';
+      const baseAlpha = this.chapter === 7 ? 0.06 : (this.chapter === 12 ? 0.08 : 0.04);
+      const pulse = baseAlpha + Math.sin(t * 2) * 0.025;
+      const pulseRadius = (isAvailable ? 24 : 18) + Math.sin(t * 1.5) * 2;
+      this.glowGraphics.fillStyle(auraColor, Math.max(0, pulse));
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius);
     }
   }
 
@@ -437,6 +482,8 @@ export class NPC extends Entity {
     }
     this.hidePrompt();
     this.completedBadge?.destroy();
+    this.questIndicator?.destroy();
+    this.questIndicator = null;
     this.behaviorGraphics?.destroy();
     this.behaviorGraphics = null;
     super.destroy();

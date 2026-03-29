@@ -44,7 +44,7 @@ export class TileMapManager {
           this.colliders!.add(wall);
           wall.setVisible(false);
         } else {
-          this.drawGroundTile(x, y, theme);
+          this.drawGroundTile(x, y, theme, config.chapter);
           this.drawDecoration(x, y, tx, ty, config);
         }
       }
@@ -61,7 +61,7 @@ export class TileMapManager {
     this.scene.physics.world.setBounds(0, 0, config.mapWidth, config.mapHeight);
   }
 
-  private drawGroundTile(x: number, y: number, theme: ChapterTheme): void {
+  private drawGroundTile(x: number, y: number, theme: ChapterTheme, chapter = 0): void {
     if (!this.groundLayer) return;
 
     const hash = ((x * 7 + y * 13) * 31) & 0xffff;
@@ -76,6 +76,167 @@ export class TileMapManager {
     if ((hash & 0x1f) < 2) {
       this.groundLayer.fillStyle(0xffffff, 0.025);
       this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+    }
+
+    // Chapter-specific surface details
+    switch (chapter) {
+      case 2: {
+        // Mud puddles (dark blue-grey ellipses)
+        if ((hash & 0xff) < 14) {
+          this.groundLayer.fillStyle(0x2a3a4a, 0.22);
+          this.groundLayer.fillEllipse(x + 3 + (hash % 8), y + 4 + ((hash >> 4) % 6), 6 + (hash % 5), 3);
+        }
+        // Reed tufts (vertical lines)
+        if ((hash & 0xfff) < 10) {
+          this.groundLayer.fillStyle(0x446644, 0.35);
+          const rx = x + (hash % 12) + 2;
+          const ry = y + ((hash >> 3) % 8) + 2;
+          this.groundLayer.fillRect(rx, ry, 1, 5);
+          this.groundLayer.fillRect(rx + 2, ry + 1, 1, 4);
+          this.groundLayer.fillRect(rx - 1, ry + 2, 1, 3);
+        }
+        // Wavy water surface hint
+        if ((hash & 0x3ff) < 5) {
+          this.groundLayer.fillStyle(0x3a5a6a, 0.12);
+          this.groundLayer.fillEllipse(x + 4 + (hash % 6), y + 6, 9, 2);
+        }
+        break;
+      }
+      case 3: {
+        // Larger rocks
+        if ((hash & 0xff) < 10) {
+          const rw = 5 + (hash % 6);
+          const rh = 3 + (hash % 4);
+          this.groundLayer.fillStyle(0x6a6a60, 0.5);
+          this.groundLayer.fillEllipse(x + 3 + (hash % 8), y + 4 + ((hash >> 3) % 8), rw, rh);
+          this.groundLayer.fillStyle(0x888880, 0.2);
+          this.groundLayer.fillEllipse(x + 2 + (hash % 8), y + 3 + ((hash >> 3) % 8), rw * 0.6, rh * 0.6);
+        }
+        // Scattered pebbles
+        if ((hash & 0x7ff) < 20) {
+          this.groundLayer.fillStyle(0x555550, 0.4);
+          this.groundLayer.fillCircle(x + (hash % 14) + 1, y + ((hash >> 4) % 12) + 2, 1);
+        }
+        // Cliff face hint (vertical crack lines)
+        if ((hash & 0xfff) < 5) {
+          this.groundLayer.fillStyle(0x2a2a28, 0.2);
+          this.groundLayer.fillRect(x + (hash % 14), y + 1, 1, 8 + (hash % 6));
+        }
+        break;
+      }
+      case 5: {
+        // Bright golden light overlay on path
+        if ((hash & 0xff) < 16) {
+          this.groundLayer.fillStyle(0xd4a853, 0.06 + ((hash >> 6) & 3) * 0.01);
+          this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        }
+        // Small wildflowers (pink/white dots)
+        if ((hash & 0x7ff) < 18) {
+          const flowerColors = [0xff99bb, 0xffffff, 0xffddaa];
+          this.groundLayer.fillStyle(flowerColors[hash % flowerColors.length], 0.55);
+          this.groundLayer.fillCircle(x + (hash % 12) + 2, y + ((hash >> 4) % 10) + 3, 1.2);
+          // Stem
+          this.groundLayer.fillStyle(0x6a9a4a, 0.3);
+          this.groundLayer.fillRect(x + (hash % 12) + 2, y + ((hash >> 4) % 10) + 4, 1, 3);
+        }
+        break;
+      }
+      case 7: {
+        // Bone fragments (thin white lines)
+        if ((hash & 0xff) < 18) {
+          this.groundLayer.fillStyle(0xddccbb, 0.22);
+          this.groundLayer.fillRect(x + (hash % 10) + 2, y + ((hash >> 3) % 10) + 3, 5 + (hash % 4), 1);
+          // Joint knob
+          this.groundLayer.fillCircle(x + (hash % 10) + 2, y + ((hash >> 3) % 10) + 3, 1);
+        }
+        // Skull-like shapes (occasional round with 2 dark spots)
+        if ((hash & 0x3fff) < 8) {
+          const sx = x + (hash % 10) + 3;
+          const sy = y + ((hash >> 4) % 8) + 4;
+          this.groundLayer.fillStyle(0xccbbaa, 0.3);
+          this.groundLayer.fillCircle(sx, sy, 3.5);
+          this.groundLayer.fillStyle(0x080608, 0.6);
+          this.groundLayer.fillCircle(sx - 1, sy - 0.5, 1);
+          this.groundLayer.fillCircle(sx + 1, sy - 0.5, 1);
+        }
+        // Dark mist wisps
+        if ((hash & 0x1fff) < 12) {
+          this.groundLayer.fillStyle(0x220033, 0.08);
+          this.groundLayer.fillEllipse(x + (hash % 12), y + ((hash >> 3) % 10), 8 + (hash % 6), 3);
+        }
+        break;
+      }
+      case 8: {
+        // Colorful market debris (tiny colored squares)
+        if ((hash & 0xff) < 22) {
+          const debrisColors = [0xff4444, 0x44aaff, 0xffcc00, 0x44cc44, 0xaa44cc, 0xff88aa];
+          this.groundLayer.fillStyle(debrisColors[hash % debrisColors.length], 0.3);
+          this.groundLayer.fillRect(x + (hash % 12) + 2, y + ((hash >> 3) % 12) + 2, 2, 2);
+        }
+        // Cobblestone pattern (more defined grid)
+        if ((hash & 0x3ff) < 60) {
+          this.groundLayer.fillStyle(0x555566, 0.08);
+          const cx2 = x + ((hash >> 3) % 4) * 4;
+          const cy2 = y + ((hash >> 5) % 4) * 4;
+          this.groundLayer.fillRect(cx2, cy2, 3, 3);
+        }
+        // Cobblestone joint lines
+        this.groundLayer.fillStyle(0x333344, 0.06);
+        this.groundLayer.fillRect(x, y + 4, TILE_SIZE, 1);
+        this.groundLayer.fillRect(x, y + 8, TILE_SIZE, 1);
+        this.groundLayer.fillRect(x, y + 12, TILE_SIZE, 1);
+        this.groundLayer.fillRect(x + 4, y, 1, TILE_SIZE);
+        this.groundLayer.fillRect(x + 8, y, 1, TILE_SIZE);
+        this.groundLayer.fillRect(x + 12, y, 1, TILE_SIZE);
+        break;
+      }
+      case 9: {
+        // Stone block grid pattern (more regular, darker joints)
+        this.groundLayer.fillStyle(0x1a1020, 0.1);
+        this.groundLayer.fillRect(x, y + TILE_SIZE / 2, TILE_SIZE, 1);
+        this.groundLayer.fillRect(x + TILE_SIZE / 2, y, 1, TILE_SIZE);
+        // Water dripping hint (vertical streak)
+        if ((hash & 0x1fff) < 6) {
+          this.groundLayer.fillStyle(0x2a3a55, 0.18);
+          this.groundLayer.fillRect(x + (hash % 12) + 2, y + 2, 1, 10 + (hash % 4));
+        }
+        break;
+      }
+      case 10: {
+        // Flower patches (bright dots)
+        if ((hash & 0xff) < 14) {
+          const flowerCols = [0xff6688, 0xffcc44, 0x88ddff, 0xaaffaa, 0xff88cc];
+          this.groundLayer.fillStyle(flowerCols[hash % flowerCols.length], 0.45);
+          this.groundLayer.fillCircle(x + (hash % 12) + 2, y + ((hash >> 3) % 10) + 3, 1.5);
+        }
+        // Soft grass rendering (small grass blades)
+        if ((hash & 0x7ff) < 20) {
+          this.groundLayer.fillStyle(0x66cc66, 0.2);
+          const gx = x + (hash % 12) + 2;
+          const gy = y + ((hash >> 4) % 10) + 4;
+          this.groundLayer.fillRect(gx, gy, 1, 4);
+          this.groundLayer.fillRect(gx + 2, gy + 1, 1, 3);
+        }
+        // Lighter tone overlay
+        if ((hash & 0x1f) < 4) {
+          this.groundLayer.fillStyle(0xaaddaa, 0.04);
+          this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        }
+        break;
+      }
+      case 12: {
+        // Golden shimmer overlay
+        if ((hash & 0xff) < 20) {
+          this.groundLayer.fillStyle(0xffd700, 0.05 + ((hash >> 6) & 3) * 0.01);
+          this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        }
+        // Pearl-like sparkle dots
+        if ((hash & 0x7ff) < 15) {
+          this.groundLayer.fillStyle(0xffffff, 0.25);
+          this.groundLayer.fillCircle(x + (hash % 14) + 1, y + ((hash >> 4) % 12) + 2, 0.8);
+        }
+        break;
+      }
     }
   }
 
@@ -714,8 +875,121 @@ export class TileMapManager {
 
   private drawTree(x: number, y: number, hash: number, chapter: number): void {
     if (!this.objectLayer) return;
-    const trunkH = 8 + (hash % 4);
+    this.drawRoundTree(x, y, hash, chapter);
+  }
 
+  /**
+   * Chapter-aware tree renderer. Supports:
+   * - Ch2: Swamp trees — dark grey-green, drooping branches, taller/thinner
+   * - Ch7: Dead trees — no foliage, only bare skeletal branch lines
+   * - Ch10: Flourishing trees — extra large canopy, brighter greens, highlight clusters
+   * - Ch12: Golden trees — yellow-orange foliage, luminous quality
+   * - Others: Standard round-canopy tree
+   */
+  private drawRoundTree(x: number, y: number, hash: number, chapter: number): void {
+    if (!this.objectLayer) return;
+
+    if (chapter === 7) {
+      // Dead/skeletal trees — no foliage, bare dark branches only
+      const trunkH = 14 + (hash % 8);
+      this.objectLayer.fillStyle(0x180c10, 0.85);
+      this.objectLayer.fillRect(x - 2, y - trunkH + 4, 4, trunkH);
+
+      // Main branches
+      this.objectLayer.lineStyle(1.5, 0x200c18, 0.75);
+      const topY = y - trunkH + 4;
+      this.objectLayer.lineBetween(x, topY, x - 14, topY + 10);
+      this.objectLayer.lineBetween(x, topY, x + 11, topY + 7);
+      this.objectLayer.lineBetween(x, topY + 5, x - 9, topY - 5);
+      this.objectLayer.lineBetween(x, topY + 5, x + 7, topY - 3);
+      // Smaller twigs
+      this.objectLayer.lineStyle(0.8, 0x200c18, 0.5);
+      this.objectLayer.lineBetween(x - 14, topY + 10, x - 20, topY + 6);
+      this.objectLayer.lineBetween(x - 14, topY + 10, x - 17, topY + 16);
+      this.objectLayer.lineBetween(x + 11, topY + 7, x + 17, topY + 3);
+      this.objectLayer.lineBetween(x + 11, topY + 7, x + 14, topY + 14);
+      return;
+    }
+
+    if (chapter === 2) {
+      // Swamp trees — taller/thinner trunk, dark grey-green, drooping branches
+      const trunkH = 12 + (hash % 6);
+      this.objectLayer.fillStyle(0x1a1e14, 0.9);
+      this.objectLayer.fillRect(x - 1, y - trunkH + 4, 3, trunkH);
+
+      const crownR = 5 + (hash % 3);
+      const crownY = y - trunkH + 2;
+      // Flattened drooping canopy
+      this.objectLayer.fillStyle(0x182a1e, 0.65);
+      this.objectLayer.fillEllipse(x, crownY, crownR * 2.2, crownR * 1.2);
+      // Drooping branch tips
+      this.objectLayer.lineStyle(1, 0x1a2818, 0.5);
+      this.objectLayer.lineBetween(x - crownR, crownY, x - crownR - 4, crownY + 5);
+      this.objectLayer.lineBetween(x + crownR, crownY, x + crownR + 3, crownY + 5);
+      this.objectLayer.lineBetween(x, crownY + crownR * 0.5, x - 2, crownY + crownR * 0.5 + 4);
+      // Mossy highlight
+      this.objectLayer.fillStyle(0x2a4a30, 0.25);
+      this.objectLayer.fillEllipse(x - 2, crownY - 1, crownR * 1.4, crownR * 0.7);
+      return;
+    }
+
+    if (chapter === 10) {
+      // Flourishing trees — extra large canopy, brighter greens, highlight clusters
+      const trunkH = 9 + (hash % 4);
+      this.objectLayer.fillStyle(0x3a2a18, 0.9);
+      this.objectLayer.fillRect(x - 2, y - trunkH + 4, 5, trunkH);
+
+      const crownR = 9 + (hash % 5);
+      const crownY = y - trunkH - crownR + 6;
+      // Main canopy (large)
+      this.objectLayer.fillStyle(0x3a8a3a, 0.75);
+      this.objectLayer.fillCircle(x, crownY, crownR);
+      // Secondary clusters
+      this.objectLayer.fillStyle(0x4aa050, 0.55);
+      this.objectLayer.fillCircle(x - crownR * 0.5, crownY - 2, crownR * 0.65);
+      this.objectLayer.fillCircle(x + crownR * 0.45, crownY - 1, crownR * 0.6);
+      this.objectLayer.fillCircle(x - 2, crownY + crownR * 0.4, crownR * 0.5);
+      // Bright highlight clusters
+      this.objectLayer.fillStyle(0x6acc6a, 0.35);
+      this.objectLayer.fillCircle(x - crownR * 0.3, crownY - crownR * 0.3, crownR * 0.4);
+      this.objectLayer.fillCircle(x + crownR * 0.25, crownY - crownR * 0.4, crownR * 0.3);
+      // Flower dots
+      this.objectLayer.fillStyle(0xffccee, 0.4);
+      for (let fi = 0; fi < 4; fi++) {
+        const fh = (hash + fi * 37) & 0xffff;
+        const angle = (fh % 256) / 256 * Math.PI * 2;
+        const rad = (fh % 100) / 100 * crownR;
+        this.objectLayer.fillCircle(x + Math.cos(angle) * rad, crownY + Math.sin(angle) * rad * 0.7, 1.2);
+      }
+      return;
+    }
+
+    if (chapter === 12) {
+      // Golden trees — yellow-orange foliage, luminous quality
+      const trunkH = 8 + (hash % 4);
+      this.objectLayer.fillStyle(0x8b6010, 0.85);
+      this.objectLayer.fillRect(x - 2, y - trunkH + 4, 4, trunkH);
+
+      const crownR = 7 + (hash % 4);
+      const crownY = y - trunkH - crownR + 6;
+      // Outer glow
+      this.objectLayer.fillStyle(0xffdd44, 0.15);
+      this.objectLayer.fillCircle(x, crownY, crownR + 3);
+      // Main golden canopy
+      this.objectLayer.fillStyle(0xffcc22, 0.65);
+      this.objectLayer.fillCircle(x, crownY, crownR);
+      // Orange-gold secondary clusters
+      this.objectLayer.fillStyle(0xffaa22, 0.5);
+      this.objectLayer.fillCircle(x - crownR * 0.5, crownY - 2, crownR * 0.65);
+      this.objectLayer.fillCircle(x + crownR * 0.45, crownY - 1, crownR * 0.6);
+      // White luminous highlight
+      this.objectLayer.fillStyle(0xffffff, 0.18);
+      this.objectLayer.fillCircle(x - 2, crownY - crownR * 0.3, crownR * 0.4);
+      return;
+    }
+
+    // Default round-canopy tree (Ch1, Ch3, Ch5, others)
+    const trunkH = 8 + (hash % 4);
     const trunkColor = chapter === 2 ? 0x2a2018 : 0x3a2a18;
     this.objectLayer.fillStyle(trunkColor, 0.9);
     this.objectLayer.fillRect(x - 2, y, 4, trunkH);
@@ -724,11 +998,10 @@ export class TileMapManager {
     const crownY = y - crownR + 2;
     const crownColors: Record<number, number[]> = {
       1: [0x2a5a2a, 0x3a7a3a, 0x1a4a1a],
-      2: [0x1a4a3a, 0x2a5a4a, 0x0a3a2a],
       3: [0x4a7a2a, 0x5a8a3a, 0x3a6a1a],
       5: [0x3a5a2a, 0x4a6a3a, 0x2a4a1a],
     };
-    const colors = crownColors[chapter] ?? crownColors[1];
+    const colors = crownColors[chapter] ?? [0x2a5a2a, 0x3a7a3a, 0x1a4a1a];
 
     this.objectLayer.fillStyle(colors[0], 0.7);
     this.objectLayer.fillCircle(x, crownY, crownR);
@@ -1044,6 +1317,47 @@ export class TileMapManager {
         far.fillStyle(0xff4400, 0.08);
         far.fillCircle(bx + 6, H - bh - 26, 4);
       }
+    } else if (ch === 2) {
+      // Murky swamp trees (short, gnarled, dark green)
+      for (let i = 0; i < 8; i++) {
+        const hash2 = ((i * 89 + 2 * 17) * 43) & 0xffff;
+        const tx2 = 30 + (hash2 % (W - 60));
+        const th2 = 25 + (hash2 % 20);
+        // Gnarled trunk
+        far.fillStyle(0x1a2a18, 0.7);
+        far.fillRect(tx2 - 2, H - th2 - 10, 4, th2);
+        // Drooping canopy
+        far.fillStyle(0x1a3a28, 0.5);
+        far.fillEllipse(tx2, H - th2 - 8, 18 + (hash2 % 12), 10);
+        far.fillStyle(0x243a2a, 0.3);
+        // Drooping branch curves
+        far.fillRect(tx2 - 10, H - th2 - 5, 8, 2);
+        far.fillRect(tx2 + 3, H - th2 - 3, 8, 2);
+      }
+      // Fog banks (grey ellipses at ground level)
+      for (let i = 0; i < 5; i++) {
+        const hash2b = ((i * 113 + 22) * 31) & 0xffff;
+        far.fillStyle(0x3a4a4a, 0.12);
+        far.fillEllipse((hash2b % (W - 40)) + 20, H - 12, 80 + (hash2b % 60), 18);
+      }
+    } else if (ch === 3) {
+      // Rocky cliff face on one side
+      far.fillStyle(0x4a4838, 0.6);
+      far.fillRect(0, H - 80, 60, 80);
+      far.fillRect(W - 50, H - 70, 50, 70);
+      // Cliff texture lines
+      for (let i = 0; i < 6; i++) {
+        const hash3 = (i * 73 + 3 * 11) & 0xff;
+        far.fillStyle(0x2a2818, 0.3);
+        far.fillRect(4 + (hash3 % 40), H - 70 + i * 10, 1, 8 + (hash3 % 12));
+      }
+      // Pathway going uphill (diagonal lines suggesting ascent)
+      far.fillStyle(0x8a7a5a, 0.15);
+      for (let i = 0; i < 5; i++) {
+        const py = H - 20 - i * 14;
+        const px = 60 + i * 30;
+        far.fillEllipse(px, py, 20, 5);
+      }
     } else if (ch === 5) {
       // Interpreter's house silhouette
       const hx = W * 0.6;
@@ -1054,6 +1368,162 @@ export class TileMapManager {
       far.fillStyle(0xff8800, 0.15);
       far.fillRect(hx + 10, H - 50, 8, 8);
       far.fillRect(hx + 30, H - 50, 8, 8);
+      // Three crosses silhouette on hilltop
+      const hillTop = H - 55;
+      const crossPositions = [W * 0.3, W * 0.4, W * 0.5];
+      crossPositions.forEach((cpx, ci) => {
+        const height = ci === 1 ? 28 : 22; // center taller
+        far.fillStyle(0x3a2a1a, 0.55);
+        far.fillRect(cpx - 1.5, hillTop - height, 3, height + 5);
+        far.fillRect(cpx - 8, hillTop - height + 7, 16, 2.5);
+      });
+      // Rays of light from center cross
+      for (let r = 0; r < 6; r++) {
+        const angle = (r / 6) * Math.PI * 2 - Math.PI / 2;
+        const rLen = 30 + r * 5;
+        far.fillStyle(0xffd700, 0.04);
+        far.fillTriangle(
+          crossPositions[1], hillTop - 24,
+          crossPositions[1] + Math.cos(angle - 0.2) * rLen,
+          hillTop - 24 + Math.sin(angle - 0.2) * rLen,
+          crossPositions[1] + Math.cos(angle + 0.2) * rLen,
+          hillTop - 24 + Math.sin(angle + 0.2) * rLen,
+        );
+      }
+    } else if (ch === 7) {
+      // Dark twisted trees with bare branches
+      for (let i = 0; i < 6; i++) {
+        const hash7 = ((i * 97 + 7 * 19) * 41) & 0xffff;
+        const tx7 = 20 + (hash7 % (W - 40));
+        const th7 = 40 + (hash7 % 30);
+        // Bare trunk
+        far.fillStyle(0x180c10, 0.8);
+        far.fillRect(tx7 - 2, H - th7 - 5, 4, th7);
+        // Skeletal branch arms
+        far.lineStyle(1, 0x200c18, 0.6);
+        far.lineBetween(tx7, H - th7, tx7 - 15, H - th7 + 10);
+        far.lineBetween(tx7, H - th7, tx7 + 12, H - th7 + 8);
+        far.lineBetween(tx7, H - th7 - 8, tx7 - 10, H - th7 - 18);
+        far.lineBetween(tx7, H - th7 - 8, tx7 + 8, H - th7 - 15);
+        far.lineBetween(tx7 - 15, H - th7 + 10, tx7 - 22, H - th7 + 5);
+        far.lineBetween(tx7 + 12, H - th7 + 8, tx7 + 18, H - th7 + 2);
+      }
+      // Purple-black mist particles at ground
+      for (let i = 0; i < 8; i++) {
+        const hash7b = ((i * 113 + 77) * 23) & 0xffff;
+        far.fillStyle(0x180828, 0.1);
+        far.fillEllipse((hash7b % (W - 40)) + 20, H - 8, 50 + (hash7b % 50), 12);
+      }
+    } else if (ch === 8) {
+      // Market stall silhouettes (rectangular shapes with canopies)
+      const stallColors = [0x662222, 0x224466, 0x664422, 0x226644, 0x662244];
+      for (let i = 0; i < 6; i++) {
+        const hash8 = ((i * 83 + 8 * 13) * 37) & 0xffff;
+        const sx8 = 20 + (hash8 % (W - 40));
+        const sw = 25 + (hash8 % 20);
+        // Stall body
+        far.fillStyle(0x1a1828, 0.5);
+        far.fillRect(sx8, H - 40, sw, 30);
+        // Canopy
+        far.fillStyle(stallColors[i % stallColors.length], 0.45);
+        far.fillRect(sx8 - 3, H - 45, sw + 6, 8);
+        far.fillStyle(0xffffff, 0.06);
+        far.fillRect(sx8 - 3, H - 45, sw + 6, 3);
+      }
+      // Banner flags hanging between stalls
+      for (let i = 0; i < 5; i++) {
+        const hash8b = ((i * 107 + 88) * 29) & 0xffff;
+        const fx8 = 30 + (hash8b % (W - 60));
+        const flagColors = [0xff4444, 0x4488ff, 0xffaa22, 0x44bb44];
+        far.fillStyle(flagColors[i % flagColors.length], 0.35);
+        far.fillTriangle(fx8, H - 60, fx8 + 8, H - 60, fx8 + 4, H - 52);
+      }
+    } else if (ch === 9) {
+      // High stone walls on both sides (thick grey rectangles)
+      far.fillStyle(0x2a2830, 0.85);
+      far.fillRect(0, 0, 55, H);
+      far.fillRect(W - 55, 0, 55, H);
+      // Wall stone texture
+      for (let row = 0; row < Math.ceil(H / 14); row++) {
+        for (let col = 0; col < 4; col++) {
+          const wx = col * 14 + (row % 2) * 7;
+          far.fillStyle(0x202028, 0.2);
+          far.fillRect(wx, row * 14, 13, 13);
+          // Iron bar hint (right wall)
+          if (col === 0) {
+            far.fillStyle(0x404848, 0.15);
+            far.fillRect(W - 50 + wx, row * 14, 13, 13);
+          }
+        }
+      }
+      // Iron bars on walls
+      far.lineStyle(1, 0x442a1a, 0.5);
+      for (let bar = 0; bar < 4; bar++) {
+        far.lineBetween(10 + bar * 10, 20, 10 + bar * 10, H - 20);
+        far.lineBetween(W - 45 + bar * 10, 20, W - 45 + bar * 10, H - 20);
+      }
+    } else if (ch === 10) {
+      // Gentle mountain silhouettes with snow caps
+      for (let m = 0; m < 5; m++) {
+        const hash10 = ((m * 79 + 10 * 11) * 41) & 0xffff;
+        const mx10 = (hash10 % (W - 60)) + 10;
+        const mh10 = 45 + (hash10 % 35);
+        const mw10 = 55 + (hash10 % 40);
+        far.fillStyle(0x5a7a6a, 0.4);
+        far.fillTriangle(mx10, H, mx10 + mw10 / 2, H - mh10, mx10 + mw10, H);
+        // Snow cap
+        far.fillStyle(0xeeeeff, 0.3);
+        far.fillTriangle(
+          mx10 + mw10 / 2 - 5, H - mh10 + 10,
+          mx10 + mw10 / 2, H - mh10,
+          mx10 + mw10 / 2 + 5, H - mh10 + 10,
+        );
+        // More lush trees on lower slopes
+        for (let t = 0; t < 3; t++) {
+          const htx = mx10 + 10 + t * (mw10 / 4);
+          const hty = H - 12 - t * 6;
+          far.fillStyle(0x4a8a5a, 0.45);
+          far.fillCircle(htx, hty, 5 + t * 2);
+        }
+      }
+    } else if (ch === 12) {
+      // Golden pillar architecture
+      for (let i = 0; i < 4; i++) {
+        const px12 = W * 0.2 + i * (W * 0.2);
+        far.fillStyle(0xffd700, 0.35);
+        far.fillRect(px12 - 4, H - 90, 8, 80);
+        // Pillar top
+        far.fillStyle(0xffeedd, 0.25);
+        far.fillRect(px12 - 8, H - 92, 16, 5);
+        // Pillar base
+        far.fillStyle(0xffcc88, 0.2);
+        far.fillRect(px12 - 7, H - 15, 14, 5);
+      }
+      // Radiant light rays from top center
+      const lx12 = W / 2;
+      for (let r = 0; r < 8; r++) {
+        const angle12 = ((r / 8) * Math.PI * 2) - Math.PI / 2;
+        const rLen12 = 70 + r * 8;
+        far.fillStyle(0xffd700, 0.04);
+        far.fillTriangle(
+          lx12, 10,
+          lx12 + Math.cos(angle12 - 0.18) * rLen12,
+          10 + Math.sin(angle12 - 0.18) * rLen12,
+          lx12 + Math.cos(angle12 + 0.18) * rLen12,
+          10 + Math.sin(angle12 + 0.18) * rLen12,
+        );
+      }
+      // Distant city silhouette
+      for (let b = 0; b < 8; b++) {
+        const hash12 = ((b * 101 + 12 * 13) * 47) & 0xff;
+        const bx12 = 10 + b * (W / 8);
+        const bh12 = 30 + (hash12 % 40);
+        far.fillStyle(0xffd700, 0.15);
+        far.fillRect(bx12, H - bh12 - 10, 10 + (hash12 % 20), bh12);
+        // Windows
+        far.fillStyle(0xffffff, 0.1);
+        far.fillRect(bx12 + 3, H - bh12, 4, 4);
+      }
     }
     this.parallaxLayers.push(far);
 
