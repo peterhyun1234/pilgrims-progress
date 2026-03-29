@@ -64,18 +64,97 @@ export class TileMapManager {
   private drawGroundTile(x: number, y: number, theme: ChapterTheme): void {
     if (!this.groundLayer) return;
 
-    const hash = ((x * 7 + y * 13) * 31) & 0xffff;
-    const base = hash % 2 === 0 ? theme.groundBase : theme.groundVariant;
+    // ── 1. Base fill — Murmur-style hash for uniform variant distribution ──
+    // (pure XOR/multiply hashes can alias on grid coords — use finalization mix)
+    let _h = (x * 0xb5297a4d + y * 0x68e31da4 + 0x1b56c4e9) >>> 0;
+    _h ^= _h >>> 16;
+    _h = Math.imul(_h, 0x27d4eb2d) >>> 0;
+    _h ^= _h >>> 15;
+    const hash = _h & 0xffff;
+    const isVariant = (hash % 9 < 2);  // ~22% variant scatter
+    const base = isVariant ? theme.groundVariant : theme.groundBase;
     this.groundLayer.fillStyle(base, 1);
     this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
+    // ── 2. Bayer 2×2 dithering at variant tile borders ──
+    if (isVariant) {
+      for (let py = 0; py < TILE_SIZE; py += 2) {
+        for (let pdx = TILE_SIZE - 3; pdx < TILE_SIZE; pdx++) {
+          if ((pdx % 2 === 0) === (py % 2 === 0)) {
+            this.groundLayer.fillStyle(0x000000, 0.09);
+            this.groundLayer.fillRect(x + pdx, y + py, 1, 1);
+          }
+        }
+      }
+    }
+
+    // ── 3. Subtle shading variation ──
     if ((hash & 0xf) < 3) {
-      this.groundLayer.fillStyle(0x000000, 0.04 + ((hash >> 4) & 3) * 0.01);
+      this.groundLayer.fillStyle(0x000000, 0.07 + ((hash >> 4) & 3) * 0.02);
       this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
     }
     if ((hash & 0x1f) < 2) {
-      this.groundLayer.fillStyle(0xffffff, 0.025);
+      this.groundLayer.fillStyle(0xffffff, 0.06);
       this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+    }
+
+    // ── 4. Detail elements ──
+    const detailHash = (((x * 48271) ^ (y * 32767) ^ (x * y * 53)) >>> 0) & 0xffff;
+
+    // Pebbles: 2-4 per eligible tile
+    if (detailHash % 3 === 0) {
+      const pebbleCount = 2 + (detailHash % 3);
+      for (let p = 0; p < pebbleCount; p++) {
+        const ph = ((detailHash * (p + 1) * 17) + x + y) & 0xffff;
+        const px = x + 1 + (ph % (TILE_SIZE - 3));
+        const py = y + 1 + ((ph >> 3) % (TILE_SIZE - 3));
+        const pr = 0.7 + (ph % 2) * 0.5;
+        this.groundLayer.fillStyle(0x000000, 0.28);
+        this.groundLayer.fillCircle(px + 1, py + 1, pr);
+        this.groundLayer.fillStyle(0x000000, 0.2);
+        this.groundLayer.fillCircle(px, py, pr);
+        this.groundLayer.fillStyle(0xffffff, 0.14);
+        this.groundLayer.fillCircle(px - 0.4, py - 0.4, pr * 0.5);
+      }
+    }
+
+    // Grass tufts: 3 individual 1px vertical lines clustered
+    if ((detailHash & 0xfff) < 100) {
+      const tgx = x + 1 + ((detailHash >> 2) % (TILE_SIZE - 6));
+      const tgy = y + 2 + ((detailHash >> 5) % (TILE_SIZE - 6));
+      const tuftCount = 1 + (detailHash % 2);
+      for (let t = 0; t < tuftCount; t++) {
+        const tx2 = tgx + t * 3;
+        if (tx2 >= x + TILE_SIZE - 1) break;
+        this.groundLayer.fillStyle(0x4a7a3a, 0.5);
+        this.groundLayer.fillRect(tx2, tgy - 1, 1, 2);
+        this.groundLayer.fillStyle(0x6a9a5a, 0.55);
+        this.groundLayer.fillRect(tx2, tgy - 2, 1, 1);
+      }
+    }
+
+    // Ground cracks: diagonal zigzag (1 per ~4 tiles)
+    if ((detailHash & 0x3fff) < 40) {
+      const crx = x + 2 + ((detailHash >> 4) % (TILE_SIZE - 7));
+      const cry = y + 2 + ((detailHash >> 7) % (TILE_SIZE - 6));
+      this.groundLayer.lineStyle(0.5, 0x000000, 0.38);
+      this.groundLayer.lineBetween(crx, cry, crx + 2, cry + 1);
+      this.groundLayer.lineBetween(crx + 2, cry + 1, crx + 3, cry);
+      this.groundLayer.lineBetween(crx + 3, cry, crx + 5, cry + 2);
+    }
+
+    // Moss/lichen spot (chapter-tinted, 2px area)
+    if ((detailHash & 0x7fff) < 18) {
+      const mx = x + 2 + ((detailHash >> 6) % (TILE_SIZE - 5));
+      const my = y + 2 + ((detailHash >> 9) % (TILE_SIZE - 5));
+      const vr = (theme.groundVariant >> 16) & 0xff;
+      const vg = (theme.groundVariant >> 8) & 0xff;
+      const vb = theme.groundVariant & 0xff;
+      const mossColor = (Math.max(0, vr - 20) << 16) | (Math.min(255, vg + 15) << 8) | Math.max(0, vb - 10);
+      this.groundLayer.fillStyle(mossColor, 0.28);
+      this.groundLayer.fillRect(mx, my, 2, 2);
+      this.groundLayer.fillStyle(mossColor, 0.15);
+      this.groundLayer.fillRect(mx - 1, my + 1, 4, 1);
     }
   }
 
@@ -696,12 +775,16 @@ export class TileMapManager {
       if (exitTooClose) continue;
 
       const type = h % 5;
-      if ([1, 2, 3, 5].includes(config.chapter) && (type === 0 || type === 1)) {
+      if ([1, 2, 3, 5, 6, 7].includes(config.chapter) && (type === 0 || type === 1)) {
         this.drawTree(ox, oy, h, config.chapter);
         const tree = this.scene.add.rectangle(ox, oy + 4, 8, 8);
         this.scene.physics.add.existing(tree, true);
         this.colliders!.add(tree);
         tree.setVisible(false);
+        // Wildflower clusters near trees in Ch1, Ch3, Ch6
+        if ([1, 3, 6].includes(config.chapter) && (h % 3 === 0)) {
+          this.drawWildflowerCluster(ox, oy + 8, h, config.chapter);
+        }
       } else if (type === 2 || type === 3) {
         this.drawRock(ox, oy, h, config.theme);
         const rock = this.scene.add.rectangle(ox, oy, 10, 8);
@@ -712,30 +795,246 @@ export class TileMapManager {
     }
   }
 
+  private drawWildflowerCluster(x: number, y: number, hash: number, chapter: number): void {
+    if (!this.objectLayer) return;
+    const flowerPalettes: Record<number, number[]> = {
+      1: [0xffaa66, 0xff8844, 0xddaa44, 0xff6655], // Ch1: warm ember tones
+      3: [0xffeeaa, 0xaaddff, 0xffaacc, 0xaaffaa], // Ch3: bright meadow
+      6: [0xffd700, 0xffeedd, 0xffcc88, 0xeeffaa], // Ch6: golden dawn
+    };
+    const palette = flowerPalettes[chapter] ?? flowerPalettes[3];
+    const count = 3 + (hash % 3); // 3-5 flowers
+    for (let f = 0; f < count; f++) {
+      const fx = x + ((hash * (f + 1) * 7) & 0xf) - 8;
+      const fy = y + ((hash * (f + 1) * 11) & 0x7) - 3;
+      const fColor = palette[(hash + f) % palette.length];
+      // Small stem
+      this.objectLayer.fillStyle(0x5a8a3a, 0.6);
+      this.objectLayer.fillRect(fx, fy, 1, 3);
+      // Flower head
+      this.objectLayer.fillStyle(fColor, 0.75);
+      this.objectLayer.fillCircle(fx, fy - 1, 1.5);
+      // Highlight
+      this.objectLayer.fillStyle(0xffffff, 0.2);
+      this.objectLayer.fillCircle(fx - 0.5, fy - 1.5, 0.7);
+    }
+  }
+
   private drawTree(x: number, y: number, hash: number, chapter: number): void {
     if (!this.objectLayer) return;
-    const trunkH = 8 + (hash % 4);
 
-    const trunkColor = chapter === 2 ? 0x2a2018 : 0x3a2a18;
-    this.objectLayer.fillStyle(trunkColor, 0.9);
-    this.objectLayer.fillRect(x - 2, y, 4, trunkH);
+    // Determine tree variant by chapter and hash
+    const variant = this.getTreeVariant(chapter, hash);
 
-    const crownR = 6 + (hash % 4);
+    if (variant === 'pine') {
+      this.drawPineTree(x, y, hash, chapter);
+    } else if (variant === 'dead') {
+      this.drawDeadTree(x, y, hash);
+    } else if (variant === 'palm') {
+      this.drawPalmTree(x, y, hash);
+    } else {
+      this.drawRoundTree(x, y, hash, chapter);
+    }
+  }
+
+  private getTreeVariant(chapter: number, hash: number): 'round' | 'pine' | 'dead' | 'palm' {
+    if (chapter === 10) return 'palm';
+    if (chapter === 8 || chapter === 9 || chapter === 11) return hash % 3 === 0 ? 'dead' : 'pine';
+    if (chapter === 2 || chapter === 4) return hash % 2 === 0 ? 'pine' : 'round';
+    return 'round';
+  }
+
+  private drawRoundTree(x: number, y: number, hash: number, chapter: number): void {
+    if (!this.objectLayer) return;
+    const trunkH = 8 + (hash % 5);
+    const sizeMod = 1 + (hash % 3) * 0.15;
+    const crownR = Math.round((6 + (hash % 4)) * sizeMod);
     const crownY = y - crownR + 2;
-    const crownColors: Record<number, number[]> = {
-      1: [0x2a5a2a, 0x3a7a3a, 0x1a4a1a],
-      2: [0x1a4a3a, 0x2a5a4a, 0x0a3a2a],
-      3: [0x4a7a2a, 0x5a8a3a, 0x3a6a1a],
-      5: [0x3a5a2a, 0x4a6a3a, 0x2a4a1a],
-    };
-    const colors = crownColors[chapter] ?? crownColors[1];
 
-    this.objectLayer.fillStyle(colors[0], 0.7);
+    // ── 1. Ground shadow ──
+    this.objectLayer.fillStyle(0x000000, 0.35);
+    this.objectLayer.fillEllipse(x, y + trunkH / 2, Math.round(crownR * 0.9), 3);
+
+    // ── 2. Trunk with gradient and grain ──
+    const trunkColor = chapter === 2 ? 0x2a2018 : 0x3a2a18;
+    const trunkLight = chapter === 2 ? 0x3a3028 : 0x5a4030;
+    // Trunk drop shadow
+    this.objectLayer.fillStyle(0x000000, 0.22);
+    this.objectLayer.fillRect(x - 1, y + 2, 4, trunkH);
+    // Trunk body
+    this.objectLayer.fillStyle(trunkColor, 0.92);
+    this.objectLayer.fillRect(x - 2, y, 4, trunkH);
+    // Trunk highlight edge (lighter left side)
+    this.objectLayer.fillStyle(trunkLight, 0.45);
+    this.objectLayer.fillRect(x - 2, y, 1, trunkH - 2);
+    // Vertical grain lines (3 lines)
+    this.objectLayer.fillStyle(0x000000, 0.2);
+    this.objectLayer.fillRect(x, y + 2, 1, trunkH - 3);
+    this.objectLayer.fillStyle(0x000000, 0.12);
+    this.objectLayer.fillRect(x + 1, y + 3, 1, trunkH - 5);
+    // Knot detail near middle
+    const knotY = y + Math.floor(trunkH * 0.45);
+    this.objectLayer.fillStyle(0x1a1008, 0.6);
+    this.objectLayer.fillCircle(x, knotY, 1.5);
+
+    // ── Crown color palette ──
+    const crownPalette: Record<number, [number, number, number]> = {
+      1: [0x1a4a1a, 0x2d5a1b, 0x4a8a3a],
+      2: [0x0a3a2a, 0x1a4a3a, 0x2a6a5a],
+      3: [0x3a6a1a, 0x4a7a2a, 0x5a9a3a],
+      5: [0x2a4a1a, 0x3a5a2a, 0x4a7a3a],
+      6: [0x2a5a1a, 0x3a6a2a, 0x4a8a3a],
+      7: [0x3a5a1a, 0x4a6a2a, 0x5a8a3a],
+    };
+    const [cDark, cMid, cLight] = crownPalette[chapter] ?? crownPalette[1];
+
+    // ── 3. Main foliage — 3 overlapping large circles ──
+    // Bottom (darkest — base shadow)
+    this.objectLayer.fillStyle(cDark, 0.9);
+    this.objectLayer.fillCircle(x, crownY + Math.round(crownR * 0.35), Math.round(crownR * 0.8));
+    // Middle (main body)
+    this.objectLayer.fillStyle(cMid, 0.88);
     this.objectLayer.fillCircle(x, crownY, crownR);
-    this.objectLayer.fillStyle(colors[1], 0.4);
-    this.objectLayer.fillCircle(x - 2, crownY - 2, crownR * 0.7);
-    this.objectLayer.fillStyle(colors[2], 0.3);
-    this.objectLayer.fillCircle(x + 2, crownY + 2, crownR * 0.6);
+    // Top-left offset circle (second overlapping blob)
+    this.objectLayer.fillStyle(cMid, 0.6);
+    this.objectLayer.fillCircle(x - Math.round(crownR * 0.4), crownY - Math.round(crownR * 0.2), Math.round(crownR * 0.72));
+    // Right offset blob
+    this.objectLayer.fillStyle(cDark, 0.45);
+    this.objectLayer.fillCircle(x + Math.round(crownR * 0.45), crownY + Math.round(crownR * 0.1), Math.round(crownR * 0.65));
+
+    // ── 4. Highlight cluster (upper-right) ──
+    const hlCount = 5 + (hash % 3);
+    for (let h2 = 0; h2 < hlCount; h2++) {
+      const hh = ((hash * (h2 + 3) * 17) + chapter) & 0xff;
+      const hlAngle = (hh / 255) * Math.PI * 0.9; // upper-right quadrant
+      const hlDist = Math.round(crownR * (0.3 + (hh % 5) * 0.1));
+      const hlX = x - Math.round(Math.cos(hlAngle) * hlDist);
+      const hlY = crownY - Math.round(Math.sin(hlAngle) * hlDist * 0.7);
+      this.objectLayer.fillStyle(cLight, 0.45 + (hh % 3) * 0.1);
+      this.objectLayer.fillCircle(hlX, hlY, 1 + (hh % 2));
+    }
+
+    // ── 5. Canopy edge bumps (break perfect circle silhouette) ──
+    const edgeCount = 8 + (hash % 4);
+    for (let e = 0; e < edgeCount; e++) {
+      const eh = ((hash * (e + 7) * 11) + chapter) & 0xff;
+      const eAngle = (e / edgeCount) * Math.PI * 2 + (eh / 255) * 0.4;
+      const eR = crownR + 1 + (eh % 3);
+      const ex2 = x + Math.round(Math.cos(eAngle) * eR);
+      const ey2 = crownY + Math.round(Math.sin(eAngle) * eR * 0.85);
+      this.objectLayer.fillStyle(cMid, 0.5);
+      this.objectLayer.fillCircle(ex2, ey2, 1 + (eh % 2));
+    }
+
+    // ── 6. Berry/flower detail (chapter-specific color) ──
+    const berryColors: Record<number, number> = {
+      1: 0xff6644, 3: 0xff88aa, 6: 0xffdd66, 7: 0xffaadd,
+    };
+    const berryColor = berryColors[chapter] ?? 0xdd8844;
+    const berryCount = 2 + (hash % 2);
+    for (let b = 0; b < berryCount; b++) {
+      const bh = ((hash * (b + 11) * 13) + chapter) & 0xff;
+      const bAngle = (bh / 255) * Math.PI * 1.8 - 0.3;
+      const bDist = Math.round(crownR * (0.35 + (bh % 4) * 0.1));
+      const bx2 = x + Math.round(Math.cos(bAngle) * bDist);
+      const by2 = crownY + Math.round(Math.sin(bAngle) * bDist * 0.8);
+      this.objectLayer.fillStyle(berryColor, 0.7);
+      this.objectLayer.fillCircle(bx2, by2, 1);
+      this.objectLayer.fillStyle(0xffffff, 0.3);
+      this.objectLayer.fillCircle(bx2 - 0.5, by2 - 0.5, 0.5);
+    }
+  }
+
+  private drawPineTree(x: number, y: number, hash: number, chapter: number): void {
+    if (!this.objectLayer) return;
+    const trunkH = 6 + (hash % 4);
+    const pineH = 18 + (hash % 8);
+    const pineW = 8 + (hash % 4);
+
+    // Trunk
+    this.objectLayer.fillStyle(0x3a2a18, 0.85);
+    this.objectLayer.fillRect(x - 1, y, 3, trunkH);
+
+    // Pine canopy (stacked triangles)
+    const pineColor = chapter === 9 || chapter === 8 ? 0x1a2a18 : 0x1a4020;
+    const pineHighlight = chapter === 9 || chapter === 8 ? 0x2a3a28 : 0x2a5030;
+    const baseY = y - 2;
+    for (let layer = 0; layer < 3; layer++) {
+      const lw = pineW - layer * 2;
+      const lh = pineH / 3;
+      const ly = baseY - layer * (lh * 0.7);
+      // Shadow
+      this.objectLayer.fillStyle(0x000000, 0.15);
+      this.objectLayer.fillTriangle(x - lw / 2 + 1, ly + 1, x + 1, ly - lh + 1, x + lw / 2 + 1, ly + 1);
+      // Body
+      this.objectLayer.fillStyle(pineColor, 0.85);
+      this.objectLayer.fillTriangle(x - lw / 2, ly, x, ly - lh, x + lw / 2, ly);
+      // Highlight
+      this.objectLayer.fillStyle(pineHighlight, 0.4);
+      this.objectLayer.fillTriangle(x - lw / 4, ly, x, ly - lh / 2, x, ly);
+    }
+  }
+
+  private drawDeadTree(x: number, y: number, hash: number): void {
+    if (!this.objectLayer) return;
+    const tH = 14 + (hash % 8);
+
+    // Main trunk
+    this.objectLayer.fillStyle(0x2a2018, 0.8);
+    this.objectLayer.fillRect(x - 1, y - tH, 3, tH);
+    this.objectLayer.fillStyle(0x3a3028, 0.4);
+    this.objectLayer.fillRect(x - 1, y - tH, 1, tH);
+
+    // Bare branches
+    const branchAngles = [-0.7, -0.3, 0.4, 0.9, -1.1, 0.6];
+    for (let i = 0; i < 4 + (hash % 3); i++) {
+      const ba = branchAngles[i % branchAngles.length] + (hash % 5) * 0.1;
+      const bLen = 5 + (hash % 4) + i;
+      const bStartY = y - tH * (0.4 + i * 0.12);
+      const bEndX = x + Math.cos(ba) * bLen;
+      const bEndY = bStartY - Math.abs(Math.sin(ba)) * bLen;
+      this.objectLayer.lineStyle(1.5, 0x2a2018, 0.75);
+      this.objectLayer.lineBetween(x, bStartY, bEndX, bEndY);
+      // Sub-branch
+      if (bLen > 6) {
+        const sbLen = bLen * 0.5;
+        this.objectLayer.lineStyle(0.8, 0x2a2018, 0.5);
+        this.objectLayer.lineBetween(bEndX, bEndY,
+          bEndX + Math.cos(ba + 0.5) * sbLen,
+          bEndY - sbLen * 0.4);
+      }
+    }
+  }
+
+  private drawPalmTree(x: number, y: number, hash: number): void {
+    if (!this.objectLayer) return;
+    const tH = 18 + (hash % 6);
+
+    // Curved trunk (slight lean)
+    const lean = (hash % 3 === 0) ? 3 : -2;
+    this.objectLayer.lineStyle(3, 0x6b4a20, 0.85);
+    this.objectLayer.lineBetween(x, y, x + lean, y - tH);
+    this.objectLayer.lineStyle(1, 0x9b7a40, 0.3);
+    this.objectLayer.lineBetween(x - 1, y, x + lean - 1, y - tH);
+    // Trunk rings
+    for (let r = 1; r < 4; r++) {
+      const ry = y - tH * (r / 4);
+      this.objectLayer.lineStyle(1, 0x4a3010, 0.3);
+      this.objectLayer.lineBetween(x + lean * (r / 4) - 1, ry, x + lean * (r / 4) + 2, ry);
+    }
+
+    // Palm fronds
+    const frondColors = [0x2a6a1a, 0x3a8a2a, 0x1a5a10];
+    const tx = x + lean;
+    const ty = y - tH;
+    const frondAngles = [-0.9, -0.4, 0, 0.4, 0.9, -1.3, 1.3];
+    for (let f = 0; f < 6; f++) {
+      const fa = frondAngles[f % frondAngles.length];
+      const fLen = 8 + (hash % 4);
+      const fColor = frondColors[f % frondColors.length];
+      this.objectLayer.lineStyle(2, fColor, 0.75);
+      this.objectLayer.lineBetween(tx, ty, tx + Math.cos(fa) * fLen, ty - Math.abs(Math.sin(fa)) * fLen - 3);
+    }
   }
 
   private drawTerrainZones(config: ChapterConfig): void {
@@ -873,17 +1172,44 @@ export class TileMapManager {
 
   private drawPathway(config: ChapterConfig): void {
     if (!this.decorLayer) return;
-    const pathColor = config.theme.pathColor;
+    // Use a brighter path color blended from theme + gold so it's always visible
+    const themeColor = config.theme.pathColor;
+    const goldColor = 0xd4a853;
+    const stoneTan = 0xc8a870; // warm tan stone path color
 
     for (let i = 0; i < 30; i++) {
       const t = i / 30;
       const px = config.spawn.x + Math.sin(t * 3) * 6;
       const py = config.spawn.y - i * (config.mapHeight / 30);
-      const w = 10 + Math.sin(i * 0.3) * 3;
+      const w = 14 + Math.sin(i * 0.3) * 3;
 
       if (py < 0) break;
-      this.decorLayer.fillStyle(pathColor, 0.1 + t * 0.04);
-      this.decorLayer.fillEllipse(px, py, w, 5);
+
+      // Base stone/tan path (broader, warmer) — increased alpha for visibility
+      this.decorLayer.fillStyle(stoneTan, 0.55 + t * 0.2);
+      this.decorLayer.fillEllipse(px, py, w + 4, 9);
+      // Theme-colored tint on top
+      this.decorLayer.fillStyle(themeColor, 0.35 + t * 0.15);
+      this.decorLayer.fillEllipse(px, py, w + 2, 8);
+      // Gold shimmer overlay — holy path feel — increased alpha
+      this.decorLayer.fillStyle(goldColor, 0.30 + t * 0.16);
+      this.decorLayer.fillEllipse(px, py, w - 3, 5);
+      // Worn center track (slightly darker)
+      this.decorLayer.fillStyle(0x000000, 0.08);
+      this.decorLayer.fillEllipse(px, py, 4, 3);
+      // Path edge stones (small dots on sides)
+      const hash = ((i * 37 + config.chapter * 13) * 17) & 0xff;
+      if (hash < 80) {
+        this.decorLayer.fillStyle(0x888866, 0.4);
+        this.decorLayer.fillCircle(px - w / 2 + 1, py, 1);
+        this.decorLayer.fillCircle(px + w / 2 - 1, py, 1);
+      }
+      // Small wildflowers near path
+      if ((hash & 0x3f) < 20) {
+        const flowerColors = [0xffffff, 0xffd700, 0xffeeaa];
+        this.decorLayer.fillStyle(flowerColors[hash % flowerColors.length], 0.5);
+        this.decorLayer.fillCircle(px - w / 2 - 2, py + ((hash % 3) - 1), 1);
+      }
     }
 
     (config.exits ?? []).forEach(exit => {
@@ -894,8 +1220,8 @@ export class TileMapManager {
         const t = i / 10;
         const px = ex + (1 - t) * Math.sin(t * 2) * 4;
         const py = ey - (1 - t) * i * 12;
-        this.decorLayer!.fillStyle(pathColor, 0.06 + t * 0.06);
-        this.decorLayer!.fillEllipse(px, py, 8, 4);
+        this.decorLayer!.fillStyle(goldColor, 0.12 + t * 0.12);
+        this.decorLayer!.fillEllipse(px, py, 9, 5);
       }
     });
   }
@@ -906,15 +1232,15 @@ export class TileMapManager {
       const cx = exit.x + exit.width / 2;
       const cy = exit.y + exit.height / 2;
 
-      this.objectLayer!.fillStyle(0xd4a853, 0.06);
+      this.objectLayer!.fillStyle(0xd4a853, 0.18);
       this.objectLayer!.fillEllipse(cx, cy, exit.width + 10, exit.height + 10);
 
       for (let i = 0; i < 3; i++) {
-        this.objectLayer!.lineStyle(0.5, 0xd4a853, 0.08 - i * 0.02);
+        this.objectLayer!.lineStyle(1, 0xd4a853, 0.22 - i * 0.06);
         this.objectLayer!.strokeEllipse(cx, cy, exit.width + 6 + i * 8, exit.height + 6 + i * 8);
       }
 
-      this.objectLayer!.fillStyle(0xd4a853, 0.3);
+      this.objectLayer!.fillStyle(0xd4a853, 0.7);
       this.objectLayer!.fillTriangle(cx, cy - 12, cx - 4, cy - 6, cx + 4, cy - 6);
     });
   }
@@ -925,18 +1251,18 @@ export class TileMapManager {
 
   /** Per-chapter sky gradient colors [top, bottom] */
   private static readonly SKY_PALETTE: Record<number, [number, number]> = {
-    1:  [0x1a1020, 0x3d2010], // City of Destruction: dark ember sky
-    2:  [0x111828, 0x1e2d3a], // Slough of Despond: murky overcast
-    3:  [0x0d2240, 0x2a5878], // Straight & Narrow: clear blue day
-    4:  [0x1a2e4a, 0x3a6478], // Hill Difficulty: pale haze
-    5:  [0x1e1228, 0x3a2218], // Interpreter's House: warm dusk
-    6:  [0x261a06, 0x5a4210], // Cross / Celestial: golden radiance
-    7:  [0x10181e, 0x1e2a30], // Palace Beautiful: twilight blue
-    8:  [0x0a0610, 0x160c18], // Apollyon: oppressive dark
-    9:  [0x080408, 0x120810], // Valley of Shadow: near-black
-    10: [0x182030, 0x2e4260], // Vanity Fair: cold city night
-    11: [0x0e1a28, 0x203850], // Enchanted Ground: hazy mist
-    12: [0x1a1a30, 0x403868], // Celestial City approach: deep purple-blue
+    1:  [0x1a1020, 0x3d2010], // City of Destruction: dark ember
+    2:  [0x111828, 0x1e3040], // Slough of Despond: murky overcast
+    3:  [0x0d3a6a, 0x2a6898], // Straight & Narrow: rich blue sky
+    4:  [0x1a1828, 0x2e2c40], // Hill Difficulty: dusk
+    5:  [0x3a2010, 0x8a4020], // Interpreter's House: warm dusk
+    6:  [0x0a1428, 0x1e3850], // Beautiful Gate: dawn blue
+    7:  [0x1a0c2e, 0x2e1a48], // Palace Beautiful: twilight purple
+    8:  [0x0a0008, 0x1a0018], // Valley of Humiliation: near black
+    9:  [0x050308, 0x100810], // Valley of Shadow: pitch dark
+    10: [0x1a0828, 0x3a1448], // Vanity Fair: garish night
+    11: [0x080610, 0x100c18], // Doubting Castle: dungeon black
+    12: [0x1a0a40, 0x4a2080], // Celestial City: cosmic purple-gold
   };
 
   private drawParallaxBackground(config: ChapterConfig): void {
@@ -969,15 +1295,27 @@ export class TileMapManager {
     if (ch === 1 || ch === 8 || ch === 9 || ch === 11) {
       const mx = W * 0.75;
       const my = H * 0.12;
-      sky.fillStyle(0xeeddcc, 0.5);
+      // Moon outer glow rings
+      sky.fillStyle(0xddccbb, 0.04);
+      sky.fillCircle(mx, my, 28);
+      sky.fillStyle(0xddccbb, 0.07);
+      sky.fillCircle(mx, my, 22);
+      // Moon disc
+      sky.fillStyle(0xeeddcc, 0.55);
       sky.fillCircle(mx, my, 10);
-      sky.fillStyle(0xffeedd, 0.3);
+      sky.fillStyle(0xffeedd, 0.35);
       sky.fillCircle(mx, my, 7);
       sky.fillStyle(0xffffff, 0.2);
-      sky.fillCircle(mx, my, 4);
-      // Moon glow
-      sky.fillStyle(0xddccbb, 0.06);
-      sky.fillCircle(mx, my, 22);
+      sky.fillCircle(mx - 1, my - 1, 4);
+      // Crater pattern (subtle shade variation)
+      sky.fillStyle(0xccbbaa, 0.12);
+      sky.fillCircle(mx - 3, my + 2, 2);
+      sky.fillStyle(0xccbbaa, 0.09);
+      sky.fillCircle(mx + 4, my - 3, 1.5);
+      sky.fillStyle(0xccbbaa, 0.07);
+      sky.fillCircle(mx + 2, my + 5, 1.2);
+      sky.fillStyle(0xbbaa99, 0.08);
+      sky.fillCircle(mx - 5, my - 4, 1.8);
     }
     // Sun for daytime chapters
     if (ch === 3 || ch === 4 || ch === 7) {
@@ -1033,16 +1371,100 @@ export class TileMapManager {
 
     // Chapter-specific far elements
     if (ch === 1) {
-      // Distant burning city
-      for (let i = 0; i < 6; i++) {
-        const bx = 50 + i * 80 + (i * 37 % 20);
-        const bh = 25 + (i * 13 % 20);
-        far.fillStyle(0x3a2a1a, 0.5);
-        far.fillRect(bx, H - bh - 20, 12, bh);
-        far.fillStyle(0xff6600, 0.12);
-        far.fillCircle(bx + 6, H - bh - 22, 6 + (i % 3));
-        far.fillStyle(0xff4400, 0.08);
-        far.fillCircle(bx + 6, H - bh - 26, 4);
+      // City of Destruction — 15 building silhouettes with rich detail
+      const buildingData = [
+        { x: 30, w: 16, h: 40 }, { x: 60, w: 10, h: 28 }, { x: 85, w: 20, h: 50 },
+        { x: 120, w: 14, h: 35 }, { x: 150, w: 18, h: 44 }, { x: 182, w: 12, h: 30 },
+        { x: 210, w: 22, h: 55 }, { x: 248, w: 10, h: 24 }, { x: 270, w: 16, h: 42 },
+        { x: 300, w: 20, h: 38 }, { x: 340, w: 14, h: 48 }, { x: 370, w: 18, h: 32 },
+        { x: 420, w: 12, h: 36 }, { x: 448, w: 24, h: 60 }, { x: 490, w: 16, h: 28 },
+      ];
+      const baseY = H - 15;
+      for (let bi = 0; bi < buildingData.length; bi++) {
+        const b = buildingData[bi];
+        const bHash = ((b.x * 17 + b.h * 7) * 31) & 0xff;
+        const hasRooftopFire = bi % 2 === 0;
+
+        // Building drop shadow
+        far.fillStyle(0x000000, 0.22);
+        far.fillRect(b.x + 2, baseY - b.h + 2, b.w, b.h);
+        // Building body base
+        far.fillStyle(0x2a2420, 0.85);
+        far.fillRect(b.x, baseY - b.h, b.w, b.h);
+        // Rooftop slightly lighter
+        far.fillStyle(0x302825, 0.9);
+        far.fillRect(b.x, baseY - b.h, b.w, 4);
+
+        // Rooftop shape variety
+        if (bHash % 3 === 0) {
+          far.fillStyle(0x201a14, 0.9);
+          far.fillTriangle(b.x, baseY - b.h, b.x + b.w / 2, baseY - b.h - 10, b.x + b.w, baseY - b.h);
+        } else if (bHash % 3 === 1) {
+          for (let p = 0; p < Math.floor(b.w / 5); p++) {
+            far.fillStyle(0x201c18, 0.85);
+            far.fillRect(b.x + p * 5, baseY - b.h - 3, 3, 4);
+          }
+        }
+        // Chimney
+        if (bHash % 2 === 0) {
+          const chimneyX = b.x + 3 + (bHash % Math.max(1, b.w - 5));
+          far.fillStyle(0x1a1410, 0.9);
+          far.fillRect(chimneyX, baseY - b.h - 7, 3, 7);
+          for (let s = 0; s < 4; s++) {
+            const smokeAlpha = 0.15 - s * 0.03;
+            const smokeR = 1 + s * 0.7;
+            const smokeX = chimneyX + 1 + (s % 2) * 1.5;
+            const smokeY = baseY - b.h - 8 - s * 4;
+            far.fillStyle(0x887060, smokeAlpha);
+            far.fillCircle(smokeX, smokeY, smokeR);
+          }
+        }
+
+        // Rooftop fire glow
+        if (hasRooftopFire) {
+          far.fillStyle(0xff2200, 0.14 + (bHash % 4) * 0.025);
+          far.fillEllipse(b.x + b.w / 2, baseY - b.h - 2, b.w * 0.7, 6);
+          far.fillStyle(0xff6600, 0.09);
+          far.fillCircle(b.x + b.w / 2, baseY - b.h - 6, 5 + (bHash % 4));
+          far.fillStyle(0xff9900, 0.06);
+          far.fillCircle(b.x + b.w / 2, baseY - b.h - 12, 7 + (bHash % 5));
+          far.fillStyle(0xffcc44, 0.08);
+          far.fillTriangle(
+            b.x + b.w / 2 - 3, baseY - b.h - 2,
+            b.x + b.w / 2, baseY - b.h - 14,
+            b.x + b.w / 2 + 3, baseY - b.h - 2,
+          );
+          for (let e = 0; e < 3; e++) {
+            const ex2 = b.x + 2 + (bHash * (e + 1)) % Math.max(1, b.w - 3);
+            const ey2 = baseY - b.h - 10 - (bHash >> (e + 2)) % 8;
+            far.fillStyle(0xff8800, 0.3);
+            far.fillCircle(ex2, ey2, 0.7);
+          }
+        } else {
+          far.fillStyle(0xff4400, 0.06 + (bHash % 3) * 0.015);
+          far.fillCircle(b.x + b.w / 2, baseY - b.h - 5, 3 + (bHash % 3));
+        }
+
+        // Window pixels: 2×2 yellow-orange glow dots
+        if (b.h > 24) {
+          const winCount = 3 + (bHash % 3);
+          const rowSpan = Math.max(1, Math.floor(b.h / 12) * 10);
+          for (let w2 = 0; w2 < winCount; w2++) {
+            const wh = ((bHash * (w2 + 5) * 7) + bi) & 0xff;
+            const wx = b.x + 2 + (wh % Math.max(1, b.w - 4));
+            const wy = baseY - b.h + 6 + ((wh * 3) & 0xff) % rowSpan;
+            far.fillStyle(0xffcc44, 0.07);
+            far.fillRect(wx - 1, wy - 1, 4, 4);
+            far.fillStyle(0xff9922, 0.2);
+            far.fillRect(wx, wy, 2, 2);
+            if (wh % 3 === 0) {
+              far.fillStyle(0xff6600, 0.1);
+              far.fillRect(wx, wy, 2, 2);
+            }
+          }
+          far.fillStyle(0xffaa33, 0.18);
+          far.fillRect(b.x + 2, baseY - b.h + 8, 2, 2);
+        }
       }
     } else if (ch === 5) {
       // Interpreter's house silhouette

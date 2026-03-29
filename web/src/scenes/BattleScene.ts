@@ -89,15 +89,15 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Distant red-orange supernatural glow (the enemy's domain)
-    sky.fillStyle(0x880000, 0.05);
+    sky.fillStyle(0x880000, 0.12);
     sky.fillEllipse(W / 2, ground * 0.7, W * 0.8, ground * 0.5);
-    sky.fillStyle(0xcc2200, 0.03);
+    sky.fillStyle(0xcc2200, 0.08);
     sky.fillEllipse(W / 2, ground * 0.8, W * 0.5, ground * 0.3);
 
     // Stars / supernatural lights
     for (let i = 0; i < 30; i++) {
       const hash = (i * 137 * 31) & 0xffff;
-      sky.fillStyle(0xffffff, 0.08 + (hash % 8) * 0.03);
+      sky.fillStyle(0xffffff, 0.15 + (hash % 8) * 0.04);
       sky.fillCircle(hash % W, (hash * 3) % (ground * 0.7), 0.5 + (hash % 2) * 0.3);
     }
 
@@ -118,7 +118,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Subtle grid in ground
-    gr.lineStyle(0.3, 0x333355, 0.15);
+    gr.lineStyle(0.3, 0x333355, 0.25);
     for (let x2 = 20; x2 < W; x2 += 20) {
       gr.lineBetween(x2, ground, x2 - 10, H);
     }
@@ -153,33 +153,95 @@ export class BattleScene extends Phaser.Scene {
       if (this.anims.exists(animKey)) this.enemySprite.play(animKey, true);
       this.enemyContainer.add(this.enemySprite);
     } else {
-      // Procedural silhouette (existing style)
+      // Procedural SANABI-style menacing silhouette
       const gfx = this.add.graphics();
-      const baseScale = enemy.isBoss ? 1.4 : 1.0;
-      gfx.fillStyle(enemy.iconColor, 0.4);
-      gfx.fillCircle(0, 0, 30 * baseScale);
-      gfx.lineStyle(2, enemy.iconColor, 0.8);
-      gfx.strokeCircle(0, 0, 30 * baseScale);
+      const bs = enemy.isBoss ? 1.5 : 1.0;
+      const ec = enemy.iconColor;
+
+      // Multi-layer outer aura (dark entity effect)
+      gfx.fillStyle(ec, 0.06); gfx.fillEllipse(0, 0, 90 * bs, 75 * bs);
+      gfx.fillStyle(ec, 0.10); gfx.fillEllipse(0, 0, 68 * bs, 56 * bs);
+      gfx.fillStyle(0x000000, 0.35); gfx.fillEllipse(0, 0, 55 * bs, 45 * bs);
+
+      // Ground shadow
+      gfx.fillStyle(0x000000, 0.40); gfx.fillEllipse(0, 22 * bs, 38 * bs, 8 * bs);
+
+      // Robe / body (dark layered)
+      gfx.fillStyle(0x080410, 0.95); gfx.fillEllipse(0, 6 * bs, 30 * bs, 40 * bs);
+      gfx.fillStyle(ec, 0.20); gfx.fillEllipse(0, 6 * bs, 26 * bs, 36 * bs);
+      // Body highlight edge
+      gfx.lineStyle(1.5, ec, 0.45);
+      gfx.strokeEllipse(0, 6 * bs, 26 * bs, 36 * bs);
+
+      // Head
+      gfx.fillStyle(0x000000, 0.90); gfx.fillCircle(0, -16 * bs, 12 * bs);
+      gfx.fillStyle(ec, 0.30); gfx.fillCircle(0, -16 * bs, 10 * bs);
+      gfx.lineStyle(1, ec, 0.50); gfx.strokeCircle(0, -16 * bs, 10 * bs);
+
+      // Eye sockets
+      gfx.fillStyle(0x000000, 1.0);
+      gfx.fillEllipse(-4.5 * bs, -17 * bs, 5 * bs, 3 * bs);
+      gfx.fillEllipse(4.5 * bs, -17 * bs, 5 * bs, 3 * bs);
+      // Glowing pupils
+      gfx.fillStyle(0xff2200, 1.0);
+      gfx.fillCircle(-4.5 * bs, -17 * bs, 1.8 * bs);
+      gfx.fillCircle(4.5 * bs, -17 * bs, 1.8 * bs);
+      // Eye bloom
+      gfx.fillStyle(0xff6644, 0.7);
+      gfx.fillCircle(-4.5 * bs, -17 * bs, 1.0 * bs);
+      gfx.fillCircle(4.5 * bs, -17 * bs, 1.0 * bs);
+      // Eye glow trails
+      gfx.fillStyle(0xff3300, 0.18);
+      gfx.fillEllipse(-4.5 * bs, -14 * bs, 4 * bs, 5 * bs);
+      gfx.fillEllipse(4.5 * bs, -14 * bs, 4 * bs, 5 * bs);
+
+      // Boss-specific features
       if (enemy.isBoss) {
-        gfx.lineStyle(1.5, 0xff0000, 0.5);
-        gfx.strokeCircle(0, 0, 42);
+        // Triple-crown horns
+        const hornPositions = [[-6 * bs, -26 * bs], [0, -30 * bs], [6 * bs, -26 * bs]];
+        for (const [hx, hy] of hornPositions) {
+          gfx.fillStyle(ec, 0.85);
+          gfx.fillTriangle(hx - 2.5 * bs, hy + 8 * bs, hx, hy, hx + 2.5 * bs, hy + 8 * bs);
+          gfx.lineStyle(1, ec, 0.6);
+          gfx.strokeTriangle(hx - 2.5 * bs, hy + 8 * bs, hx, hy, hx + 2.5 * bs, hy + 8 * bs);
+        }
+        // Menacing aura ring
+        gfx.lineStyle(1.5, 0xff0000, 0.35);
+        gfx.strokeEllipse(0, 0, 54, 44);
+        gfx.lineStyle(0.5, ec, 0.25);
+        gfx.strokeEllipse(0, 0, 62, 52);
       }
-      gfx.fillStyle(enemy.iconColor, 0.9);
-      gfx.fillCircle(0, -6 * baseScale, 9 * baseScale);
-      gfx.fillRect(-7 * baseScale, 6 * baseScale, 14 * baseScale, 18 * baseScale);
-      for (let i = 0; i < 3; i++) {
-        const angle = (i / 3) * Math.PI - Math.PI / 2;
-        gfx.fillStyle(enemy.iconColor, 0.3);
-        gfx.fillCircle(Math.cos(angle) * 22 * baseScale, Math.sin(angle) * 22 * baseScale, 5 * baseScale);
+
+      // Clawed arms (more detailed)
+      const armY = 2 * bs;
+      gfx.lineStyle(2.5, 0x080410, 0.9);
+      gfx.lineBetween(-13 * bs, armY, -24 * bs, -10 * bs);
+      gfx.lineBetween(13 * bs, armY, 24 * bs, -10 * bs);
+      gfx.lineStyle(1.5, ec, 0.55);
+      gfx.lineBetween(-13 * bs, armY, -24 * bs, -10 * bs);
+      gfx.lineBetween(13 * bs, armY, 24 * bs, -10 * bs);
+      // Claw tips (3-prong)
+      gfx.lineStyle(1, ec, 0.75);
+      for (const [sx, sy, dx, dy] of [
+        [-24 * bs, -10 * bs, -28 * bs, -15 * bs],
+        [-24 * bs, -10 * bs, -26 * bs, -5 * bs],
+        [-24 * bs, -10 * bs, -29 * bs, -8 * bs],
+        [24 * bs, -10 * bs, 28 * bs, -15 * bs],
+        [24 * bs, -10 * bs, 26 * bs, -5 * bs],
+        [24 * bs, -10 * bs, 29 * bs, -8 * bs],
+      ]) {
+        gfx.lineBetween(sx, sy, dx, dy);
       }
+
       this.enemyContainer.add(gfx);
     }
 
-    // Enemy aura (boss gets bigger aura)
+    // Enemy aura (layered, more dramatic)
     const auraGfx = this.add.graphics();
-    const auraR = enemy.isBoss ? 48 : 32;
-    auraGfx.fillStyle(enemy.iconColor, 0.06);
-    auraGfx.fillCircle(0, 0, auraR);
+    const auraR = enemy.isBoss ? 52 : 36;
+    auraGfx.fillStyle(enemy.iconColor, 0.06); auraGfx.fillCircle(0, 0, auraR * 1.5);
+    auraGfx.fillStyle(enemy.iconColor, 0.12); auraGfx.fillCircle(0, 0, auraR);
+    auraGfx.fillStyle(enemy.iconColor, 0.20); auraGfx.fillCircle(0, 0, auraR * 0.6);
     this.enemyContainer.addAt(auraGfx, 0);
 
     const ko = this.gameManager.language === 'ko';
@@ -208,6 +270,11 @@ export class BattleScene extends Phaser.Scene {
     ).setOrigin(0.5);
     this.enemyContainer.add(this.enemyHpText);
 
+    // Boss health bar at top of screen (Phase 6B)
+    if (enemy.isBoss && enemy.hp > 50) {
+      this.createBossTopBar(enemy, state);
+    }
+
     if (enemy.isBoss) {
       this.tweens.add({
         targets: this.enemyContainer, scaleX: 1.03, scaleY: 1.03,
@@ -227,15 +294,104 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  private createPlayerDisplay(state: CombatState): void {
-    this.playerContainer = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 80).setDepth(10);
+  private bossTopBarFill: Phaser.GameObjects.Graphics | null = null;
 
-    // Player sprite
-    const pTexKey = this.textures.exists('christian_gen') ? 'christian_gen' : 'christian';
-    this.playerSprite = this.add.sprite(0, -28, pTexKey, 0).setScale(1.8);
-    const idleAnim = `${pTexKey}_idle_down`;
-    if (this.anims.exists(idleAnim)) this.playerSprite.play(idleAnim, true);
-    this.playerContainer.add(this.playerSprite);
+  private createBossTopBar(enemy: EnemyDef, state: CombatState): void {
+    const barW = GAME_WIDTH - 40;
+    const barH = 8;
+    const bx = 20;
+    const by = 4;
+    const topBarContainer = this.add.container(0, 0).setDepth(60);
+
+    const bg2 = this.add.graphics();
+    bg2.fillStyle(0x0a0814, 0.85);
+    bg2.fillRoundedRect(bx - 4, by - 2, barW + 8, barH + 12, 3);
+    bg2.lineStyle(0.5, enemy.iconColor, 0.3);
+    bg2.strokeRoundedRect(bx - 4, by - 2, barW + 8, barH + 12, 3);
+
+    const trackBg = this.add.graphics();
+    trackBg.fillStyle(0x222222, 0.8);
+    trackBg.fillRoundedRect(bx, by, barW, barH, 2);
+
+    const fillGfx = this.add.graphics();
+    const ratio = state.enemyHp / state.enemyMaxHp;
+    fillGfx.fillStyle(enemy.iconColor, 0.85);
+    fillGfx.fillRoundedRect(bx, by, Math.max(barW * ratio, 2), barH, 2);
+    fillGfx.fillStyle(0xffffff, 0.15);
+    fillGfx.fillRoundedRect(bx, by, Math.max(barW * ratio - 2, 1), 3, 1);
+    this.bossTopBarFill = fillGfx;
+
+    const ko = this.gameManager.language === 'ko';
+    const bossLabel = this.add.text(bx, by + barH + 1,
+      `⚠ ${ko ? enemy.nameKo : enemy.nameEn}`,
+      DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, '#' + enemy.iconColor.toString(16).padStart(6, '0')),
+    );
+
+    topBarContainer.add([bg2, trackBg, fillGfx, bossLabel]);
+    // Slide in from top
+    topBarContainer.setY(-20);
+    this.tweens.add({ targets: topBarContainer, y: 0, duration: 500, ease: 'Back.easeOut' });
+  }
+
+  private updateBossTopBar(state: CombatState): void {
+    if (!this.bossTopBarFill) return;
+    const barW = GAME_WIDTH - 40;
+    const bx = 20;
+    const by = 4;
+    const enemy = ENEMIES[this.enemyId];
+    if (!enemy) return;
+    const ratio = state.enemyHp / state.enemyMaxHp;
+    this.bossTopBarFill.clear();
+    this.bossTopBarFill.fillStyle(enemy.iconColor, 0.85);
+    this.bossTopBarFill.fillRoundedRect(bx, by, Math.max(barW * ratio, 2), 8, 2);
+    this.bossTopBarFill.fillStyle(0xffffff, 0.15);
+    this.bossTopBarFill.fillRoundedRect(bx, by, Math.max(barW * ratio - 2, 1), 3, 1);
+  }
+
+  private createPlayerDisplay(state: CombatState): void {
+    // y=195 keeps player aura top (195-28=167) below log bottom (≈157), no overlap
+    this.playerContainer = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 75).setDepth(10);
+
+    // Player sprite — use generated texture if available, otherwise procedural silhouette
+    const pTexKey = this.textures.exists('christian_gen') ? 'christian_gen'
+      : this.textures.exists('christian') ? 'christian' : null;
+
+    if (pTexKey) {
+      this.playerSprite = this.add.sprite(0, -28, pTexKey, 0).setScale(1.8);
+      const idleAnim = `${pTexKey}_idle_down`;
+      if (this.anims.exists(idleAnim)) this.playerSprite.play(idleAnim, true);
+      this.playerContainer.add(this.playerSprite);
+    } else {
+      // Procedural pilgrim silhouette (pixel art style)
+      const gfx = this.add.graphics();
+      const bs = 1.4;
+      // Outer glow (faith/holy aura)
+      gfx.fillStyle(0xd4a853, 0.10);
+      gfx.fillEllipse(0, -16, 48 * bs, 40 * bs);
+      // Body shadow
+      gfx.fillStyle(0x000000, 0.5);
+      gfx.fillEllipse(0, -4 * bs, 22 * bs, 28 * bs);
+      // Cloak / body
+      gfx.fillStyle(0x3a4a6a, 0.9);
+      gfx.fillEllipse(0, -4 * bs, 18 * bs, 24 * bs);
+      // Head
+      gfx.fillStyle(0x000000, 0.6);
+      gfx.fillCircle(0, -16 * bs, 10 * bs);
+      gfx.fillStyle(0xc8a878, 0.85);
+      gfx.fillCircle(0, -16 * bs, 8 * bs);
+      // Eyes (determined look)
+      gfx.fillStyle(0x3366cc, 1);
+      gfx.fillRect(-3 * bs, -17 * bs, 2 * bs, 2 * bs);
+      gfx.fillRect(1 * bs, -17 * bs, 2 * bs, 2 * bs);
+      // Cross badge on chest (Christian's identifying mark)
+      gfx.fillStyle(0xffd080, 0.9);
+      gfx.fillRect(-1, -6 * bs, 2, 6 * bs);
+      gfx.fillRect(-3, -4 * bs, 6, 2);
+      // Staff
+      gfx.lineStyle(2, 0x8b6a40, 1);
+      gfx.lineBetween(10 * bs, -14 * bs, 12 * bs, 10 * bs);
+      this.playerContainer.add(gfx);
+    }
 
     const ko = this.gameManager.language === 'ko';
     const label = this.add.text(0, -2, ko ? '크리스천 / Christian' : 'Christian',
@@ -258,33 +414,88 @@ export class BattleScene extends Phaser.Scene {
     this.actionMenu = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 30).setDepth(100);
 
     const i18n = this.gameManager.i18n;
+    // SANABI-quality action buttons with icon + color hierarchy
     const actions = [
-      { label: `🙏 ${i18n.t('battle.pray')}`, action: () => this.onPray(), color: 0x2a4a2a },
-      { label: `🛡 ${i18n.t('battle.defend')}`, action: () => this.onDefend(), color: 0x2a3a5a },
-      { label: `✦ ${i18n.t('battle.skill')}`, action: () => this.showSkillPanel(), color: 0x3a2a5a },
-      { label: `📦 ${i18n.t('battle.item')}`, action: () => this.onUseItem(), color: 0x4a3a2a },
+      { label: i18n.t('battle.pray'),   icon: '✝', action: () => this.onPray(),        bgColor: 0x2a4a18, borderColor: 0xd4a853, textColor: '#ffe88a' },
+      { label: i18n.t('battle.defend'), icon: '🛡', action: () => this.onDefend(),      bgColor: 0x182a4a, borderColor: 0x7799cc, textColor: '#aaccff' },
+      { label: i18n.t('battle.skill'),  icon: '✦', action: () => this.showSkillPanel(), bgColor: 0x2a1a4a, borderColor: 0xaa66dd, textColor: '#cc99ff' },
+      { label: i18n.t('battle.item'),   icon: '⚗', action: () => this.onUseItem(),      bgColor: 0x3a2210, borderColor: 0x997755, textColor: '#ccaa88' },
     ];
 
-    const btnW = 80;
-    const gap = 6;
+    const btnW = 88;
+    const gap = 5;
     const totalW = actions.length * btnW + (actions.length - 1) * gap;
     const startX = -totalW / 2 + btnW / 2;
 
     actions.forEach((a, i) => {
-      const btn = DesignSystem.createButton(
-        this, startX + i * (btnW + gap), 0, btnW, 28, a.label, a.action,
-        { fontSize: DesignSystem.FONT_SIZE.XS, bgColor: a.color, hoverColor: a.color + 0x111111 },
-      );
-      this.actionMenu.add(btn);
+      const bx = startX + i * (btnW + gap);
+      const container = this.add.container(bx, 0);
+
+      // Button background with rounded rect
+      const bg = this.add.graphics();
+      bg.fillStyle(a.bgColor, 0.95);
+      bg.fillRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+      bg.lineStyle(1, a.borderColor, 0.55);
+      bg.strokeRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+      // Top highlight strip
+      bg.fillStyle(0xffffff, 0.06);
+      bg.fillRoundedRect(-btnW / 2 + 1, -16, btnW - 2, 8, 3);
+
+      // Icon (left side)
+      const iconTxt = this.add.text(-btnW / 2 + 8, 0, a.icon, {
+        fontSize: '11px', color: a.textColor, fontFamily: 'serif',
+      }).setOrigin(0, 0.5);
+
+      // Label text (centered-right)
+      const labelTxt = this.add.text(4, 0, a.label, {
+        fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
+        color: a.textColor,
+        fontFamily: DesignSystem.getFontFamily(),
+      }).setOrigin(0, 0.5);
+
+      // Hit area
+      const hit = this.add.rectangle(0, 0, btnW, 34, 0, 0)
+        .setInteractive({ useHandCursor: true });
+
+      hit.on('pointerover', () => {
+        bg.clear();
+        bg.fillStyle(a.bgColor + 0x181818, 0.98);
+        bg.fillRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+        bg.lineStyle(1.5, a.borderColor, 0.9);
+        bg.strokeRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+        bg.fillStyle(a.borderColor, 0.12);
+        bg.fillRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+        labelTxt.setColor('#ffffff');
+      });
+      hit.on('pointerout', () => {
+        bg.clear();
+        bg.fillStyle(a.bgColor, 0.95);
+        bg.fillRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+        bg.lineStyle(1, a.borderColor, 0.55);
+        bg.strokeRoundedRect(-btnW / 2, -17, btnW, 34, 4);
+        bg.fillStyle(0xffffff, 0.06);
+        bg.fillRoundedRect(-btnW / 2 + 1, -16, btnW - 2, 8, 3);
+        labelTxt.setColor(a.textColor);
+      });
+      hit.on('pointerdown', () => {
+        this.tweens.add({ targets: container, scaleX: 0.94, scaleY: 0.94, duration: 60, yoyo: true });
+        this.time.delayedCall(70, a.action);
+      });
+
+      container.add([bg, iconTxt, labelTxt, hit]);
+      this.actionMenu.add(container);
     });
   }
 
   private createLogPanel(state: CombatState): void {
-    this.logContainer = this.add.container(10, GAME_HEIGHT * 0.45 + 8).setDepth(50);
+    // Position log just below ground divider (y≈130), above player sprite (y≈167)
+    this.logContainer = this.add.container(8, GAME_HEIGHT * 0.45 + 6).setDepth(50);
 
     const bg = this.add.graphics();
-    bg.fillStyle(0x0a0814, 0.6);
-    bg.fillRoundedRect(0, 0, GAME_WIDTH - 20, 50, 4);
+    bg.fillStyle(0x0a0814, 0.70);
+    bg.fillRoundedRect(0, 0, GAME_WIDTH - 16, 28, 4);
+    bg.lineStyle(0.5, 0x333355, 0.35);
+    bg.strokeRoundedRect(0, 0, GAME_WIDTH - 16, 28, 4);
     this.logContainer.add(bg);
 
     this.updateLog(state);
@@ -296,13 +507,13 @@ export class BattleScene extends Phaser.Scene {
     });
 
     const ko = this.gameManager.language === 'ko';
-    const lastEntries = state.log.slice(-3);
+    const lastEntries = state.log.slice(-2);
 
     lastEntries.forEach((entry, i) => {
       const color = entry.type === 'player' ? '#88ccff' :
                     entry.type === 'enemy' ? '#ff8888' :
                     entry.type === 'heal' ? '#88ff88' : '#d4a853';
-      const text = this.add.text(8, 6 + i * 14, ko ? entry.textKo : entry.textEn,
+      const text = this.add.text(8, 4 + i * 12, ko ? entry.textKo : entry.textEn,
         DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, color),
       );
       this.logContainer.add(text);
@@ -480,6 +691,7 @@ export class BattleScene extends Phaser.Scene {
     this.playerHpText.setText(`HP: ${state.playerHp}/${state.playerMaxHp}`);
     this.enemyHpText.setText(`${state.enemyHp}/${state.enemyMaxHp}`);
     this.updateLog(state);
+    this.updateBossTopBar(state);
 
     // Player hurt reaction
     const lastEntry = state.log[state.log.length - 1];
@@ -549,14 +761,14 @@ export class BattleScene extends Phaser.Scene {
     const bubble = this.add.container(GAME_WIDTH / 2, 20).setDepth(400).setAlpha(0);
     const bg = this.add.graphics();
     bg.fillStyle(0x1a0808, 0.92);
-    bg.fillRoundedRect(-100, 0, 200, 28, 5);
+    bg.fillRoundedRect(-160, 0, 320, 36, 5);
     bg.lineStyle(1, 0xff4444, 0.6);
-    bg.strokeRoundedRect(-100, 0, 200, 28, 5);
-    const speechText = this.add.text(0, 14, line, {
-      fontSize: '4px',
+    bg.strokeRoundedRect(-160, 0, 320, 36, 5);
+    const speechText = this.add.text(0, 18, line, {
+      fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
       color: '#ff8888',
-      fontFamily: 'Silkscreen',
-      wordWrap: { width: 190 },
+      fontFamily: DesignSystem.getFontFamily(),
+      wordWrap: { width: 300 },
       align: 'center',
     }).setOrigin(0.5);
     bubble.add([bg, speechText]);
@@ -636,6 +848,35 @@ export class BattleScene extends Phaser.Scene {
         duration: 500, ease: 'Back.easeOut',
       });
 
+      // Phase 6B: floating stat gain text
+      const ko = this.gameManager.language === 'ko';
+      const statGains = [
+        { label: ko ? '+5 믿음' : '+5 Faith', color: 0xd4a853, delay: 600 },
+        { label: ko ? '+3 용기' : '+3 Courage', color: 0x88aaff, delay: 900 },
+      ];
+      statGains.forEach(sg => {
+        this.time.delayedCall(sg.delay, () => {
+          const floatTxt = this.add.text(
+            GAME_WIDTH / 2 + (Math.random() - 0.5) * 60,
+            GAME_HEIGHT / 2 + 10,
+            sg.label,
+            { fontSize: `${DesignSystem.FONT_SIZE.SM}px`, color: '#' + sg.color.toString(16).padStart(6, '0'),
+              fontFamily: DesignSystem.getFontFamily(), fontStyle: 'bold' },
+          ).setOrigin(0.5).setDepth(501).setAlpha(0);
+          this.tweens.add({
+            targets: floatTxt, alpha: 1, y: floatTxt.y - 24,
+            duration: 800, ease: 'Sine.easeOut',
+            onComplete: () => this.tweens.add({
+              targets: floatTxt, alpha: 0, duration: 400,
+              onComplete: () => floatTxt.destroy(),
+            }),
+          });
+        });
+      });
+
+      // Phase 6B: fanfare chord via Web Audio
+      this.playVictoryFanfare();
+
       // Gold sparkle ring
       const sparkRing = this.add.graphics().setDepth(499);
       this.tweens.add({
@@ -696,6 +937,28 @@ export class BattleScene extends Phaser.Scene {
       yoyo: true, repeat: 1,
     });
   };
+
+  private playVictoryFanfare(): void {
+    try {
+      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5 E5 G5 C6
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+        gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
+        gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + i * 0.12 + 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.6);
+        osc.start(ctx.currentTime + i * 0.12);
+        osc.stop(ctx.currentTime + i * 0.12 + 0.7);
+      });
+    } catch (_e) {
+      // Web Audio not available — silent fallback
+    }
+  }
 
   private setupBattleEvents(): void {
     this.eventBus.on(GameEvent.PLAYER_DAMAGED, this.onPlayerDamaged);

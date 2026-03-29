@@ -1,5 +1,5 @@
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
-import { FONT_FAMILY } from './DesignSystem';
+import { DesignSystem, FONT_FAMILY } from './DesignSystem';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
 
@@ -63,8 +63,8 @@ export class TutorialOverlay {
     const stepLabel = `${index + 1} / ${STEPS.length}`;
     const stepTxt = this.scene.add.text(cx + panelW / 2 - 6, cy - panelH / 2 + 6, stepLabel, {
       fontFamily: "'Silkscreen', monospace",
-      fontSize: '6px',
-      color: '#666655',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+      color: '#888877',
     }).setOrigin(1, 0);
 
     // Key icon (big)
@@ -89,7 +89,7 @@ export class TutorialOverlay {
       label,
       {
         fontFamily: ko ? FONT_FAMILY : "'Silkscreen', monospace",
-        fontSize: ko ? '11px' : '6px',
+        fontSize: ko ? '11px' : '10px',
         color: '#e8e0d0',
         wordWrap: { width: panelW - 66 },
         lineSpacing: 3,
@@ -100,8 +100,8 @@ export class TutorialOverlay {
     const hintText = ko ? '터치하여 계속...' : 'Tap to continue...';
     const hint = this.scene.add.text(cx, cy + panelH / 2 - 10, hintText, {
       fontFamily: ko ? FONT_FAMILY : "'Silkscreen', monospace",
-      fontSize: ko ? '9px' : '6px',
-      color: '#6b5b4f',
+      fontSize: ko ? '9px' : '8px',
+      color: '#9a8a7a',
     }).setOrigin(0.5);
 
     this.container.add([dim, panel, stepTxt, iconBg, iconTxt, instrTxt, hint]);

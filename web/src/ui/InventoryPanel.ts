@@ -165,7 +165,7 @@ export class InventoryPanel {
 
     if (slot.quantity > 1) {
       const qty = this.scene.add.text(size - 2, size - 2, `${slot.quantity}`, {
-        fontSize: '7px', color: '#ffffff',
+        fontSize: '9px', color: '#ffffff',
         fontFamily: DesignSystem.getFontFamily(),
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
       }).setOrigin(1, 1);

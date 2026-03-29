@@ -12,6 +12,8 @@ export class GameManager {
   private _currentChapter = 1;
   private _playerName = 'Christian';
   private _language: string = 'ko';
+  private _colorblindMode = false;
+  private _reduceMotion = false;
   readonly i18n: I18n = new I18n();
 
   constructor() {
@@ -67,13 +69,19 @@ export class GameManager {
     return this.statsManager;
   }
 
+  get colorblindMode(): boolean { return this._colorblindMode; }
+  set colorblindMode(v: boolean) { this._colorblindMode = v; }
+
+  get reduceMotion(): boolean { return this._reduceMotion; }
+  set reduceMotion(v: boolean) { this._reduceMotion = v; }
+
   changeState(state: GameState): void {
     this.fsm.setState(state);
   }
 
-  setChapter(chapter: number): void {
+  setChapter(chapter: number, title?: string): void {
     this._currentChapter = chapter;
-    this.eventBus.emit(GameEvent.CHAPTER_CHANGED, chapter);
+    this.eventBus.emit(GameEvent.CHAPTER_CHANGED, { chapter, title });
   }
 
   isState(state: GameState): boolean {

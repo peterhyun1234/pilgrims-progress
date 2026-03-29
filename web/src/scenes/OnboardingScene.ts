@@ -241,7 +241,7 @@ export class OnboardingScene extends Phaser.Scene {
       const styleConfig: Record<string, { size: number; color: string; alpha: number }> = {
         dramatic: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.LG, color: '#e8e0d0', alpha: 1 },
         normal: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.BASE, color: '#b0a898', alpha: 0.9 },
-        dim: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.BASE, color: '#6b5b4f', alpha: 0.6 },
+        dim: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.BASE, color: '#9a8a7a', alpha: 0.75 },
         scripture: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.LG, color: '#d4a853', alpha: 1 },
       };
       const cfg = styleConfig[line.style] ?? styleConfig.normal;

@@ -353,9 +353,9 @@ export class GameScene extends Phaser.Scene {
     board.fillStyle(0xd4a853, 0.8);
     board.fillRoundedRect(-20, -14, 40, 12, 2);
     const txt = this.add.text(0, -9, label, {
-      fontSize: '5px',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
       color: '#1a1428',
-      fontFamily: 'monospace',
+      fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5);
     c.add([pole, board, txt]);
     this.mapObjectSprites[obj.id] = c;
@@ -594,9 +594,13 @@ export class GameScene extends Phaser.Scene {
           this.inkService.jumpToKnot(idleKnot); // no-op if knot doesn't exist
         }
 
-        this.npcStateManager.beginTalk(npcId, this.gameManager.currentChapter);
-        this.dialogueManager.start(npcId);
-        return;
+        // Only start ink dialogue if the story actually has content
+        if (this.inkService.canContinue() || this.inkService.hasChoices()) {
+          this.npcStateManager.beginTalk(npcId, this.gameManager.currentChapter);
+          this.dialogueManager.start(npcId);
+          return;
+        }
+        // No content — fall through to fallback dialogue
       } catch { /* fallback */ }
     }
 
@@ -608,8 +612,8 @@ export class GameScene extends Phaser.Scene {
     const npc = this.npcs.find(n => n.npcId === npcId);
     if (!npc) return;
     const bubble = this.add.text(npc.sprite.x, npc.sprite.y - 22, '...', {
-      fontSize: '7px',
-      color: '#888877',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+      color: '#9a9a88',
       fontFamily: 'monospace',
       stroke: '#000000',
       strokeThickness: 2,
@@ -623,12 +627,22 @@ export class GameScene extends Phaser.Scene {
   }
 
   private showFallbackDialogue(npcId: string): void {
+    // Prevent re-entry while a dialogue is already active
+    if (this.gameManager.isState(GameState.DIALOGUE)) return;
+
     const npc = this.npcs.find(n => n.npcId === npcId);
     if (!npc) return;
 
     const ko = this.gameManager.language === 'ko';
     const name = ko ? npc.nameKo : npc.nameEn;
+
+    // talkCount > 0 means endTalk was called at least once (full prior conversation completed).
+    // phase === 'completed'/'idle' also covers NPCs that completed via Ink dialogue.
+    // Note: startDialogue always calls beginTalk before showFallbackDialogue, so phase
+    // will already be 'active' here — we do NOT call beginTalk again.
     const phase = this.npcStateManager.getPhase(npcId);
+    const talkCount = this.npcStateManager.getTalkCount(npcId);
+    const isReturning = (phase === 'completed' || phase === 'idle' || talkCount > 0);
 
     const langConv = FALLBACK_DIALOGUES[npcId];
     if (!langConv) {
@@ -637,16 +651,15 @@ export class GameScene extends Phaser.Scene {
     }
 
     const conv = ko ? langConv.ko : langConv.en;
-    const talkCount = this.npcStateManager.getTalkCount(npcId);
-
-    // Completed/idle phase: show repeated lines only (no stat grants)
-    if ((phase === 'completed' || phase === 'idle') && conv.repeated && conv.repeated.length > 0) {
+    if (isReturning && conv.repeated && conv.repeated.length > 0) {
+      // Strip all stat grants from repeated dialogue — one-time rewards only
       const idleConv: Conversation = { lines: conv.repeated.map(l => ({ ...l, stat: undefined, amount: undefined })) };
       this.runConversation(npcId, name, idleConv);
-    } else if (talkCount > 0 && conv.repeated && conv.repeated.length > 0) {
-      this.runConversation(npcId, name, { lines: conv.repeated });
-    } else {
+    } else if (!isReturning) {
       this.runConversation(npcId, name, conv);
+    } else {
+      // Completed NPC with no repeated lines — show a brief acknowledgment
+      this.runConversation(npcId, name, { lines: [{ text: '...', emotion: 'neutral' }] });
     }
   }
 
@@ -663,6 +676,10 @@ export class GameScene extends Phaser.Scene {
 
     let lineQueue: ConvLine[] = [...conv.lines];
     let choicePhase = false;
+    /** Guard: prevents the same dialogue-choice event from being processed twice */
+    let choiceHandled = false;
+    /** True once a choice has been selected — prevents re-showing choices after response lines */
+    let choicesConsumed = false;
 
     const applyLine = (line: ConvLine) => {
       if (line.stat && line.amount !== undefined) {
@@ -686,7 +703,8 @@ export class GameScene extends Phaser.Scene {
       if (lineQueue.length > 0) {
         choicePhase = false;
         applyLine(lineQueue.shift()!);
-      } else if (!choicePhase && conv.choices && conv.choices.length > 0) {
+      } else if (!choicePhase && !choicesConsumed && conv.choices && conv.choices.length > 0) {
+        // Show choices exactly once — after initial lines, before they're consumed
         choicePhase = true;
         this.eventBus.emit(GameEvent.DIALOGUE_CHOICE, {
           choices: conv.choices.map((c, i) => ({
@@ -706,6 +724,9 @@ export class GameScene extends Phaser.Scene {
       if (index === -1) {
         if (!choicePhase) showNextOrEnd();
       } else {
+        if (choiceHandled) return;   // ← double-fire guard
+        choiceHandled = true;
+        choicesConsumed = true;      // ← mark choices as used (no re-show after response lines)
         const choice = conv.choices?.[index];
         if (!choice) { end(); return; }
         if (choice.requires && sm.get(choice.requires.stat) < choice.requires.min) return;
@@ -816,6 +837,20 @@ export class GameScene extends Phaser.Scene {
       duration: 1500,
     });
     this.spawnStatFloat(statLabel, payload.amount, DesignSystem.STAT_COLORS[payload.stat]);
+
+    // Phase 6A: track maxFaith highscore in localStorage
+    if (payload.stat === 'faith' && isPositive) {
+      const current = payload.newValue;
+      const stored = parseInt(localStorage.getItem('pp_highscore_faith') ?? '0', 10);
+      if (current > stored) {
+        localStorage.setItem('pp_highscore_faith', String(current));
+      }
+    }
+
+    // Phase 5B: faithGlow effect when faith increases
+    if (payload.stat === 'faith' && isPositive && this.player) {
+      this.particleManager.faithGlow(this.player.sprite.x, this.player.sprite.y);
+    }
   };
 
   private spawnStatFloat(label: string, amount: number, color: number): void {
@@ -825,7 +860,7 @@ export class GameScene extends Phaser.Scene {
     const py = this.player.sprite.y - 14;
     const txt = this.add.text(px, py, `${sign}${amount} ${label}`, {
       fontFamily: DesignSystem.getFontFamily(),
-      fontSize: '6px',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
       color: `#${color.toString(16).padStart(6, '0')}`,
       stroke: '#000000',
       strokeThickness: 2,
@@ -863,8 +898,14 @@ export class GameScene extends Phaser.Scene {
       ease: 'Sine.easeOut',
     });
 
-    // Resume NPC patrol
+    // Phase 5C: briefly flash NPC with golden tint then restore
     if (this.activeDialogueNpc) {
+      const npcSprite = this.activeDialogueNpc.sprite;
+      if (npcSprite) {
+        npcSprite.setTint(0xffd080);
+        this.time.delayedCall(220, () => npcSprite.clearTint());
+      }
+      // Resume NPC patrol
       this.activeDialogueNpc.resumePatrol();
       this.activeDialogueNpc = null;
     }
@@ -975,50 +1016,65 @@ export class GameScene extends Phaser.Scene {
       .setDepth(300).setScrollFactor(0).setAlpha(0);
 
     const panelW = GAME_WIDTH - 40;
-    const panelH = verse ? (ko ? 76 : 60) : 32;
+    // Fixed heights with clear vertical zones: chap label + divider + title + verse + ref
+    const panelH = verse ? (ko ? 86 : 72) : 36;
     const bg = this.add.graphics();
-    bg.fillStyle(0x000000, 0.75);
+    bg.fillStyle(0x000000, 0.82);
     bg.fillRect(-panelW / 2, -panelH / 2, panelW, panelH);
-    bg.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
+    bg.lineStyle(0.8, COLORS.UI.GOLD, 0.35);
     bg.strokeRect(-panelW / 2, -panelH / 2, panelW, panelH);
 
+    // Decorative top / bottom rule lines (inset slightly)
     const line = this.add.graphics();
-    line.lineStyle(0.5, COLORS.UI.GOLD, 0.4);
-    line.lineBetween(-panelW / 2 + 10, -panelH / 2 + 2, panelW / 2 - 10, -panelH / 2 + 2);
-    line.lineBetween(-panelW / 2 + 10, panelH / 2 - 2, panelW / 2 - 10, panelH / 2 - 2);
+    line.lineStyle(0.5, COLORS.UI.GOLD, 0.25);
+    line.lineBetween(-panelW / 2 + 20, -panelH / 2 + 3, panelW / 2 - 20, -panelH / 2 + 3);
+    line.lineBetween(-panelW / 2 + 20, panelH / 2 - 3, panelW / 2 - 20, panelH / 2 - 3);
 
-    const nameY = verse ? -panelH / 2 + (ko ? 18 : 14) : 0;
-    const text = this.add.text(0, nameY, name,
-      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.LG),
-    ).setOrigin(0.5);
-
-    container.add([bg, line, text]);
+    container.add([bg, line]);
 
     if (verse) {
+      // Layout: [top=0] chap label (XS) → +13 divider → +6 title (BASE) → +20 verse (XS) → +14 ref (XS)
       const chapLabel = chapterPrefix;
-      const chapFontSize = ko ? DesignSystem.FONT_SIZE.XS : 6;
-      const chapText = this.add.text(0, -panelH / 2 + (ko ? 7 : 5), chapLabel, {
+      const chapText = this.add.text(0, -panelH / 2 + 8, chapLabel, {
         fontFamily: DesignSystem.getFontFamily(),
-        fontSize: `${chapFontSize}px`,
-        color: '#888877',
+        fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+        color: '#a09070',
       }).setOrigin(0.5);
+
+      // Thin divider under chap label
+      const midLine = this.add.graphics();
+      midLine.lineStyle(0.5, COLORS.UI.GOLD, 0.2);
+      midLine.lineBetween(-60, -panelH / 2 + 16, 60, -panelH / 2 + 16);
+
+      // Title — BASE size (not LG to prevent overlap)
+      const titleFontSize = ko ? DesignSystem.FONT_SIZE.BASE : DesignSystem.FONT_SIZE.SM;
+      const titleY = -panelH / 2 + (ko ? 28 : 26);
+      const text = this.add.text(0, titleY, name,
+        DesignSystem.goldTextStyle(titleFontSize),
+      ).setOrigin(0.5);
 
       const verseText = ko ? verse.ko : verse.en;
       const refText = ko ? verse.refKo : verse.refEn;
-      const verseFontSize = ko ? DesignSystem.FONT_SIZE.XS : 6;
-      const vt = this.add.text(0, nameY + (ko ? 18 : 16), `"${verseText}"`, {
+      const verseFontSize = DesignSystem.FONT_SIZE.XS;
+      const vt = this.add.text(0, titleY + (ko ? 18 : 16), `"${verseText}"`, {
         fontFamily: DesignSystem.getFontFamily(),
         fontSize: `${verseFontSize}px`,
         color: '#c8b898',
-        wordWrap: { width: panelW - 40 },
+        wordWrap: { width: panelW - 60 },
         align: 'center',
       }).setOrigin(0.5);
-      const rt = this.add.text(0, panelH / 2 - (ko ? 9 : 7), `— ${refText}`, {
+      const rt = this.add.text(0, panelH / 2 - 9, `— ${refText}`, {
         fontFamily: DesignSystem.getFontFamily(),
         fontSize: `${verseFontSize}px`,
         color: '#888870',
       }).setOrigin(0.5);
-      container.add([chapText, vt, rt]);
+      container.add([chapText, midLine, text, vt, rt]);
+    } else {
+      // No verse — just the location name centred
+      const text = this.add.text(0, 0, name,
+        DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.BASE),
+      ).setOrigin(0.5);
+      container.add(text);
     }
 
     this.locationTitle = container;
@@ -1202,7 +1258,7 @@ export class GameScene extends Phaser.Scene {
     const msg = ko ? '아직 할 일이 남은 것 같습니다...' : 'Something feels unfinished...';
     const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 28, msg, {
       fontFamily: DesignSystem.getFontFamily(),
-      fontSize: '7px',
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
       color: '#a89b8c',
       stroke: '#000000',
       strokeThickness: 2,
@@ -1219,10 +1275,12 @@ export class GameScene extends Phaser.Scene {
 
   private startBattle(enemyId: string): void {
     this.scene.pause();
+    this.scene.setVisible(false);
     this.scene.launch(SCENE_KEYS.BATTLE, { enemyId });
 
     const battleEndHandler = () => {
       this.eventBus.off(GameEvent.BATTLE_END, battleEndHandler);
+      this.scene.setVisible(true);
       this.scene.resume();
     };
     this.eventBus.on(GameEvent.BATTLE_END, battleEndHandler);
@@ -1343,12 +1401,27 @@ export class GameScene extends Phaser.Scene {
     const camR = cam.scrollX + cam.width + margin;
     const camT = cam.scrollY - margin;
     const camB = cam.scrollY + cam.height + margin;
+    const playerX = this.player.sprite.x;
+    const playerY = this.player.sprite.y;
     this.npcs.forEach(npc => {
       const nx = npc.sprite.x;
       const ny = npc.sprite.y;
       if (nx >= camL && nx <= camR && ny >= camT && ny <= camB) {
         npc.sprite.setVisible(true);
         npc.update();
+        // Phase 5C: shimmer effect when player walks within 50px of NPC
+        const dist = Math.sqrt((nx - playerX) ** 2 + (ny - playerY) ** 2);
+        if (dist < 50) {
+          const t = this.time.now * 0.003;
+          const shimmerAlpha = 0.3 + Math.sin(t + nx * 0.1) * 0.2;
+          npc.sprite.setTint(Phaser.Display.Color.GetColor(
+            Math.round(0xff + (0xd4 - 0xff) * shimmerAlpha),
+            Math.round(0xff + (0xa8 - 0xff) * shimmerAlpha),
+            0xff,
+          ));
+        } else {
+          npc.sprite.clearTint();
+        }
       } else {
         npc.sprite.setVisible(false);
       }

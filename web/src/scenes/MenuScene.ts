@@ -31,6 +31,7 @@ export class MenuScene extends Phaser.Scene {
     this.buildBackground();
     this.createParticles();
     this.buildUI(cx, ko);
+    this.addMenuPolish();
     DesignSystem.fadeIn(this, 800);
   }
 
@@ -148,21 +149,28 @@ export class MenuScene extends Phaser.Scene {
 
   private drawHorizonGlow(g: Phaser.GameObjects.Graphics, cx: number, hy: number): void {
     g.clear();
-    // Radial glow layers
+    // Wide outer halo
     const colors = [
-      { r: 100, a: 0.04 },
-      { r: 65,  a: 0.07 },
-      { r: 40,  a: 0.10 },
-      { r: 22,  a: 0.15 },
-      { r: 12,  a: 0.20 },
+      { r: 120, a: 0.06 },
+      { r: 85,  a: 0.10 },
+      { r: 60,  a: 0.16 },
+      { r: 38,  a: 0.26 },
+      { r: 22,  a: 0.38 },
+      { r: 12,  a: 0.50 },
     ];
     for (const { r, a } of colors) {
       g.fillStyle(0xffd4a0, a);
-      g.fillEllipse(cx, hy, r * 2.2, r * 0.7);
+      g.fillEllipse(cx, hy, r * 2.4, r * 0.8);
     }
+    // Celestial City spire hints (vertical streaks)
+    g.fillStyle(0xffeedd, 0.22);
+    g.fillRect(cx - 1, hy - 18, 2, 20);
+    g.fillStyle(0xffd4a0, 0.14);
+    g.fillRect(cx - 6, hy - 12, 1, 14);
+    g.fillRect(cx + 5, hy - 10, 1, 12);
     // Bright core
-    g.fillStyle(0xffeedd, 0.25);
-    g.fillEllipse(cx, hy, 18, 5);
+    g.fillStyle(0xffffff, 0.30);
+    g.fillEllipse(cx, hy, 20, 6);
   }
 
   private drawPilgrimPath(g: Phaser.GameObjects.Graphics, W: number, H: number, HOR: number, destX: number): void {
@@ -182,9 +190,12 @@ export class MenuScene extends Phaser.Scene {
       const p = pathPoints[i];
       const pn = pathPoints[i + 1];
       const t = i / pathPoints.length;
-      const alpha = 0.08 + t * 0.12;
-      g.fillStyle(0xd4a853, alpha);
-      g.fillEllipse((p.x + pn.x) / 2, (p.y + pn.y) / 2, p.w, 3);
+      // Warm stone base
+      g.fillStyle(0x8a6a3a, 0.25 + t * 0.15);
+      g.fillEllipse((p.x + pn.x) / 2, (p.y + pn.y) / 2, p.w, 4);
+      // Gold shimmer overlay
+      g.fillStyle(0xd4a853, 0.12 + t * 0.18);
+      g.fillEllipse((p.x + pn.x) / 2, (p.y + pn.y) / 2, p.w * 0.7, 2.5);
     }
   }
 
@@ -233,19 +244,19 @@ export class MenuScene extends Phaser.Scene {
       yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
 
-    // Main title
+    // Main title with stronger golden glow + drop shadow
     const title = this.add.text(cx, 42, gm.i18n.t('game.title'), {
-      fontSize: ko ? '16px' : '14px',
-      color: '#e8dfc8',
+      fontSize: `${ko ? DesignSystem.FONT_SIZE.LG : DesignSystem.FONT_SIZE.BASE}px`,
+      color: '#f0e8d0',
       fontFamily: DesignSystem.getFontFamily(),
       fontStyle: 'bold',
-      shadow: { offsetX: 0, offsetY: 0, color: '#d4a853', blur: 4, stroke: false, fill: true },
+      shadow: { offsetX: 1, offsetY: 2, color: '#d4a853', blur: 6, stroke: true, fill: true },
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: title, alpha: 1, y: 44, duration: 900, delay: 200, ease: 'Back.easeOut' });
 
     // Subtitle
     const subtitle = this.add.text(cx, 57, gm.i18n.t('game.subtitle'), {
-      fontSize: '6px', color: '#6a5a44', fontFamily: "'Silkscreen', monospace",
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: subtitle, alpha: 0.7, duration: 700, delay: 500 });
 
@@ -261,9 +272,9 @@ export class MenuScene extends Phaser.Scene {
 
     // — Bible verse —
     const verse = this.add.text(cx, 78, '"좁은 문으로 들어가라"  마 7:13', {
-      fontSize: '6px', color: '#4a3f2f', fontFamily: "'Silkscreen', monospace",
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#c8b070', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5).setDepth(10).setAlpha(0);
-    this.tweens.add({ targets: verse, alpha: 0.65, duration: 800, delay: 1200 });
+    this.tweens.add({ targets: verse, alpha: 0.9, duration: 800, delay: 1200 });
 
     // — Button panel (lower section, below horizon) —
     const btnAreaY = H * 0.58;
@@ -271,22 +282,22 @@ export class MenuScene extends Phaser.Scene {
 
     // — Bottom info bar —
     this.add.text(12, H - 10, '⛶', {
-      fontSize: '12px', color: '#3a3028', fontFamily: 'serif',
+      fontSize: '12px', color: '#7a6858', fontFamily: 'serif',
     }).setOrigin(0, 1).setDepth(10)
       .setInteractive({ useHandCursor: true })
       .on('pointerdown', () => MenuScene.toggleFullscreen())
       .on('pointerover', function(this: Phaser.GameObjects.Text) { this.setColor('#d4a853'); })
-      .on('pointerout', function(this: Phaser.GameObjects.Text) { this.setColor('#3a3028'); });
+      .on('pointerout', function(this: Phaser.GameObjects.Text) { this.setColor('#7a6858'); });
 
     this.add.text(W - 8, H - 8, 'v1.0.0', {
-      fontSize: '6px', color: '#2a2218', fontFamily: "'Silkscreen', monospace",
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#5a5040', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(1, 1).setDepth(10);
   }
 
   private buildButtonPanel(cx: number, topY: number, ko: boolean): void {
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const btnW = 160;
-    const btnH = 26;
+    const btnH = 32;
     const gap = 8;
 
     // Semi-transparent panel behind buttons
@@ -306,7 +317,7 @@ export class MenuScene extends Phaser.Scene {
       const borderColor = opts?.accent ? 0x4a8a4a : 0xd4a853;
       bg.fillStyle(defColor, 0.92);
       bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
-      bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.2);
+      bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.4);
       bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
 
       const txt = this.add.text(0, 0, label, {
@@ -335,7 +346,7 @@ export class MenuScene extends Phaser.Scene {
         bg.clear();
         bg.fillStyle(defColor, 0.92);
         bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
-        bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.2);
+        bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.4);
         bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
         txt.setColor(opts?.accent ? '#8ad88a' : '#c8bfaa');
       });
@@ -363,22 +374,116 @@ export class MenuScene extends Phaser.Scene {
     this.checkSaveExists(topY + btnH + gap, ko);
   }
 
+  // ── Menu Polish (Phase 4C) ─────────────────────────────────────────────
+
+  private addMenuPolish(): void {
+    const W = GAME_WIDTH;
+    const mx = W * 0.78, my = GAME_HEIGHT * 0.16;
+
+    // Moon gentle pulse (scale 1.0 → 1.05 → 1.0 over 3s)
+    // We use a container to allow scaling around moon center
+    const moonContainer = this.add.container(mx, my).setDepth(-8);
+    const moonDisc = this.add.graphics();
+    moonDisc.fillStyle(0xeeddcc, 0.6);
+    moonDisc.fillCircle(0, 0, 11);
+    moonDisc.fillStyle(0xffeedd, 0.35);
+    moonDisc.fillCircle(0, 0, 8);
+    moonDisc.fillStyle(0xffffff, 0.2);
+    moonDisc.fillCircle(-1, -1, 5);
+    for (let i = 1; i <= 4; i++) {
+      moonDisc.fillStyle(0xddccbb, 0.04 / i);
+      moonDisc.fillCircle(0, 0, 11 + i * 6);
+    }
+    moonContainer.add(moonDisc);
+    this.tweens.add({
+      targets: moonContainer,
+      scaleX: 1.05, scaleY: 1.05,
+      duration: 3000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // Shooting stars — occasionally cross the sky
+    this.scheduleShootingStar();
+
+    // Add highscore display if available (Phase 6A)
+    const stored = localStorage.getItem('pp_highscore_faith');
+    if (stored) {
+      const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+      const ko = gm.language === 'ko';
+      const label = ko ? `최고 믿음: ${stored}` : `Best Faith: ${stored}`;
+      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.45 + 5, label, {
+        fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+        color: '#a09060',
+        fontFamily: DesignSystem.getFontFamily(),
+      }).setOrigin(0.5).setDepth(10).setAlpha(0.75);
+    }
+  }
+
+  private scheduleShootingStar(): void {
+    // Fire a shooting star every 4-8 seconds
+    const delay = 4000 + Math.random() * 4000;
+    this.time.delayedCall(delay, () => {
+      if (!this.scene.isActive()) return;
+      this.fireShootingStar();
+      this.scheduleShootingStar();
+    });
+  }
+
+  private fireShootingStar(): void {
+    const W = GAME_WIDTH;
+    const H = GAME_HEIGHT;
+    const HOR = H * 0.45;
+    // Random start position in upper sky
+    const startX = Math.random() * W * 0.6;
+    const startY = Math.random() * HOR * 0.5;
+    const angle = 0.5 + Math.random() * 0.4; // diagonal down-right
+    const length = 30 + Math.random() * 40;
+    const duration = 300 + Math.random() * 200;
+
+    const starGfx = this.add.graphics().setDepth(-7);
+    const starObj = { t: 0 };
+    this.tweens.add({
+      targets: starObj,
+      t: 1,
+      duration,
+      ease: 'Quad.easeIn',
+      onUpdate: () => {
+        starGfx.clear();
+        const progress = starObj.t;
+        const cx2 = startX + Math.cos(angle) * length * progress;
+        const cy2 = startY + Math.sin(angle) * length * progress;
+        const trailLen = length * 0.4;
+        // Trail gradient (fades toward head)
+        for (let s = 0; s < 5; s++) {
+          const sp = s / 5;
+          const tx = cx2 - Math.cos(angle) * trailLen * sp;
+          const ty = cy2 - Math.sin(angle) * trailLen * sp;
+          starGfx.fillStyle(0xffffff, (1 - sp) * 0.7 * (1 - progress));
+          starGfx.fillCircle(tx, ty, (1 - sp) * 1.5);
+        }
+      },
+      onComplete: () => starGfx.destroy(),
+    });
+  }
+
   // ── Particles ─────────────────────────────────────────────────────────
 
   private createParticles(): void {
     this.particleGfx = this.add.graphics().setDepth(5);
     // Firefly / ember mix
-    for (let i = 0; i < 55; i++) {
-      const isEmber = i < 20;
+    for (let i = 0; i < 60; i++) {
+      const isEmber = i < 22;
       this.particles.push({
         x: Math.random() * GAME_WIDTH,
         y: Math.random() * GAME_HEIGHT,
-        vx: (Math.random() - 0.5) * 0.06,
-        vy: isEmber ? (0.04 + Math.random() * 0.15) : -(0.04 + Math.random() * 0.18),
-        alpha: isEmber ? (0.04 + Math.random() * 0.1) : (0.05 + Math.random() * 0.18),
-        size: isEmber ? (0.3 + Math.random() * 0.8) : (0.4 + Math.random() * 1.2),
+        vx: (Math.random() - 0.5) * 0.08,
+        vy: isEmber ? (0.05 + Math.random() * 0.18) : -(0.05 + Math.random() * 0.22),
+        alpha: isEmber ? (0.18 + Math.random() * 0.30) : (0.15 + Math.random() * 0.40),
+        size: isEmber ? (0.4 + Math.random() * 1.0) : (0.5 + Math.random() * 1.4),
         phase: Math.random() * Math.PI * 2,
-        color: isEmber ? 0xff6622 : 0xd4a853,
+        color: isEmber ? 0xff7733 : 0xd4a853,
       });
     }
   }
@@ -436,15 +541,12 @@ export class MenuScene extends Phaser.Scene {
     if (exists) {
       const saveData = await saveManager.load();
       if (saveData) {
-        const chapLabel = ko ? `제 ${saveData.chapter}장` : `Ch.${saveData.chapter}`;
+        const chapLabel = ko ? `제${saveData.chapter}장` : `Ch.${saveData.chapter}`;
         const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
         this.add.text(GAME_WIDTH / 2, continueBtnY + 18, `${chapLabel}  ·  ${faithLabel}`, {
-          fontSize: '6px', color: '#3a3028', fontFamily: "'Silkscreen', monospace",
+          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
         }).setOrigin(0.5).setDepth(12);
-
-        const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-        gm.setChapter(1);
-        gm.stats.reset();
+        // NOTE: do NOT call setChapter/stats.reset here — GameScene loads proper save state
       }
     }
   }

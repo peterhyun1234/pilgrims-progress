@@ -28,18 +28,50 @@ export class ParticleManager {
     }
   }
 
+  /**
+   * faithGlow: golden expanding ring that fades when player gains faith stat.
+   * @param x/y - world position to center the ring
+   */
+  faithGlow(x: number, y: number): void {
+    const scene = (this.graphics as unknown as { scene: Phaser.Scene }).scene;
+    if (!scene) return;
+    const ringObj = { r: 0 };
+    const gfx = scene.add.graphics().setDepth(39);
+    scene.tweens.add({
+      targets: ringObj,
+      r: 40,
+      duration: 600,
+      ease: 'Quad.easeOut',
+      onUpdate: () => {
+        gfx.clear();
+        const alpha = (1 - ringObj.r / 40) * 0.5;
+        gfx.lineStyle(2, 0xd4a853, alpha);
+        gfx.strokeCircle(x, y, ringObj.r);
+        gfx.fillStyle(0xffd080, alpha * 0.15);
+        gfx.fillCircle(x, y, ringObj.r);
+      },
+      onComplete: () => gfx.destroy(),
+    });
+    // Emit some light particles too
+    this.emit('holy_light', x, y, 6);
+  }
+
   private createParticle(type: string, x: number, y: number): SimpleParticle {
     const angle = Math.random() * Math.PI * 2;
     const speed = 10 + Math.random() * 30;
 
     const configs: Record<string, Partial<SimpleParticle>> = {
-      dust: { color: 0x8b7355, size: 1, maxLife: 500 },
-      light: { color: 0xd4a853, size: 1.5, maxLife: 1000 },
-      holy_light: { color: 0xffeedd, size: 2, maxLife: 1500 },
-      darkness: { color: 0x220033, size: 1.5, maxLife: 800 },
-      rain: { color: 0x4488aa, size: 0.5, maxLife: 600 },
-      fire: { color: 0xff6600, size: 1, maxLife: 400 },
-      leaf: { color: 0x55aa44, size: 1, maxLife: 1200 },
+      dust:       { color: 0x8b7355, size: 1,   maxLife: 500 },
+      light:      { color: 0xd4a853, size: 1.5, maxLife: 1000 },
+      holy_light: { color: 0xffeedd, size: 2,   maxLife: 1500 },
+      darkness:   { color: 0x220033, size: 1.5, maxLife: 800 },
+      rain:       { color: 0x4488aa, size: 0.5, maxLife: 600 },
+      fire:       { color: 0xff6600, size: 1,   maxLife: 400 },
+      leaf:       { color: 0x55aa44, size: 1,   maxLife: 1200 },
+      ash:        { color: 0x887766, size: 1.2, maxLife: 900 },    // Ch1: ash falling
+      firefly:    { color: 0xaaffaa, size: 1.5, maxLife: 2000 },   // Ch3/Ch6: fireflies
+      ember:      { color: 0xff8822, size: 0.8, maxLife: 700 },    // Ch1/Ch8: embers
+      mist:       { color: 0x88aabb, size: 2.5, maxLife: 1800 },   // Ch2/Ch9: mist
     };
 
     const cfg = configs[type] ?? configs.dust!;

@@ -9,13 +9,13 @@ export class DesignSystem {
   } as const;
 
   static readonly FONT_SIZE = {
-    XS: 9,
-    SM: 11,
-    BASE: 13,
-    LG: 16,
-    XL: 20,
-    XXL: 26,
-    DISPLAY: 34,
+    XS: 11,
+    SM: 13,
+    BASE: 15,
+    LG: 18,
+    XL: 24,
+    XXL: 30,
+    DISPLAY: 38,
   } as const;
 
   static readonly STAT_ICONS: Record<string, string> = {
@@ -79,7 +79,7 @@ export class DesignSystem {
       color,
       shadow: {
         offsetX: 1, offsetY: 1, color: '#000000',
-        blur: 0, stroke: true, fill: true,
+        blur: 2, stroke: true, fill: true,
       },
       ...extra,
     };
@@ -90,7 +90,7 @@ export class DesignSystem {
   }
 
   static mutedTextStyle(fontSize: number): Phaser.Types.GameObjects.Text.TextStyle {
-    return DesignSystem.textStyle(fontSize, '#8c8070');
+    return DesignSystem.textStyle(fontSize, '#b0a898');
   }
 
   static dangerTextStyle(fontSize: number): Phaser.Types.GameObjects.Text.TextStyle {

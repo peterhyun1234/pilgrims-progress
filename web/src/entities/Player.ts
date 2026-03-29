@@ -6,6 +6,7 @@ import { StateMachine } from '../core/StateMachine';
 import { PlayerState, GameEvent } from '../core/GameEvents';
 import { EventBus } from '../core/EventBus';
 import { NPC } from './NPC';
+import { CharacterSpriteFactory } from './CharacterSpriteFactory';
 
 export interface PlayerInput {
   x: number;
@@ -26,8 +27,16 @@ export class Player extends Entity {
   private hurtTimer = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    // Use generated 32×32 sprite if available, fallback to legacy
-    const texKey = scene.textures.exists('christian_gen') ? 'christian_gen' : 'christian';
+    // Use generated 32×32 sprite if available; lazy-generate if missing
+    let texKey: string;
+    if (scene.textures.exists('christian_gen')) {
+      texKey = 'christian_gen';
+    } else if (scene.textures.exists('christian')) {
+      texKey = 'christian';
+    } else {
+      // Lazy-generate the christian sprite if PreloadScene was skipped
+      texKey = CharacterSpriteFactory.generate(scene, 'christian');
+    }
     super(scene, x, y, texKey, 0);
     this.baseY = y;
     this.setupEvents();

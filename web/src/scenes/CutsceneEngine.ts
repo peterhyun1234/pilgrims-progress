@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { EventBus } from '../core/EventBus';
 import { GameEvent, MoodType } from '../core/GameEvents';
-import { FONT_FAMILY } from '../ui/DesignSystem';
+import { DesignSystem, FONT_FAMILY } from '../ui/DesignSystem';
 import { GAME_WIDTH, GAME_HEIGHT } from '../config';
 
 // ─── Step types ─────────────────────────────────────────────────────────────
@@ -170,7 +170,7 @@ export class CutsceneEngine {
 
       const speakerLabel = step.speaker
         ? this.scene.add.text(20, 6, step.speaker, {
-            fontSize: '5px',
+            fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
             color: '#d4a853',
             fontFamily: FONT_FAMILY,
           })
@@ -178,7 +178,7 @@ export class CutsceneEngine {
 
       const textY = step.speaker ? 18 : 8;
       const textObj = this.scene.add.text(20, textY, '', {
-        fontSize: '5px',
+        fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
         color: '#e8e0d0',
         fontFamily: FONT_FAMILY,
         wordWrap: { width: GAME_WIDTH - 44 },
@@ -358,7 +358,7 @@ export class CutsceneEngine {
         .setDepth(190).setScrollFactor(0);
 
       const titleObj = this.scene.add.text(cx, cy - 8, step.titleText ?? '', {
-        fontSize: '9px',
+        fontSize: `${DesignSystem.FONT_SIZE.LG}px`,
         color: '#d4a853',
         fontFamily: FONT_FAMILY,
         align: 'center',
@@ -366,7 +366,7 @@ export class CutsceneEngine {
 
       const subObj = step.titleSubtext
         ? this.scene.add.text(cx, cy + 10, step.titleSubtext, {
-            fontSize: '5px',
+            fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
             color: '#b0a898',
             fontFamily: FONT_FAMILY,
             align: 'center',

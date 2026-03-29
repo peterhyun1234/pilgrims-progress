@@ -25,9 +25,9 @@ export class HUD {
   private statsManager: StatsManager;
   private eventBus: EventBus;
 
-  private static readonly BAR_WIDTH = 56;
-  private static readonly BAR_HEIGHT = 6;
-  private static readonly BAR_GAP = 14;
+  private static readonly BAR_WIDTH = 80;
+  private static readonly BAR_HEIGHT = 8;
+  private static readonly BAR_GAP = 16;
   private static readonly PADDING = 7;
 
   constructor(scene: Phaser.Scene) {
@@ -43,10 +43,18 @@ export class HUD {
 
   private createBackground(): void {
     const bg = this.scene.add.graphics();
-    bg.fillStyle(0x0a0814, 0.65);
-    bg.fillRoundedRect(2, 2, 134, 68, 4);
-    bg.lineStyle(0.5, 0xd4a853, 0.1);
-    bg.strokeRoundedRect(2, 2, 134, 68, 4);
+    // Wider panel: 170px to show full bar labels
+    bg.fillStyle(0x0a0814, 0.82);
+    bg.fillRoundedRect(2, 2, 170, 78, 4);
+    // Outer border
+    bg.lineStyle(1, 0xd4a853, 0.55);
+    bg.strokeRoundedRect(2, 2, 170, 78, 4);
+    // Inner gold border line
+    bg.lineStyle(0.5, 0xd4a853, 0.2);
+    bg.strokeRoundedRect(4, 4, 166, 74, 3);
+    // Top highlight strip
+    bg.fillStyle(0xffffff, 0.03);
+    bg.fillRoundedRect(3, 3, 168, 10, 3);
     this.container.add(bg);
   }
 
@@ -59,6 +67,14 @@ export class HUD {
       const x = HUD.PADDING;
       const y = HUD.PADDING + i * HUD.BAR_GAP;
       const barContainer = this.scene.add.container(x, y);
+
+      // Stat icon with distinct colored background
+      const iconBg = this.scene.add.graphics();
+      const iconBgColor = DesignSystem.STAT_COLORS[stat];
+      iconBg.fillStyle(iconBgColor, 0.22);
+      iconBg.fillRoundedRect(-1, -1, 11, 11, 2);
+      iconBg.lineStyle(0.5, iconBgColor, 0.4);
+      iconBg.strokeRoundedRect(-1, -1, 11, 11, 2);
 
       const icon = this.scene.add.text(0, 0, DesignSystem.STAT_ICONS[stat], {
         fontSize: '9px', color: DesignSystem.hex(DesignSystem.STAT_COLORS[stat]),
@@ -93,7 +109,7 @@ export class HUD {
           shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
         }).setOrigin(0, 0);
 
-      barContainer.add([bg, fill, icon, label, value]);
+      barContainer.add([iconBg, bg, fill, icon, label, value]);
       this.container.add(barContainer);
 
       this.bars.push({
@@ -109,8 +125,14 @@ export class HUD {
     const color = DesignSystem.STAT_COLORS[stat];
     g.fillStyle(color, 0.85);
     g.fillRoundedRect(x, 1, Math.max(w, 2), HUD.BAR_HEIGHT, 2);
-    g.fillStyle(0xffffff, 0.15);
+    // Top highlight stripe
+    g.fillStyle(0xffffff, 0.18);
     g.fillRect(x + 1, 1, Math.max(w - 2, 1), 2);
+    // Bright gradient end-cap (right edge glow)
+    if (w > 4) {
+      g.fillStyle(0xffffff, 0.35);
+      g.fillRoundedRect(x + w - 4, 1, 4, HUD.BAR_HEIGHT, 2);
+    }
   }
 
   private onStatChanged = (p: StatChangePayload | undefined) => {
@@ -174,7 +196,8 @@ export class HUD {
     const cx = 240; // GAME_WIDTH / 2
     const cardY = 40;
 
-    const card = this.scene.add.container(cx, cardY - 20)
+    // Slide down from y=-30 over 400ms as per spec
+    const card = this.scene.add.container(cx, cardY - 30)
       .setDepth(150).setScrollFactor(0).setAlpha(0);
 
     // Background
@@ -203,10 +226,10 @@ export class HUD {
 
     card.add([bg, chText, locText]);
 
-    // Animate in
+    // Slide down from y=-30 to cardY over 400ms
     this.scene.tweens.add({
       targets: card, alpha: 1, y: cardY,
-      duration: 600, ease: 'Back.easeOut',
+      duration: 400, ease: 'Back.easeOut',
     });
 
     // Animate out after delay
@@ -252,21 +275,39 @@ export class HUD {
     const burden = this.statsManager.get('burden');
     if (burdenBar && burden >= 60) {
       const t = this.scene.time.now * 0.004;
+      // Red pulsing glow behind the bar at 60%+
+      const glowAlpha = 0.06 + Math.sin(t * 2) * 0.04;
+      burdenBar.fill.setAlpha(0.85); // reset before override below
+      // Draw red glow overlay on the track area
+      const trackGfx = this.scene.add.graphics().setScrollFactor(0).setDepth(99);
+      trackGfx.fillStyle(0xff2200, glowAlpha);
+      trackGfx.fillRoundedRect(burdenBar.container.x + 44, burdenBar.container.y - 1, HUD.BAR_WIDTH + 2, HUD.BAR_HEIGHT + 2, 2);
+      this.scene.time.delayedCall(50, () => trackGfx.destroy());
       if (burden >= 80) {
         // Shake + pulse fill color between red and dark-red
         const shake = Math.sin(t * 2) * 0.8;
         burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP + shake;
         const pulse = 0.6 + Math.sin(t * 3) * 0.4;
         burdenBar.fill.setAlpha(pulse);
-      } else {
-        // Just a slow pulse at burden 60-79
-        const pulse = 0.75 + Math.sin(t) * 0.25;
+        // Intense red glow on the icon background at high burden
+        burdenBar.icon.setTint(0xff4444);
+      } else if (burden >= 70) {
+        // Glow red at > 70% full (as per spec)
+        const pulse = 0.75 + Math.sin(t * 1.5) * 0.25;
         burdenBar.fill.setAlpha(pulse);
         burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
+        burdenBar.icon.setTint(0xff8866);
+      } else {
+        // Just a slow pulse at burden 60-69
+        const pulse = 0.8 + Math.sin(t) * 0.2;
+        burdenBar.fill.setAlpha(pulse);
+        burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
+        burdenBar.icon.clearTint();
       }
     } else if (burdenBar) {
       burdenBar.fill.setAlpha(0.85);
       burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
+      burdenBar.icon.clearTint();
     }
   }
 
