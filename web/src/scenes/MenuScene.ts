@@ -148,21 +148,28 @@ export class MenuScene extends Phaser.Scene {
 
   private drawHorizonGlow(g: Phaser.GameObjects.Graphics, cx: number, hy: number): void {
     g.clear();
-    // Radial glow layers
+    // Wide outer halo
     const colors = [
-      { r: 100, a: 0.08 },
-      { r: 65,  a: 0.14 },
-      { r: 40,  a: 0.20 },
-      { r: 22,  a: 0.30 },
-      { r: 12,  a: 0.40 },
+      { r: 120, a: 0.06 },
+      { r: 85,  a: 0.10 },
+      { r: 60,  a: 0.16 },
+      { r: 38,  a: 0.26 },
+      { r: 22,  a: 0.38 },
+      { r: 12,  a: 0.50 },
     ];
     for (const { r, a } of colors) {
       g.fillStyle(0xffd4a0, a);
-      g.fillEllipse(cx, hy, r * 2.2, r * 0.7);
+      g.fillEllipse(cx, hy, r * 2.4, r * 0.8);
     }
+    // Celestial City spire hints (vertical streaks)
+    g.fillStyle(0xffeedd, 0.22);
+    g.fillRect(cx - 1, hy - 18, 2, 20);
+    g.fillStyle(0xffd4a0, 0.14);
+    g.fillRect(cx - 6, hy - 12, 1, 14);
+    g.fillRect(cx + 5, hy - 10, 1, 12);
     // Bright core
-    g.fillStyle(0xffeedd, 0.25);
-    g.fillEllipse(cx, hy, 18, 5);
+    g.fillStyle(0xffffff, 0.30);
+    g.fillEllipse(cx, hy, 20, 6);
   }
 
   private drawPilgrimPath(g: Phaser.GameObjects.Graphics, W: number, H: number, HOR: number, destX: number): void {
@@ -182,9 +189,12 @@ export class MenuScene extends Phaser.Scene {
       const p = pathPoints[i];
       const pn = pathPoints[i + 1];
       const t = i / pathPoints.length;
-      const alpha = 0.08 + t * 0.12;
-      g.fillStyle(0xd4a853, alpha);
-      g.fillEllipse((p.x + pn.x) / 2, (p.y + pn.y) / 2, p.w, 3);
+      // Warm stone base
+      g.fillStyle(0x8a6a3a, 0.25 + t * 0.15);
+      g.fillEllipse((p.x + pn.x) / 2, (p.y + pn.y) / 2, p.w, 4);
+      // Gold shimmer overlay
+      g.fillStyle(0xd4a853, 0.12 + t * 0.18);
+      g.fillEllipse((p.x + pn.x) / 2, (p.y + pn.y) / 2, p.w * 0.7, 2.5);
     }
   }
 
@@ -368,17 +378,17 @@ export class MenuScene extends Phaser.Scene {
   private createParticles(): void {
     this.particleGfx = this.add.graphics().setDepth(5);
     // Firefly / ember mix
-    for (let i = 0; i < 55; i++) {
-      const isEmber = i < 20;
+    for (let i = 0; i < 60; i++) {
+      const isEmber = i < 22;
       this.particles.push({
         x: Math.random() * GAME_WIDTH,
         y: Math.random() * GAME_HEIGHT,
-        vx: (Math.random() - 0.5) * 0.06,
-        vy: isEmber ? (0.04 + Math.random() * 0.15) : -(0.04 + Math.random() * 0.18),
-        alpha: isEmber ? (0.1 + Math.random() * 0.2) : (0.1 + Math.random() * 0.3),
-        size: isEmber ? (0.3 + Math.random() * 0.8) : (0.4 + Math.random() * 1.2),
+        vx: (Math.random() - 0.5) * 0.08,
+        vy: isEmber ? (0.05 + Math.random() * 0.18) : -(0.05 + Math.random() * 0.22),
+        alpha: isEmber ? (0.18 + Math.random() * 0.30) : (0.15 + Math.random() * 0.40),
+        size: isEmber ? (0.4 + Math.random() * 1.0) : (0.5 + Math.random() * 1.4),
         phase: Math.random() * Math.PI * 2,
-        color: isEmber ? 0xff6622 : 0xd4a853,
+        color: isEmber ? 0xff7733 : 0xd4a853,
       });
     }
   }
@@ -436,15 +446,12 @@ export class MenuScene extends Phaser.Scene {
     if (exists) {
       const saveData = await saveManager.load();
       if (saveData) {
-        const chapLabel = ko ? `제 ${saveData.chapter}장` : `Ch.${saveData.chapter}`;
+        const chapLabel = ko ? `제${saveData.chapter}장` : `Ch.${saveData.chapter}`;
         const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
         this.add.text(GAME_WIDTH / 2, continueBtnY + 18, `${chapLabel}  ·  ${faithLabel}`, {
-          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#8a7a68', fontFamily: DesignSystem.getFontFamily(),
+          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
         }).setOrigin(0.5).setDepth(12);
-
-        const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-        gm.setChapter(1);
-        gm.stats.reset();
+        // NOTE: do NOT call setChapter/stats.reset here — GameScene loads proper save state
       }
     }
   }

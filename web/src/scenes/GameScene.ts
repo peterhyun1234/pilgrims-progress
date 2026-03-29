@@ -594,9 +594,13 @@ export class GameScene extends Phaser.Scene {
           this.inkService.jumpToKnot(idleKnot); // no-op if knot doesn't exist
         }
 
-        this.npcStateManager.beginTalk(npcId, this.gameManager.currentChapter);
-        this.dialogueManager.start(npcId);
-        return;
+        // Only start ink dialogue if the story actually has content
+        if (this.inkService.canContinue() || this.inkService.hasChoices()) {
+          this.npcStateManager.beginTalk(npcId, this.gameManager.currentChapter);
+          this.dialogueManager.start(npcId);
+          return;
+        }
+        // No content — fall through to fallback dialogue
       } catch { /* fallback */ }
     }
 

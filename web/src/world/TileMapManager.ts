@@ -79,8 +79,38 @@ export class TileMapManager {
       this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
     }
 
-    // Tile edge border — thin dark line on right+bottom gives 3D depth
-    this.groundLayer.lineStyle(0.5, 0x000000, 0.18);
+    // Tile texture details (every ~3rd tile gets details)
+    const detailHash = ((x * 11 + y * 17) * 53) & 0xffff;
+    if (detailHash % 3 === 0) {
+      // Small pebble/rock
+      if ((detailHash & 0xff) < 80) {
+        const px = x + (detailHash % (TILE_SIZE - 4)) + 2;
+        const py = y + ((detailHash >> 3) % (TILE_SIZE - 4)) + 2;
+        this.groundLayer.fillStyle(0x000000, 0.22);
+        this.groundLayer.fillCircle(px, py, 1 + (detailHash % 2) * 0.5);
+        this.groundLayer.fillStyle(0xffffff, 0.08);
+        this.groundLayer.fillCircle(px - 0.5, py - 0.5, 0.7);
+      }
+      // Grass tuft (V shape)
+      if ((detailHash & 0xfff) < 120) {
+        const gx = x + ((detailHash >> 2) % (TILE_SIZE - 6)) + 3;
+        const gy = y + ((detailHash >> 5) % (TILE_SIZE - 6)) + 3;
+        this.groundLayer.lineStyle(1, 0x4a7a3a, 0.35);
+        this.groundLayer.lineBetween(gx, gy, gx - 1, gy - 2);
+        this.groundLayer.lineBetween(gx, gy, gx + 1, gy - 2);
+      }
+      // Earth crack (thin line)
+      if ((detailHash & 0x3fff) < 60) {
+        const crx = x + ((detailHash >> 4) % (TILE_SIZE - 6)) + 3;
+        const cry = y + ((detailHash >> 7) % (TILE_SIZE - 4)) + 2;
+        this.groundLayer.lineStyle(0.5, 0x000000, 0.15);
+        this.groundLayer.lineBetween(crx, cry, crx + 2, cry + 1);
+        this.groundLayer.lineBetween(crx + 2, cry + 1, crx + 3, cry);
+      }
+    }
+
+    // Tile edge border — very subtle, just enough to break flat look
+    this.groundLayer.lineStyle(0.5, 0x000000, 0.06);
     this.groundLayer.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
   }
 
@@ -719,13 +749,21 @@ export class TileMapManager {
 
   private drawTree(x: number, y: number, hash: number, chapter: number): void {
     if (!this.objectLayer) return;
-    const trunkH = 8 + (hash % 4);
+    const trunkH = 8 + (hash % 5);
+    const sizeMod = 1 + (hash % 3) * 0.15; // slight size variation
 
+    // Trunk shadow
     const trunkColor = chapter === 2 ? 0x2a2018 : 0x3a2a18;
+    this.objectLayer.fillStyle(0x000000, 0.2);
+    this.objectLayer.fillRect(x - 1, y + 2, 4, trunkH);
+    // Trunk
     this.objectLayer.fillStyle(trunkColor, 0.9);
     this.objectLayer.fillRect(x - 2, y, 4, trunkH);
+    // Trunk highlight
+    this.objectLayer.fillStyle(0xffffff, 0.08);
+    this.objectLayer.fillRect(x - 2, y, 1, trunkH - 2);
 
-    const crownR = 6 + (hash % 4);
+    const crownR = Math.round((6 + (hash % 4)) * sizeMod);
     const crownY = y - crownR + 2;
     const crownColors: Record<number, number[]> = {
       1: [0x2a5a2a, 0x3a7a3a, 0x1a4a1a],
@@ -735,12 +773,21 @@ export class TileMapManager {
     };
     const colors = crownColors[chapter] ?? crownColors[1];
 
-    this.objectLayer.fillStyle(colors[0], 0.7);
+    // Shadow circle (darker, offset down-right)
+    this.objectLayer.fillStyle(0x000000, 0.18);
+    this.objectLayer.fillCircle(x + 2, crownY + 2, crownR);
+    // Main canopy layer
+    this.objectLayer.fillStyle(colors[0], 0.85);
     this.objectLayer.fillCircle(x, crownY, crownR);
-    this.objectLayer.fillStyle(colors[1], 0.4);
-    this.objectLayer.fillCircle(x - 2, crownY - 2, crownR * 0.7);
-    this.objectLayer.fillStyle(colors[2], 0.3);
-    this.objectLayer.fillCircle(x + 2, crownY + 2, crownR * 0.6);
+    // Lighter highlight canopy
+    this.objectLayer.fillStyle(colors[1], 0.55);
+    this.objectLayer.fillCircle(x - 2, crownY - 2, Math.round(crownR * 0.7));
+    // Dark shadow underneath canopy
+    this.objectLayer.fillStyle(colors[2], 0.4);
+    this.objectLayer.fillCircle(x + 1, crownY + 2, Math.round(crownR * 0.6));
+    // Bright highlight dot at top
+    this.objectLayer.fillStyle(0xffffff, 0.12);
+    this.objectLayer.fillCircle(x - 1, crownY - crownR + 3, Math.max(1, Math.round(crownR * 0.25)));
   }
 
   private drawTerrainZones(config: ChapterConfig): void {
@@ -881,20 +928,41 @@ export class TileMapManager {
     // Use a brighter path color blended from theme + gold so it's always visible
     const themeColor = config.theme.pathColor;
     const goldColor = 0xd4a853;
+    const stoneTan = 0xc8a870; // warm tan stone path color
 
     for (let i = 0; i < 30; i++) {
       const t = i / 30;
       const px = config.spawn.x + Math.sin(t * 3) * 6;
       const py = config.spawn.y - i * (config.mapHeight / 30);
-      const w = 12 + Math.sin(i * 0.3) * 3;
+      const w = 14 + Math.sin(i * 0.3) * 3;
 
       if (py < 0) break;
-      // Draw theme-colored base track
-      this.decorLayer.fillStyle(themeColor, 0.5 + t * 0.2);
+
+      // Base stone/tan path (broader, warmer)
+      this.decorLayer.fillStyle(stoneTan, 0.45 + t * 0.2);
+      this.decorLayer.fillEllipse(px, py, w + 2, 8);
+      // Theme-colored tint on top
+      this.decorLayer.fillStyle(themeColor, 0.3 + t * 0.15);
       this.decorLayer.fillEllipse(px, py, w, 7);
-      // Draw gold shine overlay on top — makes path stand out
-      this.decorLayer.fillStyle(goldColor, 0.18 + t * 0.12);
-      this.decorLayer.fillEllipse(px, py, w - 4, 4);
+      // Gold shimmer overlay — holy path feel
+      this.decorLayer.fillStyle(goldColor, 0.20 + t * 0.14);
+      this.decorLayer.fillEllipse(px, py, w - 3, 5);
+      // Worn center track (slightly darker)
+      this.decorLayer.fillStyle(0x000000, 0.08);
+      this.decorLayer.fillEllipse(px, py, 4, 3);
+      // Path edge stones (small dots on sides)
+      const hash = ((i * 37 + config.chapter * 13) * 17) & 0xff;
+      if (hash < 80) {
+        this.decorLayer.fillStyle(0x888866, 0.4);
+        this.decorLayer.fillCircle(px - w / 2 + 1, py, 1);
+        this.decorLayer.fillCircle(px + w / 2 - 1, py, 1);
+      }
+      // Small wildflowers near path
+      if ((hash & 0x3f) < 20) {
+        const flowerColors = [0xffffff, 0xffd700, 0xffeeaa];
+        this.decorLayer.fillStyle(flowerColors[hash % flowerColors.length], 0.5);
+        this.decorLayer.fillCircle(px - w / 2 - 2, py + ((hash % 3) - 1), 1);
+      }
     }
 
     (config.exits ?? []).forEach(exit => {

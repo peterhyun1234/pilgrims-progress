@@ -47,6 +47,7 @@ export class NPC extends Entity {
   private eventBus: EventBus;
   private prompt: Phaser.GameObjects.Container | null = null;
   private nameLabel: Phaser.GameObjects.Text | null = null;
+  private nameBadgeGraphics: Phaser.GameObjects.Graphics | null = null;
   private completedBadge: Phaser.GameObjects.Text | null = null;
   private isPromptVisible = false;
   private baseY = 0;
@@ -161,13 +162,20 @@ export class NPC extends Entity {
     this.completedBadge = this.scene.add.text(
       this.sprite.x, this.sprite.y - 20,
       '✓', {
-        fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-        color: '#4a7c59',
+        fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
+        color: '#d4a853',
         fontFamily: FONT_FAMILY,
         stroke: '#000000',
-        strokeThickness: 2,
+        strokeThickness: 3,
+        shadow: { offsetX: 0, offsetY: 0, color: '#ffd080', blur: 4, fill: true },
       },
     ).setOrigin(0.5).setDepth(21);
+    // Pulse the badge gently
+    this.scene.tweens.add({
+      targets: this.completedBadge,
+      alpha: 0.55, scaleX: 0.9, scaleY: 0.9,
+      duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
   }
 
   showPrompt(): void {
@@ -179,35 +187,57 @@ export class NPC extends Entity {
       this.sprite.x, this.sprite.y + NPC_CONFIG.PROMPT_OFFSET_Y - 12,
     ).setDepth(20);
 
-    const bg = this.scene.add.graphics();
-    bg.fillStyle(COLORS.UI.PANEL, 0.88);
-    bg.fillRoundedRect(-9, -7, 18, 14, 4);
-    bg.lineStyle(1, COLORS.UI.GOLD, 0.5);
-    bg.strokeRoundedRect(-9, -7, 18, 14, 4);
-
-    // Completed NPCs show a dot instead of pulsing '!'
+    // Completed NPCs show a dimmed orb instead of pulsing interaction orb
     const isIdlePhase = this.currentPhase === 'completed' || this.currentPhase === 'idle';
-    const iconText = isIdlePhase ? '·' : '!';
-    const iconColor = isIdlePhase ? '#888877' : '#d4a853';
 
-    const icon = this.scene.add.text(0, 0, iconText, {
-      fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
-      color: iconColor, fontFamily: FONT_FAMILY, fontStyle: 'bold',
-      shadow: { offsetX: 0, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
-    }).setOrigin(0.5);
+    // 3-layer glow orb prompt
+    const bg = this.scene.add.graphics();
+    if (!isIdlePhase) {
+      // Outer soft glow
+      bg.fillStyle(COLORS.UI.GOLD, 0.12);
+      bg.fillCircle(0, 0, 10);
+      // Mid ring
+      bg.fillStyle(COLORS.UI.GOLD, 0.28);
+      bg.fillCircle(0, 0, 7);
+      // Core bright
+      bg.fillStyle(0xffd080, 0.9);
+      bg.fillCircle(0, 0, 4);
+      // Gold border
+      bg.lineStyle(1, COLORS.UI.GOLD, 0.7);
+      bg.strokeCircle(0, 0, 7);
+      // Inner sparkle cross
+      bg.lineStyle(1, 0xffffff, 0.6);
+      bg.lineBetween(-3, 0, 3, 0);
+      bg.lineBetween(0, -3, 0, 3);
+    } else {
+      // Dimmed dot for completed phase
+      bg.fillStyle(COLORS.UI.PANEL, 0.7);
+      bg.fillRoundedRect(-7, -5, 14, 10, 3);
+      bg.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
+      bg.strokeRoundedRect(-7, -5, 14, 10, 3);
+      bg.fillStyle(0x888877, 0.6);
+      bg.fillCircle(0, 0, 2.5);
+    }
 
-    this.prompt.add([bg, icon]);
+    this.prompt.add([bg]);
 
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const displayName = gm.language === 'ko' ? this.nameKo : this.nameEn;
-    this.nameLabel = this.scene.add.text(
+
+    // Name label with background pill
+    const nameLabelObj = this.scene.add.text(
       this.sprite.x, this.sprite.y - 14,
       displayName, {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-        color: '#b0a898', fontFamily: FONT_FAMILY,
+        color: '#e8e0d0', fontFamily: FONT_FAMILY, fontStyle: 'bold',
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
       },
     ).setOrigin(0.5).setDepth(20);
+    this.nameLabel = nameLabelObj;
+
+    // Name badge background (semi-transparent pill behind the text, tracked separately)
+    this.nameBadgeGraphics = this.scene.add.graphics().setDepth(19);
+    this.drawNameBadge(this.sprite.x, this.sprite.y - 14, nameLabelObj.width);
 
     // Only pulse the '!' for available/active NPCs
     if (!isIdlePhase) {
@@ -226,6 +256,17 @@ export class NPC extends Entity {
     this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 18);
   }
 
+  private drawNameBadge(x: number, y: number, textWidth: number): void {
+    if (!this.nameBadgeGraphics) return;
+    this.nameBadgeGraphics.clear();
+    const nw = textWidth + 10;
+    const nh = 13;
+    this.nameBadgeGraphics.fillStyle(0x0a0814, 0.72);
+    this.nameBadgeGraphics.fillRoundedRect(x - nw / 2, y - nh / 2, nw, nh, 4);
+    this.nameBadgeGraphics.lineStyle(0.5, COLORS.UI.GOLD, 0.4);
+    this.nameBadgeGraphics.strokeRoundedRect(x - nw / 2, y - nh / 2, nw, nh, 4);
+  }
+
   hidePrompt(): void {
     if (!this.isPromptVisible) return;
     this.isPromptVisible = false;
@@ -233,6 +274,8 @@ export class NPC extends Entity {
     this.prompt = null;
     this.nameLabel?.destroy();
     this.nameLabel = null;
+    this.nameBadgeGraphics?.destroy();
+    this.nameBadgeGraphics = null;
     this.glowGraphics?.destroy();
     this.glowGraphics = null;
   }
@@ -305,6 +348,9 @@ export class NPC extends Entity {
     if (this.nameLabel) {
       this.nameLabel.x = this.sprite.x;
       this.nameLabel.y = this.sprite.y - 14;
+      if (this.nameBadgeGraphics) {
+        this.drawNameBadge(this.sprite.x, this.sprite.y - 14, this.nameLabel.width);
+      }
     }
     if (this.completedBadge) {
       this.completedBadge.x = this.sprite.x;

@@ -137,12 +137,23 @@ export class CharacterSpriteFactory {
     }
 
     // === Shadow ===
-    g.fillStyle(0x000000, 0.25);
-    g.fillEllipse(cx, oy + 29, 13, 4);
+    g.fillStyle(0x000000, 0.35);
+    g.fillEllipse(cx, oy + 29, 14, 5);
+    g.fillStyle(0x000000, 0.15);
+    g.fillEllipse(cx, oy + 29, 20, 6);
+
+    // === Faith aura (pilgrim-specific soft gold glow) ===
+    if (config.id === 'christian') {
+      const auraPulse = 0.06 + Math.sin((frame / 4) * Math.PI * 2) * 0.03;
+      g.fillStyle(0xd4a853, auraPulse);
+      g.fillCircle(cx, oy + 16 + bobY, 14);
+      g.fillStyle(0xffd080, auraPulse * 0.6);
+      g.fillCircle(cx, oy + 16 + bobY, 10);
+    }
 
     // === Dark outline pass (drawn first, slightly larger than body) ===
     const outlineColor = 0x111111;
-    g.fillStyle(outlineColor, 0.7);
+    g.fillStyle(outlineColor, 0.8);
     // Head outline
     g.fillCircle(cx, oy + 10 + bobY, 7);
     // Body outline
@@ -172,12 +183,23 @@ export class CharacterSpriteFactory {
     // === Body / Torso ===
     const bodyY = oy + 14 + bobY;
     const bodyH = 12;
+    // Cloak base
     g.fillStyle(colors.clothing, 1);
     g.fillRoundedRect(cx - 6, bodyY, 12, bodyH, 2);
+    // Cloak shading — darker sides for 3D depth
+    g.fillStyle(this.darken(colors.clothing, 0.7), 0.5);
+    g.fillRect(cx - 6, bodyY, 2, bodyH);
+    g.fillRect(cx + 4, bodyY, 2, bodyH);
+    // Cloak center highlight
+    g.fillStyle(0xffffff, 0.06);
+    g.fillRect(cx - 2, bodyY + 1, 4, bodyH - 2);
 
-    // Body detail (belt / accent line)
+    // Body detail (belt / accent line) — slightly thicker
     g.fillStyle(colors.accent, 1);
-    g.fillRect(cx - 5, bodyY + bodyH - 3, 10, 2);
+    g.fillRect(cx - 5, bodyY + bodyH - 4, 10, 2);
+    // Belt buckle
+    g.fillStyle(0xffd080, 0.9);
+    g.fillRect(cx - 1, bodyY + bodyH - 4, 2, 2);
 
     // === Arms ===
     if (dir === 'down' || dir === 'up') {
@@ -212,6 +234,12 @@ export class CharacterSpriteFactory {
     // Head shape
     g.fillStyle(colors.skin, 1);
     g.fillRoundedRect(cx - headW / 2, headY, headW, headH, config.headShape === 'square' ? 1 : 3);
+    // Skin shading — subtle shadow on one side
+    g.fillStyle(this.darken(colors.skin, 0.8), 0.3);
+    g.fillRoundedRect(cx + 1, headY + 2, headW / 2 - 1, headH - 3, 2);
+    // Skin highlight — soft bright spot
+    g.fillStyle(0xffffff, 0.1);
+    g.fillCircle(cx - 2, headY + 2, 2);
 
     // Hair
     g.fillStyle(colors.hair, 1);
@@ -275,8 +303,19 @@ export class CharacterSpriteFactory {
           break;
         case 'staff': {
           const staffX = dir === 'right' ? cx + 10 : cx - 10;
-          g.lineStyle(2, accColor, 1);
+          // Staff glow (soft)
+          g.lineStyle(4, accColor, 0.18);
           g.lineBetween(staffX, bodyY - 2, staffX, oy + 28);
+          // Staff body (wooden brown)
+          g.lineStyle(2, 0x8b6040, 1);
+          g.lineBetween(staffX, bodyY - 2, staffX, oy + 28);
+          // Staff top knob highlight
+          g.fillStyle(accColor, 0.9);
+          g.fillCircle(staffX, bodyY - 2, 1.5);
+          // Staff sway with animation frame
+          const swayX = staffX + Math.sin((frame / 4) * Math.PI * 2) * 0.5;
+          g.fillStyle(0xffd080, 0.3);
+          g.fillCircle(swayX, bodyY - 3, 2);
           break;
         }
         case 'scroll': {
@@ -324,8 +363,11 @@ export class CharacterSpriteFactory {
     if (config.id === 'christian' && (dir === 'down' || dir === 'right')) {
       const badgeX = dir === 'right' ? cx + 1 : cx - 1;
       const badgeY = bodyY + 3;
+      // Gold cross glow
+      g.fillStyle(0xffd080, 0.25);
+      g.fillCircle(badgeX, badgeY + 1, 3);
       // Bright gold cross — 3px vertical, 3px horizontal crossing at center
-      g.fillStyle(0xffd080, 0.95);
+      g.fillStyle(0xffd080, 0.98);
       g.fillRect(badgeX, badgeY, 1, 3);       // vertical bar
       g.fillRect(badgeX - 1, badgeY + 1, 3, 1); // horizontal bar
     }

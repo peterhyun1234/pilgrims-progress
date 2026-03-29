@@ -153,55 +153,95 @@ export class BattleScene extends Phaser.Scene {
       if (this.anims.exists(animKey)) this.enemySprite.play(animKey, true);
       this.enemyContainer.add(this.enemySprite);
     } else {
-      // Procedural menacing silhouette
+      // Procedural SANABI-style menacing silhouette
       const gfx = this.add.graphics();
-      const bs = enemy.isBoss ? 1.4 : 1.0;
-      // Outer dark aura
-      gfx.fillStyle(enemy.iconColor, 0.12);
-      gfx.fillEllipse(0, 0, 70 * bs, 60 * bs);
-      // Body shadow layers
-      gfx.fillStyle(0x000000, 0.7);
-      gfx.fillEllipse(0, 4 * bs, 28 * bs, 36 * bs);
-      gfx.fillStyle(enemy.iconColor, 0.5);
-      gfx.fillEllipse(0, 4 * bs, 24 * bs, 32 * bs);
+      const bs = enemy.isBoss ? 1.5 : 1.0;
+      const ec = enemy.iconColor;
+
+      // Multi-layer outer aura (dark entity effect)
+      gfx.fillStyle(ec, 0.06); gfx.fillEllipse(0, 0, 90 * bs, 75 * bs);
+      gfx.fillStyle(ec, 0.10); gfx.fillEllipse(0, 0, 68 * bs, 56 * bs);
+      gfx.fillStyle(0x000000, 0.35); gfx.fillEllipse(0, 0, 55 * bs, 45 * bs);
+
+      // Ground shadow
+      gfx.fillStyle(0x000000, 0.40); gfx.fillEllipse(0, 22 * bs, 38 * bs, 8 * bs);
+
+      // Robe / body (dark layered)
+      gfx.fillStyle(0x080410, 0.95); gfx.fillEllipse(0, 6 * bs, 30 * bs, 40 * bs);
+      gfx.fillStyle(ec, 0.20); gfx.fillEllipse(0, 6 * bs, 26 * bs, 36 * bs);
+      // Body highlight edge
+      gfx.lineStyle(1.5, ec, 0.45);
+      gfx.strokeEllipse(0, 6 * bs, 26 * bs, 36 * bs);
+
       // Head
-      gfx.fillStyle(0x000000, 0.8);
-      gfx.fillCircle(0, -14 * bs, 11 * bs);
-      gfx.fillStyle(enemy.iconColor, 0.6);
-      gfx.fillCircle(0, -14 * bs, 9 * bs);
-      // Glowing eyes
-      gfx.fillStyle(0xff3333, 0.9);
-      gfx.fillCircle(-4 * bs, -15 * bs, 2 * bs);
-      gfx.fillCircle(4 * bs, -15 * bs, 2 * bs);
-      gfx.fillStyle(0xffaaaa, 1);
-      gfx.fillCircle(-4 * bs, -15 * bs, 1 * bs);
-      gfx.fillCircle(4 * bs, -15 * bs, 1 * bs);
-      // Boss horns/crown
+      gfx.fillStyle(0x000000, 0.90); gfx.fillCircle(0, -16 * bs, 12 * bs);
+      gfx.fillStyle(ec, 0.30); gfx.fillCircle(0, -16 * bs, 10 * bs);
+      gfx.lineStyle(1, ec, 0.50); gfx.strokeCircle(0, -16 * bs, 10 * bs);
+
+      // Eye sockets
+      gfx.fillStyle(0x000000, 1.0);
+      gfx.fillEllipse(-4.5 * bs, -17 * bs, 5 * bs, 3 * bs);
+      gfx.fillEllipse(4.5 * bs, -17 * bs, 5 * bs, 3 * bs);
+      // Glowing pupils
+      gfx.fillStyle(0xff2200, 1.0);
+      gfx.fillCircle(-4.5 * bs, -17 * bs, 1.8 * bs);
+      gfx.fillCircle(4.5 * bs, -17 * bs, 1.8 * bs);
+      // Eye bloom
+      gfx.fillStyle(0xff6644, 0.7);
+      gfx.fillCircle(-4.5 * bs, -17 * bs, 1.0 * bs);
+      gfx.fillCircle(4.5 * bs, -17 * bs, 1.0 * bs);
+      // Eye glow trails
+      gfx.fillStyle(0xff3300, 0.18);
+      gfx.fillEllipse(-4.5 * bs, -14 * bs, 4 * bs, 5 * bs);
+      gfx.fillEllipse(4.5 * bs, -14 * bs, 4 * bs, 5 * bs);
+
+      // Boss-specific features
       if (enemy.isBoss) {
-        gfx.fillStyle(enemy.iconColor, 0.8);
-        gfx.fillTriangle(-8, -24, -4, -18, -12, -18);
-        gfx.fillTriangle(8, -24, 4, -18, 12, -18);
-        gfx.lineStyle(2, 0xff0000, 0.6);
-        gfx.strokeCircle(0, 0, 42);
+        // Triple-crown horns
+        const hornPositions = [[-6 * bs, -26 * bs], [0, -30 * bs], [6 * bs, -26 * bs]];
+        for (const [hx, hy] of hornPositions) {
+          gfx.fillStyle(ec, 0.85);
+          gfx.fillTriangle(hx - 2.5 * bs, hy + 8 * bs, hx, hy, hx + 2.5 * bs, hy + 8 * bs);
+          gfx.lineStyle(1, ec, 0.6);
+          gfx.strokeTriangle(hx - 2.5 * bs, hy + 8 * bs, hx, hy, hx + 2.5 * bs, hy + 8 * bs);
+        }
+        // Menacing aura ring
+        gfx.lineStyle(1.5, 0xff0000, 0.35);
+        gfx.strokeEllipse(0, 0, 54, 44);
+        gfx.lineStyle(0.5, ec, 0.25);
+        gfx.strokeEllipse(0, 0, 62, 52);
       }
-      // Clawed arms
-      gfx.lineStyle(2, enemy.iconColor, 0.6);
-      gfx.lineBetween(-12 * bs, 0, -22 * bs, -8 * bs);
-      gfx.lineBetween(12 * bs, 0, 22 * bs, -8 * bs);
-      // Claw tips
-      gfx.lineStyle(1.5, enemy.iconColor, 0.8);
-      gfx.lineBetween(-22 * bs, -8 * bs, -26 * bs, -12 * bs);
-      gfx.lineBetween(-22 * bs, -8 * bs, -24 * bs, -4 * bs);
-      gfx.lineBetween(22 * bs, -8 * bs, 26 * bs, -12 * bs);
-      gfx.lineBetween(22 * bs, -8 * bs, 24 * bs, -4 * bs);
+
+      // Clawed arms (more detailed)
+      const armY = 2 * bs;
+      gfx.lineStyle(2.5, 0x080410, 0.9);
+      gfx.lineBetween(-13 * bs, armY, -24 * bs, -10 * bs);
+      gfx.lineBetween(13 * bs, armY, 24 * bs, -10 * bs);
+      gfx.lineStyle(1.5, ec, 0.55);
+      gfx.lineBetween(-13 * bs, armY, -24 * bs, -10 * bs);
+      gfx.lineBetween(13 * bs, armY, 24 * bs, -10 * bs);
+      // Claw tips (3-prong)
+      gfx.lineStyle(1, ec, 0.75);
+      for (const [sx, sy, dx, dy] of [
+        [-24 * bs, -10 * bs, -28 * bs, -15 * bs],
+        [-24 * bs, -10 * bs, -26 * bs, -5 * bs],
+        [-24 * bs, -10 * bs, -29 * bs, -8 * bs],
+        [24 * bs, -10 * bs, 28 * bs, -15 * bs],
+        [24 * bs, -10 * bs, 26 * bs, -5 * bs],
+        [24 * bs, -10 * bs, 29 * bs, -8 * bs],
+      ]) {
+        gfx.lineBetween(sx, sy, dx, dy);
+      }
+
       this.enemyContainer.add(gfx);
     }
 
-    // Enemy aura (boss gets bigger aura)
+    // Enemy aura (layered, more dramatic)
     const auraGfx = this.add.graphics();
-    const auraR = enemy.isBoss ? 48 : 32;
-    auraGfx.fillStyle(enemy.iconColor, 0.18);
-    auraGfx.fillCircle(0, 0, auraR);
+    const auraR = enemy.isBoss ? 52 : 36;
+    auraGfx.fillStyle(enemy.iconColor, 0.06); auraGfx.fillCircle(0, 0, auraR * 1.5);
+    auraGfx.fillStyle(enemy.iconColor, 0.12); auraGfx.fillCircle(0, 0, auraR);
+    auraGfx.fillStyle(enemy.iconColor, 0.20); auraGfx.fillCircle(0, 0, auraR * 0.6);
     this.enemyContainer.addAt(auraGfx, 0);
 
     const ko = this.gameManager.language === 'ko';
@@ -250,7 +290,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private createPlayerDisplay(state: CombatState): void {
-    this.playerContainer = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 80).setDepth(10);
+    // y=195 keeps player aura top (195-28=167) below log bottom (≈157), no overlap
+    this.playerContainer = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 75).setDepth(10);
 
     // Player sprite — use generated texture if available, otherwise procedural silhouette
     const pTexKey = this.textures.exists('christian_gen') ? 'christian_gen'
@@ -336,11 +377,14 @@ export class BattleScene extends Phaser.Scene {
   }
 
   private createLogPanel(state: CombatState): void {
-    this.logContainer = this.add.container(10, GAME_HEIGHT * 0.45 + 8).setDepth(50);
+    // Position log just below ground divider (y≈130), above player sprite (y≈167)
+    this.logContainer = this.add.container(8, GAME_HEIGHT * 0.45 + 6).setDepth(50);
 
     const bg = this.add.graphics();
-    bg.fillStyle(0x0a0814, 0.6);
-    bg.fillRoundedRect(0, 0, GAME_WIDTH - 20, 50, 4);
+    bg.fillStyle(0x0a0814, 0.70);
+    bg.fillRoundedRect(0, 0, GAME_WIDTH - 16, 28, 4);
+    bg.lineStyle(0.5, 0x333355, 0.35);
+    bg.strokeRoundedRect(0, 0, GAME_WIDTH - 16, 28, 4);
     this.logContainer.add(bg);
 
     this.updateLog(state);
@@ -352,13 +396,13 @@ export class BattleScene extends Phaser.Scene {
     });
 
     const ko = this.gameManager.language === 'ko';
-    const lastEntries = state.log.slice(-3);
+    const lastEntries = state.log.slice(-2);
 
     lastEntries.forEach((entry, i) => {
       const color = entry.type === 'player' ? '#88ccff' :
                     entry.type === 'enemy' ? '#ff8888' :
                     entry.type === 'heal' ? '#88ff88' : '#d4a853';
-      const text = this.add.text(8, 6 + i * 14, ko ? entry.textKo : entry.textEn,
+      const text = this.add.text(8, 4 + i * 12, ko ? entry.textKo : entry.textEn,
         DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, color),
       );
       this.logContainer.add(text);

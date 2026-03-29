@@ -65,21 +65,39 @@ export class DialogueBox {
     this.container.add(this.sceneBg);
 
     this.bg = this.scene.add.graphics();
-    this.bg.fillStyle(0x12101e, 0.97);
+    // Dark parchment background
+    this.bg.fillStyle(0x1a1208, 0.97);
     this.bg.fillRoundedRect(bx, by, bw, bh, 6);
-    this.bg.lineStyle(1.5, COLORS.UI.PANEL_BORDER, 0.5);
+    // Gold border
+    this.bg.lineStyle(1.5, COLORS.UI.GOLD, 0.8);
     this.bg.strokeRoundedRect(bx, by, bw, bh, 6);
-    this.bg.fillStyle(COLORS.UI.GOLD, 0.04);
+    // Inner subtle warm tint
+    this.bg.fillStyle(0xd4a853, 0.04);
     this.bg.fillRoundedRect(bx + 1, by + 1, bw - 2, bh - 2, 5);
-    this.bg.lineStyle(0.5, COLORS.UI.GOLD, 0.12);
+    // Inner border line
+    this.bg.lineStyle(0.5, COLORS.UI.GOLD, 0.18);
     this.bg.strokeRoundedRect(bx + 3, by + 3, bw - 6, bh - 6, 4);
+    // Decorative corner ornaments (gold marks at each corner)
+    this.bg.fillStyle(COLORS.UI.GOLD, 0.7);
+    // Top-left corner
+    this.bg.fillRect(bx + 4, by + 2, 6, 1);
+    this.bg.fillRect(bx + 2, by + 4, 1, 6);
+    // Top-right corner
+    this.bg.fillRect(bx + bw - 10, by + 2, 6, 1);
+    this.bg.fillRect(bx + bw - 3, by + 4, 1, 6);
+    // Bottom-left corner
+    this.bg.fillRect(bx + 4, by + bh - 3, 6, 1);
+    this.bg.fillRect(bx + 2, by + bh - 10, 1, 6);
+    // Bottom-right corner
+    this.bg.fillRect(bx + bw - 10, by + bh - 3, 6, 1);
+    this.bg.fillRect(bx + bw - 3, by + bh - 10, 1, 6);
 
     this.portraitBg = this.scene.add.graphics();
     this.drawPortraitFrame(COLORS.UI.GOLD);
 
     this.speakerBg = this.scene.add.graphics();
 
-    this.speakerText = this.scene.add.text(bx + DialogueBox.TEXT_X + 4, by + 6, '',
+    this.speakerText = this.scene.add.text(bx + DialogueBox.TEXT_X + 4, by - 9, '',
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
     );
 
@@ -88,7 +106,7 @@ export class DialogueBox {
     const fontFamily = DesignSystem.getFontFamily();
 
     // Use Rex BBCodeText for rich inline formatting
-    this.dialogueText = new BBCodeText(this.scene, bx + DialogueBox.TEXT_X, by + 24, '', {
+    this.dialogueText = new BBCodeText(this.scene, bx + DialogueBox.TEXT_X, by + 18, '', {
       fontFamily,
       fontSize: `${dialogueFontSize}px`,
       color: '#e8e0d0',
@@ -131,10 +149,21 @@ export class DialogueBox {
   private drawPortraitFrame(borderColor: number): void {
     const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
     this.portraitBg.clear();
-    this.portraitBg.fillStyle(0x0e0c18, 0.8);
+    // Shadow behind portrait
+    this.portraitBg.fillStyle(0x000000, 0.4);
+    this.portraitBg.fillRoundedRect(bx + 7, by + (bh - ps) / 2 + 2, ps, ps, 4);
+    // Portrait background
+    this.portraitBg.fillStyle(0x0e0c18, 0.85);
     this.portraitBg.fillRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
-    this.portraitBg.lineStyle(1.5, borderColor, 0.6);
+    // Gold border
+    this.portraitBg.lineStyle(1.5, borderColor, 0.75);
     this.portraitBg.strokeRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
+    // Inner vignette corners (dark gradient effect via corner fills)
+    this.portraitBg.fillStyle(0x000000, 0.2);
+    this.portraitBg.fillRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
+    // Bright inner border
+    this.portraitBg.lineStyle(0.5, borderColor, 0.2);
+    this.portraitBg.strokeRoundedRect(bx + 7, by + (bh - ps) / 2 + 2, ps - 4, ps - 4, 3);
   }
 
   private onDialogueLine = (p: DialogueLinePayload | undefined) => { if (p) this.showLine(p); };
@@ -201,9 +230,15 @@ export class DialogueBox {
     this.speakerBg.clear();
     if (hasSpeaker) {
       const { BOX_X: bx, BOX_Y: by, TEXT_X: tx } = DialogueBox;
-      const sw = this.speakerText.width + 12;
-      this.speakerBg.fillStyle(COLORS.UI.GOLD, 0.12);
-      this.speakerBg.fillRoundedRect(bx + tx, by + 2, sw, 18, 3);
+      const sw = this.speakerText.width + 16;
+      // Elevated pill badge — positioned slightly above the box top
+      this.speakerBg.fillStyle(0x1a1208, 0.95);
+      this.speakerBg.fillRoundedRect(bx + tx - 2, by - 12, sw, 18, 5);
+      this.speakerBg.lineStyle(1, COLORS.UI.GOLD, 0.75);
+      this.speakerBg.strokeRoundedRect(bx + tx - 2, by - 12, sw, 18, 5);
+      // Inner glow
+      this.speakerBg.fillStyle(COLORS.UI.GOLD, 0.08);
+      this.speakerBg.fillRoundedRect(bx + tx - 1, by - 11, sw - 2, 16, 4);
     }
 
     const rawEmotion = payload.emotion ?? 'neutral';
@@ -389,8 +424,13 @@ export class DialogueBox {
           cbg.clear();
           cbg.fillStyle(COLORS.UI.BUTTON_HOVER, 0.95);
           cbg.fillRoundedRect(0, 0, w, choiceH, 4);
-          cbg.lineStyle(1.5, COLORS.UI.GOLD, 0.8);
+          cbg.lineStyle(1.5, COLORS.UI.GOLD, 0.9);
           cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
+          // Left-side gold accent bar on hover
+          cbg.fillStyle(COLORS.UI.GOLD, 0.8);
+          cbg.fillRoundedRect(0, 4, 3, choiceH - 8, 1);
+          // Update text with arrow prefix
+          txt.setText('▶ ' + (isLocked ? '' : '') + txt.text.replace(/^▶ /, ''));
         });
         hz.on('pointerout', () => {
           cbg.clear();
@@ -398,6 +438,8 @@ export class DialogueBox {
           cbg.fillRoundedRect(0, 0, w, choiceH, 4);
           cbg.lineStyle(1, bdrClr, 0.5);
           cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
+          // Remove arrow prefix
+          txt.setText(txt.text.replace(/^▶ /, ''));
         });
         hz.on('pointerdown', () => {
           this.scene.tweens.add({

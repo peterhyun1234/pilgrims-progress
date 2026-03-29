@@ -43,10 +43,15 @@ export class HUD {
 
   private createBackground(): void {
     const bg = this.scene.add.graphics();
-    bg.fillStyle(0x0a0814, 0.65);
+    // Slightly more opaque panel
+    bg.fillStyle(0x0a0814, 0.78);
     bg.fillRoundedRect(2, 2, 156, 78, 4);
-    bg.lineStyle(0.5, 0xd4a853, 0.3);
+    // Outer border
+    bg.lineStyle(1, 0xd4a853, 0.5);
     bg.strokeRoundedRect(2, 2, 156, 78, 4);
+    // Inner gold border line
+    bg.lineStyle(0.5, 0xd4a853, 0.2);
+    bg.strokeRoundedRect(4, 4, 152, 74, 3);
     this.container.add(bg);
   }
 
@@ -59,6 +64,14 @@ export class HUD {
       const x = HUD.PADDING;
       const y = HUD.PADDING + i * HUD.BAR_GAP;
       const barContainer = this.scene.add.container(x, y);
+
+      // Stat icon with distinct colored background
+      const iconBg = this.scene.add.graphics();
+      const iconBgColor = DesignSystem.STAT_COLORS[stat];
+      iconBg.fillStyle(iconBgColor, 0.22);
+      iconBg.fillRoundedRect(-1, -1, 11, 11, 2);
+      iconBg.lineStyle(0.5, iconBgColor, 0.4);
+      iconBg.strokeRoundedRect(-1, -1, 11, 11, 2);
 
       const icon = this.scene.add.text(0, 0, DesignSystem.STAT_ICONS[stat], {
         fontSize: '9px', color: DesignSystem.hex(DesignSystem.STAT_COLORS[stat]),
@@ -93,7 +106,7 @@ export class HUD {
           shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
         }).setOrigin(0, 0);
 
-      barContainer.add([bg, fill, icon, label, value]);
+      barContainer.add([iconBg, bg, fill, icon, label, value]);
       this.container.add(barContainer);
 
       this.bars.push({
@@ -109,8 +122,14 @@ export class HUD {
     const color = DesignSystem.STAT_COLORS[stat];
     g.fillStyle(color, 0.85);
     g.fillRoundedRect(x, 1, Math.max(w, 2), HUD.BAR_HEIGHT, 2);
-    g.fillStyle(0xffffff, 0.15);
+    // Top highlight stripe
+    g.fillStyle(0xffffff, 0.18);
     g.fillRect(x + 1, 1, Math.max(w - 2, 1), 2);
+    // Bright gradient end-cap (right edge glow)
+    if (w > 4) {
+      g.fillStyle(0xffffff, 0.35);
+      g.fillRoundedRect(x + w - 4, 1, 4, HUD.BAR_HEIGHT, 2);
+    }
   }
 
   private onStatChanged = (p: StatChangePayload | undefined) => {
@@ -258,15 +277,25 @@ export class HUD {
         burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP + shake;
         const pulse = 0.6 + Math.sin(t * 3) * 0.4;
         burdenBar.fill.setAlpha(pulse);
-      } else {
-        // Just a slow pulse at burden 60-79
-        const pulse = 0.75 + Math.sin(t) * 0.25;
+        // Intense red glow on the icon background at high burden
+        burdenBar.icon.setTint(0xff4444);
+      } else if (burden >= 70) {
+        // Glow red at > 70% full (as per spec)
+        const pulse = 0.75 + Math.sin(t * 1.5) * 0.25;
         burdenBar.fill.setAlpha(pulse);
         burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
+        burdenBar.icon.setTint(0xff8866);
+      } else {
+        // Just a slow pulse at burden 60-69
+        const pulse = 0.8 + Math.sin(t) * 0.2;
+        burdenBar.fill.setAlpha(pulse);
+        burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
+        burdenBar.icon.clearTint();
       }
     } else if (burdenBar) {
       burdenBar.fill.setAlpha(0.85);
       burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
+      burdenBar.icon.clearTint();
     }
   }
 

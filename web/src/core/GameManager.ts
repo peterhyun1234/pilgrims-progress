@@ -79,9 +79,9 @@ export class GameManager {
     this.fsm.setState(state);
   }
 
-  setChapter(chapter: number): void {
+  setChapter(chapter: number, title?: string): void {
     this._currentChapter = chapter;
-    this.eventBus.emit(GameEvent.CHAPTER_CHANGED, chapter);
+    this.eventBus.emit(GameEvent.CHAPTER_CHANGED, { chapter, title });
   }
 
   isState(state: GameState): boolean {
