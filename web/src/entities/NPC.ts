@@ -157,6 +157,14 @@ export class NPC extends Entity {
     }
   }
 
+  /** Returns chapter-specific NPC aura color. */
+  private getChapterAuraColor(): number {
+    if (this.chapter === 12) return 0xffd700; // Celestial: golden
+    if (this.chapter === 7)  return 0xff2200; // Valley of Death: ominous red
+    if (this.chapter === 10) return 0x66aaff; // Delectable Mts: soft blue
+    return COLORS.UI.GOLD;
+  }
+
   private showCompletedBadge(): void {
     if (this.completedBadge) return;
     this.completedBadge = this.scene.add.text(
@@ -249,10 +257,11 @@ export class NPC extends Entity {
     }
 
     this.glowGraphics = this.scene.add.graphics().setDepth(7);
-    // Initial draw — updated each frame in update()
-    this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.12);
+    // Chapter-specific aura color — initial draw updated each frame in update()
+    const initAuraColor = this.getChapterAuraColor();
+    this.glowGraphics.fillStyle(initAuraColor, 0.12);
     this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 28);
-    this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.28);
+    this.glowGraphics.fillStyle(initAuraColor, 0.28);
     this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 18);
   }
 
@@ -358,14 +367,17 @@ export class NPC extends Entity {
     }
     if (this.glowGraphics) {
       this.glowGraphics.clear();
-      // Stronger, more visible NPC glow with double-layer for bloom effect
-      const pulse = 0.22 + Math.sin(t * 2) * 0.12;
+      // Chapter-specific aura color with double-layer bloom effect
+      const auraColor = this.getChapterAuraColor();
+      const baseAlpha = this.chapter === 7 ? 0.06 : (this.chapter === 12 ? 0.08 : 0.04);
+      const pulse = baseAlpha + Math.sin(t * 2) * 0.025;
+      const pulseRadius = 24 + Math.sin(t * 1.5) * 2;
       // Outer soft ring
-      this.glowGraphics.fillStyle(COLORS.UI.GOLD, pulse * 0.4);
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 28);
+      this.glowGraphics.fillStyle(auraColor, Math.max(0, pulse) * 0.4);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius + 4);
       // Inner bright ring
-      this.glowGraphics.fillStyle(COLORS.UI.GOLD, pulse);
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 18);
+      this.glowGraphics.fillStyle(auraColor, Math.max(0, pulse + 0.18));
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius);
     }
   }
 

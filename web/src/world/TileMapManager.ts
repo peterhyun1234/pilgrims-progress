@@ -44,7 +44,7 @@ export class TileMapManager {
           this.colliders!.add(wall);
           wall.setVisible(false);
         } else {
-          this.drawGroundTile(x, y, theme);
+          this.drawGroundTile(x, y, theme, config.chapter);
           this.drawDecoration(x, y, tx, ty, config);
         }
       }
@@ -61,7 +61,7 @@ export class TileMapManager {
     this.scene.physics.world.setBounds(0, 0, config.mapWidth, config.mapHeight);
   }
 
-  private drawGroundTile(x: number, y: number, theme: ChapterTheme): void {
+  private drawGroundTile(x: number, y: number, theme: ChapterTheme, chapter = 0): void {
     if (!this.groundLayer) return;
 
     // ── 1. Base fill — Murmur-style hash for uniform variant distribution ──
@@ -155,6 +155,167 @@ export class TileMapManager {
       this.groundLayer.fillRect(mx, my, 2, 2);
       this.groundLayer.fillStyle(mossColor, 0.15);
       this.groundLayer.fillRect(mx - 1, my + 1, 4, 1);
+    }
+
+    // Chapter-specific surface details
+    switch (chapter) {
+      case 2: {
+        // Mud puddles (dark blue-grey ellipses)
+        if ((hash & 0xff) < 14) {
+          this.groundLayer.fillStyle(0x2a3a4a, 0.22);
+          this.groundLayer.fillEllipse(x + 3 + (hash % 8), y + 4 + ((hash >> 4) % 6), 6 + (hash % 5), 3);
+        }
+        // Reed tufts (vertical lines)
+        if ((hash & 0xfff) < 10) {
+          this.groundLayer.fillStyle(0x446644, 0.35);
+          const rx = x + (hash % 12) + 2;
+          const ry = y + ((hash >> 3) % 8) + 2;
+          this.groundLayer.fillRect(rx, ry, 1, 5);
+          this.groundLayer.fillRect(rx + 2, ry + 1, 1, 4);
+          this.groundLayer.fillRect(rx - 1, ry + 2, 1, 3);
+        }
+        // Wavy water surface hint
+        if ((hash & 0x3ff) < 5) {
+          this.groundLayer.fillStyle(0x3a5a6a, 0.12);
+          this.groundLayer.fillEllipse(x + 4 + (hash % 6), y + 6, 9, 2);
+        }
+        break;
+      }
+      case 3: {
+        // Larger rocks
+        if ((hash & 0xff) < 10) {
+          const rw = 5 + (hash % 6);
+          const rh = 3 + (hash % 4);
+          this.groundLayer.fillStyle(0x6a6a60, 0.5);
+          this.groundLayer.fillEllipse(x + 3 + (hash % 8), y + 4 + ((hash >> 3) % 8), rw, rh);
+          this.groundLayer.fillStyle(0x888880, 0.2);
+          this.groundLayer.fillEllipse(x + 2 + (hash % 8), y + 3 + ((hash >> 3) % 8), rw * 0.6, rh * 0.6);
+        }
+        // Scattered pebbles
+        if ((hash & 0x7ff) < 20) {
+          this.groundLayer.fillStyle(0x555550, 0.4);
+          this.groundLayer.fillCircle(x + (hash % 14) + 1, y + ((hash >> 4) % 12) + 2, 1);
+        }
+        // Cliff face hint (vertical crack lines)
+        if ((hash & 0xfff) < 5) {
+          this.groundLayer.fillStyle(0x2a2a28, 0.2);
+          this.groundLayer.fillRect(x + (hash % 14), y + 1, 1, 8 + (hash % 6));
+        }
+        break;
+      }
+      case 5: {
+        // Bright golden light overlay on path
+        if ((hash & 0xff) < 16) {
+          this.groundLayer.fillStyle(0xd4a853, 0.06 + ((hash >> 6) & 3) * 0.01);
+          this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        }
+        // Small wildflowers (pink/white dots)
+        if ((hash & 0x7ff) < 18) {
+          const flowerColors = [0xff99bb, 0xffffff, 0xffddaa];
+          this.groundLayer.fillStyle(flowerColors[hash % flowerColors.length], 0.55);
+          this.groundLayer.fillCircle(x + (hash % 12) + 2, y + ((hash >> 4) % 10) + 3, 1.2);
+          // Stem
+          this.groundLayer.fillStyle(0x6a9a4a, 0.3);
+          this.groundLayer.fillRect(x + (hash % 12) + 2, y + ((hash >> 4) % 10) + 4, 1, 3);
+        }
+        break;
+      }
+      case 7: {
+        // Bone fragments (thin white lines)
+        if ((hash & 0xff) < 18) {
+          this.groundLayer.fillStyle(0xddccbb, 0.22);
+          this.groundLayer.fillRect(x + (hash % 10) + 2, y + ((hash >> 3) % 10) + 3, 5 + (hash % 4), 1);
+          // Joint knob
+          this.groundLayer.fillCircle(x + (hash % 10) + 2, y + ((hash >> 3) % 10) + 3, 1);
+        }
+        // Skull-like shapes (occasional round with 2 dark spots)
+        if ((hash & 0x3fff) < 8) {
+          const sx = x + (hash % 10) + 3;
+          const sy = y + ((hash >> 4) % 8) + 4;
+          this.groundLayer.fillStyle(0xccbbaa, 0.3);
+          this.groundLayer.fillCircle(sx, sy, 3.5);
+          this.groundLayer.fillStyle(0x080608, 0.6);
+          this.groundLayer.fillCircle(sx - 1, sy - 0.5, 1);
+          this.groundLayer.fillCircle(sx + 1, sy - 0.5, 1);
+        }
+        // Dark mist wisps
+        if ((hash & 0x1fff) < 12) {
+          this.groundLayer.fillStyle(0x220033, 0.08);
+          this.groundLayer.fillEllipse(x + (hash % 12), y + ((hash >> 3) % 10), 8 + (hash % 6), 3);
+        }
+        break;
+      }
+      case 8: {
+        // Colorful market debris (tiny colored squares)
+        if ((hash & 0xff) < 22) {
+          const debrisColors = [0xff4444, 0x44aaff, 0xffcc00, 0x44cc44, 0xaa44cc, 0xff88aa];
+          this.groundLayer.fillStyle(debrisColors[hash % debrisColors.length], 0.3);
+          this.groundLayer.fillRect(x + (hash % 12) + 2, y + ((hash >> 3) % 12) + 2, 2, 2);
+        }
+        // Cobblestone pattern (more defined grid)
+        if ((hash & 0x3ff) < 60) {
+          this.groundLayer.fillStyle(0x555566, 0.08);
+          const cx2 = x + ((hash >> 3) % 4) * 4;
+          const cy2 = y + ((hash >> 5) % 4) * 4;
+          this.groundLayer.fillRect(cx2, cy2, 3, 3);
+        }
+        // Cobblestone joint lines
+        this.groundLayer.fillStyle(0x333344, 0.06);
+        this.groundLayer.fillRect(x, y + 4, TILE_SIZE, 1);
+        this.groundLayer.fillRect(x, y + 8, TILE_SIZE, 1);
+        this.groundLayer.fillRect(x, y + 12, TILE_SIZE, 1);
+        this.groundLayer.fillRect(x + 4, y, 1, TILE_SIZE);
+        this.groundLayer.fillRect(x + 8, y, 1, TILE_SIZE);
+        this.groundLayer.fillRect(x + 12, y, 1, TILE_SIZE);
+        break;
+      }
+      case 9: {
+        // Stone block grid pattern (more regular, darker joints)
+        this.groundLayer.fillStyle(0x1a1020, 0.1);
+        this.groundLayer.fillRect(x, y + TILE_SIZE / 2, TILE_SIZE, 1);
+        this.groundLayer.fillRect(x + TILE_SIZE / 2, y, 1, TILE_SIZE);
+        // Water dripping hint (vertical streak)
+        if ((hash & 0x1fff) < 6) {
+          this.groundLayer.fillStyle(0x2a3a55, 0.18);
+          this.groundLayer.fillRect(x + (hash % 12) + 2, y + 2, 1, 10 + (hash % 4));
+        }
+        break;
+      }
+      case 10: {
+        // Flower patches (bright dots)
+        if ((hash & 0xff) < 14) {
+          const flowerCols = [0xff6688, 0xffcc44, 0x88ddff, 0xaaffaa, 0xff88cc];
+          this.groundLayer.fillStyle(flowerCols[hash % flowerCols.length], 0.45);
+          this.groundLayer.fillCircle(x + (hash % 12) + 2, y + ((hash >> 3) % 10) + 3, 1.5);
+        }
+        // Soft grass rendering (small grass blades)
+        if ((hash & 0x7ff) < 20) {
+          this.groundLayer.fillStyle(0x66cc66, 0.2);
+          const gx = x + (hash % 12) + 2;
+          const gy = y + ((hash >> 4) % 10) + 4;
+          this.groundLayer.fillRect(gx, gy, 1, 4);
+          this.groundLayer.fillRect(gx + 2, gy + 1, 1, 3);
+        }
+        // Lighter tone overlay
+        if ((hash & 0x1f) < 4) {
+          this.groundLayer.fillStyle(0xaaddaa, 0.04);
+          this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        }
+        break;
+      }
+      case 12: {
+        // Golden shimmer overlay
+        if ((hash & 0xff) < 20) {
+          this.groundLayer.fillStyle(0xffd700, 0.05 + ((hash >> 6) & 3) * 0.01);
+          this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        }
+        // Pearl-like sparkle dots
+        if ((hash & 0x7ff) < 15) {
+          this.groundLayer.fillStyle(0xffffff, 0.25);
+          this.groundLayer.fillCircle(x + (hash % 14) + 1, y + ((hash >> 4) % 12) + 2, 0.8);
+        }
+        break;
+      }
     }
   }
 

@@ -35,14 +35,40 @@ export class BattleScene extends Phaser.Scene {
   private bossPhaseDialogues: string[][] = [];
 
   private enemyId = 'doubt';
+  private currentChapter = 1;
   private isAnimating = false;
+  private battleAuraGraphics: Phaser.GameObjects.Graphics | null = null;
 
   constructor() {
     super(SCENE_KEYS.BATTLE);
   }
 
-  init(data?: { enemyId?: string }): void {
+  init(data?: { enemyId?: string; chapter?: number }): void {
     this.enemyId = data?.enemyId ?? 'doubt';
+    this.currentChapter = data?.chapter ?? 1;
+  }
+
+  /** Returns chapter-specific battle arena sky/ground palette: [skyTop, skyBot, glowColor, groundColor, dividerColor] */
+  private getBattlePalette(): [number, number, number, number, number] {
+    const ch = this.currentChapter;
+    // Ch1: dark ember | Ch2: murky swamp | Ch3: rocky dusk | Ch4: shadowed stone
+    // Ch5: golden dusk | Ch6: dark valley | Ch7: death valley (purple) | Ch8: apollyon (volcanic)
+    // Ch9: shadow (near-black) | Ch10: vanity fair (cold city) | Ch11: doubting castle (grey) | Ch12: celestial
+    const palettes: Record<number, [number, number, number, number, number]> = {
+      1:  [0x1a0c10, 0x2a1008, 0x882200, 0x060210, 0xcc4400],
+      2:  [0x0c1a10, 0x101c14, 0x224422, 0x060c08, 0x448844],
+      3:  [0x0a1a2a, 0x1a2a1a, 0x224444, 0x060e08, 0x4488aa],
+      4:  [0x140c1a, 0x1a1228, 0x442266, 0x060210, 0x8844cc],
+      5:  [0x1a1208, 0x2a1e08, 0x884400, 0x0e0804, 0xd4a853],
+      6:  [0x0a0c08, 0x101408, 0x224422, 0x040604, 0x446633],
+      7:  [0x080408, 0x0e060c, 0x440022, 0x040204, 0x880044],
+      8:  [0x120406, 0x1a0804, 0xcc2200, 0x080202, 0xff4400],
+      9:  [0x060206, 0x080406, 0x220011, 0x040104, 0x660033],
+      10: [0x101428, 0x1a2040, 0x223366, 0x080a14, 0x4466aa],
+      11: [0x0c0c14, 0x101020, 0x222244, 0x060608, 0x555588],
+      12: [0x1a1428, 0x2a2048, 0xaa6600, 0x100c1c, 0xffd700],
+    };
+    return palettes[ch] ?? palettes[1];
   }
 
   create(): void {
@@ -76,49 +102,89 @@ export class BattleScene extends Phaser.Scene {
     const W = GAME_WIDTH, H = GAME_HEIGHT;
     const ground = H * 0.48;
 
-    // Sky: dark gradient
+    const [skyTop, skyBot, glowColor, groundColor, dividerColor] = this.getBattlePalette();
+
+    // Sky: chapter-tinted gradient
     const sky = this.add.graphics().setDepth(0);
     const strips = 16;
     for (let i = 0; i < strips; i++) {
       const t = i / strips;
-      const r = Math.round(0x08 + (0x18 - 0x08) * t);
-      const g2 = Math.round(0x04 + (0x06 - 0x04) * t);
-      const b = Math.round(0x12 + (0x08 - 0x12) * t);
+      const topR = (skyTop >> 16) & 0xff, topG = (skyTop >> 8) & 0xff, topB = skyTop & 0xff;
+      const botR = (skyBot >> 16) & 0xff, botG = (skyBot >> 8) & 0xff, botB = skyBot & 0xff;
+      const r = Math.round(topR + (botR - topR) * t);
+      const g2 = Math.round(topG + (botG - topG) * t);
+      const b = Math.round(topB + (botB - topB) * t);
       sky.fillStyle((r << 16) | (g2 << 8) | b, 1);
       sky.fillRect(0, Math.floor(t * ground), W, Math.ceil(ground / strips) + 1);
     }
 
-    // Distant red-orange supernatural glow (the enemy's domain)
-    sky.fillStyle(0x880000, 0.12);
-    sky.fillEllipse(W / 2, ground * 0.7, W * 0.8, ground * 0.5);
-    sky.fillStyle(0xcc2200, 0.08);
-    sky.fillEllipse(W / 2, ground * 0.8, W * 0.5, ground * 0.3);
+    // Chapter-specific supernatural glow
+    sky.fillStyle(glowColor, 0.07);
+    sky.fillEllipse(W / 2, ground * 0.7, W * 0.85, ground * 0.55);
+    sky.fillStyle(glowColor, 0.04);
+    sky.fillEllipse(W / 2, ground * 0.85, W * 0.5, ground * 0.3);
 
     // Stars / supernatural lights
     for (let i = 0; i < 30; i++) {
       const hash = (i * 137 * 31) & 0xffff;
-      sky.fillStyle(0xffffff, 0.15 + (hash % 8) * 0.04);
+      const starBrightness = this.currentChapter === 12 ? 0.25 : 0.08;
+      sky.fillStyle(0xffffff, starBrightness + (hash % 8) * 0.03);
       sky.fillCircle(hash % W, (hash * 3) % (ground * 0.7), 0.5 + (hash % 2) * 0.3);
     }
 
-    // Ground (dark earth plane)
+    // Chapter-specific background environment features
+    if (this.currentChapter === 7 || this.currentChapter === 8) {
+      // Bone/volcanic silhouettes
+      for (let i = 0; i < 5; i++) {
+        const hash = (i * 131 + this.currentChapter * 29) & 0xff;
+        const sx = (hash % (W - 40)) + 10;
+        const sh = 8 + (hash % 20);
+        sky.fillStyle(this.currentChapter === 8 ? 0x1a0804 : 0x0a0408, 0.5);
+        sky.fillTriangle(sx, ground, sx + sh / 2, ground - sh, sx + sh, ground);
+      }
+    } else if (this.currentChapter === 5) {
+      // Cross silhouette in background
+      sky.fillStyle(0x3a2a1a, 0.35);
+      sky.fillRect(W / 2 - 2, ground * 0.15, 4, 30);
+      sky.fillRect(W / 2 - 12, ground * 0.25, 24, 3);
+      // Golden glow from cross
+      sky.fillStyle(0xffd700, 0.05);
+      sky.fillCircle(W / 2, ground * 0.3, 30);
+    } else if (this.currentChapter === 12) {
+      // Celestial city silhouette
+      for (let b = 0; b < 5; b++) {
+        const hash = (b * 97 + 12 * 13) & 0xff;
+        const bx = W * 0.1 + b * (W * 0.18);
+        const bh = 25 + (hash % 20);
+        sky.fillStyle(0xffd700, 0.12);
+        sky.fillRect(bx, ground - bh, 12 + (hash % 10), bh);
+      }
+      // Radiant rays
+      sky.fillStyle(0xffd700, 0.04);
+      sky.fillTriangle(W / 2 - 60, 0, W / 2, ground * 0.5, W / 2 + 60, 0);
+    }
+
+    // Ground (chapter-tinted)
     const gr = this.add.graphics().setDepth(0);
     const groundStrips = 8;
     for (let i = 0; i < groundStrips; i++) {
-      gr.fillStyle(0x06020e + (i << 1), 1);
+      const baseR = (groundColor >> 16) & 0xff;
+      const baseG = (groundColor >> 8) & 0xff;
+      const baseB = groundColor & 0xff;
+      gr.fillStyle(((baseR + i) << 16) | ((baseG + i) << 8) | (baseB + i * 2), 1);
       gr.fillRect(0, ground + i * (H - ground) / groundStrips, W, (H - ground) / groundStrips + 1);
     }
 
-    // Ground line — gold divider
-    gr.lineStyle(0.8, COLORS.UI.GOLD, 0.25);
+    // Ground divider line — chapter-colored
+    gr.lineStyle(1, dividerColor, 0.35);
     gr.lineBetween(0, ground, W, ground);
-    gr.fillStyle(COLORS.UI.GOLD, 0.15);
+    gr.fillStyle(dividerColor, 0.15);
     for (let x = 0; x < W; x += 30) {
       gr.fillRect(x, ground - 0.5, 15, 1);
     }
 
     // Subtle grid in ground
-    gr.lineStyle(0.3, 0x333355, 0.25);
+    gr.lineStyle(0.3, 0x333355, 0.1);
     for (let x2 = 20; x2 < W; x2 += 20) {
       gr.lineBetween(x2, ground, x2 - 10, H);
     }
