@@ -225,61 +225,68 @@ export class MenuScene extends Phaser.Scene {
     const W = GAME_WIDTH;
     const H = GAME_HEIGHT;
 
-    // — Title area (upper third) —
+    // — Title area (upper sky zone: y=8 → y=110) —
+    // Stack: cross(16) → 4px → title(18) → 6px → subtitle(11) → 6px → divider → 6px → verse(11)
+    // Heights: 16 + 4 + 18 + 6 + 11 + 6 + 2 + 6 + 11 = 80px total → fits in 8–88
+
+    const CROSS_Y  = 16;
+    const TITLE_Y  = CROSS_Y + 16 + 6;   // 38
+    const SUB_Y    = TITLE_Y + 18 + 5;   // 61
+    const DIV_Y    = SUB_Y  + 11 + 5;    // 77
+    const VERSE_Y  = DIV_Y  + 2  + 6;    // 85
 
     // Decorative cross with glow
     const crossGlow = this.add.graphics().setDepth(9);
     crossGlow.fillStyle(0xd4a853, 0.08);
-    crossGlow.fillCircle(cx, 22, 22);
+    crossGlow.fillCircle(cx, CROSS_Y, 18);
     crossGlow.fillStyle(0xd4a853, 0.04);
-    crossGlow.fillCircle(cx, 22, 34);
+    crossGlow.fillCircle(cx, CROSS_Y, 28);
 
-    const cross = this.add.text(cx, 22, '✝', {
-      fontSize: '16px', color: '#d4a853', fontFamily: 'serif',
+    const cross = this.add.text(cx, CROSS_Y, '✝', {
+      fontSize: '14px', color: '#d4a853', fontFamily: 'serif',
       shadow: { offsetX: 0, offsetY: 0, color: '#d4a853', blur: 6, stroke: false, fill: true },
-    }).setOrigin(0.5).setAlpha(0).setDepth(10);
+    }).setOrigin(0.5, 0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: cross, alpha: 0.7, duration: 1200, ease: 'Quad.easeOut' });
-    this.tweens.add({
-      targets: cross, y: 24, duration: 3500,
-      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-    });
+    this.tweens.add({ targets: cross, y: CROSS_Y + 2, duration: 3500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
-    // Main title with stronger golden glow + drop shadow
-    const title = this.add.text(cx, 42, gm.i18n.t('game.title'), {
+    // Main title
+    const title = this.add.text(cx, TITLE_Y - 6, gm.i18n.t('game.title'), {
       fontSize: `${ko ? DesignSystem.FONT_SIZE.LG : DesignSystem.FONT_SIZE.BASE}px`,
       color: '#f0e8d0',
       fontFamily: DesignSystem.getFontFamily(),
       fontStyle: 'bold',
       shadow: { offsetX: 1, offsetY: 2, color: '#d4a853', blur: 6, stroke: true, fill: true },
-    }).setOrigin(0.5).setAlpha(0).setDepth(10);
-    this.tweens.add({ targets: title, alpha: 1, y: 44, duration: 900, delay: 200, ease: 'Back.easeOut' });
+    }).setOrigin(0.5, 0.5).setAlpha(0).setDepth(10);
+    this.tweens.add({ targets: title, alpha: 1, y: TITLE_Y, duration: 900, delay: 200, ease: 'Back.easeOut' });
 
-    // Subtitle — pushed down to avoid touching title bottom edge
-    const subtitle = this.add.text(cx, 64, gm.i18n.t('game.subtitle'), {
-      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
+    // Subtitle
+    const subtitle = this.add.text(cx, SUB_Y, gm.i18n.t('game.subtitle'), {
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080',
+      fontFamily: DesignSystem.getFontFamily(),
       shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, stroke: true, fill: true },
-    }).setOrigin(0.5).setAlpha(0).setDepth(10);
+    }).setOrigin(0.5, 0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: subtitle, alpha: 0.7, duration: 700, delay: 500 });
 
     // Ornamental divider
     const divider = this.add.graphics().setDepth(10).setAlpha(0);
     divider.lineStyle(0.5, 0xd4a853, 0.3);
-    divider.lineBetween(cx - 70, 74, cx + 70, 74);
+    divider.lineBetween(cx - 70, DIV_Y, cx + 70, DIV_Y);
     divider.fillStyle(0xd4a853, 0.5);
-    divider.fillCircle(cx, 74, 1.5);
-    divider.fillCircle(cx - 70, 74, 1);
-    divider.fillCircle(cx + 70, 74, 1);
+    divider.fillCircle(cx, DIV_Y, 1.5);
+    divider.fillCircle(cx - 70, DIV_Y, 1);
+    divider.fillCircle(cx + 70, DIV_Y, 1);
     this.tweens.add({ targets: divider, alpha: 1, duration: 600, delay: 600 });
 
-    // — Bible verse — 8px below divider
-    const verse = this.add.text(cx, 86, '"좁은 문으로 들어가라"  마 7:13', {
-      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#c8b070', fontFamily: DesignSystem.getFontFamily(),
+    // Bible verse
+    const verse = this.add.text(cx, VERSE_Y, '"좁은 문으로 들어가라"  마 7:13', {
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#c8b070',
+      fontFamily: DesignSystem.getFontFamily(),
       shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, stroke: true, fill: true },
-    }).setOrigin(0.5).setDepth(10).setAlpha(0);
+    }).setOrigin(0.5, 0.5).setDepth(10).setAlpha(0);
     this.tweens.add({ targets: verse, alpha: 0.9, duration: 800, delay: 1200 });
 
-    // — Button panel (lower section, below horizon) — moved up slightly to fit within screen
-    const btnAreaY = H * 0.56;
+    // — Button panel (lower section, H*0.57 keeps buttons in ground zone) —
+    const btnAreaY = Math.round(H * 0.57);
     this.buildButtonPanel(cx, btnAreaY, ko);
 
     // — Bottom info bar —
@@ -299,12 +306,21 @@ export class MenuScene extends Phaser.Scene {
   private buildButtonPanel(cx: number, topY: number, ko: boolean): void {
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const btnW = 160;
-    const btnH = 28;   // slightly slimmer buttons
-    const gap = 10;    // larger gap for save-info text
+    const btnH = 26;
+    const gap = 7;
 
-    // Panel height capped to stay within screen
-    const panelH = Math.min(btnH * 3 + gap * 2 + 14, GAME_HEIGHT - (topY - 8));
-    // Semi-transparent panel behind buttons
+    // Layout (all centered):
+    //   topY        : New Journey
+    //   topY+33     : Continue
+    //   topY+66     : [save info text, 10px]
+    //   topY+80     : Settings
+    // Panel spans topY-8 → topY+108 (capped to screen bottom)
+    const saveInfoY  = topY + (btnH + gap) * 2 - 1;  // between continue & settings
+    const settingsY  = topY + (btnH + gap) * 2 + 13; // below save info row
+
+    const panelBottom = Math.min(settingsY + btnH / 2 + 8, GAME_HEIGHT - 4);
+    const panelH = panelBottom - (topY - 8);
+
     const panelBg = this.add.graphics().setDepth(10).setAlpha(0);
     panelBg.fillStyle(0x06031a, 0.85);
     panelBg.fillRoundedRect(cx - btnW / 2 - 12, topY - 8, btnW + 24, panelH, 6);
@@ -319,10 +335,15 @@ export class MenuScene extends Phaser.Scene {
       const bg = this.add.graphics();
       const defColor = opts?.accent ? 0x2a4a2a : 0x110d22;
       const borderColor = opts?.accent ? 0x4a8a4a : 0xd4a853;
-      bg.fillStyle(defColor, 0.92);
-      bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
-      bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.4);
-      bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+
+      const drawBg = (fill: number, bdr: number, bdrAlpha: number) => {
+        bg.clear();
+        bg.fillStyle(fill, 0.92);
+        bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+        bg.lineStyle(0.8, bdr, bdrAlpha);
+        bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+      };
+      drawBg(defColor, borderColor, opts?.accent ? 0.6 : 0.4);
 
       const txt = this.add.text(0, 0, label, {
         fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
@@ -331,27 +352,19 @@ export class MenuScene extends Phaser.Scene {
         shadow: opts?.accent
           ? { offsetX: 0, offsetY: 0, color: '#55ff55', blur: 3, stroke: false, fill: true }
           : undefined,
-      }).setOrigin(0.5);
+      }).setOrigin(0.5, 0.5);
 
       const hit = this.add.rectangle(0, 0, btnW, btnH, 0, 0)
         .setInteractive({ useHandCursor: !opts?.dim });
       hit.on('pointerover', () => {
         if (opts?.dim) return;
-        bg.clear();
-        bg.fillStyle(opts?.accent ? 0x3a6a3a : 0x1e1840, 0.98);
-        bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
-        bg.lineStyle(1, borderColor, opts?.accent ? 0.9 : 0.5);
-        bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+        drawBg(opts?.accent ? 0x3a6a3a : 0x1e1840, borderColor, opts?.accent ? 0.9 : 0.5);
         txt.setColor(opts?.accent ? '#aaffaa' : '#e8e0d0');
         const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
         audio?.procedural?.playUIHover();
       });
       hit.on('pointerout', () => {
-        bg.clear();
-        bg.fillStyle(defColor, 0.92);
-        bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
-        bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.4);
-        bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+        drawBg(defColor, borderColor, opts?.accent ? 0.6 : 0.4);
         txt.setColor(opts?.accent ? '#8ad88a' : '#c8bfaa');
       });
       hit.on('pointerdown', () => {
@@ -371,14 +384,12 @@ export class MenuScene extends Phaser.Scene {
     const continueY = topY + btnH + gap;
     this.continueBtn = makeBtn(continueY, gm.i18n.t('menu.continueJourney'), () => this.continueGame(), { dim: true });
 
-    // Save info appears between continue and settings (enough room with gap=10, btnH=28)
-    const settingsY = topY + (btnH + gap) * 2;
     makeBtn(settingsY, gm.i18n.t('menu.settings'), () => {
       this.scene.pause();
       this.scene.launch('SettingsScene', { from: 'MenuScene' });
     });
 
-    this.checkSaveExists(continueY, ko);
+    this.checkSaveExists(continueY, saveInfoY, ko);
   }
 
   // ── Menu Polish (Phase 4C) ─────────────────────────────────────────────
@@ -414,17 +425,18 @@ export class MenuScene extends Phaser.Scene {
     // Shooting stars — occasionally cross the sky
     this.scheduleShootingStar();
 
-    // Add highscore display if available (Phase 6A)
+    // Highscore display — placed at horizon line (H*0.45) to avoid button area overlap
     const stored = localStorage.getItem('pp_highscore_faith');
     if (stored) {
       const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
       const ko = gm.language === 'ko';
-      const label = ko ? `최고 믿음: ${stored}` : `Best Faith: ${stored}`;
-      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.45 + 5, label, {
+      const label = ko ? `✝ 최고 믿음: ${stored}` : `✝ Best Faith: ${stored}`;
+      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.44, label, {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
         color: '#a09060',
         fontFamily: DesignSystem.getFontFamily(),
-      }).setOrigin(0.5).setDepth(10).setAlpha(0.75);
+        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 1, stroke: true, fill: true },
+      }).setOrigin(0.5, 0.5).setDepth(10).setAlpha(0.7);
     }
   }
 
@@ -531,7 +543,7 @@ export class MenuScene extends Phaser.Scene {
     }
   }
 
-  private async checkSaveExists(continueBtnY: number, ko: boolean): Promise<void> {
+  private async checkSaveExists(_continueBtnY: number, saveInfoY: number, ko: boolean): Promise<void> {
     if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
     const saveManager = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
     const exists = await saveManager.hasSave();
@@ -550,12 +562,12 @@ export class MenuScene extends Phaser.Scene {
       if (saveData) {
         const chapLabel = ko ? `제${saveData.chapter}장` : `Ch.${saveData.chapter}`;
         const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
-        // Position save info above the continue button, 12px above its center
-        this.add.text(GAME_WIDTH / 2, continueBtnY - 20, `${chapLabel}  ·  ${faithLabel}`, {
-          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
+        // Save info sits in dedicated row between continue and settings buttons
+        this.add.text(GAME_WIDTH / 2, saveInfoY, `📖 ${chapLabel}  ·  ${faithLabel}`, {
+          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080',
+          fontFamily: DesignSystem.getFontFamily(),
           shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 1, stroke: true, fill: true },
-        }).setOrigin(0.5).setDepth(12);
-        // NOTE: do NOT call setChapter/stats.reset here — GameScene loads proper save state
+        }).setOrigin(0.5, 0.5).setDepth(12);
       }
     }
   }

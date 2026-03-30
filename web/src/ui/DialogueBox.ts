@@ -43,15 +43,16 @@ export class DialogueBox {
   private previousState: GameState = GameState.GAME;
   private advanceHandler: (() => void) | null = null;
 
-  private static readonly BOX_W = 446;          // wider — more text space
-  private static readonly BOX_H = 94;           // taller — avoids cramping
-  private static readonly BOX_X = (GAME_WIDTH - 446) / 2;   // re-centered
-  private static readonly BOX_Y = GAME_HEIGHT - 96;
-  private static readonly PORTRAIT_S = 70;      // larger portrait
-  private static readonly PORTRAIT_PAD = 6;     // left margin for portrait
-  // TEXT_X: portrait starts at BOX_X + PORTRAIT_PAD, width = PORTRAIT_S, then 8px gap
-  // So TEXT_X = PORTRAIT_PAD + PORTRAIT_S + 8 = 84
-  private static readonly TEXT_X = 84;
+  // Dialogue box: full-width minus 8px margins, taller for readability
+  // Layout at 480×270: box is 464×100, positioned 6px from bottom
+  private static readonly BOX_W = 464;
+  private static readonly BOX_H = 100;
+  private static readonly BOX_X = (GAME_WIDTH - 464) / 2;   // 8px side margin
+  private static readonly BOX_Y = GAME_HEIGHT - 106;        // 6px bottom margin → y=164
+  private static readonly PORTRAIT_S = 74;      // portrait: fills ~74% of box height
+  private static readonly PORTRAIT_PAD = 5;     // left pad inside box
+  // TEXT_X = PORTRAIT_PAD + PORTRAIT_S + 8 gap = 87
+  private static readonly TEXT_X = 87;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -111,16 +112,17 @@ export class DialogueBox {
     const fontFamily = DesignSystem.getFontFamily();
 
     // Use Rex BBCodeText for rich inline formatting
-    // Text area: from TEXT_X to right edge with padding
-    this.dialogueText = new BBCodeText(this.scene, bx + DialogueBox.TEXT_X, by + 16, '', {
+    // Text area: from TEXT_X to right edge with 10px right padding
+    // Top padding = 14px (speaker badge is -12 to 0, so by+14 gives clear start)
+    this.dialogueText = new BBCodeText(this.scene, bx + DialogueBox.TEXT_X, by + 14, '', {
       fontFamily,
       fontSize: `${dialogueFontSize}px`,
       color: '#e8e0d0',
       wrap: {
         mode: 'word',
-        width: bw - DialogueBox.TEXT_X - 12,
+        width: bw - DialogueBox.TEXT_X - 10,
       },
-      lineSpacing: 5,
+      lineSpacing: 4,
     });
     this.scene.add.existing(this.dialogueText);
 
@@ -395,10 +397,11 @@ export class DialogueBox {
     if (isHeavy) this.showDimOverlay();
 
     const { BOX_X: bx, BOX_Y: by, BOX_W: bw } = DialogueBox;
-    const choiceH = 28;
-    const gap = 5;
+    const choiceH = 26;
+    const gap = 4;
     const total = payload.choices.length * (choiceH + gap);
-    const startY = by - total - 6;
+    // Start choices just above the dialogue box with a small gap
+    const startY = by - total - 8;
 
     payload.choices.forEach((choice, i) => {
       const delay = isHeavy ? (i + 1) * 400 : i * 100;
@@ -561,7 +564,7 @@ export class DialogueBox {
     if (!this.isVisible) return;
     const { BOX_X: bx, TEXT_X: tx, BOX_Y: by } = DialogueBox;
     const baseX = bx + tx;
-    const baseY = by + 16;
+    const baseY = by + 14;
     if (this.currentTextEffect === 'shake') {
       this.dialogueText.x = baseX + (Math.random() - 0.5) * 1.2;
       this.dialogueText.y = baseY + (Math.random() - 0.5) * 1.2;
