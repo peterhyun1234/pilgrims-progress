@@ -16,6 +16,22 @@ export interface ChapterTheme {
   pathColor: number;
   /** Applied to player movement speed as a multiplier (default 1.0). */
   playerSpeedMod?: number;
+  /** Sky gradient top color */
+  skyTop: number;
+  /** Sky gradient bottom color */
+  skyBot: number;
+  /** Highlight / accent color for glows and special details */
+  accentColor: number;
+  /** Shadow tint for cast shadows */
+  shadowColor: number;
+  /** Ambient light overlay color */
+  ambientLight: number;
+  /** Ambient light overlay alpha (0–1) */
+  ambientAlpha: number;
+  /** Tree style for this chapter */
+  treeType: 'oak' | 'swamp' | 'meadow' | 'dead' | 'paradise' | 'celestial' | 'pine';
+  /** Ground tile style for this chapter */
+  groundType: 'cobble' | 'mud' | 'rock' | 'stone' | 'grass' | 'dark' | 'market' | 'dungeon' | 'meadow' | 'forest' | 'gold';
 }
 
 export interface MapEvent {
@@ -86,170 +102,266 @@ export interface TerrainZone {
 }
 
 const THEMES: Record<number, ChapterTheme> = {
+  // ─── Ch1: City of Destruction ─────────────────────────────────────────
   1: {
-    groundBase: 0x6a5e4e,
-    groundVariant: 0x625949,   // ±6-7 diff — subtle scatter, no checkerboard
-    wallColor: 0x3a3028,
-    wallTop: 0x4a4038,
-    decorColors: [0x756a5a, 0x806e5c, 0x6a6050],
-    ambientParticleColor: 0x998880,
-    ambientCount: 18,
-    ambientDirection: 'down',  // Ash/dust falls in city of destruction
-    fogColor: 0x554444,
-    fogAlpha: 0.12,
-    pathColor: 0x8a7a65,
+    groundBase:           0x5a5048,   // dark warm gray cobble
+    groundVariant:        0x524840,   // slightly darker variant
+    wallColor:            0x2e2820,
+    wallTop:              0x3e3830,
+    decorColors:          [0x706050, 0x7a6858, 0x605848],
+    ambientParticleColor: 0xcc7722,   // falling ash/ember
+    ambientCount:         22,
+    ambientDirection:     'down',
+    fogColor:             0x5a3322,   // sooty orange-brown haze
+    fogAlpha:             0.16,
+    pathColor:            0x8a7860,
+    skyTop:               0x1a0e08,   // near-black soot sky
+    skyBot:               0x3d1e08,   // deep ember orange at horizon
+    accentColor:          0xff5500,   // fire orange
+    shadowColor:          0x1a0a00,
+    ambientLight:         0xff4400,
+    ambientAlpha:         0.04,
+    treeType:             'oak',
+    groundType:           'cobble',
   },
+  // ─── Ch2: Slough of Despond ───────────────────────────────────────────
   2: {
-    groundBase: 0x4a5a46,
-    groundVariant: 0x455542,
-    wallColor: 0x2a3528,
-    wallTop: 0x354030,
-    decorColors: [0x4a6848, 0x3e5c3c, 0x5a7055],
-    ambientParticleColor: 0x5599bb,
-    ambientCount: 25,
-    fogColor: 0x2a3a2a,
-    fogAlpha: 0.28,
-    pathColor: 0x5a6a55,
-    playerSpeedMod: 0.82,  // Mud slows player 18%
+    groundBase:           0x3a4a36,   // murky olive mud
+    groundVariant:        0x354438,   // darker mud
+    wallColor:            0x1e2e1a,
+    wallTop:              0x283820,
+    decorColors:          [0x3e5c3c, 0x4a6848, 0x334433],
+    ambientParticleColor: 0x6688aa,   // mist droplets
+    ambientCount:         28,
+    fogColor:             0x1e3028,   // deep green fog
+    fogAlpha:             0.32,
+    pathColor:            0x4a5a40,
+    playerSpeedMod:       0.82,
+    skyTop:               0x0c1418,   // near-black gray overcast
+    skyBot:               0x182830,   // dark teal horizon
+    accentColor:          0x4477aa,   // swamp water blue
+    shadowColor:          0x0a1410,
+    ambientLight:         0x225533,
+    ambientAlpha:         0.05,
+    treeType:             'swamp',
+    groundType:           'mud',
   },
+  // ─── Ch3: Hill Difficulty ─────────────────────────────────────────────
   3: {
-    groundBase: 0x607848,
-    groundVariant: 0x708858,
-    wallColor: 0x3a4830,
-    wallTop: 0x4a5840,
-    decorColors: [0x88aa66, 0x77996a, 0x99bb77],
-    ambientParticleColor: 0xaabb88,
-    ambientCount: 12,
-    fogColor: 0x334422,
-    fogAlpha: 0.08,
-    pathColor: 0x667a55,
+    groundBase:           0x7a7060,   // gray stone and dust
+    groundVariant:        0x706858,
+    wallColor:            0x484038,
+    wallTop:              0x585048,
+    decorColors:          [0x908070, 0x847868, 0x9c8c7c],
+    ambientParticleColor: 0xbbaa99,   // dust particles
+    ambientCount:         10,
+    fogColor:             0x3a3428,
+    fogAlpha:             0.08,
+    pathColor:            0x8a7a65,
+    skyTop:               0x2a4060,   // pale morning blue
+    skyBot:               0x5a8ab0,   // lighter blue near hills
+    accentColor:          0xbbaa88,   // dusty beige
+    shadowColor:          0x201c18,
+    ambientLight:         0xaa9977,
+    ambientAlpha:         0.03,
+    treeType:             'oak',
+    groundType:           'rock',
   },
+  // ─── Ch4: Palace Beautiful ────────────────────────────────────────────
   4: {
-    groundBase: 0x6e6e68,
-    groundVariant: 0x686864,
-    wallColor: 0x484844,
-    wallTop: 0x585858,
-    decorColors: [0x7a7a74, 0x6e6e68, 0x848480],
-    ambientParticleColor: 0xd4a853,
-    ambientCount: 15,
-    fogColor: 0x333330,
-    fogAlpha: 0.10,
-    pathColor: 0x807a70,
+    groundBase:           0xd4c8a8,   // warm cream flagstone
+    groundVariant:        0xc8bc9c,   // slightly darker flag
+    wallColor:            0x88785c,
+    wallTop:              0xa09070,
+    decorColors:          [0xd4a853, 0xcc9944, 0xe8c888],
+    ambientParticleColor: 0xffd700,   // golden dust
+    ambientCount:         18,
+    fogColor:             0xffeedd,
+    fogAlpha:             0.06,
+    pathColor:            0xd4b882,
+    skyTop:               0x1e2840,   // deep twilight blue
+    skyBot:               0x8a4820,   // warm amber sunset
+    accentColor:          0xd4a853,   // gold
+    shadowColor:          0x2a1e10,
+    ambientLight:         0xffd070,
+    ambientAlpha:         0.05,
+    treeType:             'oak',
+    groundType:           'stone',
   },
+  // ─── Ch5: Interpreter's House ─────────────────────────────────────────
   5: {
-    groundBase: 0x705e48,
-    groundVariant: 0x806e58,
-    wallColor: 0x3a2a1a,
-    wallTop: 0x4a3a2a,
-    decorColors: [0xd4a853, 0xaa8844, 0x886633],
+    groundBase:           0x5a4a38,   // warm dark interior floor
+    groundVariant:        0x524430,
+    wallColor:            0x3a2a1a,
+    wallTop:              0x4a3a2a,
+    decorColors:          [0xd4a853, 0xaa8844, 0x886633],
     ambientParticleColor: 0xffdd88,
-    ambientCount: 10,
-    fogColor: 0x2a2010,
-    fogAlpha: 0.05,
-    pathColor: 0x7a6a55,
+    ambientCount:         12,
+    fogColor:             0x2a2010,
+    fogAlpha:             0.05,
+    pathColor:            0x7a6a50,
+    skyTop:               0x2e1a08,   // warm interior dusk
+    skyBot:               0x7a3810,   // orange hearth glow
+    accentColor:          0xff8800,
+    shadowColor:          0x1a1008,
+    ambientLight:         0xff9933,
+    ambientAlpha:         0.04,
+    treeType:             'oak',
+    groundType:           'stone',
   },
+  // ─── Ch6: The Cross ───────────────────────────────────────────────────
   6: {
-    groundBase: 0x728068,
-    groundVariant: 0x6c7a63,
-    wallColor: 0x485840,
-    wallTop: 0x5a6850,
-    decorColors: [0x99bb77, 0xd4a853, 0xffeedd],
-    ambientParticleColor: 0xffd700,
-    ambientCount: 30,
-    fogColor: 0xffeedd,
-    fogAlpha: 0.06,
-    pathColor: 0x828c70,
+    groundBase:           0x5a7840,   // lush valley grass
+    groundVariant:        0x4e6c38,
+    wallColor:            0x384e28,
+    wallTop:              0x487038,
+    decorColors:          [0x88bb55, 0xd4a853, 0xffd700],
+    ambientParticleColor: 0xffd700,   // golden pollen
+    ambientCount:         35,
+    fogColor:             0xddeecc,   // bright haze
+    fogAlpha:             0.05,
+    pathColor:            0x7a9a50,
+    skyTop:               0x1430a0,   // deep celestial blue
+    skyBot:               0x4898d8,   // bright blue sky
+    accentColor:          0xffd700,
+    shadowColor:          0x182a08,
+    ambientLight:         0xffffff,
+    ambientAlpha:         0.06,
+    treeType:             'meadow',
+    groundType:           'grass',
   },
-
-  // ─── Ch7: Beautiful Palace ─────────────────────────────────────────────
+  // ─── Ch7: Beautiful Palace ────────────────────────────────────────────
   7: {
-    groundBase: 0x625878,
-    groundVariant: 0x5c5373,
-    wallColor: 0x3c2e50,
-    wallTop: 0x4c3e60,
-    decorColors: [0x7a6a8a, 0x8a7898, 0x685878],
-    ambientParticleColor: 0xaa99cc,
-    ambientCount: 15,
-    fogColor: 0x4a4060,
-    fogAlpha: 0.10,
-    pathColor: 0x6e6080,
-    playerSpeedMod: 0.95,
+    groundBase:           0xb8a888,   // warm palace stone floor
+    groundVariant:        0xaca090,
+    wallColor:            0x786858,
+    wallTop:              0x908070,
+    decorColors:          [0xd4a853, 0xc8b880, 0xe8d8a8],
+    ambientParticleColor: 0xffd700,   // golden motes
+    ambientCount:         20,
+    fogColor:             0xfff0cc,
+    fogAlpha:             0.04,
+    pathColor:            0xd4b882,
+    playerSpeedMod:       0.95,
+    skyTop:               0x1a2a50,   // evening palace sky
+    skyBot:               0x9a5820,   // warm amber dusk
+    accentColor:          0xffd700,
+    shadowColor:          0x302010,
+    ambientLight:         0xffcc44,
+    ambientAlpha:         0.05,
+    treeType:             'oak',
+    groundType:           'stone',
   },
-
   // ─── Ch8: Valley of Humiliation ───────────────────────────────────────
   8: {
-    groundBase: 0x2e2838,
-    groundVariant: 0x2a2534,
-    wallColor: 0x181220,
-    wallTop: 0x241c2e,
-    decorColors: [0x3a2e44, 0x2e2438, 0x3a2a3c],
-    ambientParticleColor: 0x660033,
-    ambientCount: 8,
-    ambientDirection: 'down',
-    fogColor: 0x220038,
-    fogAlpha: 0.30,
-    pathColor: 0x3c2e48,
-    playerSpeedMod: 0.9,
+    groundBase:           0x282040,   // dark violet ground
+    groundVariant:        0x221c38,
+    wallColor:            0x140c20,
+    wallTop:              0x201828,
+    decorColors:          [0x3a2e50, 0x2e2240, 0x3a2848],
+    ambientParticleColor: 0x550033,   // blood-red mist
+    ambientCount:         8,
+    ambientDirection:     'down',
+    fogColor:             0x1e0030,
+    fogAlpha:             0.30,
+    pathColor:            0x382848,
+    playerSpeedMod:       0.9,
+    skyTop:               0x060410,   // near-black void
+    skyBot:               0x12001c,   // very dark purple
+    accentColor:          0x880033,   // dark blood red
+    shadowColor:          0x060408,
+    ambientLight:         0x6600aa,
+    ambientAlpha:         0.04,
+    treeType:             'dead',
+    groundType:           'dark',
   },
-
-  // ─── Ch9: Valley of Death's Shadow ────────────────────────────────────
+  // ─── Ch9: Valley of the Shadow of Death ───────────────────────────────
   9: {
-    groundBase: 0x1e1a22,
-    groundVariant: 0x1b171f,
-    wallColor: 0x100c14,
-    wallTop: 0x1a161e,
-    decorColors: [0x28202e, 0x201826, 0x24182c],
-    ambientParticleColor: 0x332844,
-    ambientCount: 5,
-    ambientDirection: 'down',
-    fogColor: 0x100c18,
-    fogAlpha: 0.40,
-    pathColor: 0x261e30,
-    playerSpeedMod: 0.85,
+    groundBase:           0x14101a,   // near-black earth
+    groundVariant:        0x100e16,
+    wallColor:            0x080610,
+    wallTop:              0x10080e,
+    decorColors:          [0x1e1626, 0x18101e, 0x1c1222],
+    ambientParticleColor: 0x2e1e40,   // dark purple wisps
+    ambientCount:         6,
+    ambientDirection:     'down',
+    fogColor:             0x0c0810,
+    fogAlpha:             0.45,
+    pathColor:            0x1e1828,
+    playerSpeedMod:       0.85,
+    skyTop:               0x020108,   // absolute darkness
+    skyBot:               0x0a0618,   // faintest purple void
+    accentColor:          0x5500aa,   // sickly purple
+    shadowColor:          0x040308,
+    ambientLight:         0x330066,
+    ambientAlpha:         0.04,
+    treeType:             'dead',
+    groundType:           'dark',
   },
-
   // ─── Ch10: Vanity Fair ────────────────────────────────────────────────
   10: {
-    groundBase: 0x3a3850,
-    groundVariant: 0x35334c,
-    wallColor: 0x222030,
-    wallTop: 0x302e42,
-    decorColors: [0x6655aa, 0x8855bb, 0xbb77aa],
-    ambientParticleColor: 0xdd99bb,
-    ambientCount: 20,
-    fogColor: 0x2a2838,
-    fogAlpha: 0.08,
-    pathColor: 0x4a3a58,
+    groundBase:           0x4a3860,   // dark purple-cobble market
+    groundVariant:        0x3e2e54,
+    wallColor:            0x1e1430,
+    wallTop:              0x2e2440,
+    decorColors:          [0x8844cc, 0xcc4488, 0xffaa22],
+    ambientParticleColor: 0xff66bb,   // gaudy pink confetti
+    ambientCount:         25,
+    fogColor:             0x28203a,
+    fogAlpha:             0.08,
+    pathColor:            0x6044a0,
+    skyTop:               0x100828,   // dark corrupted night
+    skyBot:               0x3a1060,   // lurid purple sky
+    accentColor:          0xff3388,   // garish pink
+    shadowColor:          0x10081c,
+    ambientLight:         0xcc44ff,
+    ambientAlpha:         0.04,
+    treeType:             'pine',
+    groundType:           'market',
   },
-
   // ─── Ch11: Doubting Castle ────────────────────────────────────────────
   11: {
-    groundBase: 0x282434,
-    groundVariant: 0x232030,
-    wallColor: 0x181420,
-    wallTop: 0x262230,
-    decorColors: [0x30304a, 0x282838, 0x382e44],
-    ambientParticleColor: 0x332844,
-    ambientCount: 6,
-    ambientDirection: 'down',
-    fogColor: 0x181620,
-    fogAlpha: 0.35,
-    pathColor: 0x30283c,
-    playerSpeedMod: 0.8,
+    groundBase:           0x2c2838,   // cold dungeon stone
+    groundVariant:        0x282434,
+    wallColor:            0x18141e,
+    wallTop:              0x24202c,
+    decorColors:          [0x34304a, 0x2c2840, 0x3a3450],
+    ambientParticleColor: 0x3a3050,   // cold mist
+    ambientCount:         6,
+    ambientDirection:     'down',
+    fogColor:             0x181420,
+    fogAlpha:             0.38,
+    pathColor:            0x342e44,
+    playerSpeedMod:       0.8,
+    skyTop:               0x050310,   // dungeon black
+    skyBot:               0x0e0818,   // cold dark blue
+    accentColor:          0x3366aa,   // cold blue iron gleam
+    shadowColor:          0x040208,
+    ambientLight:         0x2244aa,
+    ambientAlpha:         0.04,
+    treeType:             'pine',
+    groundType:           'dungeon',
   },
-
   // ─── Ch12: Celestial City ─────────────────────────────────────────────
   12: {
-    groundBase: 0x524278,
-    groundVariant: 0x594880,
-    wallColor: 0x3c2c5a,
-    wallTop: 0x4e3c6e,
-    decorColors: [0xd4a853, 0xffd700, 0xffeedd],
-    ambientParticleColor: 0xffd700,
-    ambientCount: 35,
-    fogColor: 0xffeedd,
-    fogAlpha: 0.05,
-    pathColor: 0x6e5e8a,
+    groundBase:           0xf0e8cc,   // white-gold marble
+    groundVariant:        0xe4dcc0,   // pale gold variant
+    wallColor:            0xb89860,
+    wallTop:              0xd4b870,
+    decorColors:          [0xffd700, 0xffffff, 0xffeedd],
+    ambientParticleColor: 0xffd700,   // golden sparkles
+    ambientCount:         40,
+    fogColor:             0xfff8e0,   // warm radiant haze
+    fogAlpha:             0.04,
+    pathColor:            0xffd070,
+    skyTop:               0xc8e8ff,   // radiant pearl sky
+    skyBot:               0xfff8e0,   // golden light at horizon
+    accentColor:          0xffd700,   // pure gold
+    shadowColor:          0xaa8833,
+    ambientLight:         0xffffff,
+    ambientAlpha:         0.10,
+    treeType:             'celestial',
+    groundType:           'gold',
   },
 };
 
