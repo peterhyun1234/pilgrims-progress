@@ -43,12 +43,15 @@ export class DialogueBox {
   private previousState: GameState = GameState.GAME;
   private advanceHandler: (() => void) | null = null;
 
-  private static readonly BOX_W = 430;
-  private static readonly BOX_H = 90;
-  private static readonly BOX_X = (GAME_WIDTH - 430) / 2;
-  private static readonly BOX_Y = GAME_HEIGHT - 92;
-  private static readonly PORTRAIT_S = 64;
-  private static readonly TEXT_X = 68;
+  private static readonly BOX_W = 446;          // wider — more text space
+  private static readonly BOX_H = 94;           // taller — avoids cramping
+  private static readonly BOX_X = (GAME_WIDTH - 446) / 2;   // re-centered
+  private static readonly BOX_Y = GAME_HEIGHT - 96;
+  private static readonly PORTRAIT_S = 70;      // larger portrait
+  private static readonly PORTRAIT_PAD = 6;     // left margin for portrait
+  // TEXT_X: portrait starts at BOX_X + PORTRAIT_PAD, width = PORTRAIT_S, then 8px gap
+  // So TEXT_X = PORTRAIT_PAD + PORTRAIT_S + 8 = 84
+  private static readonly TEXT_X = 84;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -108,15 +111,16 @@ export class DialogueBox {
     const fontFamily = DesignSystem.getFontFamily();
 
     // Use Rex BBCodeText for rich inline formatting
-    this.dialogueText = new BBCodeText(this.scene, bx + DialogueBox.TEXT_X, by + 18, '', {
+    // Text area: from TEXT_X to right edge with padding
+    this.dialogueText = new BBCodeText(this.scene, bx + DialogueBox.TEXT_X, by + 16, '', {
       fontFamily,
       fontSize: `${dialogueFontSize}px`,
       color: '#e8e0d0',
       wrap: {
         mode: 'word',
-        width: bw - DialogueBox.TEXT_X - 16,
+        width: bw - DialogueBox.TEXT_X - 12,
       },
-      lineSpacing: 4,
+      lineSpacing: 5,
     });
     this.scene.add.existing(this.dialogueText);
 
@@ -149,23 +153,25 @@ export class DialogueBox {
   }
 
   private drawPortraitFrame(borderColor: number): void {
-    const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
+    const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps, PORTRAIT_PAD: pp } = DialogueBox;
+    const px = bx + pp;
+    const py = by + Math.round((bh - ps) / 2);
     this.portraitBg.clear();
-    // Shadow behind portrait
-    this.portraitBg.fillStyle(0x000000, 0.4);
-    this.portraitBg.fillRoundedRect(bx + 7, by + (bh - ps) / 2 + 2, ps, ps, 4);
+    // Drop shadow
+    this.portraitBg.fillStyle(0x000000, 0.45);
+    this.portraitBg.fillRoundedRect(px + 2, py + 2, ps, ps, 4);
     // Portrait background
-    this.portraitBg.fillStyle(0x0e0c18, 0.85);
-    this.portraitBg.fillRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
-    // Gold border
-    this.portraitBg.lineStyle(1.5, borderColor, 0.75);
-    this.portraitBg.strokeRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
-    // Inner vignette corners (dark gradient effect via corner fills)
-    this.portraitBg.fillStyle(0x000000, 0.2);
-    this.portraitBg.fillRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
-    // Bright inner border
-    this.portraitBg.lineStyle(0.5, borderColor, 0.2);
-    this.portraitBg.strokeRoundedRect(bx + 7, by + (bh - ps) / 2 + 2, ps - 4, ps - 4, 3);
+    this.portraitBg.fillStyle(0x0e0c18, 0.92);
+    this.portraitBg.fillRoundedRect(px, py, ps, ps, 4);
+    // Colored emotion border
+    this.portraitBg.lineStyle(1.5, borderColor, 0.8);
+    this.portraitBg.strokeRoundedRect(px, py, ps, ps, 4);
+    // Inner subtle gold glow tint
+    this.portraitBg.fillStyle(borderColor, 0.05);
+    this.portraitBg.fillRoundedRect(px + 1, py + 1, ps - 2, ps - 2, 3);
+    // Inner border line
+    this.portraitBg.lineStyle(0.5, borderColor, 0.25);
+    this.portraitBg.strokeRoundedRect(px + 2, py + 2, ps - 4, ps - 4, 3);
   }
 
   private onDialogueLine = (p: DialogueLinePayload | undefined) => { if (p) this.showLine(p); };
@@ -321,9 +327,9 @@ export class DialogueBox {
 
     if (!this.currentSpeakerId || !PORTRAIT_CONFIGS[this.currentSpeakerId]) {
       if (this.currentSpeakerId && this.scene.textures.exists(this.currentSpeakerId)) {
-        const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
+        const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps, PORTRAIT_PAD: pp } = DialogueBox;
         const sprite = this.scene.add.sprite(
-          bx + 5 + ps / 2, by + bh / 2, this.currentSpeakerId, 0,
+          bx + pp + ps / 2, by + bh / 2, this.currentSpeakerId, 0,
         ).setScale(2.5).setDepth(201);
         this.container.add(sprite);
         this.portraitImage = sprite as unknown as Phaser.GameObjects.RenderTexture;
@@ -331,10 +337,10 @@ export class DialogueBox {
       return;
     }
 
-    const rt = this.portraitRenderer.getPortrait(this.currentSpeakerId, this.emotionState);
+    const rt = this.portraitRenderer.getPortrait(this.currentSpeakerId, this.emotionState, DialogueBox.PORTRAIT_S);
     if (rt) {
-      const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
-      rt.setPosition(bx + 5, by + (bh - ps) / 2);
+      const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps, PORTRAIT_PAD: pp } = DialogueBox;
+      rt.setPosition(bx + pp, by + Math.round((bh - ps) / 2));
       rt.setOrigin(0, 0).setScrollFactor(0);
       rt.setVisible(true).setDepth(201);
       this.container.add(rt);
@@ -554,11 +560,17 @@ export class DialogueBox {
   update(): void {
     if (!this.isVisible) return;
     const { BOX_X: bx, TEXT_X: tx, BOX_Y: by } = DialogueBox;
+    const baseX = bx + tx;
+    const baseY = by + 16;
     if (this.currentTextEffect === 'shake') {
-      this.dialogueText.x = bx + tx + (Math.random() - 0.5) * 1.2;
-      this.dialogueText.y = by + 24 + (Math.random() - 0.5) * 1.2;
+      this.dialogueText.x = baseX + (Math.random() - 0.5) * 1.2;
+      this.dialogueText.y = baseY + (Math.random() - 0.5) * 1.2;
     } else if (this.currentTextEffect === 'wave') {
-      this.dialogueText.y = by + 24 + Math.sin(this.scene.time.now * 0.004) * 1.5;
+      this.dialogueText.y = baseY + Math.sin(this.scene.time.now * 0.004) * 1.5;
+    } else {
+      // Snap back to base position if effect was cleared
+      if (this.dialogueText.x !== baseX) this.dialogueText.x = baseX;
+      if (this.dialogueText.y !== baseY) this.dialogueText.y = baseY;
     }
   }
 

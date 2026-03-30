@@ -254,30 +254,32 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: title, alpha: 1, y: 44, duration: 900, delay: 200, ease: 'Back.easeOut' });
 
-    // Subtitle
-    const subtitle = this.add.text(cx, 57, gm.i18n.t('game.subtitle'), {
+    // Subtitle — pushed down to avoid touching title bottom edge
+    const subtitle = this.add.text(cx, 64, gm.i18n.t('game.subtitle'), {
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, stroke: true, fill: true },
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: subtitle, alpha: 0.7, duration: 700, delay: 500 });
 
     // Ornamental divider
     const divider = this.add.graphics().setDepth(10).setAlpha(0);
     divider.lineStyle(0.5, 0xd4a853, 0.3);
-    divider.lineBetween(cx - 70, 67, cx + 70, 67);
+    divider.lineBetween(cx - 70, 74, cx + 70, 74);
     divider.fillStyle(0xd4a853, 0.5);
-    divider.fillCircle(cx, 67, 1.5);
-    divider.fillCircle(cx - 70, 67, 1);
-    divider.fillCircle(cx + 70, 67, 1);
+    divider.fillCircle(cx, 74, 1.5);
+    divider.fillCircle(cx - 70, 74, 1);
+    divider.fillCircle(cx + 70, 74, 1);
     this.tweens.add({ targets: divider, alpha: 1, duration: 600, delay: 600 });
 
-    // — Bible verse —
-    const verse = this.add.text(cx, 78, '"좁은 문으로 들어가라"  마 7:13', {
+    // — Bible verse — 8px below divider
+    const verse = this.add.text(cx, 86, '"좁은 문으로 들어가라"  마 7:13', {
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#c8b070', fontFamily: DesignSystem.getFontFamily(),
+      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, stroke: true, fill: true },
     }).setOrigin(0.5).setDepth(10).setAlpha(0);
     this.tweens.add({ targets: verse, alpha: 0.9, duration: 800, delay: 1200 });
 
-    // — Button panel (lower section, below horizon) —
-    const btnAreaY = H * 0.58;
+    // — Button panel (lower section, below horizon) — moved up slightly to fit within screen
+    const btnAreaY = H * 0.56;
     this.buildButtonPanel(cx, btnAreaY, ko);
 
     // — Bottom info bar —
@@ -297,15 +299,17 @@ export class MenuScene extends Phaser.Scene {
   private buildButtonPanel(cx: number, topY: number, ko: boolean): void {
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const btnW = 160;
-    const btnH = 32;
-    const gap = 8;
+    const btnH = 28;   // slightly slimmer buttons
+    const gap = 10;    // larger gap for save-info text
 
+    // Panel height capped to stay within screen
+    const panelH = Math.min(btnH * 3 + gap * 2 + 14, GAME_HEIGHT - (topY - 8));
     // Semi-transparent panel behind buttons
     const panelBg = this.add.graphics().setDepth(10).setAlpha(0);
     panelBg.fillStyle(0x06031a, 0.85);
-    panelBg.fillRoundedRect(cx - btnW / 2 - 12, topY - 6, btnW + 24, btnH * 3 + gap * 2 + 18, 6);
+    panelBg.fillRoundedRect(cx - btnW / 2 - 12, topY - 8, btnW + 24, panelH, 6);
     panelBg.lineStyle(0.8, 0xd4a853, 0.18);
-    panelBg.strokeRoundedRect(cx - btnW / 2 - 12, topY - 6, btnW + 24, btnH * 3 + gap * 2 + 18, 6);
+    panelBg.strokeRoundedRect(cx - btnW / 2 - 12, topY - 8, btnW + 24, panelH, 6);
     this.tweens.add({ targets: panelBg, alpha: 1, duration: 500, delay: 700 });
 
     const makeBtn = (y: number, label: string, cb: () => void, opts?: { accent?: boolean; dim?: boolean }) => {
@@ -364,14 +368,17 @@ export class MenuScene extends Phaser.Scene {
 
     makeBtn(topY, gm.i18n.t('menu.newJourney'), () => this.startNewGame(), { accent: true });
 
-    this.continueBtn = makeBtn(topY + btnH + gap, gm.i18n.t('menu.continueJourney'), () => this.continueGame(), { dim: true });
+    const continueY = topY + btnH + gap;
+    this.continueBtn = makeBtn(continueY, gm.i18n.t('menu.continueJourney'), () => this.continueGame(), { dim: true });
 
-    makeBtn(topY + (btnH + gap) * 2, gm.i18n.t('menu.settings'), () => {
+    // Save info appears between continue and settings (enough room with gap=10, btnH=28)
+    const settingsY = topY + (btnH + gap) * 2;
+    makeBtn(settingsY, gm.i18n.t('menu.settings'), () => {
       this.scene.pause();
       this.scene.launch('SettingsScene', { from: 'MenuScene' });
     });
 
-    this.checkSaveExists(topY + btnH + gap, ko);
+    this.checkSaveExists(continueY, ko);
   }
 
   // ── Menu Polish (Phase 4C) ─────────────────────────────────────────────
@@ -543,8 +550,10 @@ export class MenuScene extends Phaser.Scene {
       if (saveData) {
         const chapLabel = ko ? `제${saveData.chapter}장` : `Ch.${saveData.chapter}`;
         const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
-        this.add.text(GAME_WIDTH / 2, continueBtnY + 18, `${chapLabel}  ·  ${faithLabel}`, {
+        // Position save info above the continue button, 12px above its center
+        this.add.text(GAME_WIDTH / 2, continueBtnY - 20, `${chapLabel}  ·  ${faithLabel}`, {
           fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
+          shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 1, stroke: true, fill: true },
         }).setOrigin(0.5).setDepth(12);
         // NOTE: do NOT call setChapter/stats.reset here — GameScene loads proper save state
       }
