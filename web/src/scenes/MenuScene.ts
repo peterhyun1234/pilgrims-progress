@@ -285,8 +285,8 @@ export class MenuScene extends Phaser.Scene {
     }).setOrigin(0.5, 0.5).setDepth(10).setAlpha(0);
     this.tweens.add({ targets: verse, alpha: 0.9, duration: 800, delay: 1200 });
 
-    // — Button panel (lower section, H*0.57 keeps buttons in ground zone) —
-    const btnAreaY = Math.round(H * 0.57);
+    // — Button panel (H*0.60 = clearly below the mountain horizon) —
+    const btnAreaY = Math.round(H * 0.60);
     this.buildButtonPanel(cx, btnAreaY, ko);
 
     // — Bottom info bar —
@@ -305,67 +305,89 @@ export class MenuScene extends Phaser.Scene {
 
   private buildButtonPanel(cx: number, topY: number, ko: boolean): void {
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-    const btnW = 160;
-    const btnH = 26;
-    const gap = 7;
+    const btnW = 164;
+    const btnH = 24;
+    const gap = 8;
 
-    // Layout (all centered):
-    //   topY        : New Journey
-    //   topY+33     : Continue
-    //   topY+66     : [save info text, 10px]
-    //   topY+80     : Settings
-    // Panel spans topY-8 → topY+108 (capped to screen bottom)
-    const saveInfoY  = topY + (btnH + gap) * 2 - 1;  // between continue & settings
-    const settingsY  = topY + (btnH + gap) * 2 + 13; // below save info row
-
-    const panelBottom = Math.min(settingsY + btnH / 2 + 8, GAME_HEIGHT - 4);
+    // 3-button layout within remaining screen space (topY → GAME_HEIGHT-6)
+    // New Journey | Continue (+ save subtitle) | Settings
+    const continueY  = topY + btnH + gap;
+    const settingsY  = continueY + btnH + gap;
+    const panelBottom = Math.min(settingsY + btnH / 2 + 10, GAME_HEIGHT - 6);
     const panelH = panelBottom - (topY - 8);
 
     const panelBg = this.add.graphics().setDepth(10).setAlpha(0);
-    panelBg.fillStyle(0x06031a, 0.85);
+    panelBg.fillStyle(0x06031a, 0.88);
     panelBg.fillRoundedRect(cx - btnW / 2 - 12, topY - 8, btnW + 24, panelH, 6);
-    panelBg.lineStyle(0.8, 0xd4a853, 0.18);
+    panelBg.lineStyle(1, 0xd4a853, 0.25);
     panelBg.strokeRoundedRect(cx - btnW / 2 - 12, topY - 8, btnW + 24, panelH, 6);
+    // Inner gold highlight strip at top of panel
+    panelBg.fillStyle(0xd4a853, 0.06);
+    panelBg.fillRoundedRect(cx - btnW / 2 - 11, topY - 7, btnW + 22, 10, 5);
     this.tweens.add({ targets: panelBg, alpha: 1, duration: 500, delay: 700 });
 
-    const makeBtn = (y: number, label: string, cb: () => void, opts?: { accent?: boolean; dim?: boolean }) => {
+    // makeBtn: creates a stylised button container at (cx, y)
+    const makeBtn = (
+      y: number, label: string, cb: () => void,
+      opts?: { accent?: boolean; dim?: boolean; subtitle?: string },
+    ) => {
+      const totalH = opts?.subtitle ? btnH + 11 : btnH;
       const c = this.add.container(cx, y).setDepth(11).setAlpha(0);
       this.tweens.add({ targets: c, alpha: opts?.dim ? 0.35 : 1, duration: 400, delay: 800 });
 
       const bg = this.add.graphics();
-      const defColor = opts?.accent ? 0x2a4a2a : 0x110d22;
-      const borderColor = opts?.accent ? 0x4a8a4a : 0xd4a853;
+      // Use visually distinct, readable colors for each button type
+      // accent (new journey) = warm gold-green; normal = dark navy; both with clear borders
+      const defColor   = opts?.accent ? 0x243818 : 0x1a1530;
+      const hoverColor = opts?.accent ? 0x365428 : 0x282050;
+      const borderColor = opts?.accent ? 0x7acc44 : 0xd4a853;
 
-      const drawBg = (fill: number, bdr: number, bdrAlpha: number) => {
+      const drawBg = (fill: number, bdr: number, bdrA: number) => {
         bg.clear();
-        bg.fillStyle(fill, 0.92);
-        bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
-        bg.lineStyle(0.8, bdr, bdrAlpha);
-        bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+        bg.fillStyle(fill, 0.97);
+        bg.fillRoundedRect(-btnW / 2, -totalH / 2, btnW, totalH, 4);
+        bg.lineStyle(1.5, bdr, bdrA);
+        bg.strokeRoundedRect(-btnW / 2, -totalH / 2, btnW, totalH, 4);
+        // Thin inner highlight at top edge
+        bg.fillStyle(0xffffff, opts?.accent ? 0.08 : 0.04);
+        bg.fillRect(-btnW / 2 + 2, -totalH / 2 + 1, btnW - 4, 2);
       };
-      drawBg(defColor, borderColor, opts?.accent ? 0.6 : 0.4);
+      drawBg(defColor, borderColor, opts?.accent ? 0.9 : 0.55);
 
-      const txt = this.add.text(0, 0, label, {
+      const labelY = opts?.subtitle ? -6 : 0;
+      const txt = this.add.text(0, labelY, label, {
         fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
-        color: opts?.accent ? '#ccffcc' : '#c8bfaa',
+        color: opts?.accent ? '#c8ff88' : '#d0c8b8',
         fontFamily: DesignSystem.getFontFamily(),
         shadow: opts?.accent
-          ? { offsetX: 0, offsetY: 0, color: '#55ff55', blur: 3, stroke: false, fill: true }
-          : undefined,
+          ? { offsetX: 0, offsetY: 1, color: '#1a4400', blur: 4, stroke: true, fill: true }
+          : { offsetX: 1, offsetY: 1, color: '#000', blur: 2, stroke: true, fill: true },
       }).setOrigin(0.5, 0.5);
 
-      const hit = this.add.rectangle(0, 0, btnW, btnH, 0, 0)
+      c.add([bg, txt]);
+
+      if (opts?.subtitle) {
+        const sub = this.add.text(0, 7, opts.subtitle, {
+          fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+          color: '#a09070',
+          fontFamily: DesignSystem.getFontFamily(),
+          shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
+        }).setOrigin(0.5, 0.5);
+        c.add(sub);
+      }
+
+      const hit = this.add.rectangle(0, 0, btnW, totalH, 0, 0)
         .setInteractive({ useHandCursor: !opts?.dim });
       hit.on('pointerover', () => {
         if (opts?.dim) return;
-        drawBg(opts?.accent ? 0x3a6a3a : 0x1e1840, borderColor, opts?.accent ? 0.9 : 0.5);
-        txt.setColor(opts?.accent ? '#aaffaa' : '#e8e0d0');
+        drawBg(hoverColor, borderColor, 1.0);
+        txt.setColor(opts?.accent ? '#e8ffaa' : '#ede8e0');
         const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
         audio?.procedural?.playUIHover();
       });
       hit.on('pointerout', () => {
-        drawBg(defColor, borderColor, opts?.accent ? 0.6 : 0.4);
-        txt.setColor(opts?.accent ? '#8ad88a' : '#c8bfaa');
+        drawBg(defColor, borderColor, opts?.accent ? 0.9 : 0.55);
+        txt.setColor(opts?.accent ? '#c8ff88' : '#d0c8b8');
       });
       hit.on('pointerdown', () => {
         if (opts?.dim) return;
@@ -374,22 +396,18 @@ export class MenuScene extends Phaser.Scene {
         this.tweens.add({ targets: c, scaleX: 0.96, scaleY: 0.96, duration: 60, yoyo: true });
         this.time.delayedCall(80, cb);
       });
-
-      c.add([bg, txt, hit]);
+      c.add(hit);
       return c;
     };
 
     makeBtn(topY, gm.i18n.t('menu.newJourney'), () => this.startNewGame(), { accent: true });
-
-    const continueY = topY + btnH + gap;
     this.continueBtn = makeBtn(continueY, gm.i18n.t('menu.continueJourney'), () => this.continueGame(), { dim: true });
-
     makeBtn(settingsY, gm.i18n.t('menu.settings'), () => {
       this.scene.pause();
       this.scene.launch('SettingsScene', { from: 'MenuScene' });
     });
 
-    this.checkSaveExists(continueY, saveInfoY, ko);
+    this.checkSaveExists(continueY, ko);
   }
 
   // ── Menu Polish (Phase 4C) ─────────────────────────────────────────────
@@ -543,7 +561,7 @@ export class MenuScene extends Phaser.Scene {
     }
   }
 
-  private async checkSaveExists(_continueBtnY: number, saveInfoY: number, ko: boolean): Promise<void> {
+  private async checkSaveExists(_continueBtnY: number, ko: boolean): Promise<void> {
     if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
     const saveManager = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
     const exists = await saveManager.hasSave();
@@ -562,15 +580,21 @@ export class MenuScene extends Phaser.Scene {
       if (saveData) {
         const chapLabel = ko ? `제${saveData.chapter}장` : `Ch.${saveData.chapter}`;
         const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
-        // Save info sits in dedicated row between continue and settings buttons
-        this.add.text(GAME_WIDTH / 2, saveInfoY, `📖 ${chapLabel}  ·  ${faithLabel}`, {
-          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080',
-          fontFamily: DesignSystem.getFontFamily(),
-          shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 1, stroke: true, fill: true },
-        }).setOrigin(0.5, 0.5).setDepth(12);
+        // Append save info as a small subtitle line inside the continue button container
+        const sub = this.add.text(0, 7, `${chapLabel}  ·  ${faithLabel}`, {
+          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09070',
+          fontFamily: this.getDesignSystem().getFontFamily(),
+          shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
+        }).setOrigin(0.5, 0.5);
+        this.continueBtn!.add(sub);
+        // Shift main label up by half the subtitle height so both are centered
+        const mainLabel = this.continueBtn!.getAt(2) as Phaser.GameObjects.Text;
+        if (mainLabel?.setY) mainLabel.setY(-6);
       }
     }
   }
+
+  private getDesignSystem() { return DesignSystem; }
 
   private async continueGame(): Promise<void> {
     if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
