@@ -49,12 +49,14 @@ export class NPC extends Entity {
   private nameLabel: Phaser.GameObjects.Text | null = null;
   private nameBadgeGraphics: Phaser.GameObjects.Graphics | null = null;
   private completedBadge: Phaser.GameObjects.Text | null = null;
+  private questIndicator: Phaser.GameObjects.Graphics | null = null;
   private isPromptVisible = false;
   private baseY = 0;
   private baseYInit = false;
   private bobPhase: number;
   private glowGraphics: Phaser.GameObjects.Graphics | null = null;
   private currentPhase: NpcPhase = 'available';
+  private chapter: number;
 
   private behavior: NPCBehavior | undefined;
   private behaviorGraphics: Phaser.GameObjects.Graphics | null = null;
@@ -82,6 +84,7 @@ export class NPC extends Entity {
     this.npcId = config.id;
     this.nameKo = config.nameKo;
     this.nameEn = config.nameEn;
+    this.chapter = config.chapter;
     this.eventBus = EventBus.getInstance();
     this.bobPhase = Math.random() * Math.PI * 2;
     this.patrolSpeed = config.patrolSpeed ?? 20;
@@ -191,14 +194,15 @@ export class NPC extends Entity {
     if (this.currentPhase === 'locked') return;
     this.isPromptVisible = true;
 
+    const isIdlePhase = this.currentPhase === 'completed' || this.currentPhase === 'idle';
+    const isAvailable = this.currentPhase === 'available';
+
     this.prompt = this.scene.add.container(
       this.sprite.x, this.sprite.y + NPC_CONFIG.PROMPT_OFFSET_Y - 12,
     ).setDepth(20);
 
+    // 3-layer glow orb prompt (HEAD approach, more polished)
     // Completed NPCs show a dimmed orb instead of pulsing interaction orb
-    const isIdlePhase = this.currentPhase === 'completed' || this.currentPhase === 'idle';
-
-    // 3-layer glow orb prompt
     const bg = this.scene.add.graphics();
     if (!isIdlePhase) {
       // Outer soft glow
@@ -237,7 +241,7 @@ export class NPC extends Entity {
       this.sprite.x, this.sprite.y - 14,
       displayName, {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-        color: '#e8e0d0', fontFamily: FONT_FAMILY, fontStyle: 'bold',
+        color: isAvailable ? '#d4c080' : '#e8e0d0', fontFamily: FONT_FAMILY, fontStyle: 'bold',
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
       },
     ).setOrigin(0.5).setDepth(20);
@@ -252,17 +256,19 @@ export class NPC extends Entity {
       this.scene.tweens.add({
         targets: this.prompt,
         y: this.sprite.y + NPC_CONFIG.PROMPT_OFFSET_Y - 16,
-        duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        duration: isAvailable ? 500 : 700,
+        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
       });
     }
 
     this.glowGraphics = this.scene.add.graphics().setDepth(7);
-    // Chapter-specific aura color — initial draw updated each frame in update()
+    // Chapter-specific aura color — initial draw; updated each frame in update()
     const initAuraColor = this.getChapterAuraColor();
+    const initRadius = isAvailable ? 24 : 18;
     this.glowGraphics.fillStyle(initAuraColor, 0.12);
-    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 28);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, initRadius + 8);
     this.glowGraphics.fillStyle(initAuraColor, 0.28);
-    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 18);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, initRadius);
   }
 
   private drawNameBadge(x: number, y: number, textWidth: number): void {
@@ -287,6 +293,8 @@ export class NPC extends Entity {
     this.nameBadgeGraphics = null;
     this.glowGraphics?.destroy();
     this.glowGraphics = null;
+    this.questIndicator?.destroy();
+    this.questIndicator = null;
   }
 
   interact(): void {
@@ -369,9 +377,10 @@ export class NPC extends Entity {
       this.glowGraphics.clear();
       // Chapter-specific aura color with double-layer bloom effect
       const auraColor = this.getChapterAuraColor();
+      const isAvailablePhase = this.currentPhase === 'available';
       const baseAlpha = this.chapter === 7 ? 0.06 : (this.chapter === 12 ? 0.08 : 0.04);
       const pulse = baseAlpha + Math.sin(t * 2) * 0.025;
-      const pulseRadius = 24 + Math.sin(t * 1.5) * 2;
+      const pulseRadius = (isAvailablePhase ? 24 : 18) + Math.sin(t * 1.5) * 2;
       // Outer soft ring
       this.glowGraphics.fillStyle(auraColor, Math.max(0, pulse) * 0.4);
       this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius + 4);
@@ -512,6 +521,8 @@ export class NPC extends Entity {
     }
     this.hidePrompt();
     this.completedBadge?.destroy();
+    this.questIndicator?.destroy();
+    this.questIndicator = null;
     this.behaviorGraphics?.destroy();
     this.behaviorGraphics = null;
     super.destroy();

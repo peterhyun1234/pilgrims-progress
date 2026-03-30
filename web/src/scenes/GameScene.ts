@@ -258,8 +258,59 @@ export class GameScene extends Phaser.Scene {
 
   // ── Chapter theming ──────────────────────────────────────────────────────
 
+  /** Returns chapter-specific ambient overlay [color, alpha] for camera tint. */
+  private static getChapterAmbientOverlay(chapter: number): [number, number] {
+    const overlays: Record<number, [number, number]> = {
+      1:  [0x3d1000, 0.08],  // City of Destruction: ember orange tint
+      2:  [0x001a00, 0.10],  // Slough of Despond: murky green
+      3:  [0x001a10, 0.05],  // Hill Difficulty: cool green-blue
+      4:  [0x0a0018, 0.07],  // Wicket Gate: deep purple
+      5:  [0x1a0800, 0.06],  // Interpreter's House: warm amber
+      6:  [0x001000, 0.07],  // Valley of Humiliation: dark green
+      7:  [0x080014, 0.12],  // Valley of Death: deep purple-black
+      8:  [0x140000, 0.14],  // Apollyon: deep blood red
+      9:  [0x060006, 0.18],  // Shadow of Death: near-black
+      10: [0x00001a, 0.07],  // Vanity Fair: cold blue city
+      11: [0x0a0010, 0.15],  // Doubting Castle: dark prison
+      12: [0x1a1000, 0.05],  // Celestial City: warm golden
+    };
+    return overlays[chapter] ?? [0x000000, 0];
+  }
+
+  /** Returns chapter-specific vignette darkness level. */
+  private static getChapterVignetteDarkness(chapter: number): number {
+    const levels: Record<number, number> = {
+      1: 0.18, 2: 0.22, 3: 0.10, 4: 0.12,
+      5: 0.08, 6: 0.15, 7: 0.30, 8: 0.28,
+      9: 0.35, 10: 0.14, 11: 0.32, 12: 0.06,
+    };
+    return levels[chapter] ?? 0.12;
+  }
+
   private applyChapterModifiers(config: ChapterConfig): void {
     this.chapterSpeedMod = config.theme.playerSpeedMod ?? 1.0;
+
+    // Chapter-specific ambient color overlay (light tint on camera)
+    const [overlayColor, overlayAlpha] = GameScene.getChapterAmbientOverlay(config.chapter);
+    if (overlayAlpha > 0) {
+      const overlay = this.add.graphics().setDepth(3).setScrollFactor(0);
+      overlay.fillStyle(overlayColor, overlayAlpha);
+      overlay.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    }
+
+    // Chapter-specific vignette
+    const vigAlpha = GameScene.getChapterVignetteDarkness(config.chapter);
+    this.vignetteOverlay?.destroy();
+    this.vignetteOverlay = this.add.graphics().setDepth(3).setScrollFactor(0);
+    const vigSteps = 10;
+    for (let i = 0; i < vigSteps; i++) {
+      const t = i / vigSteps;
+      this.vignetteOverlay.fillStyle(0x000000, vigAlpha * (1 - t) * 0.8);
+      this.vignetteOverlay.fillRect(0, 0, GAME_WIDTH, 6 - i * 0.5);
+      this.vignetteOverlay.fillRect(0, GAME_HEIGHT - 6 + i, GAME_WIDTH, 6);
+      this.vignetteOverlay.fillRect(0, 0, 5, GAME_HEIGHT);
+      this.vignetteOverlay.fillRect(GAME_WIDTH - 5, 0, 5, GAME_HEIGHT);
+    }
   }
 
   // ── Companion ─────────────────────────────────────────────────────────────

@@ -1000,7 +1000,7 @@ export class TileMapManager {
 
   private getTreeVariant(chapter: number, hash: number): 'round' | 'pine' | 'dead' | 'palm' {
     if (chapter === 10) return 'palm';
-    if (chapter === 8 || chapter === 9 || chapter === 11) return hash % 3 === 0 ? 'dead' : 'pine';
+    if (chapter === 7 || chapter === 8 || chapter === 9 || chapter === 11) return hash % 3 === 0 ? 'dead' : 'pine';
     if (chapter === 2 || chapter === 4) return hash % 2 === 0 ? 'pine' : 'round';
     return 'round';
   }
@@ -1627,6 +1627,47 @@ export class TileMapManager {
           far.fillRect(b.x + 2, baseY - b.h + 8, 2, 2);
         }
       }
+    } else if (ch === 2) {
+      // Murky swamp trees (short, gnarled, dark green)
+      for (let i = 0; i < 8; i++) {
+        const hash2 = ((i * 89 + 2 * 17) * 43) & 0xffff;
+        const tx2 = 30 + (hash2 % (W - 60));
+        const th2 = 25 + (hash2 % 20);
+        // Gnarled trunk
+        far.fillStyle(0x1a2a18, 0.7);
+        far.fillRect(tx2 - 2, H - th2 - 10, 4, th2);
+        // Drooping canopy
+        far.fillStyle(0x1a3a28, 0.5);
+        far.fillEllipse(tx2, H - th2 - 8, 18 + (hash2 % 12), 10);
+        far.fillStyle(0x243a2a, 0.3);
+        // Drooping branch curves
+        far.fillRect(tx2 - 10, H - th2 - 5, 8, 2);
+        far.fillRect(tx2 + 3, H - th2 - 3, 8, 2);
+      }
+      // Fog banks (grey ellipses at ground level)
+      for (let i = 0; i < 5; i++) {
+        const hash2b = ((i * 113 + 22) * 31) & 0xffff;
+        far.fillStyle(0x3a4a4a, 0.12);
+        far.fillEllipse((hash2b % (W - 40)) + 20, H - 12, 80 + (hash2b % 60), 18);
+      }
+    } else if (ch === 3) {
+      // Rocky cliff face on one side
+      far.fillStyle(0x4a4838, 0.6);
+      far.fillRect(0, H - 80, 60, 80);
+      far.fillRect(W - 50, H - 70, 50, 70);
+      // Cliff texture lines
+      for (let i = 0; i < 6; i++) {
+        const hash3 = (i * 73 + 3 * 11) & 0xff;
+        far.fillStyle(0x2a2818, 0.3);
+        far.fillRect(4 + (hash3 % 40), H - 70 + i * 10, 1, 8 + (hash3 % 12));
+      }
+      // Pathway going uphill (diagonal lines suggesting ascent)
+      far.fillStyle(0x8a7a5a, 0.15);
+      for (let i = 0; i < 5; i++) {
+        const py = H - 20 - i * 14;
+        const px = 60 + i * 30;
+        far.fillEllipse(px, py, 20, 5);
+      }
     } else if (ch === 5) {
       // Interpreter's house silhouette
       const hx = W * 0.6;
@@ -1637,6 +1678,162 @@ export class TileMapManager {
       far.fillStyle(0xff8800, 0.15);
       far.fillRect(hx + 10, H - 50, 8, 8);
       far.fillRect(hx + 30, H - 50, 8, 8);
+      // Three crosses silhouette on hilltop
+      const hillTop = H - 55;
+      const crossPositions = [W * 0.3, W * 0.4, W * 0.5];
+      crossPositions.forEach((cpx, ci) => {
+        const height = ci === 1 ? 28 : 22; // center taller
+        far.fillStyle(0x3a2a1a, 0.55);
+        far.fillRect(cpx - 1.5, hillTop - height, 3, height + 5);
+        far.fillRect(cpx - 8, hillTop - height + 7, 16, 2.5);
+      });
+      // Rays of light from center cross
+      for (let r = 0; r < 6; r++) {
+        const angle = (r / 6) * Math.PI * 2 - Math.PI / 2;
+        const rLen = 30 + r * 5;
+        far.fillStyle(0xffd700, 0.04);
+        far.fillTriangle(
+          crossPositions[1], hillTop - 24,
+          crossPositions[1] + Math.cos(angle - 0.2) * rLen,
+          hillTop - 24 + Math.sin(angle - 0.2) * rLen,
+          crossPositions[1] + Math.cos(angle + 0.2) * rLen,
+          hillTop - 24 + Math.sin(angle + 0.2) * rLen,
+        );
+      }
+    } else if (ch === 7) {
+      // Dark twisted trees with bare branches
+      for (let i = 0; i < 6; i++) {
+        const hash7 = ((i * 97 + 7 * 19) * 41) & 0xffff;
+        const tx7 = 20 + (hash7 % (W - 40));
+        const th7 = 40 + (hash7 % 30);
+        // Bare trunk
+        far.fillStyle(0x180c10, 0.8);
+        far.fillRect(tx7 - 2, H - th7 - 5, 4, th7);
+        // Skeletal branch arms
+        far.lineStyle(1, 0x200c18, 0.6);
+        far.lineBetween(tx7, H - th7, tx7 - 15, H - th7 + 10);
+        far.lineBetween(tx7, H - th7, tx7 + 12, H - th7 + 8);
+        far.lineBetween(tx7, H - th7 - 8, tx7 - 10, H - th7 - 18);
+        far.lineBetween(tx7, H - th7 - 8, tx7 + 8, H - th7 - 15);
+        far.lineBetween(tx7 - 15, H - th7 + 10, tx7 - 22, H - th7 + 5);
+        far.lineBetween(tx7 + 12, H - th7 + 8, tx7 + 18, H - th7 + 2);
+      }
+      // Purple-black mist particles at ground
+      for (let i = 0; i < 8; i++) {
+        const hash7b = ((i * 113 + 77) * 23) & 0xffff;
+        far.fillStyle(0x180828, 0.1);
+        far.fillEllipse((hash7b % (W - 40)) + 20, H - 8, 50 + (hash7b % 50), 12);
+      }
+    } else if (ch === 8) {
+      // Market stall silhouettes (rectangular shapes with canopies)
+      const stallColors = [0x662222, 0x224466, 0x664422, 0x226644, 0x662244];
+      for (let i = 0; i < 6; i++) {
+        const hash8 = ((i * 83 + 8 * 13) * 37) & 0xffff;
+        const sx8 = 20 + (hash8 % (W - 40));
+        const sw = 25 + (hash8 % 20);
+        // Stall body
+        far.fillStyle(0x1a1828, 0.5);
+        far.fillRect(sx8, H - 40, sw, 30);
+        // Canopy
+        far.fillStyle(stallColors[i % stallColors.length], 0.45);
+        far.fillRect(sx8 - 3, H - 45, sw + 6, 8);
+        far.fillStyle(0xffffff, 0.06);
+        far.fillRect(sx8 - 3, H - 45, sw + 6, 3);
+      }
+      // Banner flags hanging between stalls
+      for (let i = 0; i < 5; i++) {
+        const hash8b = ((i * 107 + 88) * 29) & 0xffff;
+        const fx8 = 30 + (hash8b % (W - 60));
+        const flagColors = [0xff4444, 0x4488ff, 0xffaa22, 0x44bb44];
+        far.fillStyle(flagColors[i % flagColors.length], 0.35);
+        far.fillTriangle(fx8, H - 60, fx8 + 8, H - 60, fx8 + 4, H - 52);
+      }
+    } else if (ch === 9) {
+      // High stone walls on both sides (thick grey rectangles)
+      far.fillStyle(0x2a2830, 0.85);
+      far.fillRect(0, 0, 55, H);
+      far.fillRect(W - 55, 0, 55, H);
+      // Wall stone texture
+      for (let row = 0; row < Math.ceil(H / 14); row++) {
+        for (let col = 0; col < 4; col++) {
+          const wx = col * 14 + (row % 2) * 7;
+          far.fillStyle(0x202028, 0.2);
+          far.fillRect(wx, row * 14, 13, 13);
+          // Iron bar hint (right wall)
+          if (col === 0) {
+            far.fillStyle(0x404848, 0.15);
+            far.fillRect(W - 50 + wx, row * 14, 13, 13);
+          }
+        }
+      }
+      // Iron bars on walls
+      far.lineStyle(1, 0x442a1a, 0.5);
+      for (let bar = 0; bar < 4; bar++) {
+        far.lineBetween(10 + bar * 10, 20, 10 + bar * 10, H - 20);
+        far.lineBetween(W - 45 + bar * 10, 20, W - 45 + bar * 10, H - 20);
+      }
+    } else if (ch === 10) {
+      // Gentle mountain silhouettes with snow caps
+      for (let m = 0; m < 5; m++) {
+        const hash10 = ((m * 79 + 10 * 11) * 41) & 0xffff;
+        const mx10 = (hash10 % (W - 60)) + 10;
+        const mh10 = 45 + (hash10 % 35);
+        const mw10 = 55 + (hash10 % 40);
+        far.fillStyle(0x5a7a6a, 0.4);
+        far.fillTriangle(mx10, H, mx10 + mw10 / 2, H - mh10, mx10 + mw10, H);
+        // Snow cap
+        far.fillStyle(0xeeeeff, 0.3);
+        far.fillTriangle(
+          mx10 + mw10 / 2 - 5, H - mh10 + 10,
+          mx10 + mw10 / 2, H - mh10,
+          mx10 + mw10 / 2 + 5, H - mh10 + 10,
+        );
+        // More lush trees on lower slopes
+        for (let t = 0; t < 3; t++) {
+          const htx = mx10 + 10 + t * (mw10 / 4);
+          const hty = H - 12 - t * 6;
+          far.fillStyle(0x4a8a5a, 0.45);
+          far.fillCircle(htx, hty, 5 + t * 2);
+        }
+      }
+    } else if (ch === 12) {
+      // Golden pillar architecture
+      for (let i = 0; i < 4; i++) {
+        const px12 = W * 0.2 + i * (W * 0.2);
+        far.fillStyle(0xffd700, 0.35);
+        far.fillRect(px12 - 4, H - 90, 8, 80);
+        // Pillar top
+        far.fillStyle(0xffeedd, 0.25);
+        far.fillRect(px12 - 8, H - 92, 16, 5);
+        // Pillar base
+        far.fillStyle(0xffcc88, 0.2);
+        far.fillRect(px12 - 7, H - 15, 14, 5);
+      }
+      // Radiant light rays from top center
+      const lx12 = W / 2;
+      for (let r = 0; r < 8; r++) {
+        const angle12 = ((r / 8) * Math.PI * 2) - Math.PI / 2;
+        const rLen12 = 70 + r * 8;
+        far.fillStyle(0xffd700, 0.04);
+        far.fillTriangle(
+          lx12, 10,
+          lx12 + Math.cos(angle12 - 0.18) * rLen12,
+          10 + Math.sin(angle12 - 0.18) * rLen12,
+          lx12 + Math.cos(angle12 + 0.18) * rLen12,
+          10 + Math.sin(angle12 + 0.18) * rLen12,
+        );
+      }
+      // Distant city silhouette
+      for (let b = 0; b < 8; b++) {
+        const hash12 = ((b * 101 + 12 * 13) * 47) & 0xff;
+        const bx12 = 10 + b * (W / 8);
+        const bh12 = 30 + (hash12 % 40);
+        far.fillStyle(0xffd700, 0.15);
+        far.fillRect(bx12, H - bh12 - 10, 10 + (hash12 % 20), bh12);
+        // Windows
+        far.fillStyle(0xffffff, 0.1);
+        far.fillRect(bx12 + 3, H - bh12, 4, 4);
+      }
     }
     this.parallaxLayers.push(far);
 
