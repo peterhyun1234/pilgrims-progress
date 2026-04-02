@@ -164,14 +164,14 @@ describe('StatsManager', () => {
   });
 
   describe('speed multiplier', () => {
-    it('returns 0.4 at burden >= 80', () => {
+    it('returns 0.6 at burden >= 80', () => {
       sm.setAll({ faith: 30, courage: 20, wisdom: 20, burden: 80 });
-      expect(sm.getSpeedMultiplier()).toBe(0.4);
+      expect(sm.getSpeedMultiplier()).toBe(0.6);
     });
 
-    it('returns 0.6 at burden >= 60', () => {
+    it('returns 0.8 at burden >= 60', () => {
       sm.setAll({ faith: 30, courage: 20, wisdom: 20, burden: 60 });
-      expect(sm.getSpeedMultiplier()).toBe(0.6);
+      expect(sm.getSpeedMultiplier()).toBe(0.8);
     });
 
     it('returns ~1.0 at burden 0', () => {
