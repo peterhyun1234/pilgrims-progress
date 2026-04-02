@@ -229,6 +229,7 @@ export class NarrativeDirector {
   private lightOverlay: Phaser.GameObjects.Rectangle | null = null;
   private transitionTween: Phaser.Tweens.Tween | null = null;
   private firedTriggers: Set<string> = new Set();
+  private _evaluating = false;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -284,22 +285,28 @@ export class NarrativeDirector {
   }
 
   private evaluateTriggers(): void {
+    if (this._evaluating) return;
     if (!ServiceLocator.has(SERVICE_KEYS.STATS_MANAGER)) return;
     if (!ServiceLocator.has(SERVICE_KEYS.GAME_MANAGER)) return;
     if (!ServiceLocator.has(SERVICE_KEYS.NPC_STATE_MANAGER)) return;
 
-    const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
-    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-    const nsm = ServiceLocator.get<NpcStateManager>(SERVICE_KEYS.NPC_STATE_MANAGER);
+    this._evaluating = true;
+    try {
+      const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
+      const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+      const nsm = ServiceLocator.get<NpcStateManager>(SERVICE_KEYS.NPC_STATE_MANAGER);
 
-    for (const trigger of STORY_TRIGGERS) {
-      if (trigger.once && this.firedTriggers.has(trigger.id)) continue;
-      if (!trigger.condition(sm, gm, nsm)) continue;
+      for (const trigger of STORY_TRIGGERS) {
+        if (trigger.once && this.firedTriggers.has(trigger.id)) continue;
+        if (!trigger.condition(sm, gm, nsm)) continue;
 
-      trigger.effect(sm, gm, nsm);
-      if (trigger.once) this.firedTriggers.add(trigger.id);
+        trigger.effect(sm, gm, nsm);
+        if (trigger.once) this.firedTriggers.add(trigger.id);
 
-      this.eventBus.emit(GameEvent.STORY_TRIGGER_FIRED, { triggerId: trigger.id });
+        this.eventBus.emit(GameEvent.STORY_TRIGGER_FIRED, { triggerId: trigger.id });
+      }
+    } finally {
+      this._evaluating = false;
     }
   }
 
