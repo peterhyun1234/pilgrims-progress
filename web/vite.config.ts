@@ -9,11 +9,24 @@ export default defineConfig({
     },
   },
   build: {
-    target: 'es2020',
+    target: 'es2022',
     assetsInlineLimit: 0,
+    // Chunk splitting: separate heavy vendor libs from game code
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-phaser': ['phaser'],
+          'vendor-ink': ['inkjs'],
+          'vendor-storage': ['localforage'],
+          'vendor-audio': ['howler'],
+        },
+      },
+    },
+    // Raise warning threshold; Phaser itself is ~2.7 MB
+    chunkSizeWarningLimit: 3000,
   },
   server: {
     port: 3000,
-    open: true,
+    open: false,
   },
 });

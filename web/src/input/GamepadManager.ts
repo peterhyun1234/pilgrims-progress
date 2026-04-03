@@ -58,8 +58,8 @@ export class GamepadManager {
     let y = 0;
 
     if (gp.axes.length >= 2) {
-      const ax = gp.axes[0];
-      const ay = gp.axes[1];
+      const ax = gp.axes[0] ?? 0;
+      const ay = gp.axes[1] ?? 0;
       if (Math.abs(ax) > AXIS_THRESHOLD) x = ax > 0 ? 1 : -1;
       if (Math.abs(ay) > AXIS_THRESHOLD) y = ay > 0 ? 1 : -1;
     }

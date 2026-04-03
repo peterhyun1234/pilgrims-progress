@@ -82,6 +82,9 @@ export class GameScene extends Phaser.Scene {
   private transitionEffects!: TransitionEffects;
 
   private pauseMenuCleanup: (() => void) | null = null;
+  private kbEsc: (() => void) | null = null;
+  private kbI: (() => void) | null = null;
+  private kbM: (() => void) | null = null;
   private locationTitle: Phaser.GameObjects.Container | null = null;
   private ambientParticles: Phaser.GameObjects.Graphics | null = null;
   private ambientData: { x: number; y: number; vy: number; a: number; s: number; color: number }[] = [];
@@ -170,8 +173,8 @@ export class GameScene extends Phaser.Scene {
     // Start chapter-specific ambient soundscape
     if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
       const audioMgr = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
-      audioMgr.ambient.init(this.gameManager.currentChapter);
-      audioMgr.ambient.playChapterStinger(this.gameManager.currentChapter);
+      audioMgr.ambient?.init(this.gameManager.currentChapter);
+      audioMgr.ambient?.playChapterStinger(this.gameManager.currentChapter);
     }
 
     this.player = new Player(this, chapterConfig.spawn.x, chapterConfig.spawn.y);
@@ -502,7 +505,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private setupKeyboardShortcuts(): void {
-    this.input.keyboard?.on('keydown-ESC', () => {
+    this.kbEsc = () => {
       if (this.gameManager.isState(GameState.INVENTORY)) {
         this.inventoryPanel.close();
         return;
@@ -513,17 +516,26 @@ export class GameScene extends Phaser.Scene {
         return;
       }
       this.openPauseMenu();
-    });
-
-    this.input.keyboard?.on('keydown-I', () => {
+    };
+    this.kbI = () => {
       if (this.gameManager.isState(GameState.DIALOGUE) || this.gameManager.isState(GameState.PAUSE)) return;
       this.inventoryPanel.toggle();
       this.tutorialSystem.showById('inventory');
-    });
+    };
+    this.kbM = () => { this.miniMap.toggle(); };
 
-    this.input.keyboard?.on('keydown-M', () => {
-      this.miniMap.toggle();
-    });
+    this.input.keyboard?.on('keydown-ESC', this.kbEsc);
+    this.input.keyboard?.on('keydown-I', this.kbI);
+    this.input.keyboard?.on('keydown-M', this.kbM);
+  }
+
+  private removeKeyboardShortcuts(): void {
+    if (this.kbEsc) this.input.keyboard?.off('keydown-ESC', this.kbEsc);
+    if (this.kbI)   this.input.keyboard?.off('keydown-I', this.kbI);
+    if (this.kbM)   this.input.keyboard?.off('keydown-M', this.kbM);
+    this.kbEsc = null;
+    this.kbI   = null;
+    this.kbM   = null;
   }
 
   private openPauseMenu(): void {
@@ -1014,7 +1026,6 @@ export class GameScene extends Phaser.Scene {
 
   private setupEvents(): void {
     this.eventBus.on(GameEvent.NPC_INTERACT, this.onNpcInteract);
-    this.eventBus.on('npc_interact', this.onNpcInteract);
     this.eventBus.on(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.on(GameEvent.BIBLE_CARD_COLLECTED, this.onBibleCard);
     this.eventBus.on(GameEvent.CHAPTER_ENTER, this.onChapterEnter);
@@ -1040,7 +1051,6 @@ export class GameScene extends Phaser.Scene {
 
   private cleanupEvents(): void {
     this.eventBus.off(GameEvent.NPC_INTERACT, this.onNpcInteract);
-    this.eventBus.off('npc_interact', this.onNpcInteract);
     this.eventBus.off(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.off(GameEvent.BIBLE_CARD_COLLECTED, this.onBibleCard);
     this.eventBus.off(GameEvent.CHAPTER_ENTER, this.onChapterEnter);
@@ -1372,9 +1382,9 @@ export class GameScene extends Phaser.Scene {
     // Crossfade ambient soundscape to new chapter
     if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
       const audioMgr = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
-      audioMgr.ambient.crossfadeTo(chapter, 3000);
+      audioMgr.ambient?.crossfadeTo(chapter, 3000);
       this.time.delayedCall(1500, () => {
-        audioMgr.ambient.playChapterStinger(chapter);
+        audioMgr.ambient?.playChapterStinger(chapter);
       });
     }
 
@@ -1544,6 +1554,7 @@ export class GameScene extends Phaser.Scene {
   shutdown(): void {
     this.pauseMenuCleanup?.();
     this.cleanupEvents();
+    this.removeKeyboardShortcuts();
     this.npcStateManager?.destroy();
     this.inputManager?.destroy();
     this.hud?.destroy();

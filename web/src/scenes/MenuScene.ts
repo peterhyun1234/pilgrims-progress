@@ -382,8 +382,9 @@ export class MenuScene extends Phaser.Scene {
         if (opts?.dim) return;
         drawBg(hoverColor, borderColor, 1.0);
         txt.setColor(opts?.accent ? '#e8ffaa' : '#ede8e0');
-        const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
-        audio?.procedural?.playUIHover();
+        if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+          ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER).procedural?.playUIHover();
+        }
       });
       hit.on('pointerout', () => {
         drawBg(defColor, borderColor, opts?.accent ? 0.9 : 0.55);
@@ -391,8 +392,9 @@ export class MenuScene extends Phaser.Scene {
       });
       hit.on('pointerdown', () => {
         if (opts?.dim) return;
-        const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
-        audio?.procedural?.playUIClick();
+        if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+          ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER).procedural?.playUIClick();
+        }
         this.tweens.add({ targets: c, scaleX: 0.96, scaleY: 0.96, duration: 60, yoyo: true });
         this.time.delayedCall(80, cb);
       });
@@ -564,7 +566,14 @@ export class MenuScene extends Phaser.Scene {
   private async checkSaveExists(_continueBtnY: number, ko: boolean): Promise<void> {
     if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
     const saveManager = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
-    const exists = await saveManager.hasSave();
+
+    let exists = false;
+    try {
+      exists = await saveManager.hasSave();
+    } catch (err) {
+      console.warn('[MenuScene] hasSave() failed:', err);
+      return;
+    }
 
     if (this.continueBtn) {
       this.tweens.add({ targets: this.continueBtn, alpha: exists ? 1 : 0.3, duration: 300 });
@@ -576,39 +585,52 @@ export class MenuScene extends Phaser.Scene {
     }
 
     if (exists) {
-      const saveData = await saveManager.load();
-      if (saveData) {
+      let saveData: Awaited<ReturnType<typeof saveManager.load>>;
+      try {
+        saveData = await saveManager.load();
+      } catch (err) {
+        console.warn('[MenuScene] load() failed:', err);
+        return;
+      }
+
+      if (saveData && typeof saveData.chapter === 'number' && saveData.stats) {
         const chapLabel = ko ? `제${saveData.chapter}장` : `Ch.${saveData.chapter}`;
-        const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
-        // Append save info as a small subtitle line inside the continue button container
+        const faith = saveData.stats.faith ?? 0;
+        const faithLabel = ko ? `믿음 ${faith}` : `Faith ${faith}`;
         const sub = this.add.text(0, 7, `${chapLabel}  ·  ${faithLabel}`, {
           fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09070',
-          fontFamily: this.getDesignSystem().getFontFamily(),
+          fontFamily: DesignSystem.getFontFamily(),
           shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
         }).setOrigin(0.5, 0.5);
         this.continueBtn!.add(sub);
-        // Shift main label up by half the subtitle height so both are centered
-        const mainLabel = this.continueBtn!.getAt(2) as Phaser.GameObjects.Text;
-        if (mainLabel?.setY) mainLabel.setY(-6);
+        // Container layout: [0]=bg, [1]=txt(mainLabel), [2]=hit — shift label up
+        const mainLabel = this.continueBtn!.getAt(1) as Phaser.GameObjects.Text;
+        if (typeof mainLabel?.setY === 'function') mainLabel.setY(-6);
       }
     }
   }
 
-  private getDesignSystem() { return DesignSystem; }
-
   private async continueGame(): Promise<void> {
     if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
     const sm = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
-    const saveData = await sm.load();
-    if (!saveData) return;
-    await DesignSystem.fadeOut(this, 600);
-    this.scene.start(SCENE_KEYS.GAME);
+    try {
+      const saveData = await sm.load();
+      if (!saveData) return;
+      await DesignSystem.fadeOut(this, 600);
+      this.scene.start(SCENE_KEYS.GAME);
+    } catch (err) {
+      console.error('[MenuScene] continueGame failed:', err);
+    }
   }
 
   private async startNewGame(): Promise<void> {
-    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-    gm.newGame();
-    await DesignSystem.fadeOut(this, 600);
-    this.scene.start(SCENE_KEYS.ONBOARDING);
+    try {
+      const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+      gm.newGame();
+      await DesignSystem.fadeOut(this, 600);
+      this.scene.start(SCENE_KEYS.ONBOARDING);
+    } catch (err) {
+      console.error('[MenuScene] startNewGame failed:', err);
+    }
   }
 }
