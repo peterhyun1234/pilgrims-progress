@@ -28,11 +28,14 @@ export class DialogueBox {
   private portraitRenderer: PortraitRenderer;
   private choiceContainers: Phaser.GameObjects.Container[] = [];
   private dimOverlay: Phaser.GameObjects.Rectangle | null = null;
-  private choiceKeyHandlers: (() => void)[] = [];
+  /** Each entry pairs a key-name with its handler so cleanup is always exact. */
+  private choiceKeyHandlers: Array<{ key: string; fn: () => void }> = [];
   /** Prevents duplicate choice selection (spam-click guard) */
   private _choiceLocked = false;
 
   private eventBus: EventBus;
+  /** Cached AudioManager reference — resolved once on first use to avoid ServiceLocator lookups in hot path. */
+  private audioManager: AudioManager | null = null;
   private isVisible = false;
   private isTyping = false;
   private fullText = '';
@@ -132,8 +135,10 @@ export class DialogueBox {
       setTextCallback: (text: string) => text,
     });
     this.textTyping.on('type', () => {
-      const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
-      audio?.procedural?.playTypingClick();
+      if (!this.audioManager && ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+        this.audioManager = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      }
+      this.audioManager?.procedural?.playTypingClick();
     });
     this.textTyping.on('complete', () => {
       this.isTyping = false;
@@ -480,16 +485,16 @@ export class DialogueBox {
         this.container.add(c);
 
         // Keyboard shortcut: press number key to select
-        const keyCode = `ONE TWO THREE FOUR FIVE`.split(' ')[i];
-        if (keyCode) {
-          const handler = () => {
+        const KEY_NAMES = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'] as const;
+        const keyCode = KEY_NAMES[i];
+        if (keyCode !== undefined) {
+          const fn = () => {
             if (this.choiceContainers.length === 0) return;
             this.clearChoices();
             this.eventBus.emit(GameEvent.DIALOGUE_CHOICE_SELECTED, choice.index);
           };
-          this.scene.input.keyboard?.on(`keydown-${keyCode}`, handler);
-          this.choiceKeyHandlers.push(handler);
-          (handler as unknown as Record<string, string>).__key = keyCode;
+          this.scene.input.keyboard?.on(`keydown-${keyCode}`, fn);
+          this.choiceKeyHandlers.push({ key: keyCode, fn });
         }
       });
     });
@@ -500,9 +505,8 @@ export class DialogueBox {
     this.choiceContainers.forEach(c => c.destroy(true));
     this.choiceContainers = [];
     this.hideDimOverlay();
-    const keys = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
-    this.choiceKeyHandlers.forEach((h, i) => {
-      this.scene.input.keyboard?.off(`keydown-${keys[i]}`, h);
+    this.choiceKeyHandlers.forEach(({ key, fn }) => {
+      this.scene.input.keyboard?.off(`keydown-${key}`, fn);
     });
     this.choiceKeyHandlers = [];
   }
@@ -587,6 +591,7 @@ export class DialogueBox {
       this.scene.input.keyboard?.off('keydown-ENTER', this.advanceHandler);
       this.advanceHandler = null;
     }
+    this.textTyping.removeAllListeners();
     this.textTyping.destroy();
     this.clearChoices();
     this.portraitImage = null;

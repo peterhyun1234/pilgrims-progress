@@ -446,7 +446,8 @@ export class MenuScene extends Phaser.Scene {
     this.scheduleShootingStar();
 
     // Highscore display — placed at horizon line (H*0.45) to avoid button area overlap
-    const stored = localStorage.getItem('pp_highscore_faith');
+    let stored: string | null = null;
+    try { stored = localStorage.getItem('pp_highscore_faith'); } catch { /* private browsing */ }
     if (stored) {
       const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
       const ko = gm.language === 'ko';
@@ -632,5 +633,15 @@ export class MenuScene extends Phaser.Scene {
     } catch (err) {
       console.error('[MenuScene] startNewGame failed:', err);
     }
+  }
+
+  // ── Lifecycle ─────────────────────────────────────────────────────────────
+
+  shutdown(): void {
+    // Phaser's time/tweens are auto-cleaned by the scene manager, but calling
+    // stopAll() ensures no stray callbacks fire if the scene is restarted
+    this.time.removeAllEvents();
+    this.tweens.killAll();
+    this.particles = [];
   }
 }

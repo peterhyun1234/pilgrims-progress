@@ -205,7 +205,7 @@ export class TutorialSystem {
 
   reset(): void {
     this.shownTutorials.clear();
-    localStorage.removeItem('pilgrims_tutorials');
+    try { localStorage.removeItem('pilgrims_tutorials'); } catch { /* ignore */ }
   }
 
   destroy(): void {

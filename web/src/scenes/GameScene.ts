@@ -100,6 +100,8 @@ export class GameScene extends Phaser.Scene {
   private activeDialogueNpc: NPC | null = null;
   /** Map object containers by objectId. */
   private mapObjectSprites: Record<string, Phaser.GameObjects.Container> = {};
+  /** Anonymous gate-open handlers that must be cleaned up on shutdown. */
+  private gateHandlers: Array<(p: NpcPhaseChangedPayload | undefined) => void> = [];
   /** Exit-hint cooldown guard. */
   private exitHintCooldown = 0;
   /** Cutscene engine for key emotional scenes. */
@@ -195,9 +197,11 @@ export class GameScene extends Phaser.Scene {
 
     this.hud = new HUD(this);
 
-    if (!localStorage.getItem('pp_tutorial_done')) {
+    let tutorialDone = false;
+    try { tutorialDone = !!localStorage.getItem('pp_tutorial_done'); } catch { /* private browsing */ }
+    if (!tutorialDone) {
       new TutorialOverlay(this, () => {
-        localStorage.setItem('pp_tutorial_done', '1');
+        try { localStorage.setItem('pp_tutorial_done', '1'); } catch { /* ignore */ }
       });
     }
 
@@ -371,7 +375,9 @@ export class GameScene extends Phaser.Scene {
         if (!payload || payload.npcId !== targetNpc || payload.phase !== 'completed') return;
         this.openGate(obj.id, c, g);
         this.eventBus.off(GameEvent.NPC_PHASE_CHANGED, handler);
+        this.gateHandlers = this.gateHandlers.filter(h => h !== handler);
       };
+      this.gateHandlers.push(handler);
       this.eventBus.on(GameEvent.NPC_PHASE_CHANGED, handler);
     }
   }
@@ -904,10 +910,12 @@ export class GameScene extends Phaser.Scene {
     // Phase 6A: track maxFaith highscore in localStorage
     if (payload.stat === 'faith' && isPositive) {
       const current = payload.newValue;
-      const stored = parseInt(localStorage.getItem('pp_highscore_faith') ?? '0', 10);
-      if (current > stored) {
-        localStorage.setItem('pp_highscore_faith', String(current));
-      }
+      try {
+        const stored = parseInt(localStorage.getItem('pp_highscore_faith') ?? '0', 10);
+        if (current > stored) {
+          localStorage.setItem('pp_highscore_faith', String(current));
+        }
+      } catch { /* private browsing / storage full – non-critical */ }
     }
 
     // Phase 5B: faithGlow effect when faith increases
@@ -1465,26 +1473,31 @@ export class GameScene extends Phaser.Scene {
     const playerX = this.player.sprite.x;
     const playerY = this.player.sprite.y;
     this.npcs.forEach(npc => {
-      const nx = npc.sprite.x;
-      const ny = npc.sprite.y;
-      if (nx >= camL && nx <= camR && ny >= camT && ny <= camB) {
-        npc.sprite.setVisible(true);
-        npc.update();
-        // Phase 5C: shimmer effect when player walks within 50px of NPC
-        const dist = Math.sqrt((nx - playerX) ** 2 + (ny - playerY) ** 2);
-        if (dist < 50) {
-          const t = this.time.now * 0.003;
-          const shimmerAlpha = 0.3 + Math.sin(t + nx * 0.1) * 0.2;
-          npc.sprite.setTint(Phaser.Display.Color.GetColor(
-            Math.round(0xff + (0xd4 - 0xff) * shimmerAlpha),
-            Math.round(0xff + (0xa8 - 0xff) * shimmerAlpha),
-            0xff,
-          ));
+      if (!npc?.sprite?.active) return;
+      try {
+        const nx = npc.sprite.x;
+        const ny = npc.sprite.y;
+        if (nx >= camL && nx <= camR && ny >= camT && ny <= camB) {
+          npc.sprite.setVisible(true);
+          npc.update();
+          // Phase 5C: shimmer effect when player walks within 50px of NPC
+          const dist = Math.sqrt((nx - playerX) ** 2 + (ny - playerY) ** 2);
+          if (dist < 50) {
+            const t = this.time.now * 0.003;
+            const shimmerAlpha = 0.3 + Math.sin(t + nx * 0.1) * 0.2;
+            npc.sprite.setTint(Phaser.Display.Color.GetColor(
+              Math.round(0xff + (0xd4 - 0xff) * shimmerAlpha),
+              Math.round(0xff + (0xa8 - 0xff) * shimmerAlpha),
+              0xff,
+            ));
+          } else {
+            npc.sprite.clearTint();
+          }
         } else {
-          npc.sprite.clearTint();
+          npc.sprite.setVisible(false);
         }
-      } else {
-        npc.sprite.setVisible(false);
+      } catch (err) {
+        console.warn('[GameScene] NPC update error:', err);
       }
     });
 
@@ -1553,6 +1566,9 @@ export class GameScene extends Phaser.Scene {
 
   shutdown(): void {
     this.pauseMenuCleanup?.();
+    // Clean up any outstanding gate handlers (would leak if gate never opened)
+    this.gateHandlers.forEach(h => this.eventBus.off(GameEvent.NPC_PHASE_CHANGED, h));
+    this.gateHandlers = [];
     this.cleanupEvents();
     this.removeKeyboardShortcuts();
     this.npcStateManager?.destroy();
