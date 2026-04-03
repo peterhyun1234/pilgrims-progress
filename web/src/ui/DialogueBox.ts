@@ -402,7 +402,7 @@ export class DialogueBox {
     if (isHeavy) this.showDimOverlay();
 
     const { BOX_X: bx, BOX_Y: by, BOX_W: bw } = DialogueBox;
-    const choiceH = 26;
+    const choiceH = 28; // 28px touch target meets accessibility minimum
     const gap = 4;
     const total = payload.choices.length * (choiceH + gap);
     // Start choices just above the dialogue box with a small gap

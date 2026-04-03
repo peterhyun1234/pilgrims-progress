@@ -264,11 +264,14 @@ export class NPC extends Entity {
     this.glowGraphics = this.scene.add.graphics().setDepth(7);
     // Chapter-specific aura color — initial draw; updated each frame in update()
     const initAuraColor = this.getChapterAuraColor();
-    const initRadius = isAvailable ? 24 : 18;
+    const initRadius = isAvailable ? 26 : 20;
+    // Stronger initial glow so the NPC is immediately visible as interactable
     this.glowGraphics.fillStyle(initAuraColor, 0.12);
-    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, initRadius + 8);
-    this.glowGraphics.fillStyle(initAuraColor, 0.28);
-    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, initRadius);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, initRadius + 12);
+    this.glowGraphics.fillStyle(initAuraColor, 0.22);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, initRadius + 2);
+    this.glowGraphics.fillStyle(initAuraColor, 0.38);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, initRadius * 0.65);
   }
 
   private drawNameBadge(x: number, y: number, textWidth: number): void {
@@ -375,18 +378,22 @@ export class NPC extends Entity {
     }
     if (this.glowGraphics) {
       this.glowGraphics.clear();
-      // Chapter-specific aura color with double-layer bloom effect
+      // Chapter-specific aura color with visible double-layer bloom effect
       const auraColor = this.getChapterAuraColor();
       const isAvailablePhase = this.currentPhase === 'available';
-      const baseAlpha = this.chapter === 7 ? 0.06 : (this.chapter === 12 ? 0.08 : 0.04);
-      const pulse = baseAlpha + Math.sin(t * 2) * 0.025;
-      const pulseRadius = (isAvailablePhase ? 24 : 18) + Math.sin(t * 1.5) * 2;
-      // Outer soft ring
-      this.glowGraphics.fillStyle(auraColor, Math.max(0, pulse) * 0.4);
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius + 4);
-      // Inner bright ring
-      this.glowGraphics.fillStyle(auraColor, Math.max(0, pulse + 0.18));
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius);
+      // Stronger base alpha so the glow is actually visible in the game world
+      const baseAlpha = this.chapter === 7 ? 0.14 : (this.chapter === 12 ? 0.18 : 0.10);
+      const pulse = baseAlpha + Math.sin(t * 2) * 0.05;
+      const pulseRadius = (isAvailablePhase ? 26 : 20) + Math.sin(t * 1.5) * 3;
+      // Far outer halo (very soft, wide)
+      this.glowGraphics.fillStyle(auraColor, Math.max(0, pulse) * 0.35);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius + 10);
+      // Mid ring
+      this.glowGraphics.fillStyle(auraColor, Math.max(0, pulse));
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius + 2);
+      // Inner bright core
+      this.glowGraphics.fillStyle(auraColor, Math.min(0.55, pulse + 0.22));
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius * 0.65);
     }
   }
 

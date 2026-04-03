@@ -811,20 +811,32 @@ export class BattleScene extends Phaser.Scene {
     this.updateLog(state);
     this.updateBossTopBar(state);
 
-    // Player hurt reaction
+    // Player hurt reaction — screen shake + red edge pulse for impact
     const lastEntry = state.log[state.log.length - 1];
     if (lastEntry?.type === 'enemy') {
       this.flashSprite(this.playerSprite, 0xff4444);
+      DesignSystem.screenShake(this, 0.008, 180);
+      DesignSystem.screenFlash(this, 0x880000, 0.28, 350);
+      DesignSystem.edgePulse(this, 0xff2200, 0.35, 600);
     }
-    // Enemy hurt reaction
+    // Enemy hurt reaction — brief white flash + particle burst at enemy
     if (lastEntry?.type === 'player') {
       this.flashSprite(this.enemySprite, 0xffffff);
+      DesignSystem.screenShake(this, 0.004, 100);
+      const enemy = ENEMIES[this.enemyId];
+      if (enemy) {
+        DesignSystem.particleBurst(this, GAME_WIDTH / 2, 60, enemy.iconColor, 6, { speed: 20, size: 2, depth: 250 });
+      }
+    }
+    // Heal reaction — green flash
+    if (lastEntry?.type === 'heal') {
+      DesignSystem.screenFlash(this, 0x00aa44, 0.18, 400);
     }
 
     // Low HP camera shake escalation
     const hpRatio = state.enemyHp / state.enemyMaxHp;
     if (hpRatio < 0.3) {
-      this.cameras.main.shake(80, 0.003);
+      DesignSystem.screenShake(this, 0.003, 80);
     }
 
     // Boss phase transitions

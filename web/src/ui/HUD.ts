@@ -73,7 +73,7 @@ export class HUD {
       const containerY = P + i * G;
       const barContainer = this.scene.add.container(P, containerY);
 
-      const iconBgColor = DesignSystem.STAT_COLORS[stat];
+      const iconBgColor = DesignSystem.statColorSafe(stat);
 
       // Icon background — vertically centered at MID
       const iconBg = this.scene.add.graphics();
@@ -138,7 +138,8 @@ export class HUD {
     if (w <= 0) return;
     const bh = HUD.BAR_HEIGHT;
     const fy = midY - bh / 2;
-    const color = DesignSystem.STAT_COLORS[stat];
+    // Respect colorblind mode via DesignSystem.statColorSafe
+    const color = DesignSystem.statColorSafe(stat);
     g.fillStyle(color, 0.85);
     g.fillRoundedRect(x, fy, Math.max(w, 2), bh, 2);
     // Top highlight stripe
@@ -161,15 +162,35 @@ export class HUD {
     const flashColor = p.amount > 0 ? '#66ff66' : '#ff6666';
     bar.value.setColor(flashColor);
     this.scene.tweens.add({
-      targets: bar.value, scaleX: 1.5, scaleY: 1.5, duration: 150, yoyo: true,
-      onComplete: () => bar.value.setColor(DesignSystem.hex(DesignSystem.STAT_COLORS[bar.stat])),
+      targets: bar.value, scaleX: 1.5, scaleY: 1.5, duration: DesignSystem.dur(150), yoyo: true,
+      onComplete: () => bar.value.setColor(DesignSystem.hex(DesignSystem.statColorSafe(bar.stat))),
     });
 
     if (p.amount !== 0) {
       this.showStatDelta(bar, p.amount);
-      const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
-      if (p.amount > 0) audio?.procedural?.playStatGain();
-      else audio?.procedural?.playStatLoss();
+      if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+        const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+        if (p.amount > 0) audio?.procedural?.playStatGain();
+        else audio?.procedural?.playStatLoss();
+      }
+
+      // Particle burst at the bar fill end-point for visible gain feedback
+      if (p.amount > 0) {
+        const barX = this.container.x + HUD.PADDING + this._barX;
+        const barY = this.container.y + bar.container.y + HUD.ROW_MID;
+        const fillEnd = barX + bar.currentWidth;
+        DesignSystem.particleBurst(this.scene, fillEnd, barY,
+          DesignSystem.statColorSafe(p.stat), 5,
+          { speed: 14, size: 1.5, duration: 400, depth: 102 },
+        );
+      }
+
+      // High burden warning — edge pulse
+      if (p.stat === 'burden' && p.newValue >= 70) {
+        DesignSystem.edgePulse(this.scene, 0xff2200,
+          p.newValue >= 85 ? 0.40 : 0.22, 700,
+        );
+      }
     }
   };
 
