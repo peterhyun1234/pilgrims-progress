@@ -1090,7 +1090,7 @@ export class GameScene extends Phaser.Scene {
     const bg = this.add.graphics();
     bg.fillStyle(0x000000, 0.82);
     bg.fillRect(-panelW / 2, -panelH / 2, panelW, panelH);
-    bg.lineStyle(0.8, COLORS.UI.GOLD, 0.35);
+    bg.lineStyle(1, COLORS.UI.GOLD, 0.6);
     bg.strokeRect(-panelW / 2, -panelH / 2, panelW, panelH);
 
     // Decorative top / bottom rule lines (inset slightly)
@@ -1148,10 +1148,20 @@ export class GameScene extends Phaser.Scene {
 
     this.locationTitle = container;
 
+    // Slide in from slightly above, then fade out
+    const targetY = container.y;
+    container.y = targetY - 20;
     this.tweens.add({
-      targets: container, alpha: 1, duration: 700,
-      hold: 3500, yoyo: true, ease: 'Sine.easeInOut',
-      onComplete: () => { container.destroy(true); this.locationTitle = null; },
+      targets: container, alpha: 1, y: targetY, duration: 700,
+      ease: 'Back.easeOut',
+      onComplete: () => {
+        this.time.delayedCall(3500, () => {
+          this.tweens.add({
+            targets: container, alpha: 0, duration: 700, ease: 'Sine.easeIn',
+            onComplete: () => { container.destroy(true); this.locationTitle = null; },
+          });
+        });
+      },
     });
   }
 

@@ -33,25 +33,25 @@ const TIER_THEMES: Record<EndingTier, TierTheme> = {
     titleKo: '겸손한 도착', titleEn: 'A Humble Arrival',
     subtitleKo: '조용한 발걸음으로, 그러나 흔들리지 않는 믿음으로',
     subtitleEn: 'With quiet steps, yet unwavering faith',
-    bgTint: 0xddbb66, lightColor: 0xeedd88, lightAlpha: 0.26,
+    bgTint: 0xd4a853, lightColor: 0xeedd88, lightAlpha: 0.26,
     particleColor: 0xeedd88, particleCount: 25,
-    titleColor: '#eedd88',
+    titleColor: '#d4c080',
   },
   barely: {
     titleKo: '간신히 도착', titleEn: 'Arrived at Last',
     subtitleKo: '지친 발걸음이었으나, 마침내 이른 곳',
     subtitleEn: 'Exhausted, yet the journey is complete',
-    bgTint: 0x998866, lightColor: 0xccbb99, lightAlpha: 0.18,
+    bgTint: 0x4488aa, lightColor: 0xccbb99, lightAlpha: 0.18,
     particleColor: 0xccbb99, particleCount: 15,
-    titleColor: '#ccbb99',
+    titleColor: '#88b8cc',
   },
   grace: {
     titleKo: '은혜의 도착', titleEn: 'Saved by Grace',
     subtitleKo: '넘어질 때마다 손을 내밀어 주신 분이 계셨다',
     subtitleEn: 'Every fall was met by a hand reaching down',
-    bgTint: 0xaa88dd, lightColor: 0xddbbff, lightAlpha: 0.28,
+    bgTint: 0x8866cc, lightColor: 0xddbbff, lightAlpha: 0.28,
     particleColor: 0xddbbff, particleCount: 30,
-    titleColor: '#ddbbff',
+    titleColor: '#cc99ff',
   },
 };
 
@@ -116,6 +116,25 @@ export class EndingScene extends Phaser.Scene {
     // Tier-specific tint overlay
     bg.fillStyle(theme.bgTint, 0.06);
     bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+    // Glory tier: radiant rays from center-top
+    if (this.getEndingTier() === 'glory') {
+      for (let r = 0; r < 8; r++) {
+        const angle = (r / 8) * Math.PI * 2 - Math.PI / 2;
+        const rayLength = GAME_HEIGHT * 0.85;
+        const rayW = 12;
+        const startX = GAME_WIDTH / 2;
+        const startY = 0;
+        const endX = startX + Math.cos(angle) * rayLength;
+        const endY = startY + Math.sin(angle) * rayLength;
+        bg.fillStyle(0xffd700, 0.06);
+        bg.fillTriangle(
+          startX - Math.cos(angle + Math.PI / 2) * rayW, startY - Math.sin(angle + Math.PI / 2) * rayW,
+          startX + Math.cos(angle + Math.PI / 2) * rayW, startY + Math.sin(angle + Math.PI / 2) * rayW,
+          endX, endY,
+        );
+      }
+    }
   }
 
   private createParticles(theme: TierTheme): void {

@@ -546,18 +546,21 @@ export class PortraitRenderer {
     cx: number, cy: number, r: number, size: number,
   ): void {
     if (emotion.blush) {
-      g.fillStyle(0xff6688, 0.28);
+      g.fillStyle(0xff6688, 0.43);
       g.fillCircle(cx - r * 0.52, cy + r * 0.22, r * 0.22);
       g.fillCircle(cx + r * 0.52, cy + r * 0.22, r * 0.22);
     }
 
     if (emotion.tearDrop) {
-      g.fillStyle(0x6699cc, 0.82);
+      g.fillStyle(0x6699cc, 0.97);
       g.fillEllipse(cx + r * 0.52, cy + r * 0.22, r * 0.1, r * 0.22);
+      // Second tear for more dramatic flow
+      g.fillStyle(0x6699cc, 0.65);
+      g.fillEllipse(cx - r * 0.52, cy + r * 0.32, r * 0.08, r * 0.18);
     }
 
     if (emotion.sparkle) {
-      g.fillStyle(0xffd700, 0.75);
+      g.fillStyle(0xffd700, 0.95);
       const sparkles: [number, number][] = [
         [size * 0.1, size * 0.14],
         [size * 0.84, size * 0.1],
@@ -577,6 +580,14 @@ export class PortraitRenderer {
       g.fillStyle(0x88bbdd, 0.45);
       g.fillCircle(cx + r * 0.88, cy - r * 0.28, r * 0.06);
     }
+
+    // Vignette border: dark corners inside portrait frame
+    g.fillStyle(0x000000, 0.32);
+    // Four corner triangles
+    g.fillTriangle(0, 0, size * 0.35, 0, 0, size * 0.35);
+    g.fillTriangle(size, 0, size - size * 0.35, 0, size, size * 0.35);
+    g.fillTriangle(0, size, size * 0.35, size, 0, size - size * 0.35);
+    g.fillTriangle(size, size, size - size * 0.35, size, size, size - size * 0.35);
   }
 
   // ── Color utilities ───────────────────────────────────────────────────────

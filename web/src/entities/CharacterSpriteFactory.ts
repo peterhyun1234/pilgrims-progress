@@ -36,11 +36,11 @@ type DrawDir = 'down' | 'left' | 'right' | 'up';
 /** Walk cycle leg table: [leftLegY, rightLegY, leftArmX, rightArmX] offsets */
 const WALK_STEPS: [number, number, number, number][] = [
   [ 0,  0,  0,  0],  // frame 0 — neutral
-  [-3,  3,  2, -2],  // frame 1 — left forward
+  [-5,  5,  3, -3],  // frame 1 — left forward
   [ 0,  0,  0,  0],  // frame 2 — neutral
-  [ 3, -3, -2,  2],  // frame 3 — right forward
+  [ 5, -5, -3,  3],  // frame 3 — right forward
   [ 0,  0,  0,  0],  // frame 4 — neutral
-  [-2,  2,  1, -1],  // frame 5 — half-step
+  [-3,  3,  2, -2],  // frame 5 — half-step
 ];
 
 export class CharacterSpriteFactory {
@@ -188,8 +188,8 @@ export class CharacterSpriteFactory {
     const mx = (dx: number) => flip ? -dx - 1 : dx;
 
     // Ground shadow
-    g.fillStyle(0x000000, 0.3);
-    g.fillRect(cx - 7, oy + 29, 14, 3);
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(cx, oy + 30, 18, 5);
 
     // Faith aura (visible glow, only idle) — pulsing concentric rings
     if (anim === 'idle') {
@@ -391,28 +391,28 @@ export class CharacterSpriteFactory {
 
     // === PILGRIM HAT ===
     const hatColor = colors.accessory ?? 0x5a3d1e;
-    const hatDark = this.darken(hatColor, 0.65);
-    // Wide brim (6px each side)
+    const hatDark = this.darken(hatColor, 0.55);
+    // Wide brim (6px each side) — darker for contrast
     g.fillStyle(hatDark, 1);
-    g.fillRect(cx - 8, headY - 2, 16, 3);
-    g.fillStyle(this.lighten(hatColor, 0.08), 0.25);
+    g.fillRect(cx - 9, headY - 2, 18, 3);
+    g.fillStyle(this.lighten(hatColor, 0.12), 0.35);
     g.fillRect(cx - 8, headY - 2, 16, 1);
-    g.fillStyle(0x000000, 0.2);
+    g.fillStyle(0x000000, 0.35);
     g.fillRect(cx - 8, headY, 16, 1);
-    // Tall crown
-    g.fillStyle(hatColor, 1);
-    g.fillRect(cx - 4, headY - 9, 8, 8);
+    // Tall crown — brighter vs brim for clear separation
+    g.fillStyle(this.lighten(hatColor, 0.08), 1);
+    g.fillRect(cx - 4, headY - 10, 8, 9);
     // Crown highlight
-    g.fillStyle(this.lighten(hatColor, 0.1), 0.3);
-    g.fillRect(cx - 4, headY - 9, 2, 7);
+    g.fillStyle(this.lighten(hatColor, 0.15), 0.4);
+    g.fillRect(cx - 4, headY - 10, 2, 8);
     // Crown shadow right
-    g.fillStyle(0x000000, 0.2);
-    g.fillRect(cx + 3, headY - 9, 1, 7);
-    // White hatband row
-    g.fillStyle(0xe8e0d8, 1);
-    g.fillRect(cx - 4, headY - 2, 8, 1);
+    g.fillStyle(0x000000, 0.3);
+    g.fillRect(cx + 3, headY - 10, 1, 8);
+    // White hatband row — more prominent
+    g.fillStyle(0xf0e8d8, 1);
+    g.fillRect(cx - 4, headY - 2, 8, 2);
     // Dark brim underside
-    g.fillStyle(this.darken(hatColor, 0.5), 0.7);
+    g.fillStyle(this.darken(hatColor, 0.45), 0.8);
     g.fillRect(cx - 4, headY - 1, 8, 1);
   }
 
@@ -434,8 +434,8 @@ export class CharacterSpriteFactory {
     const mx = (dx: number) => flip ? -dx - 1 : dx;
 
     // Shadow
-    g.fillStyle(0x000000, 0.28);
-    g.fillRect(cx - 6, oy + 29, 12, 3);
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(cx, oy + 30, 16, 5);
 
     // === STAFF (drawn behind body) ===
     const staffX = cx + mx(9);
@@ -611,8 +611,8 @@ export class CharacterSpriteFactory {
     const mx = (dx: number) => flip ? -dx - 1 : dx;
 
     // Wider shadow (rounder build)
-    g.fillStyle(0x000000, 0.3);
-    g.fillRect(cx - 8, oy + 29, 16, 4);
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(cx, oy + 30, 20, 5);
 
     // === ROBE (wide, 13px) ===
     const torsoY = oy + 12 + bobY;
@@ -796,8 +796,8 @@ export class CharacterSpriteFactory {
     const mx = (dx: number) => flip ? -dx - 1 : dx;
 
     // Shadow
-    g.fillStyle(0x000000, 0.28);
-    g.fillRect(cx - 6, oy + 29, 13, 3);
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(cx, oy + 30, 18, 5);
 
     // === LEGS ===
     const legY = oy + 22 + bobY;
@@ -962,8 +962,8 @@ export class CharacterSpriteFactory {
     const mx = (dx: number) => flip ? -dx - 1 : dx;
 
     // Wider shadow (stocky)
-    g.fillStyle(0x000000, 0.35);
-    g.fillRect(cx - 8, oy + 29, 16, 4);
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(cx, oy + 30, 20, 5);
 
     // === HEAVY BOOTS ===
     const legY = oy + 22 + bobY;
@@ -1122,7 +1122,7 @@ export class CharacterSpriteFactory {
 
     // Slim shadow
     g.fillStyle(0x000000, 0.25);
-    g.fillRect(cx - 5, oy + 30, 10, 2);
+    g.fillEllipse(cx, oy + 30, 14, 4);
 
     // === LEGS (shorter start — pliable is slightly shorter) ===
     const legY = oy + 23 + bobY;
@@ -1264,8 +1264,8 @@ export class CharacterSpriteFactory {
     const mx = (dx: number) => flip ? -dx - 1 : dx;
 
     // Shadow
-    g.fillStyle(0x000000, 0.3);
-    g.fillRect(cx - 6, oy + 29, 13, 3);
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(cx, oy + 30, 18, 5);
 
     // === LEGS ===
     const legY = oy + 22 + bobY;

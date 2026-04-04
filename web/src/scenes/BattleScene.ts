@@ -119,15 +119,15 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Chapter-specific supernatural glow
-    sky.fillStyle(glowColor, 0.07);
+    sky.fillStyle(glowColor, 0.105);
     sky.fillEllipse(W / 2, ground * 0.7, W * 0.85, ground * 0.55);
-    sky.fillStyle(glowColor, 0.04);
+    sky.fillStyle(glowColor, 0.06);
     sky.fillEllipse(W / 2, ground * 0.85, W * 0.5, ground * 0.3);
 
     // Stars / supernatural lights
     for (let i = 0; i < 30; i++) {
       const hash = (i * 137 * 31) & 0xffff;
-      const starBrightness = this.currentChapter === 12 ? 0.25 : 0.08;
+      const starBrightness = this.currentChapter === 12 ? 0.25 : 0.18;
       sky.fillStyle(0xffffff, starBrightness + (hash % 8) * 0.03);
       sky.fillCircle(hash % W, (hash * 3) % (ground * 0.7), 0.5 + (hash % 2) * 0.3);
     }
@@ -176,15 +176,15 @@ export class BattleScene extends Phaser.Scene {
     }
 
     // Ground divider line — chapter-colored
-    gr.lineStyle(1, dividerColor, 0.35);
+    gr.lineStyle(1, dividerColor, 0.525);
     gr.lineBetween(0, ground, W, ground);
-    gr.fillStyle(dividerColor, 0.15);
+    gr.fillStyle(dividerColor, 0.225);
     for (let x = 0; x < W; x += 30) {
       gr.fillRect(x, ground - 0.5, 15, 1);
     }
 
     // Subtle grid in ground
-    gr.lineStyle(0.3, 0x333355, 0.1);
+    gr.lineStyle(0.3, 0x333355, 0.15);
     for (let x2 = 20; x2 < W; x2 += 20) {
       gr.lineBetween(x2, ground, x2 - 10, H);
     }
@@ -348,9 +348,13 @@ export class BattleScene extends Phaser.Scene {
     });
 
     const ko = this.gameManager.language === 'ko';
-    const nameText = this.add.text(0, -52, ko ? enemy.nameKo : enemy.nameEn,
-      DesignSystem.dangerTextStyle(DesignSystem.FONT_SIZE.SM),
-    ).setOrigin(0.5);
+    const nameText = this.add.text(0, -52, ko ? enemy.nameKo : enemy.nameEn, {
+      fontSize: `${DesignSystem.FONT_SIZE.BASE}px`,
+      color: '#ffd700',
+      fontFamily: DesignSystem.getFontFamily(),
+      stroke: '#000000',
+      strokeThickness: 2,
+    }).setOrigin(0.5);
     this.enemyContainer.add(nameText);
 
     // Boss badge
@@ -387,8 +391,16 @@ export class BattleScene extends Phaser.Scene {
 
     if (enemy.isBoss) {
       this.tweens.add({
-        targets: this.enemyContainer, scaleX: 1.03, scaleY: 1.03,
+        targets: this.enemyContainer, scaleX: 1.04, scaleY: 1.04,
         duration: 2000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      });
+      // Boss menacing float
+      const enemyBaseY = this.enemyContainer.y;
+      this.tweens.add({
+        targets: this.enemyContainer,
+        y: enemyBaseY - 3,
+        duration: 1400,
+        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
       });
       // Set up boss phase dialogues
       const languageIsBossKo = ko;
@@ -523,6 +535,15 @@ export class BattleScene extends Phaser.Scene {
     ).setOrigin(1, 0);
 
     this.playerContainer.add([label, hpLabel, hpBar.bg, hpBar.fill, this.playerHpText]);
+
+    // Idle breathing bob for player
+    const baseY = this.playerContainer.y;
+    this.tweens.add({
+      targets: this.playerContainer,
+      y: baseY - 3,
+      duration: 1600,
+      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
   }
 
   private createActionMenu(): void {
