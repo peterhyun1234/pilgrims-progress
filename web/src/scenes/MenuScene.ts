@@ -49,7 +49,7 @@ export class MenuScene extends Phaser.Scene {
       const t = i / skyStrips;
       const color = this.lerpColor(0x050310, 0x16082a, t);
       sky.fillStyle(color, 1);
-      sky.fillRect(0, Math.floor(t * HOR), W, Math.ceil(HOR / skyStrips) + 1);
+      sky.fillRect(0, Math.floor(t * HOR), W, Math.ceil(HOR / skyStrips) + (i === skyStrips - 1 ? 8 : 1));
     }
     this.bgLayers.push(sky);
 
@@ -91,7 +91,7 @@ export class MenuScene extends Phaser.Scene {
     const mtFar = this.add.graphics().setDepth(-6);
     for (let x = -20; x < W + 40; x += 30) {
       const h2 = ((x * 31 + 7) * 17) & 0xff;
-      const mh = 18 + (h2 % 28);
+      const mh = 25 + (h2 % 32);
       const mw = 40 + (h2 % 25);
       mtFar.fillStyle(0x0d0520, 0.8);
       mtFar.fillTriangle(x, HOR + 2, x + mw / 2, HOR - mh, x + mw, HOR + 2);
@@ -102,7 +102,7 @@ export class MenuScene extends Phaser.Scene {
     const mtNear = this.add.graphics().setDepth(-5);
     for (let x = -30; x < W + 60; x += 50) {
       const h2 = ((x * 53 + 3) * 23) & 0xff;
-      const mh = 28 + (h2 % 22);
+      const mh = 35 + (h2 % 26);
       const mw = 70 + (h2 % 40);
       mtNear.fillStyle(0x0a031a, 0.95);
       mtNear.fillTriangle(x, HOR + 2, x + mw / 2, HOR - mh, x + mw, HOR + 2);
@@ -118,6 +118,12 @@ export class MenuScene extends Phaser.Scene {
       ground.fillStyle(color, 1);
       ground.fillRect(0, HOR + i * (H - HOR) / groundStrips, W, (H - HOR) / groundStrips + 2);
     }
+    // Horizon blend strip — softens sky/ground seam
+    ground.fillStyle(0x16082a, 0.35);
+    ground.fillRect(0, HOR - 4, W, 12);
+    ground.fillStyle(0x0d0618, 0.25);
+    ground.fillRect(0, HOR, W, 8);
+
     this.bgLayers.push(ground);
 
     // The narrow path — golden winding road to the light

@@ -206,24 +206,24 @@ export class NPC extends Entity {
     const bg = this.scene.add.graphics();
     if (!isIdlePhase) {
       // Outer soft glow
-      bg.fillStyle(COLORS.UI.GOLD, 0.12);
-      bg.fillCircle(0, 0, 10);
+      bg.fillStyle(COLORS.UI.GOLD, 0.20);
+      bg.fillCircle(0, 0, 12);
       // Mid ring
-      bg.fillStyle(COLORS.UI.GOLD, 0.28);
-      bg.fillCircle(0, 0, 7);
-      // Core bright
-      bg.fillStyle(0xffd080, 0.9);
-      bg.fillCircle(0, 0, 4);
+      bg.fillStyle(COLORS.UI.GOLD, 0.40);
+      bg.fillCircle(0, 0, 8);
+      // Core bright gold
+      bg.fillStyle(0xffd080, 1.0);
+      bg.fillCircle(0, 0, 5);
       // Gold border
-      bg.lineStyle(1, COLORS.UI.GOLD, 0.7);
-      bg.strokeCircle(0, 0, 7);
+      bg.lineStyle(1.5, 0xffcc44, 0.9);
+      bg.strokeCircle(0, 0, 8);
       // Inner sparkle cross
-      bg.lineStyle(1, 0xffffff, 0.6);
+      bg.lineStyle(1.5, 0xffffff, 0.8);
       bg.lineBetween(-3, 0, 3, 0);
       bg.lineBetween(0, -3, 0, 3);
     } else {
       // Dimmed dot for completed phase
-      bg.fillStyle(COLORS.UI.PANEL, 0.7);
+      bg.fillStyle(COLORS.UI.PANEL, 0.85);
       bg.fillRoundedRect(-7, -5, 14, 10, 3);
       bg.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
       bg.strokeRoundedRect(-7, -5, 14, 10, 3);
@@ -241,8 +241,8 @@ export class NPC extends Entity {
       this.sprite.x, this.sprite.y - 14,
       displayName, {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-        color: isAvailable ? '#d4c080' : '#e8e0d0', fontFamily: FONT_FAMILY, fontStyle: 'bold',
-        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
+        color: isAvailable ? '#ffcc44' : '#e8e0d0', fontFamily: FONT_FAMILY, fontStyle: 'bold',
+        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 2, stroke: true, fill: true },
       },
     ).setOrigin(0.5).setDepth(20);
     this.nameLabel = nameLabelObj;
@@ -279,7 +279,7 @@ export class NPC extends Entity {
     this.nameBadgeGraphics.clear();
     const nw = textWidth + 10;
     const nh = 13;
-    this.nameBadgeGraphics.fillStyle(0x0a0814, 0.72);
+    this.nameBadgeGraphics.fillStyle(0x0a0814, 0.82);
     this.nameBadgeGraphics.fillRoundedRect(x - nw / 2, y - nh / 2, nw, nh, 4);
     this.nameBadgeGraphics.lineStyle(0.5, COLORS.UI.GOLD, 0.4);
     this.nameBadgeGraphics.strokeRoundedRect(x - nw / 2, y - nh / 2, nw, nh, 4);

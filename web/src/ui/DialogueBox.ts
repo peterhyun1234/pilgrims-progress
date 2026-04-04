@@ -360,12 +360,12 @@ export class DialogueBox {
 
     const moodColors: Record<PortraitEmotion, { color: number; alpha: number }> = {
       neutral: { color: 0x1a1428, alpha: 0 },
-      happy: { color: 0xffd700, alpha: 0.10 },
-      angry: { color: 0xff0000, alpha: 0.10 },
-      sad: { color: 0x2244aa, alpha: 0.10 },
+      happy: { color: 0xffd700, alpha: 0.12 },
+      angry: { color: 0xff0000, alpha: 0.12 },
+      sad: { color: 0x2244aa, alpha: 0.12 },
       fearful: { color: 0x440066, alpha: 0.12 },
-      surprised: { color: 0xff8800, alpha: 0.08 },
-      determined: { color: 0x44aa44, alpha: 0.08 },
+      surprised: { color: 0xff8800, alpha: 0.12 },
+      determined: { color: 0x44aa44, alpha: 0.12 },
     };
 
     const mood = moodColors[this.emotionState];

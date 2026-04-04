@@ -9,7 +9,7 @@ export class MiniMap {
   private isVisible = true;
 
   private static readonly SIZE = 52;
-  private static readonly MARGIN = 6;
+  private static readonly MARGIN = 8;
   private static readonly BORDER = 1;
 
   private config: ChapterConfig | null = null;
@@ -20,7 +20,7 @@ export class MiniMap {
   constructor(scene: Phaser.Scene) {
     this.container = scene.add.container(
       GAME_WIDTH - MiniMap.SIZE - MiniMap.MARGIN,
-      MiniMap.MARGIN + 22,
+      MiniMap.MARGIN + 26,
     ).setDepth(95).setScrollFactor(0);
 
     const bg = scene.add.graphics();

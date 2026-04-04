@@ -94,6 +94,7 @@ export class SettingsScene extends Phaser.Scene {
     motionTxt.on('pointerdown', () => {
       motionReduced = !motionReduced;
       gm.reduceMotion = motionReduced;
+      try { localStorage.setItem('pilgrim_reduceMotion', motionReduced ? '1' : '0'); } catch { /* private browsing */ }
       motionTxt.setText(motionReduced ? 'ON' : 'OFF');
       motionTxt.setColor(motionReduced ? '#66cc66' : '#b0a898');
     });
@@ -113,6 +114,7 @@ export class SettingsScene extends Phaser.Scene {
     modeTxt.on('pointerdown', () => {
       modeIdx = (modeIdx + 1) % modes.length;
       gm.colorblindMode = modeIdx > 0;
+      try { localStorage.setItem('pilgrim_colorblind', modeIdx > 0 ? '1' : '0'); } catch { /* private browsing */ }
       modeTxt.setText(modeLabels[modeIdx]);
       modeTxt.setColor(modeIdx > 0 ? '#66cc66' : '#b0a898');
     });

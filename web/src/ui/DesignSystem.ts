@@ -22,12 +22,21 @@ export class DesignSystem {
 
   static isColorblind(): boolean {
     try {
+      if (localStorage.getItem('pilgrim_colorblind') === '1') return true;
+    } catch { /* private browsing */ }
+    try {
       const gm = ServiceLocator.get<{ colorblindMode: boolean }>(SERVICE_KEYS.GAME_MANAGER);
       return gm.colorblindMode;
     } catch { return false; }
   }
 
   static isReduceMotion(): boolean {
+    try {
+      if (localStorage.getItem('pilgrim_reduceMotion') === '1') return true;
+    } catch { /* private browsing */ }
+    try {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return true;
+    } catch { /* not supported */ }
     try {
       const gm = ServiceLocator.get<{ reduceMotion: boolean }>(SERVICE_KEYS.GAME_MANAGER);
       return gm.reduceMotion;
@@ -180,15 +189,17 @@ export class DesignSystem {
       icon,
     } = options;
 
+    const actualH = Math.max(h, 28); // Minimum 28px touch target
+
     const container = scene.add.container(x, y);
 
     const bg = scene.add.graphics();
     const drawBg = (color: number, border: number) => {
       bg.clear();
       bg.fillStyle(color, 0.95);
-      bg.fillRoundedRect(-w / 2, -h / 2, w, h, 4);
+      bg.fillRoundedRect(-w / 2, -actualH / 2, w, actualH, 4);
       bg.lineStyle(1.5, border, 0.7);
-      bg.strokeRoundedRect(-w / 2, -h / 2, w, h, 4);
+      bg.strokeRoundedRect(-w / 2, -actualH / 2, w, actualH, 4);
     };
     drawBg(bgColor, borderColor);
 
@@ -199,7 +210,7 @@ export class DesignSystem {
 
     container.add([bg, text]);
 
-    const hitZone = scene.add.rectangle(0, 0, w, h, 0x000000, 0)
+    const hitZone = scene.add.rectangle(0, 0, w, actualH, 0x000000, 0)
       .setInteractive({ useHandCursor: true });
 
     hitZone.on('pointerover', () => {
