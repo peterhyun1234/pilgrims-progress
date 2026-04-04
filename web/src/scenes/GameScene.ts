@@ -1465,6 +1465,7 @@ export class GameScene extends Phaser.Scene {
     this.dialogueBox.update();
 
     const cam = this.cameras.main;
+    this.tileMapManager.update(cam.scrollX);
     const margin = 64;
     const camL = cam.scrollX - margin;
     const camR = cam.scrollX + cam.width + margin;

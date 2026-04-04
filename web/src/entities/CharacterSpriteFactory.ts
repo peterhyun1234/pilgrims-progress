@@ -152,14 +152,20 @@ export class CharacterSpriteFactory {
   private static animOffsets(
     anim: 'idle' | 'walk',
     frame: number,
-  ): { bobY: number; step: [number, number, number, number] } {
+  ): { bobY: number; step: [number, number, number, number]; breathScale: number } {
     if (anim === 'idle') {
-      const bobY = frame === 1 || frame === 3 ? -1 : 0;
-      return { bobY, step: [0, 0, 0, 0] };
+      // 4-frame breathing cycle: 0=neutral, 1=up, 2=neutral, 3=down
+      // More pronounced bob (was -1, now -2 on inhale, +1 on exhale)
+      const bobs = [0, -2, -1, 1];
+      const bobY = bobs[frame % 4] ?? 0;
+      // Subtle scale variation for "chest expansion" look
+      const breathScales = [1.0, 1.02, 1.01, 0.99];
+      const breathScale = breathScales[frame % 4] ?? 1.0;
+      return { bobY, step: [0, 0, 0, 0], breathScale };
     }
     const f = Math.min(frame, WALK_STEPS.length - 1);
     const bobY = (f % 2 === 1) ? -1 : 0;
-    return { bobY, step: WALK_STEPS[f] };
+    return { bobY, step: WALK_STEPS[f], breathScale: 1.0 };
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -185,10 +191,14 @@ export class CharacterSpriteFactory {
     g.fillStyle(0x000000, 0.3);
     g.fillRect(cx - 7, oy + 29, 14, 3);
 
-    // Faith aura (subtle, only idle)
+    // Faith aura (visible glow, only idle) — pulsing concentric rings
     if (anim === 'idle') {
-      g.fillStyle(0xd4a853, 0.07 + (frame % 2) * 0.03);
-      g.fillRect(cx - 10, oy + 18 + bobY, 20, 12);
+      // Outer soft halo
+      g.fillStyle(0xd4a853, 0.08 + (frame % 2) * 0.04);
+      g.fillEllipse(cx, oy + 26 + bobY, 28, 8);
+      // Mid ring
+      g.fillStyle(0xffd080, 0.12 + (frame % 4 === 1 ? 0.05 : 0));
+      g.fillEllipse(cx, oy + 26 + bobY, 18, 5);
     }
 
     // === BURDEN (drawn first — behind body for right/front/back, in front for left) ===

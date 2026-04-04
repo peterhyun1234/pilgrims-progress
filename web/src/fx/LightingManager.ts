@@ -58,31 +58,23 @@ export class LightingManager {
     this.ambientColor = color;
   }
 
-  /** Set ambient based on chapter theme */
+  /** Set ambient based on chapter theme — stronger values for real lighting presence */
   setChapterLighting(chapter: number): void {
+    // Values tripled from v1; dark chapters are now distinctly darker
     switch (chapter) {
-      case 1:
-        this.setAmbient(0.06, 0x100808);
-        break;
-      case 2:
-        this.setAmbient(0.08, 0x0a1510);
-        break;
-      case 3:
-      case 4:
-        this.setAmbient(0.04, 0x000000);
-        break;
-      case 5:
-        this.setAmbient(0.1, 0x0a0515);
-        break;
-      case 6:
-        this.setAmbient(0.03, 0x08060a);
-        break;
-      case 8:
-      case 9:
-        this.setAmbient(0.18, 0x050008);
-        break;
-      default:
-        this.setAmbient(0.05, 0x000000);
+      case 1:  this.setAmbient(0.18, 0x100808); break; // City of Destruction — ashen tint
+      case 2:  this.setAmbient(0.22, 0x0a1a10); break; // Slough — murky green
+      case 3:  this.setAmbient(0.10, 0x060412); break; // Wicket Gate — night-ish
+      case 4:  this.setAmbient(0.12, 0x080514); break; // Interpreter's House — dim candlelight
+      case 5:  this.setAmbient(0.20, 0x100a08); break; // Hill of Difficulty — oppressive dusk
+      case 6:  this.setAmbient(0.08, 0x080a06); break; // Palace Beautiful — gentle evening
+      case 7:  this.setAmbient(0.28, 0x0a0408); break; // Valley of Humiliation — dark
+      case 8:  this.setAmbient(0.35, 0x100204); break; // Apollyon — volcanic darkness
+      case 9:  this.setAmbient(0.42, 0x060108); break; // Shadow of Death — near-pitch black
+      case 10: this.setAmbient(0.14, 0x080c14); break; // Vanity Fair — cold city glow
+      case 11: this.setAmbient(0.25, 0x080810); break; // Doubting Castle — grey gloom
+      case 12: this.setAmbient(0.06, 0x100c04); break; // Celestial City — golden glow
+      default: this.setAmbient(0.12, 0x000000); break;
     }
   }
 
@@ -174,14 +166,20 @@ export class LightingManager {
       }
     }
 
-    // Add warm glow at light centers
+    // Add warm glow at light centers — multi-layer with visible bloom
     for (const sl of screenLights) {
-      const glowSteps = 4;
-      for (let i = glowSteps; i >= 1; i--) {
-        const t = i / glowSteps;
-        this.overlay.fillStyle(sl.color, 0.02 * t * sl.a);
-        this.overlay.fillCircle(sl.x, sl.y, sl.r * t * 0.5);
-      }
+      // Outer bloom (wide, soft)
+      this.overlay.fillStyle(sl.color, 0.035 * sl.a);
+      this.overlay.fillCircle(sl.x, sl.y, sl.r * 0.65);
+      // Mid ring
+      this.overlay.fillStyle(sl.color, 0.06 * sl.a);
+      this.overlay.fillCircle(sl.x, sl.y, sl.r * 0.42);
+      // Inner warm core
+      this.overlay.fillStyle(sl.color, 0.10 * sl.a);
+      this.overlay.fillCircle(sl.x, sl.y, sl.r * 0.24);
+      // Bright center
+      this.overlay.fillStyle(0xffffff, 0.04 * sl.a);
+      this.overlay.fillCircle(sl.x, sl.y, sl.r * 0.10);
     }
   }
 
