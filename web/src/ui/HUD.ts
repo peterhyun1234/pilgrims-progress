@@ -26,7 +26,7 @@ export class HUD {
   private eventBus: EventBus;
 
   private static readonly BAR_WIDTH = 76;
-  private static readonly BAR_HEIGHT = 7;
+  private static readonly BAR_HEIGHT = 8;
   private static readonly BAR_GAP = 17;   // row height
   private static readonly ROW_MID = 8;    // vertical center within a row
   private static readonly PADDING = 6;
@@ -95,6 +95,8 @@ export class HUD {
         fontSize: `${labelFontSize}px`,
         color: DesignSystem.hex(iconBgColor),
         fontFamily: FONT_FAMILY,
+        stroke: '#000000',
+        strokeThickness: 2,
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
       }).setOrigin(0, 0.5);
 
@@ -103,7 +105,7 @@ export class HUD {
       barBg.fillStyle(0x222222, 0.7);
       barBg.fillRoundedRect(barX, MID - HUD.BAR_HEIGHT / 2, HUD.BAR_WIDTH, HUD.BAR_HEIGHT, 2);
       // Subtle border around track
-      barBg.lineStyle(0.5, iconBgColor, 0.2);
+      barBg.lineStyle(1, iconBgColor, 0.3);
       barBg.strokeRoundedRect(barX, MID - HUD.BAR_HEIGHT / 2, HUD.BAR_WIDTH, HUD.BAR_HEIGHT, 2);
 
       const fill = this.scene.add.graphics();

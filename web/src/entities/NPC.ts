@@ -253,11 +253,21 @@ export class NPC extends Entity {
 
     // Only pulse the '!' for available/active NPCs
     if (!isIdlePhase) {
+      // Vertical bob tween
       this.scene.tweens.add({
         targets: this.prompt,
         y: this.sprite.y + NPC_CONFIG.PROMPT_OFFSET_Y - 16,
-        duration: isAvailable ? 500 : 700,
+        duration: isAvailable ? 450 : 650,
         yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      });
+      // Scale pulse tween for more prominent animation
+      this.scene.tweens.add({
+        targets: this.prompt,
+        scaleX: isAvailable ? 1.3 : 1.15,
+        scaleY: isAvailable ? 1.3 : 1.15,
+        duration: isAvailable ? 400 : 600,
+        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        delay: isAvailable ? 100 : 150,
       });
     }
 
@@ -277,11 +287,13 @@ export class NPC extends Entity {
   private drawNameBadge(x: number, y: number, textWidth: number): void {
     if (!this.nameBadgeGraphics) return;
     this.nameBadgeGraphics.clear();
-    const nw = textWidth + 10;
-    const nh = 13;
-    this.nameBadgeGraphics.fillStyle(0x0a0814, 0.82);
+    const nw = textWidth + 12;
+    const nh = 14;
+    // Stronger background for better readability
+    this.nameBadgeGraphics.fillStyle(0x050210, 0.92);
     this.nameBadgeGraphics.fillRoundedRect(x - nw / 2, y - nh / 2, nw, nh, 4);
-    this.nameBadgeGraphics.lineStyle(0.5, COLORS.UI.GOLD, 0.4);
+    // More visible border
+    this.nameBadgeGraphics.lineStyle(1, COLORS.UI.GOLD, 0.65);
     this.nameBadgeGraphics.strokeRoundedRect(x - nw / 2, y - nh / 2, nw, nh, 4);
   }
 

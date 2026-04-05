@@ -285,11 +285,11 @@ export class MenuScene extends Phaser.Scene {
 
     // Bible verse
     const verse = this.add.text(cx, VERSE_Y, '"좁은 문으로 들어가라"  마 7:13', {
-      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#c8b070',
+      fontSize: `${DesignSystem.FONT_SIZE.SM}px`, color: '#d4c890',
       fontFamily: DesignSystem.getFontFamily(),
       shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, stroke: true, fill: true },
     }).setOrigin(0.5, 0.5).setDepth(10).setAlpha(0);
-    this.tweens.add({ targets: verse, alpha: 0.9, duration: 800, delay: 1200 });
+    this.tweens.add({ targets: verse, alpha: 1.0, duration: 800, delay: 1200 });
 
     // — Button panel (H*0.60 = clearly below the mountain horizon) —
     const btnAreaY = Math.round(H * 0.60);
