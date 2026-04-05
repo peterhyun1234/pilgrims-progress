@@ -516,7 +516,10 @@ export class GameScene extends Phaser.Scene {
         this.inventoryPanel.close();
         return;
       }
-      if (this.gameManager.isState(GameState.DIALOGUE)) return;
+      if (this.gameManager.isState(GameState.DIALOGUE)) {
+        this.eventBus.emit(GameEvent.DIALOGUE_END);
+        return;
+      }
       if (this.gameManager.isState(GameState.PAUSE)) {
         this.closePauseMenu();
         return;

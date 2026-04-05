@@ -201,6 +201,11 @@ export class DialogueBox {
     this.scene.input.on('pointerdown', this.advanceHandler);
     this.scene.input.keyboard?.on('keydown-SPACE', this.advanceHandler);
     this.scene.input.keyboard?.on('keydown-ENTER', this.advanceHandler);
+    this.scene.input.keyboard?.on('keydown-ESC', () => {
+      if (!this.isVisible) return;
+      // Force close dialogue on ESC
+      this.eventBus.emit(GameEvent.DIALOGUE_END);
+    });
   }
 
   /**
@@ -328,6 +333,7 @@ export class DialogueBox {
 
   private updatePortrait(): void {
     if (this.portraitImage) {
+      this.portraitImage.setVisible(false);
       this.container.remove(this.portraitImage, false);
       this.portraitImage = null;
     }
@@ -555,6 +561,7 @@ export class DialogueBox {
         this.speakerText.setText('');
         this.dialogueText.setText('');
         if (this.portraitImage) {
+          this.portraitImage.setVisible(false);
           this.container.remove(this.portraitImage, false);
           this.portraitImage = null;
         }
