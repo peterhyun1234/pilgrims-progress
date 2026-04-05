@@ -97,9 +97,10 @@ export class ParallaxBackground {
     this.buildMountainsNear(pal);
     this.buildGround(pal);
     if (pal.fogAlpha > 0.01) this.buildFog(pal);
+    this.buildVignette();
 
-    // Animated layer (rotating, pulsing effects)
-    this.animGfx = this.scene.add.graphics().setDepth(-1).setScrollFactor(0);
+    // Animated layer (star twinkle, horizon pulse) — above sky layers
+    this.animGfx = this.scene.add.graphics().setDepth(0.65).setScrollFactor(0);
   }
 
   private addLayer(gfx: Phaser.GameObjects.Graphics, speed: number, depth: number): void {
@@ -111,7 +112,8 @@ export class ParallaxBackground {
   private buildSky(pal: ChapterPalette): void {
     const W = this.mapWidth;
     const HOR = this.horizonY;
-    const gfx = this.scene.add.graphics().setDepth(-10).setScrollFactor(0);
+    // depth 0.5: above groundLayer (0) so sky is visible at top of screen
+    const gfx = this.scene.add.graphics().setDepth(0.5).setScrollFactor(0);
 
     const strips = 28;
     for (let i = 0; i < strips; i++) {
@@ -121,7 +123,7 @@ export class ParallaxBackground {
       gfx.fillRect(0, Math.floor(t * HOR), W, Math.ceil(HOR / strips) + 1);
     }
 
-    this.addLayer(gfx, 0, -10);
+    this.addLayer(gfx, 0, 0.5);
   }
 
   // ── Stars ─────────────────────────────────────────────────────────────────
@@ -129,7 +131,7 @@ export class ParallaxBackground {
   private buildStars(pal: ChapterPalette): void {
     const W = GAME_WIDTH;
     const HOR = this.horizonY;
-    const gfx = this.scene.add.graphics().setDepth(-9).setScrollFactor(0);
+    const gfx = this.scene.add.graphics().setDepth(0.6).setScrollFactor(0);
 
     this.stars = [];
     for (let i = 0; i < pal.starCount; i++) {
@@ -143,7 +145,7 @@ export class ParallaxBackground {
       gfx.fillCircle(sx, sy, sz);
     }
 
-    this.addLayer(gfx, 0, -9);
+    this.addLayer(gfx, 0, 0.6);
   }
 
   // ── Far mountains ─────────────────────────────────────────────────────────
@@ -151,7 +153,7 @@ export class ParallaxBackground {
   private buildMountainsFar(pal: ChapterPalette): void {
     const W = GAME_WIDTH;
     const HOR = this.horizonY;
-    const gfx = this.scene.add.graphics().setDepth(-7).setScrollFactor(0.15);
+    const gfx = this.scene.add.graphics().setDepth(0.7).setScrollFactor(0.15);
 
     for (let x = -30; x < W + 60; x += 28) {
       const h2 = ((x * 31 + 7) * 17) & 0xff;
@@ -164,7 +166,7 @@ export class ParallaxBackground {
       gfx.fillTriangle(x + mw / 2 - 2, HOR - mh + 2, x + mw / 2, HOR - mh, x + mw / 2 + 2, HOR - mh + 3);
     }
 
-    this.addLayer(gfx, 0.15, -7);
+    this.addLayer(gfx, 0.15, 0.7);
   }
 
   // ── Horizon glow ─────────────────────────────────────────────────────────
@@ -202,7 +204,7 @@ export class ParallaxBackground {
       }
     }
 
-    this.addLayer(gfx, 0, -6);
+    this.addLayer(gfx, 0, 0.8);
   }
 
   // ── Near mountains ────────────────────────────────────────────────────────
@@ -210,7 +212,7 @@ export class ParallaxBackground {
   private buildMountainsNear(pal: ChapterPalette): void {
     const W = GAME_WIDTH;
     const HOR = this.horizonY;
-    const gfx = this.scene.add.graphics().setDepth(-5).setScrollFactor(0.35);
+    const gfx = this.scene.add.graphics().setDepth(0.9).setScrollFactor(0.35);
 
     for (let x = -40; x < W + 80; x += 50) {
       const h2 = ((x * 53 + 3) * 23) & 0xff;
@@ -225,7 +227,7 @@ export class ParallaxBackground {
       }
     }
 
-    this.addLayer(gfx, 0.35, -5);
+    this.addLayer(gfx, 0.35, 0.9);
   }
 
   // ── Ground ────────────────────────────────────────────────────────────────
@@ -273,7 +275,8 @@ export class ParallaxBackground {
   buildVignette(): void {
     const W = GAME_WIDTH;
     const H = GAME_HEIGHT;
-    const gfx = this.scene.add.graphics().setDepth(-1).setScrollFactor(0);
+    // depth 3.5: above terrain zones (2) but below NPC/player/HUD
+    const gfx = this.scene.add.graphics().setDepth(3.5).setScrollFactor(0);
 
     for (let i = 0; i < 10; i++) {
       const t = i / 10;
@@ -290,7 +293,7 @@ export class ParallaxBackground {
       gfx.fillRect(W - 5, 0, 5, H);
     }
 
-    this.addLayer(gfx, 0, -1);
+    this.addLayer(gfx, 0, 3.5);
   }
 
   // ── Animated overlay (stars twinkle, horizon pulse) ───────────────────────
