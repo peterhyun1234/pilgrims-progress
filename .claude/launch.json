@@ -3,10 +3,10 @@
   "configurations": [
     {
       "name": "pilgrims-progress-dev",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["dev"],
+      "runtimeExecutable": "/Users/peterjeon/Desktop/workspace/pilgrims-progress/.claude/start-dev.sh",
+      "runtimeArgs": [],
       "port": 3000,
-      "cwd": "web"
+      "cwd": "/Users/peterjeon/Desktop/workspace/pilgrims-progress/web"
     }
   ]
 }

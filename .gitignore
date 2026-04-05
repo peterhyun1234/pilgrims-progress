@@ -20,3 +20,9 @@ node_modules/
 
 # Test screenshots
 screenshots/
+
+# Vite cache
+.vite/
+
+# Claude worktrees (임시 작업 브랜치)
+.claude/worktrees/
