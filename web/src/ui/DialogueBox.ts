@@ -418,7 +418,10 @@ export class DialogueBox {
       const delay = isHeavy ? (i + 1) * 400 : i * 100;
       this.scene.time.delayedCall(delay, () => {
         const cy = startY + i * (choiceH + gap);
-        const c = this.scene.add.container(bx + 10, cy + 4).setAlpha(0);
+        // FIX: add directly to scene (not inside scrollFactor-0 container)
+        // so Phaser's hit-test coords match the visual screen position.
+        const c = this.scene.add.container(bx + 10, cy + 4)
+          .setAlpha(0).setScrollFactor(0).setDepth(201);
         const w = bw - 20;
 
         const cbg = this.scene.add.graphics();
@@ -488,7 +491,8 @@ export class DialogueBox {
           ease: 'Back.easeOut',
         });
         this.choiceContainers.push(c);
-        this.container.add(c);
+        // NOTE: c is already in the scene display list (scrollFactor 0, depth 201)
+        // Do NOT add to this.container to avoid input coordinate mismatch
 
         // Keyboard shortcut: press number key to select
         const KEY_NAMES = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'] as const;
