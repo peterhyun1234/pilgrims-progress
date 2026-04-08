@@ -398,7 +398,7 @@ export class GameScene extends Phaser.Scene {
 
       const icon = this.add.text(0, 0,
         this.itemSystem.getItemDef(itemEntry.itemId)?.icon ?? '?',
-        { fontSize: '12px' },
+        DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM),
       ).setOrigin(0.5);
 
       c.add([glow, icon]);
@@ -484,6 +484,13 @@ export class GameScene extends Phaser.Scene {
     ).setDepth(500).setScrollFactor(0);
     this.tweens.add({ targets: overlay, alpha: 0.55, duration: 200, ease: 'Sine.easeOut' });
 
+    // Detect platform for help text
+    let isMobile = false;
+    try {
+      const rm = ServiceLocator.get<ResponsiveManager>(SERVICE_KEYS.RESPONSIVE_MANAGER);
+      isMobile = rm.isTouchDevice;
+    } catch { /* ignore */ }
+
     const panel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2).setDepth(501).setScrollFactor(0);
     const bg = DesignSystem.createPanel(this, -110, -80, 220, 200);
 
@@ -496,7 +503,15 @@ export class GameScene extends Phaser.Scene {
     line.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
     line.lineBetween(-60, -42, 60, -42);
 
-    panel.add([bg, title, line]);
+    // Platform-specific shortcut hint at bottom of panel
+    const shortcutHint = isMobile
+      ? (ko ? '❕ NPC 대화  ❚❚ 일시정지' : '❕ Talk  ❚❚ Pause')
+      : (ko ? 'E 대화  I 소지품  M 지도  ESC 일시정지' : 'E Talk  I Inventory  M Map  ESC Pause');
+    const hintText = this.add.text(0, 84, shortcutHint,
+      DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
+    ).setOrigin(0.5);
+
+    panel.add([bg, title, line, hintText]);
 
     const buttons: Phaser.GameObjects.Container[] = [];
     const cleanup = () => {
@@ -614,7 +629,7 @@ export class GameScene extends Phaser.Scene {
     const bubble = this.add.text(npc.sprite.x, npc.sprite.y - 22, '...', {
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
       color: '#9a9a88',
-      fontFamily: 'monospace',
+      fontFamily: DesignSystem.getFontFamily(),
       stroke: '#000000',
       strokeThickness: 2,
     }).setOrigin(0.5).setDepth(22);
@@ -1378,8 +1393,10 @@ export class GameScene extends Phaser.Scene {
 
       if (this.player.nearbyNPC) {
         this.mobileControls.setActionLabel('!');
+        this.mobileControls.setActionEnabled(true);
       } else {
-        this.mobileControls.setActionLabel('A');
+        this.mobileControls.setActionLabel('·');
+        this.mobileControls.setActionEnabled(false);
       }
     }
 

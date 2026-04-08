@@ -379,9 +379,9 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     spawn: { x: 80, y: 280 },
     npcs: [
       {
-        id: 'worldly_wiseman',
+        id: 'worldly_wiseman_ch3',
         nameKo: '세속 현자',
-        nameEn: 'Worldly Wiseman',
+        nameEn: 'Mr. Worldly Wiseman',
         sprite: 'worldly_wiseman',
         x: 300, y: 200,
         chapter: 3,
@@ -405,7 +405,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         type: 'dialogue',
         x: 500, y: 200, width: 40, height: 100,
         triggerOnce: false,
-        data: { npcId: 'worldly_wiseman', knotName: 'worldly_wiseman_warning' },
+        data: { npcId: 'worldly_wiseman_ch3', knotName: 'worldly_wiseman_warning' },
       },
     ],
     mapObjects: [
@@ -418,7 +418,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       },
     ],
     completionRequirements: {
-      requiredNpcs: ['worldly_wiseman'],
+      requiredNpcs: ['worldly_wiseman_ch3'],
     },
   },
   {

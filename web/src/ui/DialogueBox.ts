@@ -403,17 +403,18 @@ export class DialogueBox {
 
         const cbg = this.scene.add.graphics();
         const defaultColor = choice.isHidden ? 0x2a2040 : COLORS.UI.BUTTON_DEFAULT;
-        const bdrClr = choice.isHidden ? COLORS.UI.GOLD : 0x444444;
-        cbg.fillStyle(defaultColor, 0.92);
+        const bdrClr = choice.isHidden ? COLORS.UI.GOLD : 0x554433;
+        cbg.fillStyle(defaultColor, 0.93);
         cbg.fillRoundedRect(0, 0, w, choiceH, 4);
-        cbg.lineStyle(1, bdrClr, 0.5);
+        cbg.lineStyle(1, bdrClr, 0.6);
         cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
 
         const isLocked = choice.requiredStat !== undefined
           && (ServiceLocator.get<import('../core/StatsManager').StatsManager>(SERVICE_KEYS.STATS_MANAGER)
             .get(choice.requiredStat as import('../core/GameEvents').StatType) < (choice.requiredValue ?? 0));
         const prefix = isLocked ? '🔒 ' : (choice.isHidden ? '★ ' : `${i + 1}. `);
-        const textColor = isLocked ? '#887766' : (choice.isHidden ? '#d4a853' : '#d0c8b8');
+        // Locked: more visible muted amber (not nearly-invisible 0x887766)
+        const textColor = isLocked ? '#aa9977' : (choice.isHidden ? '#d4a853' : '#d0c8b8');
         const txt = this.scene.add.text(w / 2, choiceH / 2, prefix + choice.text,
           DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, textColor),
         ).setOrigin(0.5).setAlpha(isLocked ? 0.5 : 1);

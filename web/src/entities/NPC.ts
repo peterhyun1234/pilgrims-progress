@@ -193,8 +193,8 @@ export class NPC extends Entity {
     // 3-layer glow orb prompt
     const bg = this.scene.add.graphics();
     if (!isIdlePhase) {
-      // Outer soft glow
-      bg.fillStyle(COLORS.UI.GOLD, 0.12);
+      // Outer soft glow (more visible — 0.12 → 0.22)
+      bg.fillStyle(COLORS.UI.GOLD, 0.22);
       bg.fillCircle(0, 0, 10);
       // Mid ring
       bg.fillStyle(COLORS.UI.GOLD, 0.28);
@@ -229,8 +229,8 @@ export class NPC extends Entity {
       this.sprite.x, this.sprite.y - 14,
       displayName, {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-        color: '#e8e0d0', fontFamily: FONT_FAMILY, fontStyle: 'bold',
-        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
+        color: '#d0c8b0', fontFamily: FONT_FAMILY, fontStyle: 'bold',
+        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 1, stroke: true, fill: true },
       },
     ).setOrigin(0.5).setDepth(20);
     this.nameLabel = nameLabelObj;
@@ -282,7 +282,7 @@ export class NPC extends Entity {
 
   interact(): void {
     if (this.currentPhase === 'locked') return;
-    this.eventBus.emit('npc_interact', this.npcId);
+    this.eventBus.emit(GameEvent.NPC_INTERACT, this.npcId);
   }
 
   // ─── Patrol ──────────────────────────────────────────────────────────────
@@ -358,14 +358,19 @@ export class NPC extends Entity {
     }
     if (this.glowGraphics) {
       this.glowGraphics.clear();
-      // Stronger, more visible NPC glow with double-layer for bloom effect
-      const pulse = 0.22 + Math.sin(t * 2) * 0.12;
-      // Outer soft ring
-      this.glowGraphics.fillStyle(COLORS.UI.GOLD, pulse * 0.4);
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 28);
-      // Inner bright ring
-      this.glowGraphics.fillStyle(COLORS.UI.GOLD, pulse);
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 18);
+      // Skip glow for completed/idle NPCs
+      if (this.currentPhase === 'completed' || this.currentPhase === 'idle') return;
+      // Pulsing triple-layer bloom: outer (0.10-0.22), mid (0.25-0.45), inner (0.50-0.75)
+      const pulse = 0.5 + Math.sin(t * 2.2) * 0.5; // 0..1 normalised
+      // Wide outer aura
+      this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.10 + pulse * 0.12);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 32);
+      // Mid ring
+      this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.25 + pulse * 0.20);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 20);
+      // Inner bright core
+      this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.50 + pulse * 0.25);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 10);
     }
   }
 

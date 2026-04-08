@@ -359,13 +359,20 @@ export class TileMapManager {
     const theme = config.theme;
     if (theme.fogAlpha <= 0) return;
 
-    for (let i = 0; i < 8; i++) {
+    // Use a subtle purple-tinted fog instead of pure black/grey
+    // so unvisited areas feel mysterious rather than flat.
+    const fogTint = theme.fogColor !== 0x000000 ? theme.fogColor : 0x1a0a2e;
+
+    for (let i = 0; i < 10; i++) {
       const hash = (i * 127 + config.chapter * 37) & 0xffff;
       const fx = (hash % config.mapWidth);
       const fy = ((hash * 3) % config.mapHeight);
-      const fr = 40 + (hash % 60);
-      this.fogLayer.fillStyle(theme.fogColor, theme.fogAlpha * (0.5 + (hash % 5) * 0.1));
+      const fr = 50 + (hash % 70);
+      // Layered fog: outer soft ring + inner denser ring
+      this.fogLayer.fillStyle(fogTint, theme.fogAlpha * (0.30 + (hash % 5) * 0.08));
       this.fogLayer.fillCircle(fx, fy, fr);
+      this.fogLayer.fillStyle(fogTint, theme.fogAlpha * (0.45 + (hash % 3) * 0.08));
+      this.fogLayer.fillCircle(fx, fy, fr * 0.55);
     }
   }
 

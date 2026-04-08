@@ -133,7 +133,7 @@ export class InkService {
         requiredValue = parseInt(bracketMatch[2], 10);
         const currentVal = sm.get(requiredStat as StatType);
 
-        if (currentVal >= requiredValue) {
+        if (currentVal < requiredValue) {
           isHidden = true;
         }
 

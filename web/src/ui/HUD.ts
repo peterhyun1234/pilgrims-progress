@@ -25,9 +25,9 @@ export class HUD {
   private statsManager: StatsManager;
   private eventBus: EventBus;
 
-  private static readonly BAR_WIDTH = 80;
-  private static readonly BAR_HEIGHT = 8;
-  private static readonly BAR_GAP = 16;
+  private static readonly BAR_WIDTH = 88;
+  private static readonly BAR_HEIGHT = 9;
+  private static readonly BAR_GAP = 17;
   private static readonly PADDING = 7;
 
   constructor(scene: Phaser.Scene) {
@@ -43,18 +43,18 @@ export class HUD {
 
   private createBackground(): void {
     const bg = this.scene.add.graphics();
-    // Wider panel: 170px to show full bar labels
-    bg.fillStyle(0x0a0814, 0.82);
-    bg.fillRoundedRect(2, 2, 170, 78, 4);
+    // Panel: wide enough for 88px bars + labels + value
+    bg.fillStyle(0x0a0814, 0.88);
+    bg.fillRoundedRect(2, 2, 178, 82, 4);
     // Outer border
-    bg.lineStyle(1, 0xd4a853, 0.55);
-    bg.strokeRoundedRect(2, 2, 170, 78, 4);
+    bg.lineStyle(1, 0xd4a853, 0.65);
+    bg.strokeRoundedRect(2, 2, 178, 82, 4);
     // Inner gold border line
-    bg.lineStyle(0.5, 0xd4a853, 0.2);
-    bg.strokeRoundedRect(4, 4, 166, 74, 3);
+    bg.lineStyle(0.5, 0xd4a853, 0.25);
+    bg.strokeRoundedRect(4, 4, 174, 78, 3);
     // Top highlight strip
-    bg.fillStyle(0xffffff, 0.03);
-    bg.fillRoundedRect(3, 3, 168, 10, 3);
+    bg.fillStyle(0xffffff, 0.04);
+    bg.fillRoundedRect(3, 3, 176, 10, 3);
     this.container.add(bg);
   }
 

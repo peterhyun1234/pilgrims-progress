@@ -443,7 +443,7 @@ export class BattleScene extends Phaser.Scene {
 
       // Icon (left side)
       const iconTxt = this.add.text(-btnW / 2 + 8, 0, a.icon, {
-        fontSize: '11px', color: a.textColor, fontFamily: 'serif',
+        fontSize: `${DesignSystem.FONT_SIZE.SM}px`, color: a.textColor, fontFamily: 'serif',
       }).setOrigin(0, 0.5);
 
       // Label text (centered-right)
@@ -644,7 +644,7 @@ export class BattleScene extends Phaser.Scene {
 
       // Icon effect
       const effect = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20, icon, {
-        fontSize: '20px',
+        fontSize: `${DesignSystem.FONT_SIZE.XL}px`,
       }).setOrigin(0.5).setDepth(300).setAlpha(0);
 
       this.tweens.add({

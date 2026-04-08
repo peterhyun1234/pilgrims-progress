@@ -104,18 +104,27 @@ export class EndingScene extends Phaser.Scene {
       bg.fillStyle(0xffffff, brightness);
       bg.fillCircle(sx, sy, size);
     }
-    // Holy light beam — wide outer shaft
-    bg.fillStyle(theme.lightColor, theme.lightAlpha * 0.45);
-    bg.fillTriangle(GAME_WIDTH / 2 - 80, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.75, GAME_WIDTH / 2 + 80, 0);
-    // Inner bright core
+    // Holy light beam — wide outer shaft (increased visibility)
+    bg.fillStyle(theme.lightColor, theme.lightAlpha * 0.55);
+    bg.fillTriangle(GAME_WIDTH / 2 - 90, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.8, GAME_WIDTH / 2 + 90, 0);
+    // Mid shaft
     bg.fillStyle(theme.lightColor, theme.lightAlpha);
-    bg.fillTriangle(GAME_WIDTH / 2 - 40, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.6, GAME_WIDTH / 2 + 40, 0);
-    // Tight inner glow
-    bg.fillStyle(theme.lightColor, theme.lightAlpha * 1.3 > 0.6 ? 0.6 : theme.lightAlpha * 1.3);
-    bg.fillTriangle(GAME_WIDTH / 2 - 16, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.4, GAME_WIDTH / 2 + 16, 0);
-    // Tier-specific tint overlay
-    bg.fillStyle(theme.bgTint, 0.06);
+    bg.fillTriangle(GAME_WIDTH / 2 - 50, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.65, GAME_WIDTH / 2 + 50, 0);
+    // Inner bright core
+    bg.fillStyle(theme.lightColor, Math.min(theme.lightAlpha * 1.5, 0.7));
+    bg.fillTriangle(GAME_WIDTH / 2 - 20, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.45, GAME_WIDTH / 2 + 20, 0);
+    // Tight inner hot core
+    bg.fillStyle(0xffffff, Math.min(theme.lightAlpha * 0.8, 0.35));
+    bg.fillTriangle(GAME_WIDTH / 2 - 8, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.25, GAME_WIDTH / 2 + 8, 0);
+    // Tier-specific tint overlay (0.06 → 0.12 for better visual distinction)
+    bg.fillStyle(theme.bgTint, 0.12);
     bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    // Horizon glow at bottom of beam
+    for (let i = 0; i < 5; i++) {
+      const r = 30 + i * 20;
+      bg.fillStyle(theme.lightColor, 0.06 - i * 0.01);
+      bg.fillEllipse(GAME_WIDTH / 2, GAME_HEIGHT * 0.75, r * 2, r * 0.5);
+    }
   }
 
   private createParticles(theme: TierTheme): void {
@@ -154,12 +163,19 @@ export class EndingScene extends Phaser.Scene {
   private runEpilogueSequence(tier: EndingTier, theme: TierTheme): void {
     const ko = this.gameManager.language === 'ko';
 
-    const flash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xffffff, 1)
+    // Tier-specific opening flash colour (glory=gold, grace=purple, humble=soft gold, barely=silver-white)
+    const flashColors: Record<EndingTier, number> = {
+      glory: 0xffd700,
+      humble: 0xeedd88,
+      barely: 0xffffff,
+      grace: 0xddbbff,
+    };
+    const flash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, flashColors[tier], 1)
       .setDepth(100);
     this.tweens.add({
       targets: flash,
       alpha: 0,
-      duration: 2000,
+      duration: 2200,
       ease: 'Sine.easeIn',
       onComplete: () => {
         flash.destroy();

@@ -70,8 +70,9 @@ export class AudioManager {
 
   stopBGM(): void {
     if (this.bgm) {
-      this.bgm.fade(this.bgmVolume, 0, 500);
-      setTimeout(() => this.bgm?.stop(), 500);
+      const oldBgm = this.bgm;
+      oldBgm.fade(this.bgmVolume, 0, 500);
+      setTimeout(() => oldBgm.stop(), 500);
     }
   }
 

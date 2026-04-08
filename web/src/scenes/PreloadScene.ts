@@ -57,7 +57,7 @@ export class PreloadScene extends Phaser.Scene {
     ).setOrigin(0.5);
 
     this.add.text(cx, cy - 14, '천로역정',
-      DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#7a6a54'),
+      DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a070'),
     ).setOrigin(0.5);
 
     this.progressBar = this.add.graphics();
