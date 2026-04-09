@@ -18,6 +18,8 @@ export class MenuScene extends Phaser.Scene {
   private continueBtn: Phaser.GameObjects.Container | null = null;
   private bgLayers: Phaser.GameObjects.Graphics[] = [];
   private horizonGlow!: Phaser.GameObjects.Graphics;
+  private pilgrimGfx!: Phaser.GameObjects.Graphics;
+  private pilgrimPhase = 0;
 
   constructor() {
     super({ key: SCENE_KEYS.MENU });
@@ -125,10 +127,14 @@ export class MenuScene extends Phaser.Scene {
     this.drawPilgrimPath(path, W, H, HOR, glowX);
     this.bgLayers.push(path);
 
-    // Pilgrim silhouette on the path
-    const pilgrim = this.add.graphics().setDepth(-2);
-    this.drawPilgrimSilhouette(pilgrim, W * 0.30, HOR + (H - HOR) * 0.35);
-    this.bgLayers.push(pilgrim);
+    // Tree silhouettes flanking the path (depth)
+    const trees = this.add.graphics().setDepth(-3);
+    this.drawTreeSilhouettes(trees, W, H, HOR);
+    this.bgLayers.push(trees);
+
+    // Pilgrim silhouette on the path (animated in update())
+    this.pilgrimGfx = this.add.graphics().setDepth(-2);
+    this.bgLayers.push(this.pilgrimGfx);
 
     // Foreground vignette overlay
     const vig = this.add.graphics().setDepth(-1);
@@ -173,6 +179,45 @@ export class MenuScene extends Phaser.Scene {
     g.fillEllipse(cx, hy, 20, 6);
   }
 
+  private drawTreeSilhouettes(g: Phaser.GameObjects.Graphics, W: number, H: number, HOR: number): void {
+    // Pine tree silhouettes along the horizon line — left and right of path
+    const treePositions = [
+      { x: 30,       scaleY: 1.1, side: 'L' },
+      { x: 65,       scaleY: 0.9, side: 'L' },
+      { x: 100,      scaleY: 1.2, side: 'L' },
+      { x: 130,      scaleY: 0.85, side: 'L' },
+      { x: W - 40,  scaleY: 1.0, side: 'R' },
+      { x: W - 70,  scaleY: 1.15, side: 'R' },
+      { x: W - 110, scaleY: 0.9, side: 'R' },
+      { x: W - 145, scaleY: 1.05, side: 'R' },
+    ];
+    const baseY = HOR + 2;
+    treePositions.forEach(({ x, scaleY }) => {
+      const h = 28 * scaleY;
+      const w = 14 * scaleY;
+      // Double triangle pine
+      g.fillStyle(0x060416, 0.95);
+      g.fillTriangle(x, baseY, x - w / 2, baseY - h * 0.55, x + w / 2, baseY - h * 0.55);
+      g.fillTriangle(x, baseY - h * 0.3, x - w * 0.65, baseY - h * 0.8, x + w * 0.65, baseY - h * 0.8);
+      g.fillTriangle(x, baseY - h * 0.6, x - w * 0.4, baseY - h, x + w * 0.4, baseY - h);
+      // Trunk
+      g.fillStyle(0x050310, 0.8);
+      g.fillRect(x - 1.5, baseY, 3, 5);
+    });
+
+    // Foreground tall trees (bottom edge, more imposing)
+    const fgTrees = [
+      { x: 10,      h: 55 },
+      { x: W - 18, h: 48 },
+    ];
+    fgTrees.forEach(({ x, h }) => {
+      g.fillStyle(0x030210, 0.98);
+      g.fillTriangle(x, H, x - 12, H - h * 0.5, x + 12, H - h * 0.5);
+      g.fillTriangle(x, H - h * 0.25, x - 9, H - h * 0.75, x + 9, H - h * 0.75);
+      g.fillTriangle(x, H - h * 0.5, x - 6, H - h, x + 6, H - h);
+    });
+  }
+
   private drawPilgrimPath(g: Phaser.GameObjects.Graphics, W: number, H: number, HOR: number, destX: number): void {
     // A golden winding path from bottom-left toward the celestial glow
     const pathPoints: { x: number; y: number; w: number }[] = [];
@@ -199,24 +244,6 @@ export class MenuScene extends Phaser.Scene {
     }
   }
 
-  private drawPilgrimSilhouette(g: Phaser.GameObjects.Graphics, x: number, y: number): void {
-    // Small walking pilgrim silhouette (pixel art style, ~8px tall)
-    const dark = 0x08041a;
-    // Body
-    g.fillStyle(dark, 0.9);
-    g.fillRect(x - 2, y - 8, 4, 5);
-    // Head
-    g.fillCircle(x, y - 10, 2.5);
-    // Staff
-    g.fillRect(x + 3, y - 12, 1, 14);
-    // Cloak flowing
-    g.fillTriangle(x - 3, y - 4, x + 2, y - 4, x - 4, y + 2);
-    // Legs (walking pose)
-    g.fillRect(x - 2, y - 3, 1, 5);
-    g.fillRect(x + 1, y - 2, 1, 4);
-    // Pack on back
-    g.fillRect(x - 4, y - 7, 3, 3);
-  }
 
   // ── UI Layout ────────────────────────────────────────────────────────────
 
@@ -504,6 +531,45 @@ export class MenuScene extends Phaser.Scene {
       this.particleGfx.fillStyle(p.color, p.alpha * (0.7 + Math.sin(t * 2 + p.phase) * 0.3));
       this.particleGfx.fillCircle(p.x, p.y, p.size);
     });
+
+    // Animated pilgrim — gentle walking bob
+    this.pilgrimPhase += 0.03;
+    const H = GAME_HEIGHT;
+    const HOR = H * 0.45;
+    const bobY = Math.sin(this.pilgrimPhase * 4) * 0.6;
+    const legSwing = Math.sin(this.pilgrimPhase * 4) * 2;
+    this.pilgrimGfx.clear();
+    const px = GAME_WIDTH * 0.30;
+    const py = HOR + (H - HOR) * 0.35 + bobY;
+    this.drawAnimatedPilgrim(this.pilgrimGfx, px, py, legSwing);
+  }
+
+  private drawAnimatedPilgrim(g: Phaser.GameObjects.Graphics, x: number, y: number, legSwing: number): void {
+    const dark = 0x08041a;
+    // Shadow
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(x, y + 3, 10, 3);
+    // Body
+    g.fillStyle(dark, 0.9);
+    g.fillRect(x - 2, y - 8, 4, 5);
+    // Head
+    g.fillCircle(x, y - 10, 2.5);
+    // Staff
+    g.fillRect(x + 3, y - 12, 1, 14);
+    // Cloak flowing
+    g.fillTriangle(x - 3, y - 4, x + 2, y - 4, x - 4, y + 2);
+    // Animated legs
+    g.fillStyle(dark, 0.85);
+    g.fillRect(x - 2, y - 3, 1, 4 + legSwing * 0.3);
+    g.fillRect(x + 1, y - 3, 1, 4 - legSwing * 0.3);
+    // Small foot detail
+    g.fillRect(x - 3, y + 1 + legSwing * 0.3, 3, 1);
+    g.fillRect(x + 1, y + 1 - legSwing * 0.3, 3, 1);
+    // Pack on back
+    g.fillRect(x - 4, y - 7, 3, 3);
+    // Staff tip glow (subtle)
+    g.fillStyle(0xd4a853, 0.2);
+    g.fillCircle(x + 3, y - 12, 2);
   }
 
   // ── Helpers ──────────────────────────────────────────────────────────────

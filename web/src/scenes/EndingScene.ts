@@ -70,6 +70,7 @@ export class EndingScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(0x000000);
     this.createStarfield(theme);
     this.createParticles(theme);
+    this.createPilgrimApproach(theme);
     this.runEpilogueSequence(tier, theme);
 
     if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
@@ -156,6 +157,70 @@ export class EndingScene extends Phaser.Scene {
           gfx.fillStyle(theme.particleColor, a);
           gfx.fillCircle(p.x, p.y, p.size);
         });
+      },
+    });
+  }
+
+  private createPilgrimApproach(theme: TierTheme): void {
+    // Pilgrim silhouette walks from bottom-center toward the light beam
+    const gfx = this.add.graphics().setDepth(3);
+    const startX = GAME_WIDTH * 0.35;
+    const startY = GAME_HEIGHT * 0.82;
+    const endX = GAME_WIDTH * 0.5;
+    const endY = GAME_HEIGHT * 0.55;
+    const pilgrim = { t: 0 };
+
+    // Draw ground road
+    gfx.fillStyle(0x1a1430, 0.4);
+    gfx.fillRect(GAME_WIDTH * 0.2, startY - 2, GAME_WIDTH * 0.6, 4);
+    // Road golden shimmer
+    gfx.fillStyle(theme.lightColor, 0.06);
+    gfx.fillRect(GAME_WIDTH * 0.3, startY - 1, GAME_WIDTH * 0.4, 2);
+
+    this.tweens.add({
+      targets: pilgrim,
+      t: 1,
+      duration: 2500,
+      ease: 'Sine.easeIn',
+      onUpdate: () => {
+        gfx.clear();
+        // Ground road
+        gfx.fillStyle(0x1a1430, 0.4);
+        gfx.fillRect(GAME_WIDTH * 0.2, startY - 2, GAME_WIDTH * 0.6, 4);
+        gfx.fillStyle(theme.lightColor, 0.06);
+        gfx.fillRect(GAME_WIDTH * 0.3, startY - 1, GAME_WIDTH * 0.4, 2);
+
+        const px = startX + (endX - startX) * pilgrim.t;
+        const py = startY + (endY - startY) * pilgrim.t;
+        const scale = 1 - pilgrim.t * 0.45; // shrinks as they approach light
+        const alpha = 1 - pilgrim.t * 0.5;  // fades into the light
+
+        // Shadow
+        gfx.fillStyle(0x000000, 0.2 * alpha);
+        gfx.fillEllipse(px, py + 4 * scale, 10 * scale, 3 * scale);
+        // Body
+        gfx.fillStyle(0x0a0520, alpha * 0.9);
+        gfx.fillRect(px - 2 * scale, py - 8 * scale, 4 * scale, 6 * scale);
+        // Head
+        gfx.fillCircle(px, py - 10 * scale, 2.5 * scale);
+        // Staff
+        gfx.fillRect(px + 3 * scale, py - 13 * scale, scale, 15 * scale);
+        // Cloak
+        gfx.fillTriangle(
+          px - 3 * scale, py - 4 * scale,
+          px + 2 * scale, py - 4 * scale,
+          px - 4 * scale, py + 2 * scale,
+        );
+        // Legs
+        const legAnim = Math.sin(pilgrim.t * 40) * 1.5 * scale;
+        gfx.fillRect(px - 2 * scale, py - 3 * scale, scale, 5 * scale + legAnim);
+        gfx.fillRect(px + scale, py - 3 * scale, scale, 5 * scale - legAnim);
+        // Aura brightening near the end
+        if (pilgrim.t > 0.6) {
+          const glowA = (pilgrim.t - 0.6) / 0.4 * 0.3;
+          gfx.fillStyle(theme.lightColor, glowA);
+          gfx.fillCircle(px, py, 14 * scale);
+        }
       },
     });
   }
