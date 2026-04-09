@@ -628,7 +628,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         x: 1800, y: 280,
         chapter: 7,
         unlockedAt: 'watchful',
-        behavior: 'read',
+        behavior: 'welcome',
       },
       {
         id: 'piety',
@@ -648,6 +648,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         x: 2200, y: 290,
         chapter: 7,
         unlockedAt: 'watchful',
+        behavior: 'welcome',
       },
     ],
     exits: [
@@ -835,6 +836,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         x: 1500, y: 280,
         chapter: 10,
         unlockedAt: 'faithful',
+        behavior: 'judge',
       },
     ],
     exits: [
@@ -983,6 +985,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         sprite: 'shining_ones',
         x: 2100, y: 280,
         chapter: 12,
+        behavior: 'angelic',
       },
     ],
     exits: [],

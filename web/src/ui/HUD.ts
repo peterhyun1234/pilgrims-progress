@@ -24,6 +24,10 @@ export class HUD {
   private bars: StatBar[] = [];
   private statsManager: StatsManager;
   private eventBus: EventBus;
+  /** Reused graphics for burden glow overlay — avoids per-frame allocation. */
+  private burdenGlowGfx!: Phaser.GameObjects.Graphics;
+  /** Small chapter badge shown in top-right of HUD panel. */
+  private chapterBadge!: Phaser.GameObjects.Text;
 
   private static readonly BAR_WIDTH = 88;
   private static readonly BAR_HEIGHT = 9;
@@ -38,7 +42,24 @@ export class HUD {
 
     this.createBackground();
     this.createBars();
+    this.createChapterBadge();
+    // Reusable graphics layer for the burden glow overlay
+    this.burdenGlowGfx = scene.add.graphics().setScrollFactor(0).setDepth(99);
+    this.container.add(this.burdenGlowGfx);
     this.setupEvents();
+  }
+
+  private createChapterBadge(): void {
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    const ch = gm.currentChapter;
+    const ko = gm.language === 'ko';
+    const label = ko ? `${ch}장` : `Ch.${ch}`;
+    this.chapterBadge = this.scene.add.text(171, 4, label, {
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+      color: '#d4a853',
+      fontFamily: FONT_FAMILY,
+    }).setAlpha(0.7).setOrigin(1, 0).setScrollFactor(0).setDepth(101);
+    this.container.add(this.chapterBadge);
   }
 
   private createBackground(): void {
@@ -176,6 +197,10 @@ export class HUD {
   private onChapterLoaded = (payload?: { chapter: number; title?: string }) => {
     if (!payload) return;
     this.showLocationCard(payload.chapter, payload.title);
+    // Update chapter badge in HUD panel
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    const ko = gm.language === 'ko';
+    this.chapterBadge.setText(ko ? `${payload.chapter}장` : `Ch.${payload.chapter}`);
   };
 
   private onSettingsChanged = () => {
@@ -286,34 +311,27 @@ export class HUD {
 
     const burdenBar = this.bars[3];
     const burden = this.statsManager.get('burden');
+    this.burdenGlowGfx.clear();
     if (burdenBar && burden >= 60) {
       const t = this.scene.time.now * 0.004;
-      // Red pulsing glow behind the bar at 60%+
+      // Red pulsing glow behind the bar — reuse cached graphics, no allocation
       const glowAlpha = 0.06 + Math.sin(t * 2) * 0.04;
-      burdenBar.fill.setAlpha(0.85); // reset before override below
-      // Draw red glow overlay on the track area
-      const trackGfx = this.scene.add.graphics().setScrollFactor(0).setDepth(99);
-      trackGfx.fillStyle(0xff2200, glowAlpha);
-      trackGfx.fillRoundedRect(burdenBar.container.x + 44, burdenBar.container.y - 1, HUD.BAR_WIDTH + 2, HUD.BAR_HEIGHT + 2, 2);
-      this.scene.time.delayedCall(50, () => trackGfx.destroy());
+      this.burdenGlowGfx.fillStyle(0xff2200, glowAlpha);
+      this.burdenGlowGfx.fillRoundedRect(
+        burdenBar.container.x + 44, burdenBar.container.y - 1,
+        HUD.BAR_WIDTH + 2, HUD.BAR_HEIGHT + 2, 2,
+      );
       if (burden >= 80) {
-        // Shake + pulse fill color between red and dark-red
         const shake = Math.sin(t * 2) * 0.8;
         burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP + shake;
-        const pulse = 0.6 + Math.sin(t * 3) * 0.4;
-        burdenBar.fill.setAlpha(pulse);
-        // Intense red glow on the icon background at high burden
+        burdenBar.fill.setAlpha(0.6 + Math.sin(t * 3) * 0.4);
         burdenBar.icon.setTint(0xff4444);
       } else if (burden >= 70) {
-        // Glow red at > 70% full (as per spec)
-        const pulse = 0.75 + Math.sin(t * 1.5) * 0.25;
-        burdenBar.fill.setAlpha(pulse);
+        burdenBar.fill.setAlpha(0.75 + Math.sin(t * 1.5) * 0.25);
         burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
         burdenBar.icon.setTint(0xff8866);
       } else {
-        // Just a slow pulse at burden 60-69
-        const pulse = 0.8 + Math.sin(t) * 0.2;
-        burdenBar.fill.setAlpha(pulse);
+        burdenBar.fill.setAlpha(0.8 + Math.sin(t) * 0.2);
         burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
         burdenBar.icon.clearTint();
       }

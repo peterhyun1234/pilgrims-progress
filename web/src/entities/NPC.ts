@@ -16,7 +16,10 @@ export type NPCBehavior =
   | 'pace'      // Anxious back-and-forth faster than patrol
   | 'cower'     // Reduced scale + shiver
   | 'guard'     // No bob, directional scan sweep
-  | 'merchant'; // Beckoning hand gesture + '!' emote loop
+  | 'merchant'  // Beckoning hand gesture + '!' emote loop
+  | 'angelic'   // Floating hover + radiant halo pulse (Shining Ones)
+  | 'welcome'   // Open-arm gentle sway + warm glow (Palace sisters)
+  | 'judge';    // Imposing stillness + authority aura (Lord Hategood)
 
 export interface NPCConfig {
   id: string;
@@ -494,6 +497,80 @@ export class NPC extends Entity {
         this.behaviorGraphics.fillCircle(sx + 10, sy - 20, 3);
         this.behaviorGraphics.fillStyle(0xffcc00, Math.max(0, emoteAlpha) * 0.7);
         this.behaviorGraphics.fillCircle(sx + 10, sy - 14, 1.5);
+        break;
+      }
+
+      case 'angelic': {
+        // Celestial floating — override Y with hover offset
+        const hoverY = Math.sin(t * 1.2) * 2.5;
+        this.sprite.y = this.baseY + hoverY;
+        // Radiant halo ring above head
+        const haloPulse = 0.5 + Math.sin(t * 2.0) * 0.35;
+        this.behaviorGraphics.lineStyle(1.5, 0xffd700, haloPulse);
+        this.behaviorGraphics.strokeEllipse(sx, sy - 20, 16, 5);
+        this.behaviorGraphics.lineStyle(0.8, 0xffffff, haloPulse * 0.5);
+        this.behaviorGraphics.strokeEllipse(sx, sy - 20, 13, 4);
+        // Soft gold body glow
+        const bodyGlow = 0.06 + Math.sin(t * 1.6) * 0.03;
+        this.behaviorGraphics.fillStyle(0xffd700, bodyGlow);
+        this.behaviorGraphics.fillCircle(sx, sy, 18);
+        // Rising light motes — 3 drifting particles
+        for (let m = 0; m < 3; m++) {
+          const mPhase = (t * 0.7 + m * 2.09) % (Math.PI * 2);
+          const mX = sx + Math.cos(mPhase + m) * 10;
+          const mY = sy - 10 - ((t * 20 + m * 15) % 30);
+          const mA = (1 - ((t * 20 + m * 15) % 30) / 30) * 0.5;
+          this.behaviorGraphics.fillStyle(0xffd700, mA);
+          this.behaviorGraphics.fillCircle(mX, mY, 1);
+        }
+        break;
+      }
+
+      case 'welcome': {
+        // Open-arm gentle sway — welcoming pose
+        const swayAmp = Math.sin(t * 0.9) * 0.04;
+        this.sprite.setScale(1 + swayAmp, 1);
+        // Warm soft glow radiating outward
+        const warmPulse = 0.04 + Math.sin(t * 1.3) * 0.02;
+        this.behaviorGraphics.fillStyle(0xff9966, warmPulse);
+        this.behaviorGraphics.fillCircle(sx, sy - 4, 16);
+        this.behaviorGraphics.fillStyle(0xffdd88, warmPulse * 0.5);
+        this.behaviorGraphics.fillCircle(sx, sy - 4, 22);
+        // Small floating hearts — subtle, not kitsch
+        const heartCycle = t % 4;
+        if (heartCycle < 1.5) {
+          const ha = Math.sin(heartCycle / 1.5 * Math.PI) * 0.25;
+          const hy = sy - 22 - heartCycle * 6;
+          this.behaviorGraphics.fillStyle(0xff8899, ha);
+          this.behaviorGraphics.fillCircle(sx - 2, hy, 1.5);
+          this.behaviorGraphics.fillCircle(sx + 2, hy, 1.5);
+          this.behaviorGraphics.fillTriangle(sx - 3, hy + 1, sx, hy + 4, sx + 3, hy + 1);
+        }
+        break;
+      }
+
+      case 'judge': {
+        // Imposing stillness — minimal movement, authority aura
+        this.sprite.setScale(1, 1); // no bob override; handled by base bob = 0.5
+        // Dark authority emanation — deep crimson ground shadow
+        const judgePulse = 0.06 + Math.sin(t * 0.8) * 0.03;
+        this.behaviorGraphics.fillStyle(0x660000, judgePulse);
+        this.behaviorGraphics.fillEllipse(sx, sy + 10, 30, 8);
+        this.behaviorGraphics.fillStyle(0xaa2200, judgePulse * 0.4);
+        this.behaviorGraphics.fillEllipse(sx, sy + 10, 46, 12);
+        // Subtle dark motes drifting downward (inverted prayer)
+        for (let m = 0; m < 2; m++) {
+          const mY = sy + ((t * 15 + m * 20) % 35);
+          const mA = (1 - ((t * 15 + m * 20) % 35) / 35) * 0.2;
+          this.behaviorGraphics.fillStyle(0x440000, mA);
+          this.behaviorGraphics.fillCircle(sx + (m === 0 ? -5 : 5), mY, 1);
+        }
+        // Occasional gavel-like emphasis: scale pulse on a slow beat
+        const judgeBeat = t % 3;
+        if (judgeBeat < 0.15) {
+          const beatPulse = Math.sin(judgeBeat / 0.15 * Math.PI) * 0.06;
+          this.sprite.setScale(1 + beatPulse, 1 - beatPulse * 0.3);
+        }
         break;
       }
     }

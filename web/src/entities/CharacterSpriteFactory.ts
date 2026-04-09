@@ -132,6 +132,21 @@ export class CharacterSpriteFactory {
       case 'faithful':
         this.drawFaithful(g, ox, oy, dir, colors, anim, frame);
         break;
+      case 'hopeful':
+        this.drawHopeful(g, ox, oy, dir, colors, anim, frame);
+        break;
+      case 'shining_ones':
+        this.drawShiningOnes(g, ox, oy, dir, colors, anim, frame);
+        break;
+      case 'lord_hategood':
+        this.drawLordHategood(g, ox, oy, dir, colors, anim, frame);
+        break;
+      case 'prudence':
+        this.drawPrudence(g, ox, oy, dir, colors, anim, frame);
+        break;
+      case 'watchful':
+        this.drawWatchful(g, ox, oy, dir, colors, anim, frame);
+        break;
       default:
         this.drawGenericCharacter(g, ox, oy, dir, colors, config, anim, frame);
         break;
@@ -913,6 +928,620 @@ export class CharacterSpriteFactory {
   // ─────────────────────────────────────────────────────────────────────────
   // GENERIC — fallback for all other characters (obstinate, pliable, etc.)
   // ─────────────────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // HOPEFUL — young pilgrim companion, energetic green, bright eyes
+  // ─────────────────────────────────────────────────────────────────────────
+  private static drawHopeful(
+    g: Phaser.GameObjects.Graphics,
+    ox: number, oy: number,
+    dir: DrawDir,
+    colors: BodyColors,
+    anim: 'idle' | 'walk',
+    frame: number,
+  ): void {
+    const cx = ox + SPRITE_SIZE / 2;
+
+    let bobY = 0, legOffset = 0, armSwing = 0;
+    if (anim === 'idle') {
+      bobY = Math.sin((frame / 4) * Math.PI * 2) * 1.2; // bouncier idle
+    } else {
+      const phase = (frame / 6) * Math.PI * 2;
+      bobY = Math.abs(Math.sin(phase)) * -2.0;           // energetic step dip
+      legOffset = Math.sin(phase) * 5;
+      armSwing = Math.sin(phase) * 5;                    // wide arm swing
+    }
+
+    // Shadow (lighter — he's upbeat)
+    g.fillStyle(0x000000, 0.25);
+    g.fillEllipse(cx, oy + 29, 12, 4);
+
+    // Boots (slightly shorter than Faithful — younger)
+    const footY = Math.round(oy + 26 + bobY);
+    g.fillStyle(0x6a5530, 1);
+    if (dir === 'left' || dir === 'right') {
+      g.fillRect(cx - 3, footY - 1 + Math.round(legOffset), 4, 4);
+      g.fillRect(cx + 1, footY - 1 - Math.round(legOffset), 4, 4);
+    } else {
+      g.fillRect(cx - 5, footY - 1 + Math.round(legOffset), 4, 4);
+      g.fillRect(cx + 2, footY - 1 - Math.round(legOffset), 4, 4);
+    }
+
+    // Legs
+    const bodyY = Math.round(oy + 15 + bobY);
+    g.fillStyle(this.darken(colors.clothing, 0.75), 1);
+    if (dir === 'left' || dir === 'right') {
+      g.fillRect(cx - 3, bodyY + 9 + Math.round(legOffset), 3, 4);
+      g.fillRect(cx + 1, bodyY + 9 - Math.round(legOffset), 3, 4);
+    } else {
+      g.fillRect(cx - 5, bodyY + 9 + Math.round(legOffset), 3, 4);
+      g.fillRect(cx + 2, bodyY + 9 - Math.round(legOffset), 3, 4);
+    }
+
+    // Torso — slim traveller's vest
+    g.fillStyle(colors.clothing, 1);
+    g.fillRoundedRect(cx - 5, bodyY, 10, 10, 2);
+    g.fillStyle(colors.accent, 1);
+    g.fillRect(cx - 4, bodyY + 7, 8, 2); // bottom trim
+    // Chest hope emblem (small sunburst dot)
+    g.fillStyle(0xffd700, 0.85);
+    g.fillCircle(cx, bodyY + 3, 1.5);
+    g.fillStyle(0xffffff, 0.3);
+    g.fillCircle(cx, bodyY + 3, 0.8);
+
+    // Arms — wide energetic swing
+    if (dir === 'down' || dir === 'up') {
+      g.fillStyle(colors.clothing, 1);
+      g.fillRect(cx - 8, bodyY + Math.round(armSwing), 3, 7);
+      g.fillRect(cx + 5, bodyY - Math.round(armSwing), 3, 7);
+      g.fillStyle(colors.skin, 1);
+      g.fillRect(cx - 8, bodyY + 7 + Math.round(armSwing), 3, 2);
+      g.fillRect(cx + 5, bodyY + 7 - Math.round(armSwing), 3, 2);
+    } else {
+      const armX = dir === 'right' ? cx - 7 : cx + 4;
+      g.fillStyle(colors.clothing, 1);
+      g.fillRect(armX, bodyY + Math.round(armSwing), 3, 7);
+      g.fillStyle(colors.skin, 1);
+      g.fillRect(armX, bodyY + 7 + Math.round(armSwing), 3, 2);
+    }
+
+    // Head — round face, messy light hair
+    const headY = Math.round(oy + 5 + bobY);
+    // Hair (slightly wild/tousled)
+    g.fillStyle(colors.hair, 1);
+    g.fillRoundedRect(cx - 5, headY - 3, 10, 6, 2);
+    g.fillTriangle(cx - 5, headY - 1, cx - 7, headY - 4, cx - 3, headY - 1);
+    g.fillTriangle(cx + 5, headY - 1, cx + 7, headY - 4, cx + 3, headY - 1);
+    // Face
+    g.fillStyle(colors.skin, 1);
+    g.fillRoundedRect(cx - 5, headY, 10, 10, 3);
+    g.fillStyle(this.darken(colors.skin, 0.85), 0.25);
+    g.fillRoundedRect(cx + 1, headY + 2, 4, 7, 2);
+    // Eyes (bright, alert)
+    if (dir !== 'up') {
+      if (dir === 'down') {
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(cx - 3, headY + 3, 2, 2);
+        g.fillRect(cx + 1, headY + 3, 2, 2);
+        g.fillStyle(colors.eye, 1);
+        g.fillRect(cx - 3, headY + 4, 2, 1);
+        g.fillRect(cx + 1, headY + 4, 2, 1);
+        // Bright highlight spark
+        g.fillStyle(0xffffff, 0.9);
+        g.fillRect(cx - 2, headY + 3, 1, 1);
+        // Smile
+        g.fillStyle(this.darken(colors.skin, 0.7), 1);
+        g.fillRect(cx - 2, headY + 7, 4, 1);
+        g.fillRect(cx - 3, headY + 6, 1, 1);
+        g.fillRect(cx + 2, headY + 6, 1, 1);
+      } else {
+        const eyeX = dir === 'right' ? cx + 2 : cx - 4;
+        g.fillStyle(0xffffff, 1);
+        g.fillRect(eyeX, headY + 3, 2, 2);
+        g.fillStyle(colors.eye, 1);
+        g.fillRect(eyeX, headY + 4, 2, 1);
+        g.fillStyle(0xffffff, 0.9);
+        g.fillRect(eyeX, headY + 3, 1, 1);
+      }
+    }
+
+    // Silhouette outline
+    this.outlineRoundedRect(g, cx - 5, Math.round(oy + 15 + bobY), 10, 10, 2, 0.55);
+    this.outlineRoundedRect(g, cx - 5, Math.round(oy + 5 + bobY), 10, 10, 3, 0.5);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // SHINING ONES — celestial angels, ethereal white/gold, glowing halo
+  // ─────────────────────────────────────────────────────────────────────────
+  private static drawShiningOnes(
+    g: Phaser.GameObjects.Graphics,
+    ox: number, oy: number,
+    dir: DrawDir,
+    colors: BodyColors,
+    anim: 'idle' | 'walk',
+    frame: number,
+  ): void {
+    const cx = ox + SPRITE_SIZE / 2;
+
+    // Floating animation — gentle hover, no ground contact
+    const floatY = Math.sin((frame / 4) * Math.PI * 2) * 1.5;
+    const bodyY = Math.round(oy + 12 + floatY);
+    const headY = Math.round(oy + 3 + floatY);
+
+    // No ground shadow — ethereal beings
+    g.fillStyle(colors.accessory ?? 0xffd700, 0.08);
+    g.fillEllipse(cx, oy + 30, 18, 5);
+
+    // Flowing robe (wide at base, tapering to shoulders)
+    g.fillStyle(colors.clothing, 0.95);
+    g.fillTriangle(cx - 9, oy + 29, cx + 9, oy + 29, cx, bodyY + 2);
+    // Robe body
+    g.fillStyle(colors.clothing, 1);
+    g.fillRoundedRect(cx - 6, bodyY, 12, 14, 3);
+    // Gold trim on robe
+    g.fillStyle(colors.accent, 0.8);
+    g.fillRect(cx - 6, bodyY, 12, 2);      // neckline
+    g.fillRect(cx - 6, bodyY + 12, 12, 2); // hem
+    // Centre belt/sash
+    g.fillStyle(colors.accent, 0.5);
+    g.fillRect(cx - 1, bodyY + 5, 2, 6);
+    // Inner glow on robes
+    g.fillStyle(0xffffff, 0.12);
+    g.fillRoundedRect(cx - 4, bodyY + 2, 8, 10, 2);
+
+    // Wings suggestion (side fan shapes)
+    if (dir === 'down' || dir === 'up') {
+      g.fillStyle(colors.clothing, 0.4);
+      g.fillTriangle(cx - 6, bodyY + 3, cx - 13, bodyY + 10, cx - 6, bodyY + 10);
+      g.fillTriangle(cx + 6, bodyY + 3, cx + 13, bodyY + 10, cx + 6, bodyY + 10);
+      g.lineStyle(0.5, colors.accent, 0.35);
+      g.lineBetween(cx - 6, bodyY + 3, cx - 13, bodyY + 10);
+      g.lineBetween(cx + 6, bodyY + 3, cx + 13, bodyY + 10);
+    }
+
+    // Arms (reaching/welcoming gesture)
+    const armRaise = anim === 'idle' ? Math.sin((frame / 4) * Math.PI * 2) * 1.5 : 0;
+    if (dir === 'down' || dir === 'up') {
+      g.fillStyle(colors.clothing, 1);
+      g.fillRect(cx - 9, bodyY + 1 - Math.round(armRaise), 3, 7);
+      g.fillRect(cx + 6, bodyY + 1 + Math.round(armRaise), 3, 7);
+      g.fillStyle(colors.skin, 1);
+      g.fillRect(cx - 9, bodyY + 8 - Math.round(armRaise), 3, 2);
+      g.fillRect(cx + 6, bodyY + 8 + Math.round(armRaise), 3, 2);
+    } else {
+      const armX = dir === 'right' ? cx - 8 : cx + 5;
+      g.fillStyle(colors.clothing, 1);
+      g.fillRect(armX, bodyY + 1, 3, 7);
+      g.fillStyle(colors.skin, 1);
+      g.fillRect(armX, bodyY + 8, 3, 2);
+    }
+
+    // Head — serene, oval
+    g.fillStyle(colors.skin, 1);
+    g.fillRoundedRect(cx - 5, headY, 10, 11, 4);
+    g.fillStyle(0xffffff, 0.15);
+    g.fillCircle(cx - 2, headY + 2, 2); // brow highlight
+    // Long flowing hair
+    if (dir !== 'up') {
+      g.fillStyle(colors.hair, 0.9);
+      g.fillRoundedRect(cx - 6, headY - 1, 12, 6, 3);
+      if (dir === 'left' || dir === 'right') {
+        g.fillRoundedRect(cx - 6, headY + 3, 4, 8, 2); // side hair
+      } else {
+        g.fillRoundedRect(cx - 6, headY + 3, 3, 7, 2);
+        g.fillRoundedRect(cx + 3, headY + 3, 3, 7, 2);
+      }
+    }
+    // Eyes (calm, luminous)
+    if (dir === 'down') {
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(cx - 4, headY + 4, 3, 2);
+      g.fillRect(cx + 1, headY + 4, 3, 2);
+      g.fillStyle(colors.eye, 0.8);
+      g.fillRect(cx - 3, headY + 5, 2, 1);
+      g.fillRect(cx + 2, headY + 5, 2, 1);
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(cx - 2, headY + 4, 1, 1); // sparkle
+    } else if (dir !== 'up') {
+      const eyeX = dir === 'right' ? cx + 1 : cx - 4;
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(eyeX, headY + 4, 3, 2);
+      g.fillStyle(colors.eye, 0.8);
+      g.fillRect(eyeX + 1, headY + 5, 2, 1);
+    }
+
+    // Halo — animated ring of light
+    const haloPulse = 0.65 + Math.sin((frame / 4) * Math.PI * 2) * 0.2;
+    const haloColor = colors.accessory ?? 0xffd700;
+    g.lineStyle(2, haloColor, haloPulse);
+    g.strokeEllipse(cx, headY - 1 + floatY * 0.3, 14, 4);
+    g.lineStyle(1, 0xffffff, haloPulse * 0.5);
+    g.strokeEllipse(cx, headY - 1 + floatY * 0.3, 12, 3);
+    // Halo sparkle points
+    g.fillStyle(haloColor, haloPulse);
+    g.fillRect(cx - 7, headY - 1, 1, 1);
+    g.fillRect(cx + 6, headY - 1, 1, 1);
+    g.fillRect(cx, headY - 3, 1, 1);
+
+    // Subtle body glow
+    g.lineStyle(1, haloColor, 0.12);
+    g.strokeRoundedRect(cx - 7, bodyY - 1, 14, 16, 3);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // LORD HATEGOOD — corrupt judge, imposing black robes, dark crown
+  // ─────────────────────────────────────────────────────────────────────────
+  private static drawLordHategood(
+    g: Phaser.GameObjects.Graphics,
+    ox: number, oy: number,
+    dir: DrawDir,
+    colors: BodyColors,
+    anim: 'idle' | 'walk',
+    frame: number,
+  ): void {
+    const cx = ox + SPRITE_SIZE / 2;
+
+    // Slow, deliberate movement — judge doesn't rush
+    let bobY = 0, legOffset = 0, armSwing = 0;
+    if (anim === 'idle') {
+      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.5; // minimal movement — imposing stillness
+    } else {
+      const phase = (frame / 6) * Math.PI * 2;
+      bobY = Math.abs(Math.sin(phase)) * -1.2;
+      legOffset = Math.sin(phase) * 3;
+      armSwing = Math.sin(phase) * 2;
+    }
+
+    // Heavy shadow
+    g.fillStyle(0x000000, 0.5);
+    g.fillEllipse(cx, oy + 29, 18, 6);
+    g.fillStyle(0x000000, 0.2);
+    g.fillEllipse(cx, oy + 29, 24, 7);
+
+    // Judge's robes — wide at base (intimidating silhouette)
+    const bodyY = Math.round(oy + 12 + bobY);
+    g.fillStyle(colors.clothing, 1); // near-black
+    g.fillTriangle(cx - 10, oy + 29, cx + 10, oy + 29, cx, bodyY + 4);
+    g.fillRoundedRect(cx - 7, bodyY, 14, 15, 2);
+    // Red lining/accent
+    g.fillStyle(colors.accent, 0.7);
+    g.fillRect(cx - 7, bodyY + 2, 14, 2);      // collar trim
+    g.fillRect(cx - 7, bodyY + 13, 14, 2);     // hem
+    g.fillRect(cx - 1, bodyY + 4, 2, 10);      // centre line (judge's robe seam)
+    // Robe sheen
+    g.fillStyle(0xffffff, 0.04);
+    g.fillRoundedRect(cx - 6, bodyY + 1, 6, 13, 1);
+
+    // Legs (hidden under robes — just boots visible)
+    const footY = Math.round(oy + 27 + bobY);
+    g.fillStyle(0x1a1010, 1);
+    if (dir === 'left' || dir === 'right') {
+      g.fillRect(cx - 4, footY - 2 + Math.round(legOffset), 4, 4);
+      g.fillRect(cx + 1, footY - 2 - Math.round(legOffset), 4, 4);
+    } else {
+      g.fillRect(cx - 5, footY - 2, 4, 3);
+      g.fillRect(cx + 2, footY - 2, 4, 3);
+    }
+
+    // Arms (authoritative pose — one raised slightly for judgment)
+    const judgeArmY = anim === 'idle' ? Math.sin((frame / 4) * Math.PI * 2) * 1.0 : armSwing;
+    if (dir === 'down' || dir === 'up') {
+      g.fillStyle(colors.clothing, 1);
+      g.fillRect(cx - 10, bodyY + 2 + Math.round(judgeArmY), 4, 9);
+      g.fillRect(cx + 6, bodyY + 1 - Math.round(judgeArmY), 4, 9);
+      // Wide sleeves
+      g.fillRect(cx - 11, bodyY + 8 + Math.round(judgeArmY), 5, 4);
+      g.fillRect(cx + 7, bodyY + 7 - Math.round(judgeArmY), 5, 4);
+      g.fillStyle(colors.skin, 1);
+      g.fillRect(cx - 10, bodyY + 11 + Math.round(judgeArmY), 3, 2);
+      g.fillRect(cx + 7, bodyY + 10 - Math.round(judgeArmY), 3, 2);
+    } else {
+      const armX = dir === 'right' ? cx - 9 : cx + 5;
+      g.fillStyle(colors.clothing, 1);
+      g.fillRect(armX, bodyY + 2 + Math.round(judgeArmY), 4, 9);
+      g.fillRect(armX, bodyY + 9, 5, 4);
+      g.fillStyle(colors.skin, 1);
+      g.fillRect(armX + 1, bodyY + 11 + Math.round(judgeArmY), 3, 2);
+    }
+
+    // Head — square jaw, severe expression
+    const headY = Math.round(oy + 4 + bobY);
+    g.fillStyle(colors.skin, 1);
+    g.fillRect(cx - 6, headY, 12, 10); // square head
+    g.fillStyle(this.darken(colors.skin, 0.75), 0.35);
+    g.fillRect(cx + 2, headY + 2, 4, 7); // jaw shadow
+    // Severe eyes
+    if (dir !== 'up') {
+      if (dir === 'down') {
+        g.fillStyle(0xffffff, 0.7);
+        g.fillRect(cx - 4, headY + 3, 3, 2);
+        g.fillRect(cx + 1, headY + 3, 3, 2);
+        g.fillStyle(colors.eye, 1); // dark red eyes
+        g.fillRect(cx - 3, headY + 4, 2, 1);
+        g.fillRect(cx + 2, headY + 4, 2, 1);
+        // Furrowed brow
+        g.fillStyle(this.darken(colors.skin, 0.65), 0.8);
+        g.fillRect(cx - 4, headY + 2, 3, 1);
+        g.fillRect(cx + 1, headY + 2, 3, 1);
+        // Stern mouth (downturned)
+        g.fillStyle(this.darken(colors.skin, 0.6), 1);
+        g.fillRect(cx - 2, headY + 7, 4, 1);
+        g.fillRect(cx - 3, headY + 7, 1, 1); // downturned corner
+        g.fillRect(cx + 2, headY + 7, 1, 1);
+      } else {
+        const eyeX = dir === 'right' ? cx + 1 : cx - 4;
+        g.fillStyle(0xffffff, 0.7);
+        g.fillRect(eyeX, headY + 3, 3, 2);
+        g.fillStyle(colors.eye, 1);
+        g.fillRect(eyeX + 1, headY + 4, 2, 1);
+        g.fillStyle(this.darken(colors.skin, 0.65), 0.8);
+        g.fillRect(eyeX, headY + 2, 3, 1); // brow
+      }
+    }
+    // Short dark hair
+    g.fillStyle(colors.hair, 1);
+    g.fillRect(cx - 6, headY - 1, 12, 4);
+
+    // Judge's crown — dark metal with small gems
+    const crownColor = colors.accessory ?? 0x884422;
+    g.fillStyle(crownColor, 1);
+    g.fillRect(cx - 6, headY - 3, 12, 3);           // crown band
+    // Three teeth
+    g.fillTriangle(cx - 5, headY - 3, cx - 5, headY - 7, cx - 3, headY - 3);
+    g.fillTriangle(cx, headY - 3, cx, headY - 8, cx + 2, headY - 3);
+    g.fillTriangle(cx + 5, headY - 3, cx + 5, headY - 7, cx + 3, headY - 3);
+    // Dark gem centres
+    g.fillStyle(0x220000, 0.8);
+    g.fillRect(cx - 4, headY - 6, 1, 1);
+    g.fillStyle(0x440000, 0.6);
+    g.fillRect(cx + 1, headY - 7, 1, 1);
+
+    // Imposing outline
+    this.outlineRect(g, cx - 7, Math.round(oy + 12 + bobY), 14, 15, 0.7);
+    this.outlineRect(g, cx - 6, Math.round(oy + 4 + bobY), 12, 10, 0.65);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // PRUDENCE — wise woman of the Palace, blue robes, holds a scroll
+  // ─────────────────────────────────────────────────────────────────────────
+  private static drawPrudence(
+    g: Phaser.GameObjects.Graphics,
+    ox: number, oy: number,
+    dir: DrawDir,
+    colors: BodyColors,
+    anim: 'idle' | 'walk',
+    frame: number,
+  ): void {
+    const cx = ox + SPRITE_SIZE / 2;
+
+    // Floor-length robe — no exposed legs, so legOffset not needed
+    let bobY = 0, armSwing = 0;
+    if (anim === 'idle') {
+      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.7;
+    } else {
+      const phase = (frame / 6) * Math.PI * 2;
+      bobY = Math.abs(Math.sin(phase)) * -1.5;
+      armSwing = Math.sin(phase) * 2.5; // restrained, dignified
+    }
+
+    // Shadow
+    g.fillStyle(0x000000, 0.3);
+    g.fillEllipse(cx, oy + 29, 13, 4);
+
+    // Long skirt/robe (floor-length)
+    const bodyY = Math.round(oy + 13 + bobY);
+    g.fillStyle(colors.clothing, 1);
+    g.fillTriangle(cx - 8, oy + 28, cx + 8, oy + 28, cx, bodyY + 2);
+    g.fillRoundedRect(cx - 5, bodyY, 10, 13, 2);
+    // Robe shading
+    g.fillStyle(this.darken(colors.clothing, 0.75), 0.4);
+    g.fillRect(cx - 5, bodyY, 2, 13);
+    g.fillRect(cx + 3, bodyY, 2, 13);
+    // Blue accent trim
+    g.fillStyle(colors.accent, 0.8);
+    g.fillRect(cx - 5, bodyY, 10, 2);       // yoke
+    g.fillRect(cx - 5, bodyY + 11, 10, 2);  // hem
+
+    // Scroll held in one hand
+    const scrollX = dir === 'right' ? cx + 6 : cx - 10;
+    const scrollY = bodyY + 3;
+    g.fillStyle(0xf5e6d3, 1);          // parchment
+    g.fillRoundedRect(scrollX, scrollY, 6, 8, 1);
+    g.fillStyle(this.darken(0xf5e6d3, 0.75), 1);
+    g.fillRect(scrollX, scrollY, 6, 1);
+    g.fillRect(scrollX, scrollY + 7, 6, 1);
+    g.lineStyle(0.5, 0x664422, 0.4);
+    g.lineBetween(scrollX + 1, scrollY + 3, scrollX + 5, scrollY + 3);
+    g.lineBetween(scrollX + 1, scrollY + 5, scrollX + 5, scrollY + 5);
+
+    // Arms
+    if (dir === 'down' || dir === 'up') {
+      g.fillStyle(colors.clothing, 1);
+      g.fillRect(cx - 8, bodyY + 1 + Math.round(armSwing), 3, 8);
+      g.fillRect(cx + 5, bodyY + 1 - Math.round(armSwing), 3, 8);
+      g.fillStyle(colors.skin, 1);
+      g.fillRect(cx - 8, bodyY + 9 + Math.round(armSwing), 3, 2);
+      g.fillRect(cx + 5, bodyY + 9 - Math.round(armSwing), 3, 2);
+    } else {
+      const armX = dir === 'right' ? cx - 7 : cx + 4;
+      g.fillStyle(colors.clothing, 1);
+      g.fillRect(armX, bodyY + 1 + Math.round(armSwing), 3, 8);
+      g.fillStyle(colors.skin, 1);
+      g.fillRect(armX, bodyY + 9 + Math.round(armSwing), 3, 2);
+    }
+
+    // Head — oval, thoughtful expression
+    const headY = Math.round(oy + 4 + bobY);
+    // Long hair
+    g.fillStyle(colors.hair, 1);
+    g.fillRoundedRect(cx - 6, headY - 1, 12, 7, 3);
+    g.fillRoundedRect(cx - 6, headY + 4, 4, 8, 2);
+    g.fillRoundedRect(cx + 2, headY + 4, 4, 8, 2);
+    // Head
+    g.fillStyle(colors.skin, 1);
+    g.fillRoundedRect(cx - 5, headY, 10, 11, 3);
+    g.fillStyle(0xffffff, 0.1);
+    g.fillCircle(cx - 2, headY + 2, 2);
+    // Kind, wise eyes
+    if (dir === 'down') {
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(cx - 4, headY + 4, 3, 2);
+      g.fillRect(cx + 1, headY + 4, 3, 2);
+      g.fillStyle(colors.eye, 1);
+      g.fillRect(cx - 3, headY + 5, 2, 1);
+      g.fillRect(cx + 2, headY + 5, 2, 1);
+      // Gentle smile
+      g.fillStyle(this.darken(colors.skin, 0.7), 1);
+      g.fillRect(cx - 2, headY + 8, 4, 1);
+      g.fillRect(cx - 3, headY + 7, 1, 1);
+      g.fillRect(cx + 2, headY + 7, 1, 1);
+    } else if (dir !== 'up') {
+      const eyeX = dir === 'right' ? cx + 1 : cx - 4;
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(eyeX, headY + 4, 3, 2);
+      g.fillStyle(colors.eye, 1);
+      g.fillRect(eyeX + 1, headY + 5, 2, 1);
+      g.fillStyle(this.darken(colors.skin, 0.7), 1);
+      g.fillRect(eyeX, headY + 8, 2, 1);
+    }
+
+    // Silhouette
+    this.outlineRoundedRect(g, cx - 5, Math.round(oy + 13 + bobY), 10, 13, 2, 0.55);
+    this.outlineRoundedRect(g, cx - 5, Math.round(oy + 4 + bobY), 10, 11, 3, 0.5);
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // WATCHFUL — palace gate guard, military bearing, carries a staff
+  // ─────────────────────────────────────────────────────────────────────────
+  private static drawWatchful(
+    g: Phaser.GameObjects.Graphics,
+    ox: number, oy: number,
+    dir: DrawDir,
+    colors: BodyColors,
+    anim: 'idle' | 'walk',
+    frame: number,
+  ): void {
+    const cx = ox + SPRITE_SIZE / 2;
+
+    // Guard stands mostly still — upright posture
+    let bobY = 0, legOffset = 0, armSwing = 0;
+    if (anim === 'idle') {
+      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.4; // near-stationary
+    } else {
+      const phase = (frame / 6) * Math.PI * 2;
+      bobY = Math.abs(Math.sin(phase)) * -1.2;
+      legOffset = Math.sin(phase) * 3.5;
+      armSwing = Math.sin(phase) * 2;
+    }
+
+    // Shadow
+    g.fillStyle(0x000000, 0.35);
+    g.fillEllipse(cx, oy + 29, 14, 5);
+
+    // Boots — sturdy guard boots
+    const footY = Math.round(oy + 25 + bobY);
+    g.fillStyle(0x3a2a18, 1);
+    if (dir === 'left' || dir === 'right') {
+      g.fillRect(cx - 4, footY + Math.round(legOffset), 4, 5);
+      g.fillRect(cx + 1, footY - Math.round(legOffset), 4, 5);
+    } else {
+      g.fillRect(cx - 6, footY + Math.round(legOffset), 4, 5);
+      g.fillRect(cx + 2, footY - Math.round(legOffset), 4, 5);
+    }
+
+    // Legs — dark trousers
+    const bodyY = Math.round(oy + 13 + bobY);
+    g.fillStyle(this.darken(colors.clothing, 0.6), 1);
+    if (dir === 'left' || dir === 'right') {
+      g.fillRect(cx - 3, bodyY + 9 + Math.round(legOffset), 3, 5);
+      g.fillRect(cx + 1, bodyY + 9 - Math.round(legOffset), 3, 5);
+    } else {
+      g.fillRect(cx - 5, bodyY + 9 + Math.round(legOffset), 3, 5);
+      g.fillRect(cx + 2, bodyY + 9 - Math.round(legOffset), 3, 5);
+    }
+
+    // Chest armour / tabard (wider at shoulders)
+    g.fillStyle(colors.clothing, 1);
+    g.fillRoundedRect(cx - 7, bodyY, 14, 11, 2); // wide shoulders
+    // Shoulder pads
+    g.fillStyle(this.darken(colors.clothing, 0.85), 1);
+    g.fillRect(cx - 7, bodyY, 4, 3);
+    g.fillRect(cx + 3, bodyY, 4, 3);
+    // Chest badge — blue steel colour
+    g.fillStyle(colors.accent, 0.8);
+    g.fillRoundedRect(cx - 2, bodyY + 3, 4, 5, 1);
+    g.fillStyle(0xffffff, 0.15);
+    g.fillRoundedRect(cx - 1, bodyY + 4, 2, 3, 1);
+
+    // Staff (tall — guard weapon)
+    const staffX = dir === 'right' ? cx + 11 : cx - 11;
+    g.lineStyle(4, 0x5c4020, 0.2);
+    g.lineBetween(staffX, bodyY - 5, staffX, oy + 28);
+    g.lineStyle(2, 0x8b6040, 1);
+    g.lineBetween(staffX, bodyY - 5, staffX, oy + 28);
+    g.lineStyle(1, 0xaa8060, 0.4);
+    g.lineBetween(staffX - 1, bodyY - 5, staffX - 1, oy + 28);
+    // Staff tip
+    g.fillStyle(colors.accent, 0.9);
+    g.fillTriangle(staffX, bodyY - 8, staffX - 2, bodyY - 5, staffX + 2, bodyY - 5);
+
+    // Arms
+    if (dir === 'down' || dir === 'up') {
+      g.fillStyle(colors.clothing, 1);
+      g.fillRect(cx - 10, bodyY + 1 + Math.round(armSwing), 3, 9);
+      g.fillRect(cx + 7, bodyY + 1 - Math.round(armSwing), 3, 9);
+      g.fillStyle(colors.skin, 1);
+      g.fillRect(cx - 10, bodyY + 10 + Math.round(armSwing), 3, 2);
+      g.fillRect(cx + 7, bodyY + 10 - Math.round(armSwing), 3, 2);
+    } else {
+      const armX = dir === 'right' ? cx - 9 : cx + 6;
+      g.fillStyle(colors.clothing, 1);
+      g.fillRect(armX, bodyY + 1 + Math.round(armSwing), 3, 9);
+      g.fillStyle(colors.skin, 1);
+      g.fillRect(armX, bodyY + 10 + Math.round(armSwing), 3, 2);
+    }
+
+    // Head — square-jawed, vigilant expression
+    const headY = Math.round(oy + 4 + bobY);
+    // Guard helmet/hat brim
+    g.fillStyle(this.darken(colors.clothing, 0.7), 1);
+    g.fillRoundedRect(cx - 7, headY - 1, 14, 3, 1);
+    g.fillStyle(colors.accent, 0.5);
+    g.fillRect(cx - 7, headY + 1, 14, 1); // helmet band
+    // Head
+    g.fillStyle(colors.skin, 1);
+    g.fillRect(cx - 5, headY, 10, 10); // square head
+    g.fillStyle(this.darken(colors.skin, 0.8), 0.3);
+    g.fillRect(cx + 2, headY + 2, 3, 7); // jaw shadow
+    // Vigilant eyes — scanning
+    if (dir === 'down') {
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(cx - 4, headY + 3, 3, 2);
+      g.fillRect(cx + 1, headY + 3, 3, 2);
+      g.fillStyle(colors.eye, 1);
+      g.fillRect(cx - 3, headY + 4, 2, 1);
+      g.fillRect(cx + 2, headY + 4, 2, 1);
+      // Stern brow
+      g.fillStyle(this.darken(colors.skin, 0.65), 0.7);
+      g.fillRect(cx - 4, headY + 2, 3, 1);
+      g.fillRect(cx + 1, headY + 2, 3, 1);
+    } else if (dir !== 'up') {
+      const eyeX = dir === 'right' ? cx + 1 : cx - 4;
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(eyeX, headY + 3, 3, 2);
+      g.fillStyle(colors.eye, 1);
+      g.fillRect(eyeX + 1, headY + 4, 2, 1);
+      g.fillStyle(this.darken(colors.skin, 0.65), 0.7);
+      g.fillRect(eyeX, headY + 2, 3, 1);
+    }
+    // Short hair
+    g.fillStyle(colors.hair, 1);
+    g.fillRect(cx - 5, headY, 10, 4);
+
+    // Silhouette
+    this.outlineRoundedRect(g, cx - 7, Math.round(oy + 13 + bobY), 14, 11, 2, 0.65);
+    this.outlineRect(g, cx - 5, Math.round(oy + 4 + bobY), 10, 10, 0.6);
+  }
+
   private static drawGenericCharacter(
     g: Phaser.GameObjects.Graphics,
     ox: number, oy: number,
