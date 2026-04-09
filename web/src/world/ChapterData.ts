@@ -532,6 +532,10 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       requiredNpcs: ['interpreter'],
     },
   },
+  // ─── Chapter 6: The Cross ─────────────────────────────────────────────────
+  // Emotional arc: burden of sin → surrender at the cross → liberation
+  // Player starts at bottom (y:500), walks uphill to the cross (y:80),
+  // triggering the burden_released cutscene, then exits north to Ch7.
   {
     chapter: 6,
     locationName: '십자가',
@@ -541,6 +545,36 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     spawn: { x: 240, y: 500 },
     npcs: [],
     theme: THEMES[6],
+    bgmKey: 'bgm_cross',
+    events: [
+      {
+        id: 'ch6_burden_released',
+        type: 'cutscene',
+        x: 190, y: 60,          // top-center — at the foot of the cross
+        width: 100, height: 100,
+        triggerOnce: true,
+        data: { cutsceneId: 'ch6_burden_released' },
+      },
+    ],
+    exits: [
+      {
+        x: 190, y: 0,            // north edge — only reachable after cutscene
+        width: 100, height: 60,
+        targetChapter: 7,
+      },
+    ],
+    mapObjects: [
+      {
+        id: 'ch6_cross',
+        type: 'sign',
+        x: 220, y: 80,
+        label: '✝',
+        labelEn: '✝',
+      },
+    ],
+    completionRequirements: {
+      requiredEvents: ['ch6_burden_released'],
+    },
   },
 
   // ─── Chapter 7: Beautiful Palace ──────────────────────────────────────────

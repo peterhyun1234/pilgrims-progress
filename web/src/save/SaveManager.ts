@@ -67,6 +67,8 @@ export class SaveManager {
           language: gm.language,
           bgmVolume,
           sfxVolume,
+          colorblindMode: gm.colorblindMode,
+          reduceMotion: gm.reduceMotion,
         },
       };
 
@@ -118,6 +120,8 @@ export class SaveManager {
       gm.setChapter(data.chapter);
       gm.playerName = data.playerName;
       gm.language = data.settings.language;
+      gm.colorblindMode = data.settings.colorblindMode ?? 'none';
+      gm.reduceMotion = data.settings.reduceMotion ?? false;
       sm.setAll(data.stats);
       sm.setHidden(data.hiddenStats);
 

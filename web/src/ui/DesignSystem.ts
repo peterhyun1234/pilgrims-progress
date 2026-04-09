@@ -1,5 +1,6 @@
 import { COLORS, GAME_WIDTH, GAME_HEIGHT, FONT } from '../config';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
+import { StatType } from '../core/GameEvents';
 
 export const FONT_FAMILY = FONT.KO_PRIMARY;
 
@@ -63,6 +64,19 @@ export class DesignSystem {
       return Math.round(baseSize * FONT.EN_SIZE_SCALE);
     }
     return baseSize;
+  }
+
+  /**
+   * Returns the display color for a stat, respecting the active colorblind palette.
+   * Always use this instead of DesignSystem.STAT_COLORS[stat] directly.
+   */
+  static getStatColor(stat: StatType): number {
+    try {
+      const gm = ServiceLocator.get<{ getStatColor: (s: StatType) => number }>(SERVICE_KEYS.GAME_MANAGER);
+      return gm.getStatColor(stat);
+    } catch {
+      return DesignSystem.STAT_COLORS[stat] ?? 0xffffff;
+    }
   }
 
   static hex(c: number): string {

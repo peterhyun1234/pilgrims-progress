@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { ChapterConfig, TerrainZone } from '../world/ChapterData';
+import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
+import { GameManager } from '../core/GameManager';
 
 /**
  * Animates environmental elements: water ripples, torch flicker, leaf fall,
@@ -29,12 +31,21 @@ export class EnvironmentAnimations {
     this.spawnInitialParticles();
   }
 
+  private isReduceMotion(): boolean {
+    try {
+      return ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER).reduceMotion;
+    } catch { return false; }
+  }
+
   update(delta: number): void {
     if (!this.animLayer || !this.config) return;
     this.elapsed += delta;
     this.particleTimer += delta;
 
     this.animLayer.clear();
+
+    // Skip all animated FX when reduce motion is enabled
+    if (this.isReduceMotion()) return;
 
     this.drawWaterRipples();
     this.drawTorchFlicker();

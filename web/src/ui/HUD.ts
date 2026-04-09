@@ -70,14 +70,14 @@ export class HUD {
 
       // Stat icon with distinct colored background
       const iconBg = this.scene.add.graphics();
-      const iconBgColor = DesignSystem.STAT_COLORS[stat];
+      const iconBgColor = DesignSystem.getStatColor(stat);
       iconBg.fillStyle(iconBgColor, 0.22);
       iconBg.fillRoundedRect(-1, -1, 11, 11, 2);
       iconBg.lineStyle(0.5, iconBgColor, 0.4);
       iconBg.strokeRoundedRect(-1, -1, 11, 11, 2);
 
       const icon = this.scene.add.text(0, 0, DesignSystem.STAT_ICONS[stat], {
-        fontSize: '9px', color: DesignSystem.hex(DesignSystem.STAT_COLORS[stat]),
+        fontSize: '9px', color: DesignSystem.hex(DesignSystem.getStatColor(stat)),
         fontFamily: 'serif',
       }).setOrigin(0, 0);
 
@@ -86,7 +86,7 @@ export class HUD {
       const labelFontSize = ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.XS;
       const label = this.scene.add.text(11, 0, labelText, {
         fontSize: `${labelFontSize}px`,
-        color: DesignSystem.hex(DesignSystem.STAT_COLORS[stat]),
+        color: DesignSystem.hex(DesignSystem.getStatColor(stat)),
         fontFamily: FONT_FAMILY,
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
       }).setOrigin(0, 0);
@@ -104,7 +104,7 @@ export class HUD {
       const value = this.scene.add.text(barX + HUD.BAR_WIDTH + 4, 0,
         currentVal.toString(), {
           fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-          color: DesignSystem.hex(DesignSystem.STAT_COLORS[stat]),
+          color: DesignSystem.hex(DesignSystem.getStatColor(stat)),
           fontFamily: FONT_FAMILY,
           shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
         }).setOrigin(0, 0);
@@ -122,7 +122,7 @@ export class HUD {
   private drawFill(g: Phaser.GameObjects.Graphics, x: number, w: number, stat: StatType): void {
     g.clear();
     if (w <= 0) return;
-    const color = DesignSystem.STAT_COLORS[stat];
+    const color = DesignSystem.getStatColor(stat);
     g.fillStyle(color, 0.85);
     g.fillRoundedRect(x, 1, Math.max(w, 2), HUD.BAR_HEIGHT, 2);
     // Top highlight stripe
@@ -146,7 +146,7 @@ export class HUD {
     bar.value.setColor(flashColor);
     this.scene.tweens.add({
       targets: bar.value, scaleX: 1.5, scaleY: 1.5, duration: 150, yoyo: true,
-      onComplete: () => bar.value.setColor(DesignSystem.hex(DesignSystem.STAT_COLORS[bar.stat])),
+      onComplete: () => bar.value.setColor(DesignSystem.hex(DesignSystem.getStatColor(bar.stat))),
     });
 
     if (p.amount !== 0) {
@@ -178,10 +178,23 @@ export class HUD {
     this.showLocationCard(payload.chapter, payload.title);
   };
 
+  private onSettingsChanged = () => {
+    // Refresh all bar colors when colorblind mode changes
+    this.bars.forEach(bar => {
+      const color = DesignSystem.getStatColor(bar.stat);
+      const hexColor = DesignSystem.hex(color);
+      bar.icon.setColor(hexColor);
+      bar.label.setColor(hexColor);
+      bar.value.setColor(hexColor);
+      this.drawFill(bar.fill, 44, bar.currentWidth, bar.stat);
+    });
+  };
+
   private setupEvents(): void {
     this.eventBus.on(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.on(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
     this.eventBus.on(GameEvent.CHAPTER_CHANGED, this.onChapterLoaded);
+    this.eventBus.on(GameEvent.SETTINGS_CHANGED, this.onSettingsChanged);
   }
 
   /** Show a cinematic location card when entering a new chapter */
@@ -315,6 +328,7 @@ export class HUD {
     this.eventBus.off(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.off(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
     this.eventBus.off(GameEvent.CHAPTER_CHANGED, this.onChapterLoaded);
+    this.eventBus.off(GameEvent.SETTINGS_CHANGED, this.onSettingsChanged);
     this.container.destroy(true);
   }
 }

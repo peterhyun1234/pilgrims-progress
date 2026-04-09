@@ -156,12 +156,12 @@ export class CharacterSpriteFactory {
     let legOffset = 0;
     let armSwing = 0;
     if (anim === 'idle') {
-      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.8;
+      bobY = Math.sin((frame / 4) * Math.PI * 2) * 1.0;  // slightly more pronounced idle bob
     } else {
       const phase = (frame / 6) * Math.PI * 2;
-      bobY = Math.abs(Math.sin(phase)) * -1.5;
-      legOffset = Math.sin(phase) * 4;
-      armSwing = Math.sin(phase) * 3;
+      bobY = Math.abs(Math.sin(phase)) * -1.8;            // deeper walk dip
+      legOffset = Math.sin(phase) * 5;                    // wider leg stride
+      armSwing = Math.sin(phase) * 4;                     // fuller arm swing
     }
 
     // === Ground shadow (oval under feet) ===
@@ -389,6 +389,12 @@ export class CharacterSpriteFactory {
     // Hat band (thin darker stripe)
     g.fillStyle(hatDark, 0.9);
     g.fillRect(cx - 5, headY - 2, 10, 1);
+
+    // === Silhouette outline pass — improves background separation ===
+    // Torso outline
+    this.outlineRoundedRect(g, cx - 6, Math.round(oy + 15 + bobY), 12, 12, 2, 0.6);
+    // Head + hat outline (approximate)
+    this.outlineRect(g, cx - 8, headY - 9, 16, 19, 0.45);
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -407,11 +413,11 @@ export class CharacterSpriteFactory {
     let bobY = 0;
     let armSwing = 0;
     if (anim === 'idle') {
-      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.6;
+      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.8;
     } else {
       const phase = (frame / 6) * Math.PI * 2;
-      bobY = Math.abs(Math.sin(phase)) * -1.2;
-      armSwing = Math.sin(phase) * 2;
+      bobY = Math.abs(Math.sin(phase)) * -1.4;
+      armSwing = Math.sin(phase) * 3;
     }
 
     // Shadow
@@ -572,11 +578,11 @@ export class CharacterSpriteFactory {
     let bobY = 0;
     let armSwing = 0;
     if (anim === 'idle') {
-      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.7;
+      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.9;
     } else {
       const phase = (frame / 6) * Math.PI * 2;
-      bobY = Math.abs(Math.sin(phase)) * -1.3;
-      armSwing = Math.sin(phase) * 2.5;
+      bobY = Math.abs(Math.sin(phase)) * -1.5;
+      armSwing = Math.sin(phase) * 3.5;
     }
 
     // Shadow — rounder character = wider shadow
@@ -753,12 +759,12 @@ export class CharacterSpriteFactory {
     let legOffset = 0;
     let armSwing = 0;
     if (anim === 'idle') {
-      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.8;
+      bobY = Math.sin((frame / 4) * Math.PI * 2) * 1.0;
     } else {
       const phase = (frame / 6) * Math.PI * 2;
-      bobY = Math.abs(Math.sin(phase)) * -1.5;
-      legOffset = Math.sin(phase) * 4;
-      armSwing = Math.sin(phase) * 3;
+      bobY = Math.abs(Math.sin(phase)) * -1.8;
+      legOffset = Math.sin(phase) * 5;
+      armSwing = Math.sin(phase) * 4;
     }
 
     // Shadow
@@ -922,12 +928,12 @@ export class CharacterSpriteFactory {
     let legOffset = 0;
     let armSwing = 0;
     if (anim === 'idle') {
-      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.8;
+      bobY = Math.sin((frame / 4) * Math.PI * 2) * 1.0;
     } else {
       const phase = (frame / 6) * Math.PI * 2;
-      bobY = Math.abs(Math.sin(phase)) * -1.5;
-      legOffset = Math.sin(phase) * 4;
-      armSwing = Math.sin(phase) * 3;
+      bobY = Math.abs(Math.sin(phase)) * -1.8;
+      legOffset = Math.sin(phase) * 5;
+      armSwing = Math.sin(phase) * 4;
     }
 
     // === Shadow ===
@@ -1115,6 +1121,24 @@ export class CharacterSpriteFactory {
         }
       }
     }
+
+    // === Silhouette outline pass — improves background separation ===
+    this.outlineRoundedRect(g, cx - 6, Math.round(oy + 14 + bobY), 12, 12, 2, 0.6);
+    this.outlineRoundedRect(g, cx - Math.round((config.headShape === 'square' ? 12 : (config.headShape === 'oval' ? 10 : 11)) / 2), Math.round(oy + 4 + bobY), config.headShape === 'square' ? 12 : (config.headShape === 'oval' ? 10 : 11), config.headShape === 'oval' ? 12 : 10, config.headShape === 'square' ? 1 : 3, 0.55);
+  }
+
+  /**
+   * Draw a 1px dark silhouette outline around a rect — improves readability
+   * of characters against varied backgrounds.
+   */
+  private static outlineRect(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number, alpha = 0.7): void {
+    g.lineStyle(1, 0x0a0814, alpha);
+    g.strokeRect(x, y, w, h);
+  }
+
+  private static outlineRoundedRect(g: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number, radius = 2, alpha = 0.7): void {
+    g.lineStyle(1, 0x0a0814, alpha);
+    g.strokeRoundedRect(x, y, w, h, radius);
   }
 
   /** Darken a hex color by factor (0 = black, 1 = original) */

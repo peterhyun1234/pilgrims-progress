@@ -1046,10 +1046,20 @@ export const FALLBACK_DIALOGUES: Record<string, LangConv> = {
     ko: {
       lines: [
         { text: '멈추시오! 앞으로 가지 마시오!', emotion: 'fearful' },
-        { text: '저 앞에 아볼루온이라는 괴물이 있소. 우리는 보고 도망쳤소.', emotion: 'fearful' },
-        { text: '돌아가시오. 목숨이 아깝거든 지금 당장 돌아가시오!', emotion: 'fearful', stat: 'courage', amount: -3 },
+        { text: '저 계곡에는 아볼루온이라는 무시무시한 괴물이 있소. 우리는 간신히 살아 돌아왔소.', emotion: 'fearful' },
+        { text: '사자들도 있소! 맹수들도! 순례자들의 뼈가 그 길에 널려있소!', emotion: 'fearful', stat: 'courage', amount: -3 },
       ],
       choices: [
+        {
+          text: '당신이 경험한 위험들을 알면서도, 나는 앞으로 가야 합니다.',
+          requires: { stat: 'wisdom' as StatType, min: 25 },
+          stat: 'courage',
+          amount: 12,
+          lines: [
+            { text: '...당신은 겁쟁이가 아니군요. 두려움을 알면서도 가는 자가 진정한 용사요.', emotion: 'sad', speaker: '소심', stat: 'faith', amount: 5 },
+            { text: '이 길의 끝에 무엇이 있는지 혹시 아시오? ...나는 끝내 알 수 없었소.', emotion: 'sad', speaker: '소심' },
+          ],
+        },
         {
           text: '두렵지만 나는 계속 가겠소.',
           stat: 'courage',
@@ -1061,21 +1071,31 @@ export const FALLBACK_DIALOGUES: Record<string, LangConv> = {
         {
           text: '정말 그렇게 위험합니까?',
           lines: [
-            { text: '내 말을 믿으시오! 그 계곡은 공포 그 자체요. 제발 돌아가시오.', emotion: 'fearful', speaker: '소심', stat: 'burden', amount: 5 },
+            { text: '내 말을 믿으시오! 그 계곡은 공포 그 자체요. 사자들의 울부짖음이 아직도 귀에 들리는 것 같소.', emotion: 'fearful', speaker: '소심', stat: 'burden', amount: 5 },
           ],
         },
       ],
       repeated: [
-        { text: '제발 돌아가시오. 아직 늦지 않았소.', emotion: 'fearful' },
+        { text: '제발 돌아가시오. 당신도 아직 선택할 수 있소.', emotion: 'fearful', stat: 'burden', amount: 2 },
       ],
     },
     en: {
       lines: [
-        { text: 'Stop! Do not go any further!', emotion: 'fearful' },
-        { text: 'There is a monster ahead called Apollyon. We saw him and fled.', emotion: 'fearful' },
-        { text: 'Turn back! If you value your life, turn back now!', emotion: 'fearful', stat: 'courage', amount: -3 },
+        { text: 'Stop! Do not go one step further!', emotion: 'fearful' },
+        { text: 'There is a monster in that valley called Apollyon. We barely escaped with our lives.', emotion: 'fearful' },
+        { text: 'Lions too! And beasts! The bones of pilgrims litter that road!', emotion: 'fearful', stat: 'courage', amount: -3 },
       ],
       choices: [
+        {
+          text: 'Knowing all you have faced — I must still go forward.',
+          requires: { stat: 'wisdom' as StatType, min: 25 },
+          stat: 'courage',
+          amount: 12,
+          lines: [
+            { text: '...You are no coward. To go on knowing the danger — that is true courage.', emotion: 'sad', speaker: 'Timorous', stat: 'faith', amount: 5 },
+            { text: 'Do you know what lies at the end of this road? ...I never had the courage to find out.', emotion: 'sad', speaker: 'Timorous' },
+          ],
+        },
         {
           text: 'I am afraid — but I will press on.',
           stat: 'courage',
@@ -1087,12 +1107,12 @@ export const FALLBACK_DIALOGUES: Record<string, LangConv> = {
         {
           text: 'Is it truly so dangerous?',
           lines: [
-            { text: 'Believe me! That valley is terror itself. Please, turn back.', emotion: 'fearful', speaker: 'Timorous', stat: 'burden', amount: 5 },
+            { text: "Believe me! That valley is terror itself. I can still hear the lions' roaring.", emotion: 'fearful', speaker: 'Timorous', stat: 'burden', amount: 5 },
           ],
         },
       ],
       repeated: [
-        { text: 'Please, go back. It is not too late.', emotion: 'fearful' },
+        { text: 'Please — go back. You can still choose differently.', emotion: 'fearful', stat: 'burden', amount: 2 },
       ],
     },
   },
@@ -1149,40 +1169,58 @@ export const FALLBACK_DIALOGUES: Record<string, LangConv> = {
   watchful: {
     ko: {
       lines: [
-        { text: '누가 오는고?', emotion: 'neutral' },
-        { text: '멀리서 오셨군요. 순례자이십니까?', emotion: 'neutral' },
-        { text: '이 궁전은 순례자들을 위해 세워진 것이오. 어서 들어오시오. 여기서는 안전하오.', emotion: 'happy', stat: 'faith', amount: 5 },
+        { text: '멈추시오. 이 궁전은 올바른 길로 온 자만 들어올 수 있소.', emotion: 'neutral' },
+        { text: '당신은 진정 좁은 문을 지나 여기까지 왔소?', emotion: 'neutral' },
       ],
       choices: [
         {
-          text: '감사합니다. 이 궁전은 무엇입니까?',
+          text: '그렇습니다. 전도자의 안내로 좁은 문을 지나 여기까지 왔습니다.',
+          requires: { stat: 'faith' as StatType, min: 20 },
+          stat: 'faith',
+          amount: 8,
           lines: [
-            { text: '아름다운 궁전이라 하오. 순례자들에게 쉼과 가르침을 주기 위해 세워진 곳이오.', emotion: 'neutral', speaker: '파수꾼', stat: 'wisdom', amount: 5 },
-            { text: '현숙, 경건, 자선이 그대를 맞이할 것이오. 잘 쉬어 가시오.', emotion: 'happy', speaker: '파수꾼' },
+            { text: '그 문을 지난 자만이 이 궁전에 들어올 자격이 있소.', emotion: 'happy', speaker: '파수꾼', stat: 'wisdom', amount: 5 },
+            { text: '어서 들어오시오. 현숙, 경건, 자선이 당신을 기다리고 있소.', emotion: 'happy', speaker: '파수꾼' },
+          ],
+        },
+        {
+          text: '멀리서 왔습니다. 쉴 곳을 찾고 있습니다.',
+          lines: [
+            { text: '이 궁전은 순례자들을 위한 것이오. 좁은 문을 지나오셨나요?', emotion: 'neutral', speaker: '파수꾼' },
+            { text: '전도자를 만난 적 있소? 그의 가르침을 따르면 이 길을 찾을 수 있소.', emotion: 'neutral', speaker: '파수꾼', stat: 'wisdom', amount: 3 },
           ],
         },
       ],
       repeated: [
-        { text: '다시 오셨군요. 이 문은 항상 열려 있소.', emotion: 'happy', stat: 'faith', amount: 3 },
+        { text: '다시 오셨군요. 이 문은 항상 열려 있소. 천성을 잊지 마시오.', emotion: 'happy', stat: 'faith', amount: 3 },
       ],
     },
     en: {
       lines: [
-        { text: 'Who goes there?', emotion: 'neutral' },
-        { text: 'You have come far. Are you a pilgrim?', emotion: 'neutral' },
-        { text: 'This palace was built for such as you. Come in — you are safe here.', emotion: 'happy', stat: 'faith', amount: 5 },
+        { text: 'Halt. This palace is for those who have come by the right way.', emotion: 'neutral' },
+        { text: 'Did you truly pass through the Wicket Gate to come this far?', emotion: 'neutral' },
       ],
       choices: [
         {
-          text: 'Thank you. What is this place?',
+          text: 'I did — Evangelist showed me the way through the Wicket Gate.',
+          requires: { stat: 'faith' as StatType, min: 20 },
+          stat: 'faith',
+          amount: 8,
           lines: [
-            { text: 'It is called the Palace Beautiful. Built to give pilgrims rest and instruction.', emotion: 'neutral', speaker: 'Watchful', stat: 'wisdom', amount: 5 },
-            { text: 'Prudence, Piety, and Charity will receive you. Rest well.', emotion: 'happy', speaker: 'Watchful' },
+            { text: 'Then you have come the right way. Only those who pass through that gate may enter here.', emotion: 'happy', speaker: 'Watchful', stat: 'wisdom', amount: 5 },
+            { text: 'Come in. Prudence, Piety, and Charity are waiting to receive you.', emotion: 'happy', speaker: 'Watchful' },
+          ],
+        },
+        {
+          text: 'I have traveled far and seek rest.',
+          lines: [
+            { text: 'This palace is for pilgrims. Have you come through the Wicket Gate?', emotion: 'neutral', speaker: 'Watchful' },
+            { text: 'Seek out the Evangelist — his counsel will guide you to the true path.', emotion: 'neutral', speaker: 'Watchful', stat: 'wisdom', amount: 3 },
           ],
         },
       ],
       repeated: [
-        { text: 'Welcome back. This gate is always open to you.', emotion: 'happy', stat: 'faith', amount: 3 },
+        { text: 'Welcome back. This gate is always open to you. Remember the Celestial City.', emotion: 'happy', stat: 'faith', amount: 3 },
       ],
     },
   },
@@ -1193,56 +1231,71 @@ export const FALLBACK_DIALOGUES: Record<string, LangConv> = {
   prudence: {
     ko: {
       lines: [
-        { text: '어서 오세요, 순례자여.', emotion: 'neutral' },
-        { text: '저는 현숙이라 합니다. 그대에게 몇 가지 여쭤봐도 될까요?', emotion: 'neutral' },
-        { text: '그대는 아직도 고향 땅을 생각하나요?', emotion: 'neutral' },
+        { text: '어서 오세요, 순례자여. 저는 현숙이라 합니다.', emotion: 'neutral' },
+        { text: '한 가지 여쭤봐도 될까요? 당신이 도망쳐온 그 삶을 생각하면 무엇이 떠오르나요?', emotion: 'neutral' },
       ],
       choices: [
         {
-          text: '때때로 생각이 나지만, 더 나은 곳을 바라봅니다.',
+          text: '죄와 짐을 지고 있던 제 모습이 떠오릅니다. 그것에서 벗어나고 싶었습니다.',
           stat: 'wisdom',
-          amount: 8,
+          amount: 10,
           lines: [
-            { text: '그것이 믿음이오. 보이지 않는 것을 바라보는 것이 지혜의 시작이오.', emotion: 'happy', speaker: '현숙', stat: 'faith', amount: 5 },
+            { text: '그 깨달음이 이 길의 시작이었군요. 자신의 비참함을 아는 것이 지혜의 첫 걸음이오.', emotion: 'happy', speaker: '현숙', stat: 'faith', amount: 5 },
+            { text: '그런데 지금은 어떻소? 짐이 가벼워졌나요?', emotion: 'neutral', speaker: '현숙' },
+            { text: '십자가에서 모든 것이 바뀌었군요. 그것을 잊지 마시오.', emotion: 'happy', speaker: '현숙', stat: 'wisdom', amount: 5 },
           ],
         },
         {
-          text: '솔직히 말하면 아직 그리운 것들이 있습니다.',
+          text: '때때로 고향과 사랑하는 사람들이 그리워집니다.',
           lines: [
-            { text: '정직하군요. 그 그리움을 인정하는 것도 여정의 일부라오.', emotion: 'neutral', speaker: '현숙', stat: 'wisdom', amount: 5 },
-            { text: '하지만 앞을 향해 가시오. 더 좋은 것이 기다리고 있소.', emotion: 'happy', speaker: '현숙' },
+            { text: '그 그리움은 자연스러운 것이오. 하지만 더 나은 나라를 바라보는 것이 믿음이오.', emotion: 'neutral', speaker: '현숙', stat: 'wisdom', amount: 6 },
+            { text: '아브라함도 고향을 떠났소. 그는 더 좋은 곳, 하나님이 설계하신 도성을 바라보았소.', emotion: 'happy', speaker: '현숙', stat: 'faith', amount: 3 },
+          ],
+        },
+        {
+          text: '솔직히 이 여정이 올바른 선택이었는지 흔들릴 때가 있습니다.',
+          lines: [
+            { text: '정직하군요. 그 의심 자체가 당신이 진지하게 걷고 있다는 증거요.', emotion: 'neutral', speaker: '현숙', stat: 'wisdom', amount: 5 },
+            { text: '흔들리는 자는 결국 뿌리를 더 깊이 내리게 된다오.', emotion: 'determined', speaker: '현숙', stat: 'courage', amount: 5 },
           ],
         },
       ],
       repeated: [
-        { text: '믿음의 길을 계속 가고 있군요. 훌륭하오.', emotion: 'happy', stat: 'wisdom', amount: 3 },
+        { text: '다시 오셨군요. 이 길을 계속 걷고 있다는 것 자체가 훌륭하오.', emotion: 'happy', stat: 'wisdom', amount: 3 },
       ],
     },
     en: {
       lines: [
-        { text: 'Welcome, Pilgrim.', emotion: 'neutral' },
-        { text: 'I am Prudence. May I ask you a few questions?', emotion: 'neutral' },
-        { text: 'Do you still think of your former country?', emotion: 'neutral' },
+        { text: 'Welcome, Pilgrim. I am Prudence.', emotion: 'neutral' },
+        { text: 'May I ask — when you think of the life you fled, what comes to mind?', emotion: 'neutral' },
       ],
       choices: [
         {
-          text: 'Sometimes — but I look toward a better place.',
+          text: 'I think of the sin and the burden I carried. I longed to be free of it.',
           stat: 'wisdom',
-          amount: 8,
+          amount: 10,
           lines: [
-            { text: 'That is faith. To see what is unseen — that is the beginning of wisdom.', emotion: 'happy', speaker: 'Prudence', stat: 'faith', amount: 5 },
+            { text: 'And that longing was the very beginning of wisdom. To know one\'s misery is the first step toward deliverance.', emotion: 'happy', speaker: 'Prudence', stat: 'faith', amount: 5 },
+            { text: 'The Cross has already answered that burden. Never forget what happened there.', emotion: 'happy', speaker: 'Prudence', stat: 'wisdom', amount: 5 },
           ],
         },
         {
-          text: 'Honestly, I still miss some things.',
+          text: 'Sometimes I miss my homeland and the people I left behind.',
           lines: [
-            { text: 'You are honest. Acknowledging that longing is part of the journey.', emotion: 'neutral', speaker: 'Prudence', stat: 'wisdom', amount: 5 },
-            { text: 'But keep looking forward. Better things await.', emotion: 'happy', speaker: 'Prudence' },
+            { text: 'That longing is natural. But faith looks toward a better country — one designed by God.', emotion: 'neutral', speaker: 'Prudence', stat: 'wisdom', amount: 6 },
+            { text: 'Abraham left his homeland too. He looked for a city whose builder and maker is God.', emotion: 'happy', speaker: 'Prudence', stat: 'faith', amount: 3 },
+          ],
+        },
+        {
+          text: 'Honestly, there are moments when I wonder if I chose rightly.',
+          lines: [
+            { text: 'Your honesty is itself a sign that you walk this road seriously.', emotion: 'neutral', speaker: 'Prudence', stat: 'wisdom', amount: 5 },
+            { text: 'Those who are shaken often find their roots grow deeper for it.', emotion: 'determined', speaker: 'Prudence', stat: 'courage', amount: 5 },
           ],
         },
       ],
       repeated: [
-        { text: 'You continue the road of faith. Well done.', emotion: 'happy', stat: 'wisdom', amount: 3 },
+        { text: 'You return. That alone speaks well of you.', emotion: 'happy', stat: 'wisdom', amount: 3 },
       ],
     },
   },

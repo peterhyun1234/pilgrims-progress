@@ -2,7 +2,8 @@ import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
-import { GameState } from '../core/GameEvents';
+import { EventBus } from '../core/EventBus';
+import { GameEvent, GameState } from '../core/GameEvents';
 import { DesignSystem } from '../ui/DesignSystem';
 import { AudioManager } from '../audio/AudioManager';
 
@@ -96,6 +97,7 @@ export class SettingsScene extends Phaser.Scene {
       gm.reduceMotion = motionReduced;
       motionTxt.setText(motionReduced ? 'ON' : 'OFF');
       motionTxt.setColor(motionReduced ? '#66cc66' : '#b0a898');
+      EventBus.getInstance().emit(GameEvent.SAVE_GAME);
     });
 
     y += 32;
@@ -105,16 +107,17 @@ export class SettingsScene extends Phaser.Scene {
     const modes = ['none', 'protanopia', 'deuteranopia', 'tritanopia'] as const;
     const modeLabels = ko
       ? ['없음', '적색맹', '녹색맹', '청색맹']
-      : ['none', 'protanopia', 'deuteranopia', 'tritanopia'];
-    let modeIdx = gm.colorblindMode ? 1 : 0;
+      : ['None', 'Protanopia', 'Deuteranopia', 'Tritanopia'];
+    let modeIdx = Math.max(0, modes.indexOf(gm.colorblindMode));
     const modeTxt = this.add.text(cx + 30, y, modeLabels[modeIdx],
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, modeIdx > 0 ? '#66cc66' : '#b0a898'),
     ).setInteractive({ useHandCursor: true });
     modeTxt.on('pointerdown', () => {
       modeIdx = (modeIdx + 1) % modes.length;
-      gm.colorblindMode = modeIdx > 0;
+      gm.colorblindMode = modes[modeIdx];
       modeTxt.setText(modeLabels[modeIdx]);
       modeTxt.setColor(modeIdx > 0 ? '#66cc66' : '#b0a898');
+      EventBus.getInstance().emit(GameEvent.SAVE_GAME);
     });
 
     y += 44;

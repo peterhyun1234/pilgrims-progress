@@ -1,3 +1,6 @@
+import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
+import { GameManager } from '../core/GameManager';
+
 interface SimpleParticle {
   x: number;
   y: number;
@@ -19,7 +22,14 @@ export class ParticleManager {
     this.graphics = scene.add.graphics().setDepth(40);
   }
 
+  private isReduceMotion(): boolean {
+    try {
+      return ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER).reduceMotion;
+    } catch { return false; }
+  }
+
   emit(type: string, x: number, y: number, count = 5): void {
+    if (this.isReduceMotion()) return;
     for (let i = 0; i < count; i++) {
       if (this.particles.length >= ParticleManager.MAX_PARTICLES) break;
 
@@ -33,6 +43,7 @@ export class ParticleManager {
    * @param x/y - world position to center the ring
    */
   faithGlow(x: number, y: number): void {
+    if (this.isReduceMotion()) return;
     const scene = (this.graphics as unknown as { scene: Phaser.Scene }).scene;
     if (!scene) return;
     const ringObj = { r: 0 };
