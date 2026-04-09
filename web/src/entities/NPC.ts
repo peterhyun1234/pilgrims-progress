@@ -67,6 +67,9 @@ export class NPC extends Entity {
   private patrolTween: Phaser.Tweens.Tween | null = null;
   private patrolPaused = false;
   private patrolIndex = 0;
+  /** Last position used to draw the name badge — avoids redrawing every frame. */
+  private _lastBadgeX = NaN;
+  private _lastBadgeY = NaN;
 
   constructor(scene: Phaser.Scene, config: NPCConfig) {
     // Use generated 32×32 sprite if available; lazy-generate if missing
@@ -310,11 +313,13 @@ export class NPC extends Entity {
     this.glowGraphics = null;
     this.questIndicator?.destroy();
     this.questIndicator = null;
+    this._lastBadgeX = NaN;
+    this._lastBadgeY = NaN;
   }
 
   interact(): void {
     if (this.currentPhase === 'locked') return;
-    this.eventBus.emit('npc_interact', this.npcId);
+    this.eventBus.emit(GameEvent.NPC_INTERACT, this.npcId);
   }
 
   // ─── Patrol ──────────────────────────────────────────────────────────────
@@ -380,7 +385,10 @@ export class NPC extends Entity {
     if (this.nameLabel) {
       this.nameLabel.x = this.sprite.x;
       this.nameLabel.y = this.sprite.y - 14;
-      if (this.nameBadgeGraphics) {
+      if (this.nameBadgeGraphics &&
+          (this.sprite.x !== this._lastBadgeX || this.sprite.y !== this._lastBadgeY)) {
+        this._lastBadgeX = this.sprite.x;
+        this._lastBadgeY = this.sprite.y;
         this.drawNameBadge(this.sprite.x, this.sprite.y - 14, this.nameLabel.width);
       }
     }

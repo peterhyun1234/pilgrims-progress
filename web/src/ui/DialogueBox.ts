@@ -455,7 +455,7 @@ export class DialogueBox {
           cbg.fillStyle(COLORS.UI.GOLD, 0.8);
           cbg.fillRoundedRect(0, 4, 3, choiceH - 8, 1);
           // Update text with arrow prefix
-          txt.setText('▶ ' + (isLocked ? '' : '') + txt.text.replace(/^▶ /, ''));
+          txt.setText('▶ ' + txt.text.replace(/^▶ /, ''));
         });
         hz.on('pointerout', () => {
           cbg.clear();

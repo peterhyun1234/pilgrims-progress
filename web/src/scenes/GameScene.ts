@@ -504,7 +504,9 @@ export class GameScene extends Phaser.Scene {
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5);
     c.add([bg, txt]);
-    const hit = this.add.rectangle(0, 0, 28, 22, 0, 0).setInteractive({ useHandCursor: true });
+    const hit = this.add.rectangle(0, 0, 28, 22, 0, 0)
+      .setInteractive({ useHandCursor: true })
+      .setScrollFactor(0);  // must be set before adding to container so hit area uses screen coords
     hit.on('pointerdown', () => this.openPauseMenu());
     c.add(hit);
     this.pauseBtn = c;
@@ -1494,18 +1496,23 @@ export class GameScene extends Phaser.Scene {
         if (nx >= camL && nx <= camR && ny >= camT && ny <= camB) {
           npc.sprite.setVisible(true);
           npc.update();
-          // Phase 5C: shimmer effect when player walks within 50px of NPC
-          const dist = Math.sqrt((nx - playerX) ** 2 + (ny - playerY) ** 2);
-          if (dist < 50) {
-            const t = this.time.now * 0.003;
-            const shimmerAlpha = 0.3 + Math.sin(t + nx * 0.1) * 0.2;
-            npc.sprite.setTint(Phaser.Display.Color.GetColor(
-              Math.round(0xff + (0xd4 - 0xff) * shimmerAlpha),
-              Math.round(0xff + (0xa8 - 0xff) * shimmerAlpha),
-              0xff,
-            ));
-          } else {
-            npc.sprite.clearTint();
+          // Phase 5C: shimmer effect when player walks within 50px of NPC.
+          // Use squared distance to avoid Math.sqrt per-frame.
+          // Skip locked NPCs — they have their own gray tint that must not be overwritten.
+          const distSq = (nx - playerX) ** 2 + (ny - playerY) ** 2;
+          const npcPhase = this.npcStateManager.getPhase(npc.npcId);
+          if (npcPhase !== 'locked') {
+            if (distSq < 2500) { // 50² = 2500
+              const t = this.time.now * 0.003;
+              const shimmerAlpha = 0.3 + Math.sin(t + nx * 0.1) * 0.2;
+              npc.sprite.setTint(Phaser.Display.Color.GetColor(
+                Math.round(0xff + (0xd4 - 0xff) * shimmerAlpha),
+                Math.round(0xff + (0xa8 - 0xff) * shimmerAlpha),
+                0xff,
+              ));
+            } else {
+              npc.sprite.clearTint();
+            }
           }
         } else {
           npc.sprite.setVisible(false);

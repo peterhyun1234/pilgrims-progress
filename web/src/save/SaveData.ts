@@ -105,19 +105,40 @@ export function migrateSaveData(raw: unknown): SaveData {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const obj: Record<string, any> = { ...(raw as Record<string, unknown>) };
 
+  // v1 → v2: inkState was a string | null, reset it
+  if (!obj['version'] || obj['version'] === 1) {
+    obj['version'] = 2;
+    obj['inkState'] = {};
+  }
+
   // v2 → v3
   if (obj['version'] === 2) {
     obj['version'] = SAVE_VERSION;
-    obj['talkedNpcs'] = {};
-    obj['triggeredEvents'] = [];
-    obj['npcStates'] = {};
-    obj['mapState'] = {};
-    obj['firedTriggers'] = [];
-    // inkState was string | null in v2 — reset to empty Record
-    obj['inkState'] = {};
+    obj['talkedNpcs'] = obj['talkedNpcs'] ?? {};
+    obj['triggeredEvents'] = obj['triggeredEvents'] ?? [];
+    obj['npcStates'] = obj['npcStates'] ?? {};
+    obj['mapState'] = obj['mapState'] ?? {};
+    obj['firedTriggers'] = obj['firedTriggers'] ?? [];
+    // inkState was string | null in some v2 builds — reset to empty Record
+    if (typeof obj['inkState'] !== 'object' || obj['inkState'] === null) {
+      obj['inkState'] = {};
+    }
   }
 
   // Merge with defaults to ensure all required fields exist (forward-compat)
   const defaults = createDefaultSaveData();
-  return { ...defaults, ...obj } as SaveData;
+  const result = { ...defaults, ...obj } as SaveData;
+
+  // Always stamp current version after migration.
+  result.version = SAVE_VERSION;
+
+  // Clamp stats to valid [0, 100] range — guards against corrupted saves.
+  for (const key of ['faith', 'courage', 'wisdom', 'burden'] as StatType[]) {
+    result.stats[key] = Math.max(
+      STATS[key.toUpperCase() as keyof typeof STATS].min,
+      Math.min(STATS[key.toUpperCase() as keyof typeof STATS].max, result.stats[key] ?? defaults.stats[key]),
+    );
+  }
+
+  return result;
 }

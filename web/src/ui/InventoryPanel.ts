@@ -173,7 +173,8 @@ export class InventoryPanel {
     }
 
     const hit = this.scene.add.rectangle(size / 2, size / 2, size, size, 0, 0)
-      .setInteractive({ useHandCursor: true });
+      .setInteractive({ useHandCursor: true })
+      .setScrollFactor(0);  // screen-space UI: hit area must use screen coords
     hit.on('pointerdown', () => {
       this.showItemDetail(def, x, y);
     });

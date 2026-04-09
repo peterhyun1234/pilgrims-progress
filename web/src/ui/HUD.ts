@@ -24,6 +24,8 @@ export class HUD {
   private bars: StatBar[] = [];
   private statsManager: StatsManager;
   private eventBus: EventBus;
+  /** Reusable graphics for the burden bar glow — created once, not per-frame. */
+  private burdenGlowGfx: Phaser.GameObjects.Graphics | null = null;
 
   private static readonly BAR_WIDTH = 76;
   private static readonly BAR_HEIGHT = 8;
@@ -322,15 +324,18 @@ export class HUD {
       const t = this.scene.time.now * 0.004;
       const glowAlpha = 0.06 + Math.sin(t * 2) * 0.04;
       burdenBar.fill.setAlpha(0.85);
-      const trackGfx = this.scene.add.graphics().setScrollFactor(0).setDepth(99);
-      trackGfx.fillStyle(0xff2200, glowAlpha);
+      // Reuse a single graphics object instead of creating+destroying every frame.
+      if (!this.burdenGlowGfx) {
+        this.burdenGlowGfx = this.scene.add.graphics().setScrollFactor(0).setDepth(99);
+      }
+      this.burdenGlowGfx.clear();
+      this.burdenGlowGfx.fillStyle(0xff2200, glowAlpha);
       const bh = HUD.BAR_HEIGHT;
-      trackGfx.fillRoundedRect(
+      this.burdenGlowGfx.fillRoundedRect(
         burdenBar.container.x + this._barX,
         burdenBar.container.y + HUD.ROW_MID - bh / 2 - 1,
         HUD.BAR_WIDTH + 2, bh + 2, 2,
       );
-      this.scene.time.delayedCall(50, () => trackGfx.destroy());
       if (burden >= 80) {
         const shake = Math.sin(t * 2) * 0.8;
         burdenBar.container.y = baseY + shake;
@@ -349,6 +354,10 @@ export class HUD {
       burdenBar.fill.setAlpha(0.85);
       burdenBar.container.y = baseY;
       burdenBar.icon.clearTint();
+      // Hide the glow when burden is below threshold.
+      if (this.burdenGlowGfx) {
+        this.burdenGlowGfx.clear();
+      }
     }
   }
 
@@ -356,6 +365,8 @@ export class HUD {
     this.eventBus.off(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.off(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
     this.eventBus.off(GameEvent.CHAPTER_CHANGED, this.onChapterLoaded);
+    this.burdenGlowGfx?.destroy();
+    this.burdenGlowGfx = null;
     this.container.destroy(true);
   }
 }

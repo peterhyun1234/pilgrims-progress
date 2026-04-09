@@ -105,6 +105,13 @@ export class StatsManager {
     const oldValue = this.stats.burden;
     this.stats.burden = 0;
     this.burdenFreed = true;
+    // Emit STAT_CHANGED so the HUD bar animates to 0.
+    this.eventBus.emit(GameEvent.STAT_CHANGED, {
+      stat: 'burden' as StatType,
+      amount: -oldValue,
+      newValue: 0,
+      oldValue,
+    } as StatChangePayload);
     this.eventBus.emit(GameEvent.BURDEN_CHANGED, 0);
     if (oldValue > 0) {
       this.eventBus.emit(GameEvent.BURDEN_RELEASED);

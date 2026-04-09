@@ -42,7 +42,9 @@ export class DialogueManager {
   private advance(): void {
     if (!this.isActive) return;
 
-    if (this.inkService.canContinue()) {
+    // Use a loop instead of recursion to skip consecutive empty Ink lines
+    // without risking a stack overflow in long or malformed stories.
+    while (this.isActive && this.inkService.canContinue()) {
       const result = this.inkService.continue();
       if (!result) return;
 
@@ -81,10 +83,12 @@ export class DialogueManager {
           tags: result.tags,
         };
         this.eventBus.emit(GameEvent.DIALOGUE_LINE, payload);
-      } else {
-        this.advance();
+        return; // Wait for player to advance
       }
-    } else if (this.inkService.hasChoices()) {
+      // Empty line: continue loop to process next Ink line
+    }
+
+    if (this.inkService.hasChoices()) {
       const choices = this.inkService.getChoices();
       const payload: DialogueChoicePayload = {
         choices: choices.map(c => ({
