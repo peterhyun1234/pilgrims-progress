@@ -13,6 +13,7 @@ export class EnvironmentAnimations {
   private animLayer: Phaser.GameObjects.Graphics | null = null;
   private elapsed = 0;
   private config: ChapterConfig | null = null;
+  private _frameTick = 0;
 
   // Particle pools for floating effects
   private floatingParticles: Array<{ x: number; y: number; vy: number; alpha: number; color: number; size: number }> = [];
@@ -41,17 +42,24 @@ export class EnvironmentAnimations {
     if (!this.animLayer || !this.config) return;
     this.elapsed += delta;
     this.particleTimer += delta;
+    this._frameTick++;
 
     this.animLayer.clear();
 
     // Skip all animated FX when reduce motion is enabled
     if (this.isReduceMotion()) return;
 
+    // Water ripples and grass sway are subtly animated — render every frame.
     this.drawWaterRipples();
-    this.drawTorchFlicker();
-    this.updateFloatingParticles(delta);
     this.drawGrassSway();
-    this.drawChapterAtmosphere();
+    // Floating particles must advance each frame for smooth motion.
+    this.updateFloatingParticles(delta);
+    // Torch flicker and chapter atmosphere are complex multi-loop draws.
+    // Half-rate is imperceptible at 60fps and saves ~10 draw calls per frame.
+    if (this._frameTick % 2 === 0) {
+      this.drawTorchFlicker();
+      this.drawChapterAtmosphere();
+    }
   }
 
   // ── Water ripples ─────────────────────────────────────────────────────────

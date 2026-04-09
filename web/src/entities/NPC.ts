@@ -55,6 +55,7 @@ export class NPC extends Entity {
   private bobPhase: number;
   private glowGraphics: Phaser.GameObjects.Graphics | null = null;
   private currentPhase: NpcPhase = 'available';
+  private _frameTick = 0;
 
   private behavior: NPCBehavior | undefined;
   private behaviorGraphics: Phaser.GameObjects.Graphics | null = null;
@@ -348,7 +349,7 @@ export class NPC extends Entity {
     if (this.nameLabel) {
       this.nameLabel.x = this.sprite.x;
       this.nameLabel.y = this.sprite.y - 14;
-      if (this.nameBadgeGraphics) {
+      if (this.nameBadgeGraphics && this._frameTick % 3 === 0) {
         this.drawNameBadge(this.sprite.x, this.sprite.y - 14, this.nameLabel.width);
       }
     }
@@ -356,7 +357,10 @@ export class NPC extends Entity {
       this.completedBadge.x = this.sprite.x;
       this.completedBadge.y = this.sprite.y - 20;
     }
+    this._frameTick++;
     if (this.glowGraphics) {
+      // Throttle glow redraw to every other frame — pulsing at 30fps is imperceptible.
+      if (this._frameTick % 2 !== 0) return;
       this.glowGraphics.clear();
       // Skip glow for completed/idle NPCs
       if (this.currentPhase === 'completed' || this.currentPhase === 'idle') return;

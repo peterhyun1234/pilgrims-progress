@@ -103,6 +103,8 @@ export class GameScene extends Phaser.Scene {
   private exitArrowGfx: Phaser.GameObjects.Graphics | null = null;
   /** True once we've confirmed chapter requirements are met this chapter. */
   private chapterComplete = false;
+  /** Incremented each update(); used for frame-throttled draw calls. */
+  private _frameTick = 0;
   /** Cutscene engine for key emotional scenes. */
   private cutsceneEngine!: CutsceneEngine;
   private environmentAnimations!: EnvironmentAnimations;
@@ -1021,9 +1023,10 @@ export class GameScene extends Phaser.Scene {
 
   /**
    * Draws animated gold arrows over exit zones when chapter requirements are met.
-   * Uses a pulsing glow + bouncing triangle drawn each frame.
+   * Throttled to every other frame — animation is slow enough to be imperceptible.
    */
   private updateExitArrows(): void {
+    if (this._frameTick % 2 !== 0) return; // half-rate redraw
     const config = this.chapterManager.getCurrentConfig();
     if (!config?.exits?.length) return;
 
@@ -1512,6 +1515,7 @@ export class GameScene extends Phaser.Scene {
     if (this.gameManager.isState(GameState.PAUSE) ||
         this.gameManager.isState(GameState.INVENTORY)) return;
 
+    this._frameTick++;
     this.updateAmbientParticles();
 
     if (this.gameManager.isState(GameState.DIALOGUE) || this.gameManager.isState(GameState.CUTSCENE)) {
@@ -1565,8 +1569,9 @@ export class GameScene extends Phaser.Scene {
         npc.sprite.setVisible(true);
         npc.update();
         // Phase 5C: shimmer effect when player walks within 50px of NPC
-        const dist = Math.sqrt((nx - playerX) ** 2 + (ny - playerY) ** 2);
-        if (dist < 50) {
+        // Use squared distance to avoid per-NPC sqrt each frame.
+        const distSq = (nx - playerX) ** 2 + (ny - playerY) ** 2;
+        if (distSq < 2500 /* 50² */) {
           const t = this.time.now * 0.003;
           const shimmerAlpha = 0.3 + Math.sin(t + nx * 0.1) * 0.2;
           npc.sprite.setTint(Phaser.Display.Color.GetColor(
