@@ -735,13 +735,20 @@ export class TileMapManager {
     const theme = config.theme;
     if (theme.fogAlpha <= 0) return;
 
-    for (let i = 0; i < 8; i++) {
+    // Use a subtle purple-tinted fog instead of pure black/grey
+    // so unvisited areas feel mysterious rather than flat.
+    const fogTint = theme.fogColor !== 0x000000 ? theme.fogColor : 0x1a0a2e;
+
+    for (let i = 0; i < 10; i++) {
       const hash = (i * 127 + config.chapter * 37) & 0xffff;
       const fx = (hash % config.mapWidth);
       const fy = ((hash * 3) % config.mapHeight);
-      const fr = 40 + (hash % 60);
-      this.fogLayer.fillStyle(theme.fogColor, theme.fogAlpha * (0.5 + (hash % 5) * 0.1));
+      const fr = 50 + (hash % 70);
+      // Layered fog: outer soft ring + inner denser ring
+      this.fogLayer.fillStyle(fogTint, theme.fogAlpha * (0.30 + (hash % 5) * 0.08));
       this.fogLayer.fillCircle(fx, fy, fr);
+      this.fogLayer.fillStyle(fogTint, theme.fogAlpha * (0.45 + (hash % 3) * 0.08));
+      this.fogLayer.fillCircle(fx, fy, fr * 0.55);
     }
   }
 
@@ -784,16 +791,58 @@ export class TileMapManager {
       }
       case 6: {
         const cx = config.mapWidth / 2;
-        const cy = 120;
-        this.objectLayer.fillStyle(0x8b7355, 0.9);
-        this.objectLayer.fillRect(cx - 4, cy - 40, 8, 80);
-        this.objectLayer.fillRect(cx - 20, cy - 30, 40, 8);
-        this.objectLayer.fillStyle(0xd4a853, 0.2);
-        this.objectLayer.fillCircle(cx, cy - 20, 25);
-        this.objectLayer.fillStyle(0xffd700, 0.1);
-        this.objectLayer.fillCircle(cx, cy - 20, 35);
-        this.objectLayer.fillStyle(0xffeedd, 0.05);
-        this.objectLayer.fillCircle(cx, cy - 20, 50);
+        const cy = 100;
+        // Hill leading up to cross
+        this.objectLayer.fillStyle(0x1a1030, 0.6);
+        this.objectLayer.fillTriangle(cx - 80, cy + 60, cx, cy + 5, cx + 80, cy + 60);
+        this.objectLayer.fillStyle(0x1e1438, 0.4);
+        this.objectLayer.fillTriangle(cx - 60, cy + 60, cx, cy + 10, cx + 60, cy + 60);
+        // Outer radiance halos (multi-layered glow)
+        const haloLevels = [
+          { r: 80, a: 0.025 }, { r: 62, a: 0.05 }, { r: 48, a: 0.09 },
+          { r: 35, a: 0.15 },  { r: 24, a: 0.22 }, { r: 14, a: 0.35 },
+        ];
+        haloLevels.forEach(({ r, a }) => {
+          this.objectLayer!.fillStyle(0xffd700, a);
+          this.objectLayer!.fillEllipse(cx, cy - 10, r * 2, r * 1.2);
+        });
+        // Cross beam shadow (subtle depth)
+        this.objectLayer.fillStyle(0x000000, 0.3);
+        this.objectLayer.fillRect(cx - 4 + 2, cy - 45 + 2, 8, 90);
+        this.objectLayer.fillRect(cx - 22 + 2, cy - 30 + 2, 44, 9);
+        // Cross main body (dark wood texture)
+        this.objectLayer.fillStyle(0x4a2e10, 0.95);
+        this.objectLayer.fillRect(cx - 4, cy - 45, 8, 90);
+        this.objectLayer.fillRect(cx - 22, cy - 30, 44, 9);
+        // Cross edge highlight (golden rim)
+        this.objectLayer.lineStyle(1, 0xffd700, 0.5);
+        this.objectLayer.strokeRect(cx - 4, cy - 45, 8, 90);
+        this.objectLayer.strokeRect(cx - 22, cy - 30, 44, 9);
+        // Bright core glow at intersection
+        this.objectLayer.fillStyle(0xffffff, 0.18);
+        this.objectLayer.fillCircle(cx, cy - 25, 8);
+        this.objectLayer.fillStyle(0xffd700, 0.35);
+        this.objectLayer.fillCircle(cx, cy - 25, 5);
+        this.objectLayer.fillStyle(0xffffff, 0.5);
+        this.objectLayer.fillCircle(cx, cy - 25, 2);
+        // 8 radiating light beams
+        for (let beam = 0; beam < 8; beam++) {
+          const angle = (beam / 8) * Math.PI * 2;
+          const bLen = 55;
+          this.objectLayer.fillStyle(0xffd700, 0.04 - (beam % 2) * 0.01);
+          this.objectLayer.fillTriangle(
+            cx, cy - 25,
+            cx + Math.cos(angle - 0.12) * bLen, cy - 25 + Math.sin(angle - 0.12) * bLen,
+            cx + Math.cos(angle + 0.12) * bLen, cy - 25 + Math.sin(angle + 0.12) * bLen,
+          );
+        }
+        // Ground path stones leading to hill
+        for (let s = 0; s < 5; s++) {
+          const stoneX = cx - 20 + s * 10;
+          const stoneY = cy + 55;
+          this.objectLayer.fillStyle(0x7a6a5a, 0.5);
+          this.objectLayer.fillEllipse(stoneX, stoneY, 8, 4);
+        }
         break;
       }
 
@@ -1081,46 +1130,102 @@ export class TileMapManager {
           this.objectLayer.fillStyle(0xaaaaaa, 0.3);
           this.objectLayer.fillEllipse(stoneX - 3, H12 / 2 + 7, 12, 5);
         }
-        // Zone 3: Celestial City gates (x:2000-3000)
-        const gateX12 = 2200;
-        const gateY12 = 40;
-        // Gate arch columns
-        this.objectLayer.fillStyle(0xffd700, 0.8);
-        this.objectLayer.fillRect(gateX12 - 60, gateY12, 12, 140);
-        this.objectLayer.fillRect(gateX12 + 48, gateY12, 12, 140);
-        // Arch top
-        this.objectLayer.fillStyle(0xffd700, 0.7);
-        this.objectLayer.fillRect(gateX12 - 60, gateY12, 120, 12);
-        this.objectLayer.fillCircle(gateX12, gateY12, 60);
-        // Inner arch glow
-        this.objectLayer.fillStyle(0xffffff, 0.1);
-        this.objectLayer.fillCircle(gateX12, gateY12, 45);
-        this.objectLayer.fillStyle(0xfffacc, 0.06);
-        this.objectLayer.fillCircle(gateX12, gateY12, 70);
-        // Radiating light beams
-        for (let beam = 0; beam < 8; beam++) {
-          const angle = (beam / 8) * Math.PI * 2;
-          const bLen = 100;
-          this.objectLayer.fillStyle(0xffd700, 0.04);
+        // Zone 3: Celestial City gates (x:2000-3000) — grand pearl gates
+        const gateX12 = 2250;
+        const gateY12 = H12 / 2 - 20;
+        // Sweeping radiance halos behind gate
+        const halo12 = [
+          { r: 180, a: 0.018 }, { r: 140, a: 0.03 }, { r: 110, a: 0.05 },
+          { r: 85,  a: 0.08 },  { r: 65,  a: 0.13 }, { r: 45,  a: 0.20 },
+        ];
+        halo12.forEach(({ r, a }) => {
+          this.objectLayer!.fillStyle(0xffd700, a);
+          this.objectLayer!.fillEllipse(gateX12, gateY12 - 40, r * 2.2, r * 1.4);
+        });
+        // 12 radiating beams (12 gates of the holy city)
+        for (let beam = 0; beam < 12; beam++) {
+          const angle = (beam / 12) * Math.PI * 2;
+          const bLen = 160;
+          this.objectLayer.fillStyle(0xffd700, 0.025 + (beam % 3 === 0 ? 0.01 : 0));
           this.objectLayer.fillTriangle(
-            gateX12, gateY12,
-            gateX12 + Math.cos(angle - 0.15) * bLen,
-            gateY12 + Math.sin(angle - 0.15) * bLen,
-            gateX12 + Math.cos(angle + 0.15) * bLen,
-            gateY12 + Math.sin(angle + 0.15) * bLen,
+            gateX12, gateY12 - 40,
+            gateX12 + Math.cos(angle - 0.1) * bLen, gateY12 - 40 + Math.sin(angle - 0.1) * bLen,
+            gateX12 + Math.cos(angle + 0.1) * bLen, gateY12 - 40 + Math.sin(angle + 0.1) * bLen,
           );
         }
-        // Golden road leading to gate
-        this.objectLayer.fillStyle(0xffd700, 0.12);
-        this.objectLayer.fillRect(2000, H12 / 2 - 15, 300, 30);
-        this.objectLayer.fillStyle(0xffd700, 0.08);
-        this.objectLayer.fillRect(1800, H12 / 2 - 20, 200, 40);
-        // Shining Ones near gate
-        for (const soX of [2080, 2330]) {
+        // Gate columns (pearl-white with gold trim)
+        const colH = 140;
+        const colY = gateY12 - colH;
+        for (const colX of [gateX12 - 62, gateX12 + 50]) {
+          // Pearl column body
+          this.objectLayer.fillStyle(0xfafaf8, 0.85);
+          this.objectLayer.fillRect(colX, colY, 12, colH);
+          // Gold capital
+          this.objectLayer.fillStyle(0xffd700, 0.75);
+          this.objectLayer.fillRect(colX - 3, colY - 5, 18, 7);
+          this.objectLayer.fillRect(colX - 2, colY + colH, 16, 5);
+          // Column flute highlights
           this.objectLayer.fillStyle(0xffffff, 0.2);
-          this.objectLayer.fillCircle(soX, H12 / 2 - 15, 8);
-          this.objectLayer.fillStyle(0xffd700, 0.15);
-          this.objectLayer.fillCircle(soX, H12 / 2 - 20, 12);
+          this.objectLayer.fillRect(colX + 3, colY + 5, 2, colH - 10);
+          this.objectLayer.fillRect(colX + 7, colY + 5, 1, colH - 10);
+        }
+        // Grand arch header
+        this.objectLayer.fillStyle(0xffd700, 0.8);
+        this.objectLayer.fillRect(gateX12 - 62, colY - 2, 124, 10);
+        // Arch crown (full circle)
+        this.objectLayer.fillStyle(0xffd700, 0.55);
+        this.objectLayer.fillCircle(gateX12, colY, 62);
+        this.objectLayer.fillStyle(0xfff8e0, 0.3);
+        this.objectLayer.fillCircle(gateX12, colY, 50);
+        // Inner pearl gate opening
+        this.objectLayer.fillStyle(0xffffff, 0.12);
+        this.objectLayer.fillCircle(gateX12, colY, 42);
+        this.objectLayer.fillStyle(0xffffee, 0.25);
+        this.objectLayer.fillRect(gateX12 - 25, colY, 50, colH);
+        // Gate cross motif
+        this.objectLayer.fillStyle(0xffd700, 0.6);
+        this.objectLayer.fillRect(gateX12 - 2, colY + 15, 4, 50);
+        this.objectLayer.fillRect(gateX12 - 12, colY + 28, 24, 4);
+        // Pearl floor
+        this.objectLayer.fillStyle(0xfafaf8, 0.15);
+        this.objectLayer.fillRect(gateX12 - 62, gateY12, 124, 8);
+        // Golden road leading to gate (textured segments)
+        for (let seg = 0; seg < 8; seg++) {
+          const segX = 1920 + seg * 40;
+          this.objectLayer.fillStyle(0xffd700, 0.08 + seg * 0.012);
+          this.objectLayer.fillRect(segX, H12 / 2 - 12, 38, 24);
+          // Road edge highlights
+          this.objectLayer.fillStyle(0xffd700, 0.15 + seg * 0.02);
+          this.objectLayer.fillRect(segX, H12 / 2 - 12, 38, 2);
+          this.objectLayer.fillRect(segX, H12 / 2 + 10, 38, 2);
+        }
+        // Broader approach road
+        this.objectLayer.fillStyle(0xffd700, 0.05);
+        this.objectLayer.fillRect(1700, H12 / 2 - 18, 220, 36);
+        // Shining Ones flanking the road (4 welcoming figures)
+        for (const [soX, soY] of [[2080, H12 / 2 - 18], [2140, H12 / 2 + 5], [2340, H12 / 2 - 18], [2390, H12 / 2 + 5]]) {
+          // Bright halo
+          this.objectLayer.fillStyle(0xffd700, 0.2);
+          this.objectLayer.fillCircle(soX, soY - 8, 10);
+          this.objectLayer.fillStyle(0xffffff, 0.3);
+          this.objectLayer.fillCircle(soX, soY - 8, 6);
+          // Body glow
+          this.objectLayer.fillStyle(0xffffff, 0.2);
+          this.objectLayer.fillEllipse(soX, soY + 2, 8, 16);
+          // Wing hint
+          this.objectLayer.fillStyle(0xffffff, 0.12);
+          this.objectLayer.fillEllipse(soX - 6, soY, 10, 6);
+          this.objectLayer.fillEllipse(soX + 6, soY, 10, 6);
+        }
+        // Celestial city walls extending from gate
+        this.objectLayer.fillStyle(0xffd700, 0.12);
+        this.objectLayer.fillRect(gateX12 + 62, colY, 300, colH);
+        this.objectLayer.fillRect(gateX12 - 362, colY, 300, colH);
+        // Wall battlements
+        for (let w = 0; w < 12; w++) {
+          this.objectLayer.fillStyle(0xffd700, 0.2);
+          this.objectLayer.fillRect(gateX12 + 62 + w * 26, colY - 8, 14, 10);
+          this.objectLayer.fillRect(gateX12 - 362 + w * 26, colY - 8, 14, 10);
         }
         break;
       }

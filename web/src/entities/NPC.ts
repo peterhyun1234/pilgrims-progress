@@ -16,7 +16,10 @@ export type NPCBehavior =
   | 'pace'      // Anxious back-and-forth faster than patrol
   | 'cower'     // Reduced scale + shiver
   | 'guard'     // No bob, directional scan sweep
-  | 'merchant'; // Beckoning hand gesture + '!' emote loop
+  | 'merchant'  // Beckoning hand gesture + '!' emote loop
+  | 'angelic'   // Floating hover + radiant halo pulse (Shining Ones)
+  | 'welcome'   // Open-arm gentle sway + warm glow (Palace sisters)
+  | 'judge';    // Imposing stillness + authority aura (Lord Hategood)
 
 export interface NPCConfig {
   id: string;
@@ -49,14 +52,13 @@ export class NPC extends Entity {
   private nameLabel: Phaser.GameObjects.Text | null = null;
   private nameBadgeGraphics: Phaser.GameObjects.Graphics | null = null;
   private completedBadge: Phaser.GameObjects.Text | null = null;
-  private questIndicator: Phaser.GameObjects.Graphics | null = null;
   private isPromptVisible = false;
   private baseY = 0;
   private baseYInit = false;
   private bobPhase: number;
   private glowGraphics: Phaser.GameObjects.Graphics | null = null;
   private currentPhase: NpcPhase = 'available';
-  private chapter: number;
+  private _frameTick = 0;
 
   private behavior: NPCBehavior | undefined;
   private behaviorGraphics: Phaser.GameObjects.Graphics | null = null;
@@ -67,9 +69,6 @@ export class NPC extends Entity {
   private patrolTween: Phaser.Tweens.Tween | null = null;
   private patrolPaused = false;
   private patrolIndex = 0;
-  /** Last position used to draw the name badge — avoids redrawing every frame. */
-  private _lastBadgeX = NaN;
-  private _lastBadgeY = NaN;
 
   constructor(scene: Phaser.Scene, config: NPCConfig) {
     // Use generated 32×32 sprite if available; lazy-generate if missing
@@ -87,7 +86,6 @@ export class NPC extends Entity {
     this.npcId = config.id;
     this.nameKo = config.nameKo;
     this.nameEn = config.nameEn;
-    this.chapter = config.chapter;
     this.eventBus = EventBus.getInstance();
     this.bobPhase = Math.random() * Math.PI * 2;
     this.patrolSpeed = config.patrolSpeed ?? 20;
@@ -163,14 +161,6 @@ export class NPC extends Entity {
     }
   }
 
-  /** Returns chapter-specific NPC aura color. */
-  private getChapterAuraColor(): number {
-    if (this.chapter === 12) return 0xffd700; // Celestial: golden
-    if (this.chapter === 7)  return 0xff2200; // Valley of Death: ominous red
-    if (this.chapter === 10) return 0x66aaff; // Delectable Mts: soft blue
-    return COLORS.UI.GOLD;
-  }
-
   private showCompletedBadge(): void {
     if (this.completedBadge) return;
     this.completedBadge = this.scene.add.text(
@@ -197,36 +187,35 @@ export class NPC extends Entity {
     if (this.currentPhase === 'locked') return;
     this.isPromptVisible = true;
 
-    const isIdlePhase = this.currentPhase === 'completed' || this.currentPhase === 'idle';
-    const isAvailable = this.currentPhase === 'available';
-
     this.prompt = this.scene.add.container(
       this.sprite.x, this.sprite.y + NPC_CONFIG.PROMPT_OFFSET_Y - 12,
     ).setDepth(20);
 
-    // 3-layer glow orb prompt (HEAD approach, more polished)
     // Completed NPCs show a dimmed orb instead of pulsing interaction orb
+    const isIdlePhase = this.currentPhase === 'completed' || this.currentPhase === 'idle';
+
+    // 3-layer glow orb prompt
     const bg = this.scene.add.graphics();
     if (!isIdlePhase) {
-      // Outer soft glow
-      bg.fillStyle(COLORS.UI.GOLD, 0.20);
-      bg.fillCircle(0, 0, 12);
+      // Outer soft glow (more visible — 0.12 → 0.22)
+      bg.fillStyle(COLORS.UI.GOLD, 0.22);
+      bg.fillCircle(0, 0, 10);
       // Mid ring
-      bg.fillStyle(COLORS.UI.GOLD, 0.40);
-      bg.fillCircle(0, 0, 8);
-      // Core bright gold
-      bg.fillStyle(0xffd080, 1.0);
-      bg.fillCircle(0, 0, 5);
+      bg.fillStyle(COLORS.UI.GOLD, 0.28);
+      bg.fillCircle(0, 0, 7);
+      // Core bright
+      bg.fillStyle(0xffd080, 0.9);
+      bg.fillCircle(0, 0, 4);
       // Gold border
-      bg.lineStyle(1.5, 0xffcc44, 0.9);
-      bg.strokeCircle(0, 0, 8);
+      bg.lineStyle(1, COLORS.UI.GOLD, 0.7);
+      bg.strokeCircle(0, 0, 7);
       // Inner sparkle cross
-      bg.lineStyle(1.5, 0xffffff, 0.8);
+      bg.lineStyle(1, 0xffffff, 0.6);
       bg.lineBetween(-3, 0, 3, 0);
       bg.lineBetween(0, -3, 0, 3);
     } else {
       // Dimmed dot for completed phase
-      bg.fillStyle(COLORS.UI.PANEL, 0.85);
+      bg.fillStyle(COLORS.UI.PANEL, 0.7);
       bg.fillRoundedRect(-7, -5, 14, 10, 3);
       bg.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
       bg.strokeRoundedRect(-7, -5, 14, 10, 3);
@@ -244,8 +233,8 @@ export class NPC extends Entity {
       this.sprite.x, this.sprite.y - 14,
       displayName, {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-        color: isAvailable ? '#ffcc44' : '#e8e0d0', fontFamily: FONT_FAMILY, fontStyle: 'bold',
-        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 2, stroke: true, fill: true },
+        color: '#d0c8b0', fontFamily: FONT_FAMILY, fontStyle: 'bold',
+        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 1, stroke: true, fill: true },
       },
     ).setOrigin(0.5).setDepth(20);
     this.nameLabel = nameLabelObj;
@@ -256,47 +245,29 @@ export class NPC extends Entity {
 
     // Only pulse the '!' for available/active NPCs
     if (!isIdlePhase) {
-      // Vertical bob tween
       this.scene.tweens.add({
         targets: this.prompt,
         y: this.sprite.y + NPC_CONFIG.PROMPT_OFFSET_Y - 16,
-        duration: isAvailable ? 450 : 650,
-        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-      });
-      // Scale pulse tween for more prominent animation
-      this.scene.tweens.add({
-        targets: this.prompt,
-        scaleX: isAvailable ? 1.3 : 1.15,
-        scaleY: isAvailable ? 1.3 : 1.15,
-        duration: isAvailable ? 400 : 600,
-        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-        delay: isAvailable ? 100 : 150,
+        duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
       });
     }
 
     this.glowGraphics = this.scene.add.graphics().setDepth(7);
-    // Chapter-specific aura color — initial draw; updated each frame in update()
-    const initAuraColor = this.getChapterAuraColor();
-    const initRadius = isAvailable ? 26 : 20;
-    // Stronger initial glow so the NPC is immediately visible as interactable
-    this.glowGraphics.fillStyle(initAuraColor, 0.12);
-    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, initRadius + 12);
-    this.glowGraphics.fillStyle(initAuraColor, 0.22);
-    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, initRadius + 2);
-    this.glowGraphics.fillStyle(initAuraColor, 0.38);
-    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, initRadius * 0.65);
+    // Initial draw — updated each frame in update()
+    this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.12);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 28);
+    this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.28);
+    this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 18);
   }
 
   private drawNameBadge(x: number, y: number, textWidth: number): void {
     if (!this.nameBadgeGraphics) return;
     this.nameBadgeGraphics.clear();
-    const nw = textWidth + 12;
-    const nh = 14;
-    // Stronger background for better readability
-    this.nameBadgeGraphics.fillStyle(0x050210, 0.92);
+    const nw = textWidth + 10;
+    const nh = 13;
+    this.nameBadgeGraphics.fillStyle(0x0a0814, 0.72);
     this.nameBadgeGraphics.fillRoundedRect(x - nw / 2, y - nh / 2, nw, nh, 4);
-    // More visible border
-    this.nameBadgeGraphics.lineStyle(1, COLORS.UI.GOLD, 0.65);
+    this.nameBadgeGraphics.lineStyle(0.5, COLORS.UI.GOLD, 0.4);
     this.nameBadgeGraphics.strokeRoundedRect(x - nw / 2, y - nh / 2, nw, nh, 4);
   }
 
@@ -311,10 +282,6 @@ export class NPC extends Entity {
     this.nameBadgeGraphics = null;
     this.glowGraphics?.destroy();
     this.glowGraphics = null;
-    this.questIndicator?.destroy();
-    this.questIndicator = null;
-    this._lastBadgeX = NaN;
-    this._lastBadgeY = NaN;
   }
 
   interact(): void {
@@ -385,10 +352,7 @@ export class NPC extends Entity {
     if (this.nameLabel) {
       this.nameLabel.x = this.sprite.x;
       this.nameLabel.y = this.sprite.y - 14;
-      if (this.nameBadgeGraphics &&
-          (this.sprite.x !== this._lastBadgeX || this.sprite.y !== this._lastBadgeY)) {
-        this._lastBadgeX = this.sprite.x;
-        this._lastBadgeY = this.sprite.y;
+      if (this.nameBadgeGraphics && this._frameTick % 3 === 0) {
         this.drawNameBadge(this.sprite.x, this.sprite.y - 14, this.nameLabel.width);
       }
     }
@@ -396,24 +360,24 @@ export class NPC extends Entity {
       this.completedBadge.x = this.sprite.x;
       this.completedBadge.y = this.sprite.y - 20;
     }
+    this._frameTick++;
     if (this.glowGraphics) {
+      // Throttle glow redraw to every other frame — pulsing at 30fps is imperceptible.
+      if (this._frameTick % 2 !== 0) return;
       this.glowGraphics.clear();
-      // Chapter-specific aura color with visible double-layer bloom effect
-      const auraColor = this.getChapterAuraColor();
-      const isAvailablePhase = this.currentPhase === 'available';
-      // Stronger base alpha so the glow is actually visible in the game world
-      const baseAlpha = this.chapter === 7 ? 0.14 : (this.chapter === 12 ? 0.18 : 0.10);
-      const pulse = baseAlpha + Math.sin(t * 2) * 0.05;
-      const pulseRadius = (isAvailablePhase ? 26 : 20) + Math.sin(t * 1.5) * 3;
-      // Far outer halo (very soft, wide)
-      this.glowGraphics.fillStyle(auraColor, Math.max(0, pulse) * 0.35);
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius + 10);
+      // Skip glow for completed/idle NPCs
+      if (this.currentPhase === 'completed' || this.currentPhase === 'idle') return;
+      // Pulsing triple-layer bloom: outer (0.10-0.22), mid (0.25-0.45), inner (0.50-0.75)
+      const pulse = 0.5 + Math.sin(t * 2.2) * 0.5; // 0..1 normalised
+      // Wide outer aura
+      this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.10 + pulse * 0.12);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 32);
       // Mid ring
-      this.glowGraphics.fillStyle(auraColor, Math.max(0, pulse));
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius + 2);
+      this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.25 + pulse * 0.20);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 20);
       // Inner bright core
-      this.glowGraphics.fillStyle(auraColor, Math.min(0.55, pulse + 0.22));
-      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, pulseRadius * 0.65);
+      this.glowGraphics.fillStyle(COLORS.UI.GOLD, 0.50 + pulse * 0.25);
+      this.glowGraphics.fillCircle(this.sprite.x, this.sprite.y, 10);
     }
   }
 
@@ -535,6 +499,80 @@ export class NPC extends Entity {
         this.behaviorGraphics.fillCircle(sx + 10, sy - 14, 1.5);
         break;
       }
+
+      case 'angelic': {
+        // Celestial floating — override Y with hover offset
+        const hoverY = Math.sin(t * 1.2) * 2.5;
+        this.sprite.y = this.baseY + hoverY;
+        // Radiant halo ring above head
+        const haloPulse = 0.5 + Math.sin(t * 2.0) * 0.35;
+        this.behaviorGraphics.lineStyle(1.5, 0xffd700, haloPulse);
+        this.behaviorGraphics.strokeEllipse(sx, sy - 20, 16, 5);
+        this.behaviorGraphics.lineStyle(0.8, 0xffffff, haloPulse * 0.5);
+        this.behaviorGraphics.strokeEllipse(sx, sy - 20, 13, 4);
+        // Soft gold body glow
+        const bodyGlow = 0.06 + Math.sin(t * 1.6) * 0.03;
+        this.behaviorGraphics.fillStyle(0xffd700, bodyGlow);
+        this.behaviorGraphics.fillCircle(sx, sy, 18);
+        // Rising light motes — 3 drifting particles
+        for (let m = 0; m < 3; m++) {
+          const mPhase = (t * 0.7 + m * 2.09) % (Math.PI * 2);
+          const mX = sx + Math.cos(mPhase + m) * 10;
+          const mY = sy - 10 - ((t * 20 + m * 15) % 30);
+          const mA = (1 - ((t * 20 + m * 15) % 30) / 30) * 0.5;
+          this.behaviorGraphics.fillStyle(0xffd700, mA);
+          this.behaviorGraphics.fillCircle(mX, mY, 1);
+        }
+        break;
+      }
+
+      case 'welcome': {
+        // Open-arm gentle sway — welcoming pose
+        const swayAmp = Math.sin(t * 0.9) * 0.04;
+        this.sprite.setScale(1 + swayAmp, 1);
+        // Warm soft glow radiating outward
+        const warmPulse = 0.04 + Math.sin(t * 1.3) * 0.02;
+        this.behaviorGraphics.fillStyle(0xff9966, warmPulse);
+        this.behaviorGraphics.fillCircle(sx, sy - 4, 16);
+        this.behaviorGraphics.fillStyle(0xffdd88, warmPulse * 0.5);
+        this.behaviorGraphics.fillCircle(sx, sy - 4, 22);
+        // Small floating hearts — subtle, not kitsch
+        const heartCycle = t % 4;
+        if (heartCycle < 1.5) {
+          const ha = Math.sin(heartCycle / 1.5 * Math.PI) * 0.25;
+          const hy = sy - 22 - heartCycle * 6;
+          this.behaviorGraphics.fillStyle(0xff8899, ha);
+          this.behaviorGraphics.fillCircle(sx - 2, hy, 1.5);
+          this.behaviorGraphics.fillCircle(sx + 2, hy, 1.5);
+          this.behaviorGraphics.fillTriangle(sx - 3, hy + 1, sx, hy + 4, sx + 3, hy + 1);
+        }
+        break;
+      }
+
+      case 'judge': {
+        // Imposing stillness — minimal movement, authority aura
+        this.sprite.setScale(1, 1); // no bob override; handled by base bob = 0.5
+        // Dark authority emanation — deep crimson ground shadow
+        const judgePulse = 0.06 + Math.sin(t * 0.8) * 0.03;
+        this.behaviorGraphics.fillStyle(0x660000, judgePulse);
+        this.behaviorGraphics.fillEllipse(sx, sy + 10, 30, 8);
+        this.behaviorGraphics.fillStyle(0xaa2200, judgePulse * 0.4);
+        this.behaviorGraphics.fillEllipse(sx, sy + 10, 46, 12);
+        // Subtle dark motes drifting downward (inverted prayer)
+        for (let m = 0; m < 2; m++) {
+          const mY = sy + ((t * 15 + m * 20) % 35);
+          const mA = (1 - ((t * 15 + m * 20) % 35) / 35) * 0.2;
+          this.behaviorGraphics.fillStyle(0x440000, mA);
+          this.behaviorGraphics.fillCircle(sx + (m === 0 ? -5 : 5), mY, 1);
+        }
+        // Occasional gavel-like emphasis: scale pulse on a slow beat
+        const judgeBeat = t % 3;
+        if (judgeBeat < 0.15) {
+          const beatPulse = Math.sin(judgeBeat / 0.15 * Math.PI) * 0.06;
+          this.sprite.setScale(1 + beatPulse, 1 - beatPulse * 0.3);
+        }
+        break;
+      }
     }
   }
 
@@ -548,8 +586,6 @@ export class NPC extends Entity {
     }
     this.hidePrompt();
     this.completedBadge?.destroy();
-    this.questIndicator?.destroy();
-    this.questIndicator = null;
     this.behaviorGraphics?.destroy();
     this.behaviorGraphics = null;
     super.destroy();

@@ -4,6 +4,7 @@ import { EventBus } from '../core/EventBus';
 import { GameEvent, EmoteType } from '../core/GameEvents';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { AudioManager } from '../audio/AudioManager';
+import { GameManager } from '../core/GameManager';
 
 /**
  * Game-feel ("juice") effects: hit freeze, squash/stretch, emote bubbles,
@@ -47,6 +48,12 @@ export class JuiceEffects {
     this.setupListeners();
   }
 
+  private isReduceMotion(): boolean {
+    try {
+      return ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER).reduceMotion;
+    } catch { return false; }
+  }
+
   private setupListeners(): void {
     this.eventBus.on(GameEvent.EMOTE_SHOW, this.onEmoteShow);
     this.eventBus.on(GameEvent.PLAYER_DAMAGED, this.onPlayerDamaged);
@@ -70,6 +77,7 @@ export class JuiceEffects {
    * Used by BattleScene and Player.onDamaged.
    */
   hitFreeze(durationMs = 60): void {
+    if (this.isReduceMotion()) return;
     this.scene.time.timeScale = 0;
     this.scene.physics?.world?.pause();
 
@@ -87,6 +95,7 @@ export class JuiceEffects {
 
   /** White flash overlay that fades out — used on critical hits */
   impactFlash(color = 0xffffff, alpha = 0.4, duration = 120): void {
+    if (this.isReduceMotion()) return;
     const { width, height } = this.scene.cameras.main;
     const flash = this.scene.add.rectangle(
       width / 2, height / 2, width + 20, height + 20,

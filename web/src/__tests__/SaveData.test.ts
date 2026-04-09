@@ -43,6 +43,47 @@ describe('SaveData', () => {
     });
   });
 
+  describe('settings fields', () => {
+    it('includes colorblindMode defaulting to none', () => {
+      const data = createDefaultSaveData();
+      expect(data.settings.colorblindMode).toBe('none');
+    });
+
+    it('includes reduceMotion defaulting to false', () => {
+      const data = createDefaultSaveData();
+      expect(data.settings.reduceMotion).toBe(false);
+    });
+
+    it('preserves colorblindMode through migrateSaveData', () => {
+      const data = createDefaultSaveData();
+      data.settings.colorblindMode = 'protanopia';
+      const result = migrateSaveData(data);
+      expect(result.settings.colorblindMode).toBe('protanopia');
+    });
+
+    it('preserves reduceMotion through migrateSaveData', () => {
+      const data = createDefaultSaveData();
+      data.settings.reduceMotion = true;
+      const result = migrateSaveData(data);
+      expect(result.settings.reduceMotion).toBe(true);
+    });
+
+    it('migrated v2 data gets default colorblindMode none', () => {
+      const v2: Record<string, unknown> = {
+        version: 2,
+        chapter: 1,
+        playerName: 'Test',
+        stats: { faith: 30, courage: 20, wisdom: 20, burden: 60 },
+        hiddenStats: { relationships: {}, spiritualInsight: 0, graceCounter: 0 },
+        settings: { language: 'ko' },
+        timestamp: 0,
+      };
+      const result = migrateSaveData(v2 as unknown);
+      expect(result.settings.colorblindMode).toBe('none');
+      expect(result.settings.reduceMotion).toBe(false);
+    });
+  });
+
   describe('migrateSaveData', () => {
     it('migrates v2 data to v3', () => {
       const v2: Record<string, unknown> = {

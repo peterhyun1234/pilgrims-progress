@@ -582,7 +582,7 @@ export class BattleScene extends Phaser.Scene {
 
       // Icon (left side)
       const iconTxt = this.add.text(-btnW / 2 + 8, 0, a.icon, {
-        fontSize: '11px', color: a.textColor, fontFamily: 'serif',
+        fontSize: `${DesignSystem.FONT_SIZE.SM}px`, color: a.textColor, fontFamily: 'serif',
       }).setOrigin(0, 0.5);
 
       // Label text (centered-right)
@@ -669,39 +669,140 @@ export class BattleScene extends Phaser.Scene {
     const ko = this.gameManager.language === 'ko';
     this.skillPanel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2).setDepth(200).setAlpha(0);
 
-    const bg = DesignSystem.createPanel(this, -130, -60, 260, 175);
-    this.skillPanel.add(bg);
+    // Skill type color palette
+    const TYPE_COLORS: Record<string, { bg: number; border: number; text: string; badge: string }> = {
+      attack:  { bg: 0x3a1a1a, border: 0xdd4444, text: '#ff9999', badge: '⚔' },
+      defend:  { bg: 0x1a2a3a, border: 0x4477cc, text: '#88bbff', badge: '🛡' },
+      heal:    { bg: 0x1a3a1a, border: 0x44aa55, text: '#88ff99', badge: '✦' },
+      special: { bg: 0x2a1a3a, border: 0xaa55dd, text: '#cc88ff', badge: '★' },
+    };
 
-    const title = this.add.text(0, -48, i18n.t('battle.selectSkill'),
-      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
+    const skills = state.availableSkills;
+    const panelH = skills.length === 0 ? 100 : 56 + skills.length * 36;
+    const panelW = 260;
+    const panelHalf = panelH / 2;
+
+    // Panel background
+    const panelBg = this.add.graphics();
+    panelBg.fillStyle(0x060312, 0.96);
+    panelBg.fillRoundedRect(-panelW / 2, -panelHalf, panelW, panelH, 6);
+    panelBg.lineStyle(1, COLORS.UI.GOLD, 0.4);
+    panelBg.strokeRoundedRect(-panelW / 2, -panelHalf, panelW, panelH, 6);
+    panelBg.lineStyle(0.5, COLORS.UI.GOLD, 0.15);
+    panelBg.strokeRoundedRect(-panelW / 2 + 2, -panelHalf + 2, panelW - 4, panelH - 4, 5);
+    // Top header strip
+    panelBg.fillStyle(COLORS.UI.GOLD, 0.08);
+    panelBg.fillRoundedRect(-panelW / 2, -panelHalf, panelW, 22, { tl: 6, tr: 6, bl: 0, br: 0 });
+    this.skillPanel.add(panelBg);
+
+    const title = this.add.text(0, -panelHalf + 11, i18n.t('battle.selectSkill'),
+      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5);
     this.skillPanel.add(title);
 
-    const skills = state.availableSkills;
     if (skills.length === 0) {
-      const noSkill = this.add.text(0, 0, i18n.t('battle.noSkills'),
+      const noSkill = this.add.text(0, 10, i18n.t('battle.noSkills'),
         DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
       ).setOrigin(0.5);
       this.skillPanel.add(noSkill);
     } else {
-      skills.slice(0, 4).forEach((skill, i) => {
-        const sy = -24 + i * 28;
-        const btn = DesignSystem.createButton(
-          this, 0, sy, 220, 24,
-          `${skill.icon} ${ko ? skill.nameKo : skill.nameEn}`,
-          () => this.onSkill(skill),
-          { fontSize: DesignSystem.FONT_SIZE.XS },
-        );
-        this.skillPanel!.add(btn);
+      skills.slice(0, 5).forEach((skill, i) => {
+        const sy = -panelHalf + 30 + i * 36;
+        const tc = TYPE_COLORS[skill.type] ?? TYPE_COLORS.special;
+        const btnW = panelW - 20;
+        const btnH = 32;
+        const bx = -btnW / 2;
+
+        const skillRow = this.add.container(0, sy);
+
+        // Row background
+        const rowBg = this.add.graphics();
+        rowBg.fillStyle(tc.bg, 0.9);
+        rowBg.fillRoundedRect(bx, 0, btnW, btnH, 3);
+        rowBg.lineStyle(0.8, tc.border, 0.5);
+        rowBg.strokeRoundedRect(bx, 0, btnW, btnH, 3);
+        // Top highlight
+        rowBg.fillStyle(0xffffff, 0.05);
+        rowBg.fillRoundedRect(bx + 1, 1, btnW - 2, 8, { tl: 3, tr: 3, bl: 0, br: 0 });
+
+        // Type badge (left circle)
+        const badgeBg = this.add.graphics();
+        badgeBg.fillStyle(tc.border, 0.25);
+        badgeBg.fillCircle(bx + 16, btnH / 2, 11);
+        badgeBg.lineStyle(0.5, tc.border, 0.6);
+        badgeBg.strokeCircle(bx + 16, btnH / 2, 11);
+
+        const badgeTxt = this.add.text(bx + 16, btnH / 2, skill.icon, {
+          fontSize: '10px', fontFamily: 'serif',
+        }).setOrigin(0.5);
+
+        // Skill name
+        const nameTxt = this.add.text(bx + 32, btnH / 2 - 4,
+          ko ? skill.nameKo : skill.nameEn, {
+            fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+            color: tc.text,
+            fontFamily: DesignSystem.getFontFamily(),
+            fontStyle: 'bold',
+          }).setOrigin(0, 0.5);
+
+        // Cost indicator (right side)
+        const statColorMap: Record<string, string> = {
+          faith: '#d4a853', courage: '#cc5555', wisdom: '#5599dd', burden: '#cc8844',
+        };
+        const costColor = statColorMap[skill.costStat] ?? '#aaaaaa';
+        const costTxt = this.add.text(btnW / 2 - 4, btnH / 2, `-${skill.cost}`, {
+          fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+          color: costColor,
+          fontFamily: DesignSystem.getFontFamily(),
+        }).setOrigin(1, 0.5);
+
+        // Hit area
+        const hit = this.add.rectangle(0, btnH / 2, btnW, btnH, 0, 0)
+          .setInteractive({ useHandCursor: true });
+        hit.on('pointerover', () => {
+          rowBg.clear();
+          rowBg.fillStyle(tc.bg + 0x101010, 0.98);
+          rowBg.fillRoundedRect(bx, 0, btnW, btnH, 3);
+          rowBg.lineStyle(1.5, tc.border, 0.9);
+          rowBg.strokeRoundedRect(bx, 0, btnW, btnH, 3);
+          rowBg.fillStyle(tc.border, 0.10);
+          rowBg.fillRoundedRect(bx, 0, btnW, btnH, 3);
+          nameTxt.setColor('#ffffff');
+        });
+        hit.on('pointerout', () => {
+          rowBg.clear();
+          rowBg.fillStyle(tc.bg, 0.9);
+          rowBg.fillRoundedRect(bx, 0, btnW, btnH, 3);
+          rowBg.lineStyle(0.8, tc.border, 0.5);
+          rowBg.strokeRoundedRect(bx, 0, btnW, btnH, 3);
+          rowBg.fillStyle(0xffffff, 0.05);
+          rowBg.fillRoundedRect(bx + 1, 1, btnW - 2, 8, { tl: 3, tr: 3, bl: 0, br: 0 });
+          nameTxt.setColor(tc.text);
+        });
+        hit.on('pointerdown', () => {
+          this.tweens.add({ targets: skillRow, scaleX: 0.97, scaleY: 0.97, duration: 60, yoyo: true });
+          this.time.delayedCall(70, () => this.onSkill(skill));
+        });
+
+        skillRow.add([rowBg, badgeBg, badgeTxt, nameTxt, costTxt, hit]);
+        this.skillPanel!.add(skillRow);
       });
     }
 
-    const closeBtn = DesignSystem.createButton(
-      this, 0, 90, 80, 24, i18n.t('battle.close'),
-      () => { this.skillPanel?.destroy(true); this.skillPanel = null; },
-      { fontSize: DesignSystem.FONT_SIZE.XS, bgColor: 0x3a1a1a },
-    );
-    this.skillPanel.add(closeBtn);
+    // Close button (bottom)
+    const closeBtnY = panelHalf - 14;
+    const closeBg = this.add.graphics();
+    closeBg.fillStyle(0x3a1818, 0.9);
+    closeBg.fillRoundedRect(-35, closeBtnY - 10, 70, 20, 3);
+    closeBg.lineStyle(0.5, 0x884444, 0.5);
+    closeBg.strokeRoundedRect(-35, closeBtnY - 10, 70, 20, 3);
+    const closeTxt = this.add.text(0, closeBtnY, i18n.t('battle.close'), {
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#cc8888',
+      fontFamily: DesignSystem.getFontFamily(),
+    }).setOrigin(0.5);
+    const closeHit = this.add.rectangle(0, closeBtnY, 70, 20, 0, 0).setInteractive({ useHandCursor: true });
+    closeHit.on('pointerdown', () => { this.skillPanel?.destroy(true); this.skillPanel = null; });
+    this.skillPanel.add([closeBg, closeTxt, closeHit]);
 
     this.tweens.add({ targets: this.skillPanel, alpha: 1, duration: 150, ease: 'Sine.easeOut' });
   }
@@ -783,7 +884,7 @@ export class BattleScene extends Phaser.Scene {
 
       // Icon effect
       const effect = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT / 2 + 20, icon, {
-        fontSize: '20px',
+        fontSize: `${DesignSystem.FONT_SIZE.XL}px`,
       }).setOrigin(0.5).setDepth(300).setAlpha(0);
 
       this.tweens.add({

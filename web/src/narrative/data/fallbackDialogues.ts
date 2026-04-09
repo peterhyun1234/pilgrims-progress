@@ -843,7 +843,8 @@ export const FALLBACK_DIALOGUES: Record<string, LangConv> = {
       ],
       choices: [
         {
-          text: '(WISDOM >= 30이면 보임) 전도자가 그 길을 경계하라 했소.',
+          text: '전도자가 그 길을 경계하라 했소.',
+          requires: { stat: 'wisdom' as StatType, min: 30 },
           stat: 'wisdom',
           amount: 8,
           lines: [
@@ -916,7 +917,8 @@ export const FALLBACK_DIALOGUES: Record<string, LangConv> = {
       ],
       choices: [
         {
-          text: '(Requires WISDOM 30+) The Evangelist warned me against this road.',
+          text: 'The Evangelist warned me against this road.',
+          requires: { stat: 'wisdom' as StatType, min: 30 },
           stat: 'wisdom',
           amount: 8,
           lines: [
@@ -969,6 +971,801 @@ export const FALLBACK_DIALOGUES: Record<string, LangConv> = {
           text: "Still considering? Morality is far more comfortable, I assure you.",
           emotion: 'neutral',
         },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Ch3 재등장 세속 현자 (Ch1과 분리된 ID)
+  // ─────────────────────────────────────────────────────────────────────────
+  worldly_wiseman_ch3: {
+    ko: {
+      lines: [
+        { text: '다시 만났군요, 순례자여.', emotion: 'neutral' },
+        { text: '그래도 아직 그 험한 길을 고집하는 것이오?', emotion: 'neutral' },
+        { text: '도덕 마을에 가면 훨씬 평안한 삶이 있소. 그 짐을 내려놓고 평범하게 사는 것이 지혜가 아니겠소?', emotion: 'happy' },
+      ],
+      choices: [
+        {
+          text: '전도자가 경고했소. 나는 좁은 문으로 갑니다.',
+          requires: { stat: 'wisdom' as StatType, min: 30 },
+          stat: 'courage',
+          amount: 8,
+          lines: [
+            { text: '...끝내 그 길을 택하는군. 후회하지 마시오.', emotion: 'sad', speaker: '세속 현자' },
+          ],
+        },
+        {
+          text: '됐소. 더 이상 이야기할 것이 없소.',
+          stat: 'courage',
+          amount: 5,
+          lines: [
+            { text: '고집 센 사람이군. 무사하길 바라오.', emotion: 'angry', speaker: '세속 현자' },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '아직도 이 길이오? 도덕 마을 제안은 언제든 유효하오.', emotion: 'neutral' },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'We meet again, Pilgrim.', emotion: 'neutral' },
+        { text: 'Still insisting on that perilous road?', emotion: 'neutral' },
+        { text: 'The village of Morality offers peace and comfort. Is it not wiser to set down that burden and live quietly?', emotion: 'happy' },
+      ],
+      choices: [
+        {
+          text: 'The Evangelist warned me of this. I go to the Wicket Gate.',
+          requires: { stat: 'wisdom' as StatType, min: 30 },
+          stat: 'courage',
+          amount: 8,
+          lines: [
+            { text: "...So you choose that road after all. Do not say I didn't warn you.", emotion: 'sad', speaker: 'Mr. Worldly Wiseman' },
+          ],
+        },
+        {
+          text: 'I have heard enough. Good day.',
+          stat: 'courage',
+          amount: 5,
+          lines: [
+            { text: 'Stubborn fellow. I hope you fare well, at least.', emotion: 'angry', speaker: 'Mr. Worldly Wiseman' },
+          ],
+        },
+      ],
+      repeated: [
+        { text: "Still on this road? My offer of Morality stands, whenever you tire of it.", emotion: 'neutral' },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 소심 / Timorous — 겁쟁이, 돌아가라 경고 (Ch7)
+  // ─────────────────────────────────────────────────────────────────────────
+  timorous: {
+    ko: {
+      lines: [
+        { text: '멈추시오! 앞으로 가지 마시오!', emotion: 'fearful' },
+        { text: '저 계곡에는 아볼루온이라는 무시무시한 괴물이 있소. 우리는 간신히 살아 돌아왔소.', emotion: 'fearful' },
+        { text: '사자들도 있소! 맹수들도! 순례자들의 뼈가 그 길에 널려있소!', emotion: 'fearful', stat: 'courage', amount: -3 },
+      ],
+      choices: [
+        {
+          text: '당신이 경험한 위험들을 알면서도, 나는 앞으로 가야 합니다.',
+          requires: { stat: 'wisdom' as StatType, min: 25 },
+          stat: 'courage',
+          amount: 12,
+          lines: [
+            { text: '...당신은 겁쟁이가 아니군요. 두려움을 알면서도 가는 자가 진정한 용사요.', emotion: 'sad', speaker: '소심', stat: 'faith', amount: 5 },
+            { text: '이 길의 끝에 무엇이 있는지 혹시 아시오? ...나는 끝내 알 수 없었소.', emotion: 'sad', speaker: '소심' },
+          ],
+        },
+        {
+          text: '두렵지만 나는 계속 가겠소.',
+          stat: 'courage',
+          amount: 8,
+          lines: [
+            { text: '...미쳤구만. 당신의 용기에 경의를 표하오. 하지만 나는 여기까지요.', emotion: 'sad', speaker: '소심' },
+          ],
+        },
+        {
+          text: '정말 그렇게 위험합니까?',
+          lines: [
+            { text: '내 말을 믿으시오! 그 계곡은 공포 그 자체요. 사자들의 울부짖음이 아직도 귀에 들리는 것 같소.', emotion: 'fearful', speaker: '소심', stat: 'burden', amount: 5 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '제발 돌아가시오. 당신도 아직 선택할 수 있소.', emotion: 'fearful', stat: 'burden', amount: 2 },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'Stop! Do not go one step further!', emotion: 'fearful' },
+        { text: 'There is a monster in that valley called Apollyon. We barely escaped with our lives.', emotion: 'fearful' },
+        { text: 'Lions too! And beasts! The bones of pilgrims litter that road!', emotion: 'fearful', stat: 'courage', amount: -3 },
+      ],
+      choices: [
+        {
+          text: 'Knowing all you have faced — I must still go forward.',
+          requires: { stat: 'wisdom' as StatType, min: 25 },
+          stat: 'courage',
+          amount: 12,
+          lines: [
+            { text: '...You are no coward. To go on knowing the danger — that is true courage.', emotion: 'sad', speaker: 'Timorous', stat: 'faith', amount: 5 },
+            { text: 'Do you know what lies at the end of this road? ...I never had the courage to find out.', emotion: 'sad', speaker: 'Timorous' },
+          ],
+        },
+        {
+          text: 'I am afraid — but I will press on.',
+          stat: 'courage',
+          amount: 8,
+          lines: [
+            { text: '...You are mad. I salute your courage. But I go no further.', emotion: 'sad', speaker: 'Timorous' },
+          ],
+        },
+        {
+          text: 'Is it truly so dangerous?',
+          lines: [
+            { text: "Believe me! That valley is terror itself. I can still hear the lions' roaring.", emotion: 'fearful', speaker: 'Timorous', stat: 'burden', amount: 5 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'Please — go back. You can still choose differently.', emotion: 'fearful', stat: 'burden', amount: 2 },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 불신 / Mistrust — 소심의 동행, 같이 도망 (Ch7)
+  // ─────────────────────────────────────────────────────────────────────────
+  mistrust: {
+    ko: {
+      lines: [
+        { text: '당신도 그 계곡에 가려는 것이오?', emotion: 'fearful' },
+        { text: '우리는 사자들과 괴물들을 보았소. 살아 돌아온 것이 기적이오.', emotion: 'fearful' },
+        { text: '이 길은 죽음의 길이오. 믿음만으로는 부족하오.', emotion: 'sad', stat: 'faith', amount: -3 },
+      ],
+      choices: [
+        {
+          text: '나는 믿음으로 갑니다.',
+          stat: 'faith',
+          amount: 8,
+          lines: [
+            { text: '...그런 믿음이라면 혹시 모르겠소. 조심하시오.', emotion: 'neutral', speaker: '불신' },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '아직 살아있군. 대단하오.', emotion: 'neutral', stat: 'courage', amount: 3 },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'You mean to go into that valley?', emotion: 'fearful' },
+        { text: 'We saw lions and monsters there. It is a miracle we escaped alive.', emotion: 'fearful' },
+        { text: 'This road is death. Faith alone is not enough.', emotion: 'sad', stat: 'faith', amount: -3 },
+      ],
+      choices: [
+        {
+          text: 'I go by faith.',
+          stat: 'faith',
+          amount: 8,
+          lines: [
+            { text: '...With such faith, perhaps there is hope for you. Be careful.', emotion: 'neutral', speaker: 'Mistrust' },
+          ],
+        },
+      ],
+      repeated: [
+        { text: "You're still alive. Remarkable.", emotion: 'neutral', stat: 'courage', amount: 3 },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 파수꾼 / Watchful — 아름다운 궁전 문지기 (Ch7)
+  // ─────────────────────────────────────────────────────────────────────────
+  watchful: {
+    ko: {
+      lines: [
+        { text: '멈추시오. 이 궁전은 올바른 길로 온 자만 들어올 수 있소.', emotion: 'neutral' },
+        { text: '당신은 진정 좁은 문을 지나 여기까지 왔소?', emotion: 'neutral' },
+      ],
+      choices: [
+        {
+          text: '그렇습니다. 전도자의 안내로 좁은 문을 지나 여기까지 왔습니다.',
+          requires: { stat: 'faith' as StatType, min: 20 },
+          stat: 'faith',
+          amount: 8,
+          lines: [
+            { text: '그 문을 지난 자만이 이 궁전에 들어올 자격이 있소.', emotion: 'happy', speaker: '파수꾼', stat: 'wisdom', amount: 5 },
+            { text: '어서 들어오시오. 현숙, 경건, 자선이 당신을 기다리고 있소.', emotion: 'happy', speaker: '파수꾼' },
+          ],
+        },
+        {
+          text: '멀리서 왔습니다. 쉴 곳을 찾고 있습니다.',
+          lines: [
+            { text: '이 궁전은 순례자들을 위한 것이오. 좁은 문을 지나오셨나요?', emotion: 'neutral', speaker: '파수꾼' },
+            { text: '전도자를 만난 적 있소? 그의 가르침을 따르면 이 길을 찾을 수 있소.', emotion: 'neutral', speaker: '파수꾼', stat: 'wisdom', amount: 3 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '다시 오셨군요. 이 문은 항상 열려 있소. 천성을 잊지 마시오.', emotion: 'happy', stat: 'faith', amount: 3 },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'Halt. This palace is for those who have come by the right way.', emotion: 'neutral' },
+        { text: 'Did you truly pass through the Wicket Gate to come this far?', emotion: 'neutral' },
+      ],
+      choices: [
+        {
+          text: 'I did — Evangelist showed me the way through the Wicket Gate.',
+          requires: { stat: 'faith' as StatType, min: 20 },
+          stat: 'faith',
+          amount: 8,
+          lines: [
+            { text: 'Then you have come the right way. Only those who pass through that gate may enter here.', emotion: 'happy', speaker: 'Watchful', stat: 'wisdom', amount: 5 },
+            { text: 'Come in. Prudence, Piety, and Charity are waiting to receive you.', emotion: 'happy', speaker: 'Watchful' },
+          ],
+        },
+        {
+          text: 'I have traveled far and seek rest.',
+          lines: [
+            { text: 'This palace is for pilgrims. Have you come through the Wicket Gate?', emotion: 'neutral', speaker: 'Watchful' },
+            { text: 'Seek out the Evangelist — his counsel will guide you to the true path.', emotion: 'neutral', speaker: 'Watchful', stat: 'wisdom', amount: 3 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'Welcome back. This gate is always open to you. Remember the Celestial City.', emotion: 'happy', stat: 'faith', amount: 3 },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 현숙 / Prudence — 영적 성숙 질문 (Ch7)
+  // ─────────────────────────────────────────────────────────────────────────
+  prudence: {
+    ko: {
+      lines: [
+        { text: '어서 오세요, 순례자여. 저는 현숙이라 합니다.', emotion: 'neutral' },
+        { text: '한 가지 여쭤봐도 될까요? 당신이 도망쳐온 그 삶을 생각하면 무엇이 떠오르나요?', emotion: 'neutral' },
+      ],
+      choices: [
+        {
+          text: '죄와 짐을 지고 있던 제 모습이 떠오릅니다. 그것에서 벗어나고 싶었습니다.',
+          stat: 'wisdom',
+          amount: 10,
+          lines: [
+            { text: '그 깨달음이 이 길의 시작이었군요. 자신의 비참함을 아는 것이 지혜의 첫 걸음이오.', emotion: 'happy', speaker: '현숙', stat: 'faith', amount: 5 },
+            { text: '그런데 지금은 어떻소? 짐이 가벼워졌나요?', emotion: 'neutral', speaker: '현숙' },
+            { text: '십자가에서 모든 것이 바뀌었군요. 그것을 잊지 마시오.', emotion: 'happy', speaker: '현숙', stat: 'wisdom', amount: 5 },
+          ],
+        },
+        {
+          text: '때때로 고향과 사랑하는 사람들이 그리워집니다.',
+          lines: [
+            { text: '그 그리움은 자연스러운 것이오. 하지만 더 나은 나라를 바라보는 것이 믿음이오.', emotion: 'neutral', speaker: '현숙', stat: 'wisdom', amount: 6 },
+            { text: '아브라함도 고향을 떠났소. 그는 더 좋은 곳, 하나님이 설계하신 도성을 바라보았소.', emotion: 'happy', speaker: '현숙', stat: 'faith', amount: 3 },
+          ],
+        },
+        {
+          text: '솔직히 이 여정이 올바른 선택이었는지 흔들릴 때가 있습니다.',
+          lines: [
+            { text: '정직하군요. 그 의심 자체가 당신이 진지하게 걷고 있다는 증거요.', emotion: 'neutral', speaker: '현숙', stat: 'wisdom', amount: 5 },
+            { text: '흔들리는 자는 결국 뿌리를 더 깊이 내리게 된다오.', emotion: 'determined', speaker: '현숙', stat: 'courage', amount: 5 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '다시 오셨군요. 이 길을 계속 걷고 있다는 것 자체가 훌륭하오.', emotion: 'happy', stat: 'wisdom', amount: 3 },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'Welcome, Pilgrim. I am Prudence.', emotion: 'neutral' },
+        { text: 'May I ask — when you think of the life you fled, what comes to mind?', emotion: 'neutral' },
+      ],
+      choices: [
+        {
+          text: 'I think of the sin and the burden I carried. I longed to be free of it.',
+          stat: 'wisdom',
+          amount: 10,
+          lines: [
+            { text: 'And that longing was the very beginning of wisdom. To know one\'s misery is the first step toward deliverance.', emotion: 'happy', speaker: 'Prudence', stat: 'faith', amount: 5 },
+            { text: 'The Cross has already answered that burden. Never forget what happened there.', emotion: 'happy', speaker: 'Prudence', stat: 'wisdom', amount: 5 },
+          ],
+        },
+        {
+          text: 'Sometimes I miss my homeland and the people I left behind.',
+          lines: [
+            { text: 'That longing is natural. But faith looks toward a better country — one designed by God.', emotion: 'neutral', speaker: 'Prudence', stat: 'wisdom', amount: 6 },
+            { text: 'Abraham left his homeland too. He looked for a city whose builder and maker is God.', emotion: 'happy', speaker: 'Prudence', stat: 'faith', amount: 3 },
+          ],
+        },
+        {
+          text: 'Honestly, there are moments when I wonder if I chose rightly.',
+          lines: [
+            { text: 'Your honesty is itself a sign that you walk this road seriously.', emotion: 'neutral', speaker: 'Prudence', stat: 'wisdom', amount: 5 },
+            { text: 'Those who are shaken often find their roots grow deeper for it.', emotion: 'determined', speaker: 'Prudence', stat: 'courage', amount: 5 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'You return. That alone speaks well of you.', emotion: 'happy', stat: 'wisdom', amount: 3 },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 경건 / Piety — 신앙 격려 (Ch7)
+  // ─────────────────────────────────────────────────────────────────────────
+  piety: {
+    ko: {
+      lines: [
+        { text: '순례자여, 저는 경건이라 합니다.', emotion: 'neutral' },
+        { text: '이 여정에서 무엇이 가장 힘드셨나요?', emotion: 'neutral' },
+        { text: '천성에 대한 생각이 힘든 순간에 위로가 되었나요?', emotion: 'neutral' },
+      ],
+      choices: [
+        {
+          text: '그렇습니다. 천성을 생각할 때마다 힘을 얻었습니다.',
+          stat: 'faith',
+          amount: 10,
+          lines: [
+            { text: '그것이 순례자의 힘이오. 보이지 않는 것을 바라보는 것이오.', emotion: 'happy', speaker: '경건', stat: 'courage', amount: 5 },
+          ],
+        },
+        {
+          text: '솔직히 쉽지 않았습니다.',
+          lines: [
+            { text: '그렇소. 이 길은 쉽지 않소. 하지만 당신은 여기까지 왔소.', emotion: 'determined', speaker: '경건', stat: 'courage', amount: 8 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '기도가 당신의 방패가 될 것이오.', emotion: 'determined', stat: 'faith', amount: 3 },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'Pilgrim, I am Piety.', emotion: 'neutral' },
+        { text: 'What has been the hardest part of your journey?', emotion: 'neutral' },
+        { text: 'Did thoughts of the Celestial City comfort you in dark moments?', emotion: 'neutral' },
+      ],
+      choices: [
+        {
+          text: 'Yes — thinking of the City gave me strength every time.',
+          stat: 'faith',
+          amount: 10,
+          lines: [
+            { text: "That is the pilgrim's power — to see what is not yet seen.", emotion: 'happy', speaker: 'Piety', stat: 'courage', amount: 5 },
+          ],
+        },
+        {
+          text: 'Honestly, it has not been easy.',
+          lines: [
+            { text: "No, it is not. But here you stand, Pilgrim. That says everything.", emotion: 'determined', speaker: 'Piety', stat: 'courage', amount: 8 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'Prayer will be your shield on the road ahead.', emotion: 'determined', stat: 'faith', amount: 3 },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 자선 / Charity — 사랑과 가족에 대해 (Ch7)
+  // ─────────────────────────────────────────────────────────────────────────
+  charity: {
+    ko: {
+      lines: [
+        { text: '순례자여, 저는 자선이라 합니다.', emotion: 'happy' },
+        { text: '가족은 함께 오지 않았나요?', emotion: 'sad' },
+        { text: '사랑하는 사람들을 뒤에 두고 오셨군요. 그 아픔을 압니다.', emotion: 'sad', stat: 'burden', amount: -5 },
+      ],
+      choices: [
+        {
+          text: '그들도 언젠가 이 길을 오기를 바랍니다.',
+          stat: 'faith',
+          amount: 8,
+          lines: [
+            { text: '그 소망 자체가 사랑이오. 계속 기도하시오. 씨앗이 자랄 것이오.', emotion: 'happy', speaker: '자선', stat: 'wisdom', amount: 5 },
+          ],
+        },
+        {
+          text: '남겨두고 온 것이 지금도 괴롭습니다.',
+          lines: [
+            { text: '그 마음이 자비롭소. 하지만 당신이 이 길을 걷는 것이 그들을 위한 것일 수 있소.', emotion: 'determined', speaker: '자선', stat: 'courage', amount: 5 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '사랑은 이 여정에서도 당신과 함께하오.', emotion: 'happy', stat: 'faith', amount: 3 },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'Pilgrim, I am Charity.', emotion: 'happy' },
+        { text: 'Did your family not come with you?', emotion: 'sad' },
+        { text: 'You left those you love behind. I understand that grief.', emotion: 'sad', stat: 'burden', amount: -5 },
+      ],
+      choices: [
+        {
+          text: 'I hope they will follow someday.',
+          stat: 'faith',
+          amount: 8,
+          lines: [
+            { text: 'That hope is itself love. Keep praying. Seeds take time to grow.', emotion: 'happy', speaker: 'Charity', stat: 'wisdom', amount: 5 },
+          ],
+        },
+        {
+          text: 'Leaving them behind still troubles me.',
+          lines: [
+            { text: 'Your grief is tender. But know — your walking this road may yet be for them.', emotion: 'determined', speaker: 'Charity', stat: 'courage', amount: 5 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'Love walks with you on this road.', emotion: 'happy', stat: 'faith', amount: 3 },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 충실 / Faithful — 동행자, 순교 전 (Ch9/10)
+  // ─────────────────────────────────────────────────────────────────────────
+  faithful: {
+    ko: {
+      lines: [
+        { text: '크리스천! 반갑소!', emotion: 'happy' },
+        { text: '나도 멸망의 도시에서 왔소. 당신이 떠난 후 나도 이 길을 걷기 시작했소.', emotion: 'neutral' },
+        { text: '함께 가면 어떻겠소? 이 길은 혼자 가기엔 너무 험하오.', emotion: 'happy', stat: 'courage', amount: 8 },
+      ],
+      choices: [
+        {
+          text: '물론이오! 함께 갑시다.',
+          stat: 'faith',
+          amount: 5,
+          lines: [
+            { text: '좋소! 서로에게 힘이 될 것이오. 함께라면 이 어둠의 계곡도 통과할 수 있소.', emotion: 'happy', speaker: '충실' },
+          ],
+        },
+        {
+          text: '당신도 허영의 시장을 통과해야 합니까?',
+          lines: [
+            { text: '그렇소. 그 시장은 피할 수 없는 것 같소. 하지만 진리를 팔 수는 없소.', emotion: 'determined', speaker: '충실', stat: 'courage', amount: 8 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '함께 있으니 마음이 든든하오.', emotion: 'happy', stat: 'courage', amount: 3 },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'Christian! Well met!', emotion: 'happy' },
+        { text: 'I too am from the City of Destruction. After you left, I took to the road.', emotion: 'neutral' },
+        { text: "Shall we travel together? This road is too hard to walk alone.", emotion: 'happy', stat: 'courage', amount: 8 },
+      ],
+      choices: [
+        {
+          text: 'Gladly! Let us go together.',
+          stat: 'faith',
+          amount: 5,
+          lines: [
+            { text: 'Excellent! We will strengthen each other. Even the dark valley is less fearful with a companion.', emotion: 'happy', speaker: 'Faithful' },
+          ],
+        },
+        {
+          text: 'Must you also pass through Vanity Fair?',
+          lines: [
+            { text: "It seems unavoidable. But I will not sell the truth there — not for any price.", emotion: 'determined', speaker: 'Faithful', stat: 'courage', amount: 8 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'Walking together makes the road lighter.', emotion: 'happy', stat: 'courage', amount: 3 },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 증오선 재판장 / Lord Hategood — 허영의 시장 재판 (Ch10)
+  // ─────────────────────────────────────────────────────────────────────────
+  lord_hategood: {
+    ko: {
+      lines: [
+        { text: '여기 이단자들이 섰도다!', emotion: 'angry' },
+        { text: '그대들은 우리의 왕과 상품을 거부하였소. 이것은 반역이오.', emotion: 'angry' },
+        { text: '이 시장의 모든 것을 받아들이겠소, 아니면 재판을 받겠소?', emotion: 'angry', stat: 'burden', amount: 10 },
+      ],
+      choices: [
+        {
+          text: '나는 오직 진리만을 섬기오.',
+          stat: 'faith',
+          amount: 10,
+          lines: [
+            { text: '...배짱 하나는 있군. 하지만 그 용기는 이곳에서 너를 구하지 못하리라.', emotion: 'angry', speaker: '증오선 재판장' },
+          ],
+        },
+        {
+          text: '(...침묵으로 맞선다)',
+          stat: 'courage',
+          amount: 8,
+          lines: [
+            { text: '침묵? 죄를 인정하는 것이로구나. 판결을 내리겠다!', emotion: 'angry', speaker: '증오선 재판장' },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '이 법정은 진리의 적들로 가득하다.', emotion: 'angry' },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'Here stand the heretics!', emotion: 'angry' },
+        { text: 'You have refused our prince and our wares. This is treason.', emotion: 'angry' },
+        { text: 'Will you accept all that this fair offers — or face judgment?', emotion: 'angry', stat: 'burden', amount: 10 },
+      ],
+      choices: [
+        {
+          text: 'I serve truth alone.',
+          stat: 'faith',
+          amount: 10,
+          lines: [
+            { text: '...Bold words. But your courage will not save you here.', emotion: 'angry', speaker: 'Lord Hategood' },
+          ],
+        },
+        {
+          text: '(...stand in silence)',
+          stat: 'courage',
+          amount: 8,
+          lines: [
+            { text: 'Silence! You admit your guilt. I will pass sentence!', emotion: 'angry', speaker: 'Lord Hategood' },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'This court has no patience for enemies of the fair.', emotion: 'angry' },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 소망 / Hopeful — 충실의 뒤를 이은 동행자 (Ch11/12)
+  // ─────────────────────────────────────────────────────────────────────────
+  hopeful: {
+    ko: {
+      lines: [
+        { text: '크리스천, 저는 소망이오.', emotion: 'happy' },
+        { text: '충실의 죽음을 보았소. 그것이 나를 이 길로 이끌었소.', emotion: 'sad' },
+        { text: '그의 용기가 씨앗이 되었소. 이제 함께 가도 되겠소?', emotion: 'determined', stat: 'faith', amount: 8 },
+      ],
+      choices: [
+        {
+          text: '충실의 뒤를 잇는 것이오. 함께 갑시다.',
+          stat: 'courage',
+          amount: 8,
+          lines: [
+            { text: '감사하오. 천성까지 함께 갑시다. 포기하지 맙시다.', emotion: 'happy', speaker: '소망', stat: 'faith', amount: 5 },
+          ],
+        },
+        {
+          text: '의심의 성 앞에서도 포기하지 않겠소?',
+          lines: [
+            { text: '소망이 있는 한 포기는 없소. 약속의 열쇠를 기억하시오.', emotion: 'determined', speaker: '소망', stat: 'wisdom', amount: 8 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '포기하지 마시오. 천성이 코앞이오.', emotion: 'happy', stat: 'faith', amount: 5 },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'Christian, I am Hopeful.', emotion: 'happy' },
+        { text: "I witnessed Faithful's death. It brought me to this road.", emotion: 'sad' },
+        { text: 'His courage became a seed. May I travel with you?', emotion: 'determined', stat: 'faith', amount: 8 },
+      ],
+      choices: [
+        {
+          text: "You carry on Faithful's legacy. Let us go together.",
+          stat: 'courage',
+          amount: 8,
+          lines: [
+            { text: 'Thank you. Together to the Celestial City — we will not give up.', emotion: 'happy', speaker: 'Hopeful', stat: 'faith', amount: 5 },
+          ],
+        },
+        {
+          text: 'Will you not falter before Doubting Castle?',
+          lines: [
+            { text: 'Where there is hope, there is no surrender. Remember the key of promise.', emotion: 'determined', speaker: 'Hopeful', stat: 'wisdom', amount: 8 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'Do not give up. The City is close now.', emotion: 'happy', stat: 'faith', amount: 5 },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 불신감 / Diffidence — 거인 절망의 아내 (Ch11)
+  // ─────────────────────────────────────────────────────────────────────────
+  diffidence: {
+    ko: {
+      lines: [
+        { text: '당신들은 어차피 살아나가지 못할 것이오.', emotion: 'sad' },
+        { text: '우리 성에 갇힌 자들은 모두 절망 속에 죽었소.', emotion: 'sad' },
+        { text: '빨리 포기하는 것이 덜 고통스럽소.', emotion: 'sad', stat: 'burden', amount: 10 },
+      ],
+      choices: [
+        {
+          text: '나에게는 소망이 있소.',
+          stat: 'faith',
+          amount: 10,
+          lines: [
+            { text: '...소망? 여기서도 그것을 붙드는 자가 있다는 것이 신기하군.', emotion: 'neutral', speaker: '불신감' },
+          ],
+        },
+        {
+          text: '(...기도한다)',
+          stat: 'faith',
+          amount: 8,
+          lines: [
+            { text: '...기도라니. 이 어둠 속에서.', emotion: 'sad', speaker: '불신감', stat: 'burden', amount: -5 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '아직도 포기하지 않았소?', emotion: 'sad' },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'You will not escape from here.', emotion: 'sad' },
+        { text: 'All who are imprisoned in this castle die in despair.', emotion: 'sad' },
+        { text: 'Surrender sooner — the suffering will be less.', emotion: 'sad', stat: 'burden', amount: 10 },
+      ],
+      choices: [
+        {
+          text: 'I have hope.',
+          stat: 'faith',
+          amount: 10,
+          lines: [
+            { text: "...Hope? Strange — to find one who still holds it here.", emotion: 'neutral', speaker: 'Diffidence' },
+          ],
+        },
+        {
+          text: '(...pray)',
+          stat: 'faith',
+          amount: 8,
+          lines: [
+            { text: '...Prayer. In this darkness.', emotion: 'sad', speaker: 'Diffidence', stat: 'burden', amount: -5 },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'You still have not given up?', emotion: 'sad' },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 무지 / Ignorance — 천성 문 앞에서 거절당하는 자 (Ch12)
+  // ─────────────────────────────────────────────────────────────────────────
+  ignorance: {
+    ko: {
+      lines: [
+        { text: '나도 천성에 들어갈 것이오.', emotion: 'neutral' },
+        { text: '나는 착하게 살았소. 하나님이 나를 받아줄 것이오.', emotion: 'neutral' },
+        { text: '왕의 도장이 없어도 괜찮을 것이오.', emotion: 'neutral' },
+      ],
+      choices: [
+        {
+          text: '그 확신은 어디서 오는 것이오?',
+          stat: 'wisdom',
+          amount: 5,
+          lines: [
+            { text: '내 마음이 그렇게 말하오. 내 마음이 선하니 충분하오.', emotion: 'neutral', speaker: '무지' },
+            { text: '...하지만 왕은 그렇게 말씀하지 않으셨소. 문서가 필요하오.', emotion: 'sad', speaker: '무지', stat: 'wisdom', amount: 5 },
+          ],
+        },
+        {
+          text: '믿음의 근거는 자신의 선함이 아니라 은혜라오.',
+          requires: { stat: 'wisdom' as StatType, min: 50 },
+          stat: 'wisdom',
+          amount: 8,
+          lines: [
+            { text: "...그 말이 무슨 뜻인지 아직 잘 모르겠소. 하지만 한번 생각해보겠소.", emotion: 'neutral', speaker: '무지' },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '나는 나의 방식대로 갈 것이오.', emotion: 'neutral' },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'I too shall enter the Celestial City.', emotion: 'neutral' },
+        { text: "I have lived a good life. God will accept me.", emotion: 'neutral' },
+        { text: "I think I will be fine without the King's certificate.", emotion: 'neutral' },
+      ],
+      choices: [
+        {
+          text: 'Where does that certainty come from?',
+          stat: 'wisdom',
+          amount: 5,
+          lines: [
+            { text: "My heart tells me so. My heart is good — that is enough.", emotion: 'neutral', speaker: 'Ignorance' },
+            { text: "...But the King did not say that. A scroll is required.", emotion: 'sad', speaker: 'Ignorance', stat: 'wisdom', amount: 5 },
+          ],
+        },
+        {
+          text: "Faith's ground is not your goodness but grace alone.",
+          requires: { stat: 'wisdom' as StatType, min: 50 },
+          stat: 'wisdom',
+          amount: 8,
+          lines: [
+            { text: "...I don't quite understand that. But I will think on it.", emotion: 'neutral', speaker: 'Ignorance' },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'I will go my own way.', emotion: 'neutral' },
+      ],
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // 빛나는 자들 / Shining Ones — 천성 문의 천사 (Ch12)
+  // ─────────────────────────────────────────────────────────────────────────
+  shining_ones: {
+    ko: {
+      lines: [
+        { text: '순례자여, 그대가 왔구나.', emotion: 'awe' },
+        { text: '왕께서 그대를 기다리고 계셨소. 이 긴 여정 동안 단 한 번도 눈을 떼지 않으셨소.', emotion: 'happy', stat: 'faith', amount: 15 },
+        { text: '이제 짐은 영원히 없어졌소. 눈물도 없고, 죽음도 없소. 어서 들어오시오.', emotion: 'awe', stat: 'burden', amount: -100 },
+      ],
+      choices: [
+        {
+          text: '...정말 제가 여기 있는 것이 맞습니까?',
+          stat: 'faith',
+          amount: 10,
+          lines: [
+            { text: '맞소. 그대는 처음부터 이곳을 위해 부름 받았소.', emotion: 'awe', speaker: '빛나는 자들', stat: 'courage', amount: 10 },
+            { text: '자, 어서 들어가시오. 왕이 기다리십니다.', emotion: 'happy', speaker: '빛나는 자들' },
+          ],
+        },
+      ],
+      repeated: [
+        { text: '천성에 오신 것을 환영하오, 순례자여.', emotion: 'awe', stat: 'faith', amount: 5 },
+      ],
+    },
+    en: {
+      lines: [
+        { text: 'Pilgrim — you have come.', emotion: 'awe' },
+        { text: "The King has been waiting. Through every step of your long journey, His eyes never left you.", emotion: 'happy', stat: 'faith', amount: 15 },
+        { text: 'The burden is gone forever. No sorrow, no death. Come in.', emotion: 'awe', stat: 'burden', amount: -100 },
+      ],
+      choices: [
+        {
+          text: '...Is it truly right that I am here?',
+          stat: 'faith',
+          amount: 10,
+          lines: [
+            { text: 'It is. You were called for this from the very beginning.', emotion: 'awe', speaker: 'Shining Ones', stat: 'courage', amount: 10 },
+            { text: 'Now come in. The King awaits.', emotion: 'happy', speaker: 'Shining Ones' },
+          ],
+        },
+      ],
+      repeated: [
+        { text: 'Welcome to the Celestial City, Pilgrim.', emotion: 'awe', stat: 'faith', amount: 5 },
       ],
     },
   },

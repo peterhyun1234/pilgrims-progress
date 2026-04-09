@@ -60,7 +60,7 @@ export const COLORS = {
     BG_PRIMARY: 0x1e2a3a,
     BG_SECONDARY: 0x2d1b4e,
     TEXT_PRIMARY: 0xe8e0d0,
-    TEXT_SECONDARY: 0xa89b8c,
+    TEXT_SECONDARY: 0xc8b8a0,
     ACCENT: 0xd4a853,
   },
   BATTLE: {
@@ -80,7 +80,7 @@ export const COLORS = {
     PARCHMENT: 0xf5e6d3,
     PARCHMENT_DARK: 0xc8a882,
     DARK_BG: 0x0a0814,
-    PANEL: 0x1a1428,
+    PANEL: 0x1e1830,
     PANEL_BORDER: 0xa68d50,
     TEXT_WHITE: 0xffffff,
     TEXT_MUTED: 0xb0a898,

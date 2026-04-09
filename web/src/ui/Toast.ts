@@ -1,6 +1,6 @@
 import { GAME_WIDTH, COLORS } from '../config';
 import { EventBus } from '../core/EventBus';
-import { GameEvent, ToastPayload } from '../core/GameEvents';
+import { GameEvent, GameState, ToastPayload } from '../core/GameEvents';
 import { DesignSystem } from './DesignSystem';
 
 interface ToastItem {
@@ -14,14 +14,40 @@ export class Toast {
   private eventBus: EventBus;
   private queue: ToastPayload[] = [];
   private activeToasts: ToastItem[] = [];
+  private suppressedQueue: ToastPayload[] = [];
+  private isSuppressed = false;
   private static readonly MAX_VISIBLE = 3;
 
-  private onToastShow = (p: ToastPayload | undefined) => { if (p) this.enqueue(p); };
+  private onToastShow = (p: ToastPayload | undefined) => {
+    if (!p) return;
+    if (this.isSuppressed) {
+      this.suppressedQueue.push(p);
+    } else {
+      this.enqueue(p);
+    }
+  };
+
+  private onStateChanged = (state: GameState | undefined) => {
+    const dialogueActive = state === GameState.DIALOGUE || state === GameState.CUTSCENE;
+    if (dialogueActive && !this.isSuppressed) {
+      this.isSuppressed = true;
+    } else if (!dialogueActive && this.isSuppressed) {
+      this.isSuppressed = false;
+      // Flush suppressed queue with slight delay so dialogue box has time to close
+      this.scene.time.delayedCall(400, () => {
+        while (this.suppressedQueue.length > 0) {
+          const next = this.suppressedQueue.shift()!;
+          this.enqueue(next);
+        }
+      });
+    }
+  };
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this.eventBus = EventBus.getInstance();
     this.eventBus.on(GameEvent.TOAST_SHOW, this.onToastShow);
+    this.eventBus.on(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
   }
 
   private enqueue(payload: ToastPayload): void {
@@ -90,8 +116,10 @@ export class Toast {
 
   destroy(): void {
     this.eventBus.off(GameEvent.TOAST_SHOW, this.onToastShow);
+    this.eventBus.off(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
     this.activeToasts.forEach(t => t.container.destroy(true));
     this.activeToasts = [];
     this.queue = [];
+    this.suppressedQueue = [];
   }
 }

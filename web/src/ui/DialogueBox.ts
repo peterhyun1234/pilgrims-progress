@@ -246,23 +246,34 @@ export class DialogueBox {
     const speaker = payload.speaker ?? '';
     this.speakerText.setText(speaker);
 
+    const rawEmotion = payload.emotion ?? 'neutral';
+    this.emotionState = this.mapEmotion(rawEmotion);
+
+    // Resolve speaker first so we can use their personality for badge color
+    this.resolveSpeakerId(speaker);
+    const speakerBadgeColor = this.getSpeakerBadgeColor();
+
     const hasSpeaker = !!speaker;
     this.speakerBg.clear();
     if (hasSpeaker) {
       const { BOX_X: bx, BOX_Y: by, TEXT_X: tx } = DialogueBox;
       const sw = this.speakerText.width + 16;
-      // Elevated pill badge — positioned slightly above the box top
-      this.speakerBg.fillStyle(0x1a1208, 0.95);
-      this.speakerBg.fillRoundedRect(bx + tx - 2, by - 12, sw, 18, 5);
-      this.speakerBg.lineStyle(1, COLORS.UI.GOLD, 0.75);
-      this.speakerBg.strokeRoundedRect(bx + tx - 2, by - 12, sw, 18, 5);
+      // Personality-tinted pill badge above the dialogue box
+      this.speakerBg.fillStyle(0x0e0c18, 0.96);
+      this.speakerBg.fillRoundedRect(bx + tx - 2, by - 13, sw, 19, 5);
+      this.speakerBg.lineStyle(1.2, speakerBadgeColor, 0.85);
+      this.speakerBg.strokeRoundedRect(bx + tx - 2, by - 13, sw, 19, 5);
+      // Colour accent strip on the left edge of badge
+      this.speakerBg.fillStyle(speakerBadgeColor, 0.55);
+      this.speakerBg.fillRoundedRect(bx + tx - 2, by - 13, 3, 19, { tl: 5, bl: 5, tr: 0, br: 0 });
       // Inner glow
-      this.speakerBg.fillStyle(COLORS.UI.GOLD, 0.08);
-      this.speakerBg.fillRoundedRect(bx + tx - 1, by - 11, sw - 2, 16, 4);
+      this.speakerBg.fillStyle(speakerBadgeColor, 0.06);
+      this.speakerBg.fillRoundedRect(bx + tx + 1, by - 12, sw - 5, 17, 4);
+      // Update speaker text color to match badge accent
+      this.speakerText.setStyle({ color: Phaser.Display.Color.IntegerToColor(speakerBadgeColor).rgba });
+    } else {
+      this.speakerText.setStyle({ color: '#d4a853' });
     }
-
-    const rawEmotion = payload.emotion ?? 'neutral';
-    this.emotionState = this.mapEmotion(rawEmotion);
 
     const emotionColors: Record<string, number> = {
       angry: 0xff4444, happy: 0xffd700, sad: 0x5577cc,
@@ -271,7 +282,6 @@ export class DialogueBox {
     };
     this.drawPortraitFrame(emotionColors[this.emotionState] ?? COLORS.UI.GOLD);
 
-    this.resolveSpeakerId(speaker);
     this.updatePortrait();
     this.updateSceneMood();
 
@@ -317,18 +327,58 @@ export class DialogueBox {
     return map[raw] ?? 'neutral';
   }
 
+  /** Returns a badge accent color based on the speaker's personality/role. */
+  private getSpeakerBadgeColor(): number {
+    const config = PORTRAIT_CONFIGS[this.currentSpeakerId];
+    if (!config) return COLORS.UI.GOLD;
+    const personalityColors: Record<string, number> = {
+      noble:      0xffd700,   // bright gold — angels, goodwill
+      wise:       0x88aadd,   // cool blue — evangelist, interpreter, prudence
+      kind:       0x88cc88,   // warm green — help, piety, charity, faithful, hopeful
+      timid:      0xaa9977,   // muted tan — pliable, timorous
+      stern:      0x99aacc,   // steel blue — watchful, obstinate
+      sly:        0xcc8855,   // amber-orange — worldly_wiseman, ignorance, diffidence
+      aggressive: 0xcc4433,   // dark red — lord_hategood, apollyon
+    };
+    return personalityColors[config.personality ?? 'wise'] ?? COLORS.UI.GOLD;
+  }
+
   private resolveSpeakerId(speaker: string): void {
     const nameMap: Record<string, string> = {
-      '전도자': 'evangelist', 'Evangelist': 'evangelist',
-      '완고': 'obstinate', 'Obstinate': 'obstinate',
-      '유연': 'pliable', 'Pliable': 'pliable',
-      '도움': 'help', 'Help': 'help',
+      // Ch1 — City of Destruction
+      '전도자': 'evangelist',       'Evangelist': 'evangelist',
+      '완고': 'obstinate',          'Obstinate': 'obstinate',
+      '유연': 'pliable',            'Pliable': 'pliable',
+      '도움': 'help',               'Help': 'help',
       '세속 현자': 'worldly_wiseman', 'Worldly Wiseman': 'worldly_wiseman',
-      '선의': 'goodwill', 'Good-will': 'goodwill',
-      '해석자': 'interpreter', 'Interpreter': 'interpreter',
-      '크리스천': 'christian', 'Christian': 'christian',
+      // Ch2 — Wicket Gate / Ch3 — Interpreter's House
+      '선의': 'goodwill',           'Good-will': 'goodwill',
+      '해석자': 'interpreter',      'Interpreter': 'interpreter',
+      '크리스천': 'christian',      'Christian': 'christian',
+      // Ch5–6 — Valley / Cross
+      '신실': 'faithful',           'Faithful': 'faithful',
+      // Ch7 — Beautiful Palace
+      '겁쟁이': 'timorous',         'Timorous': 'timorous',
+      '불신': 'mistrust',           'Mistrust': 'mistrust',
+      '파수꾼': 'watchful',         'Watchful': 'watchful',
+      '현숙': 'prudence',           'Prudence': 'prudence',
+      '경건': 'piety',              'Piety': 'piety',
+      '자선': 'charity',            'Charity': 'charity',
+      // Ch8–9 — Companion
+      '소망': 'hopeful',            'Hopeful': 'hopeful',
+      // Ch9 — Valley of the Shadow
+      '무지': 'ignorance',          'Ignorance': 'ignorance',
+      '소신': 'little_faith',       'Little-faith': 'little_faith',
+      // Ch10 — Vanity Fair
+      '증오 판사': 'lord_hategood', 'Lord Hategood': 'lord_hategood',
+      // Ch11 — Doubting Castle
+      '소심': 'timorous',           // timorous also appears in Ch11
+      '의심 부인': 'diffidence',    'Diffidence': 'diffidence',
+      // Ch12 — Celestial City
+      '빛나는 자들': 'shining_ones','Shining Ones': 'shining_ones',
     };
-    this.currentSpeakerId = nameMap[speaker] ?? '';
+    // Fallback: normalise display names to snake_case portrait IDs
+    this.currentSpeakerId = nameMap[speaker] ?? speaker.toLowerCase().replace(/[\s-]/g, '_');
   }
 
   private updatePortrait(): void {
@@ -426,17 +476,18 @@ export class DialogueBox {
 
         const cbg = this.scene.add.graphics();
         const defaultColor = choice.isHidden ? 0x2a2040 : COLORS.UI.BUTTON_DEFAULT;
-        const bdrClr = choice.isHidden ? COLORS.UI.GOLD : 0x444444;
-        cbg.fillStyle(defaultColor, 0.92);
+        const bdrClr = choice.isHidden ? COLORS.UI.GOLD : 0x554433;
+        cbg.fillStyle(defaultColor, 0.93);
         cbg.fillRoundedRect(0, 0, w, choiceH, 4);
-        cbg.lineStyle(1, bdrClr, 0.5);
+        cbg.lineStyle(1, bdrClr, 0.6);
         cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
 
         const isLocked = choice.requiredStat !== undefined
           && (ServiceLocator.get<import('../core/StatsManager').StatsManager>(SERVICE_KEYS.STATS_MANAGER)
             .get(choice.requiredStat as import('../core/GameEvents').StatType) < (choice.requiredValue ?? 0));
         const prefix = isLocked ? '🔒 ' : (choice.isHidden ? '★ ' : `${i + 1}. `);
-        const textColor = isLocked ? '#887766' : (choice.isHidden ? '#d4a853' : '#d0c8b8');
+        // Locked: more visible muted amber (not nearly-invisible 0x887766)
+        const textColor = isLocked ? '#aa9977' : (choice.isHidden ? '#d4a853' : '#d0c8b8');
         const txt = this.scene.add.text(w / 2, choiceH / 2, prefix + choice.text,
           DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, textColor),
         ).setOrigin(0.5).setAlpha(isLocked ? 0.5 : 1);

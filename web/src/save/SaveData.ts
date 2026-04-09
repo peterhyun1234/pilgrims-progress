@@ -125,9 +125,15 @@ export function migrateSaveData(raw: unknown): SaveData {
     }
   }
 
-  // Merge with defaults to ensure all required fields exist (forward-compat)
+  // Merge with defaults to ensure all required fields exist (forward-compat).
+  // Deep-merge `settings` so new fields (colorblindMode, reduceMotion, …) always
+  // have a value even when loading saves written before they existed.
   const defaults = createDefaultSaveData();
   const result = { ...defaults, ...obj } as SaveData;
+
+  // Deep-merge settings so new fields (colorblindMode, reduceMotion, …) always
+  // have a value even when loading saves written before they existed.
+  result.settings = { ...defaults.settings, ...(obj['settings'] ?? {}) } as SaveData['settings'];
 
   // Always stamp current version after migration.
   result.version = SAVE_VERSION;

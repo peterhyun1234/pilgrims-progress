@@ -24,15 +24,15 @@ export class HUD {
   private bars: StatBar[] = [];
   private statsManager: StatsManager;
   private eventBus: EventBus;
-  /** Reusable graphics for the burden bar glow — created once, not per-frame. */
-  private burdenGlowGfx: Phaser.GameObjects.Graphics | null = null;
+  /** Reused graphics for burden glow overlay — avoids per-frame allocation. */
+  private burdenGlowGfx!: Phaser.GameObjects.Graphics;
+  /** Small chapter badge shown in top-right of HUD panel. */
+  private chapterBadge!: Phaser.GameObjects.Text;
 
-  private static readonly BAR_WIDTH = 76;
-  private static readonly BAR_HEIGHT = 8;
-  private static readonly BAR_GAP = 17;   // row height
-  private static readonly ROW_MID = 8;    // vertical center within a row
-  private static readonly PADDING = 6;
-  private static readonly ICON_SIZE = 12; // iconBg square size
+  private static readonly BAR_WIDTH = 88;
+  private static readonly BAR_HEIGHT = 9;
+  private static readonly BAR_GAP = 17;
+  private static readonly PADDING = 7;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -42,24 +42,40 @@ export class HUD {
 
     this.createBackground();
     this.createBars();
+    this.createChapterBadge();
+    // Reusable graphics layer for the burden glow overlay
+    this.burdenGlowGfx = scene.add.graphics().setScrollFactor(0).setDepth(99);
+    this.container.add(this.burdenGlowGfx);
     this.setupEvents();
+  }
+
+  private createChapterBadge(): void {
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    const ch = gm.currentChapter;
+    const ko = gm.language === 'ko';
+    const label = ko ? `${ch}장` : `Ch.${ch}`;
+    this.chapterBadge = this.scene.add.text(171, 4, label, {
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+      color: '#d4a853',
+      fontFamily: FONT_FAMILY,
+    }).setAlpha(0.7).setOrigin(1, 0).setScrollFactor(0).setDepth(101);
+    this.container.add(this.chapterBadge);
   }
 
   private createBackground(): void {
     const bg = this.scene.add.graphics();
-    const { PADDING: P, BAR_GAP: G, ICON_SIZE: IS } = HUD;
-    // 4 rows + top/bottom padding
-    const panelH = P + 4 * G + P - 2;
-    // Panel width: padding + iconSize + gap + label(32) + gap + bar(76) + gap + value(18) + padding
-    const panelW = P + IS + 2 + 32 + 4 + HUD.BAR_WIDTH + 4 + 18 + P;
-    bg.fillStyle(0x0a0814, 0.85);
-    bg.fillRoundedRect(2, 2, panelW, panelH, 4);
-    bg.lineStyle(1, 0xd4a853, 0.55);
-    bg.strokeRoundedRect(2, 2, panelW, panelH, 4);
-    bg.lineStyle(0.5, 0xd4a853, 0.2);
-    bg.strokeRoundedRect(4, 4, panelW - 4, panelH - 4, 3);
-    bg.fillStyle(0xffffff, 0.03);
-    bg.fillRoundedRect(3, 3, panelW - 2, 10, 3);
+    // Panel: wide enough for 88px bars + labels + value
+    bg.fillStyle(0x0a0814, 0.88);
+    bg.fillRoundedRect(2, 2, 178, 82, 4);
+    // Outer border
+    bg.lineStyle(1, 0xd4a853, 0.65);
+    bg.strokeRoundedRect(2, 2, 178, 82, 4);
+    // Inner gold border line
+    bg.lineStyle(0.5, 0xd4a853, 0.25);
+    bg.strokeRoundedRect(4, 4, 174, 78, 3);
+    // Top highlight strip
+    bg.fillStyle(0xffffff, 0.04);
+    bg.fillRoundedRect(3, 3, 176, 10, 3);
     this.container.add(bg);
   }
 
@@ -67,64 +83,54 @@ export class HUD {
     const stats: StatType[] = ['faith', 'courage', 'wisdom', 'burden'];
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const ko = gm.language === 'ko';
-    const { PADDING: P, BAR_GAP: G, ROW_MID: MID, ICON_SIZE: IS } = HUD;
-    // barX: icon(IS) + 2px gap + label(32) + 4px gap
-    const barX = IS + 2 + 32 + 4;
 
     stats.forEach((stat, i) => {
-      const containerY = P + i * G;
-      const barContainer = this.scene.add.container(P, containerY);
+      const x = HUD.PADDING;
+      const y = HUD.PADDING + i * HUD.BAR_GAP;
+      const barContainer = this.scene.add.container(x, y);
 
-      const iconBgColor = DesignSystem.statColorSafe(stat);
-
-      // Icon background — vertically centered at MID
+      // Stat icon with distinct colored background
       const iconBg = this.scene.add.graphics();
+      const iconBgColor = DesignSystem.getStatColor(stat);
       iconBg.fillStyle(iconBgColor, 0.22);
-      iconBg.fillRoundedRect(0, MID - IS / 2, IS, IS, 2);
-      iconBg.lineStyle(0.5, iconBgColor, 0.5);
-      iconBg.strokeRoundedRect(0, MID - IS / 2, IS, IS, 2);
+      iconBg.fillRoundedRect(-1, -1, 11, 11, 2);
+      iconBg.lineStyle(0.5, iconBgColor, 0.4);
+      iconBg.strokeRoundedRect(-1, -1, 11, 11, 2);
 
-      // Icon glyph — centered inside iconBg
-      const icon = this.scene.add.text(IS / 2, MID, DesignSystem.STAT_ICONS[stat], {
-        fontSize: '8px', color: DesignSystem.hex(iconBgColor),
+      const icon = this.scene.add.text(0, 0, DesignSystem.STAT_ICONS[stat], {
+        fontSize: '9px', color: DesignSystem.hex(DesignSystem.getStatColor(stat)),
         fontFamily: 'serif',
-      }).setOrigin(0.5, 0.5);
+      }).setOrigin(0, 0);
 
-      // Label — vertically centered, right of iconBg
       const labelText = gm.i18n.t(`hud.${stat}`);
+      // Use native 11px for Galmuri11 (KO) so final consonants aren't clipped at 9px
       const labelFontSize = ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.XS;
-      const label = this.scene.add.text(IS + 2, MID, labelText, {
+      const label = this.scene.add.text(11, 0, labelText, {
         fontSize: `${labelFontSize}px`,
-        color: DesignSystem.hex(iconBgColor),
+        color: DesignSystem.hex(DesignSystem.getStatColor(stat)),
         fontFamily: FONT_FAMILY,
-        stroke: '#000000',
-        strokeThickness: 2,
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
-      }).setOrigin(0, 0.5);
+      }).setOrigin(0, 0);
 
-      // Bar track — vertically centered at MID
-      const barBg = this.scene.add.graphics();
-      barBg.fillStyle(0x222222, 0.7);
-      barBg.fillRoundedRect(barX, MID - HUD.BAR_HEIGHT / 2, HUD.BAR_WIDTH, HUD.BAR_HEIGHT, 2);
-      // Subtle border around track
-      barBg.lineStyle(1, iconBgColor, 0.3);
-      barBg.strokeRoundedRect(barX, MID - HUD.BAR_HEIGHT / 2, HUD.BAR_WIDTH, HUD.BAR_HEIGHT, 2);
+      const barX = 44;
+      const bg = this.scene.add.graphics();
+      bg.fillStyle(0x222222, 0.7);
+      bg.fillRoundedRect(barX, 1, HUD.BAR_WIDTH, HUD.BAR_HEIGHT, 2);
 
       const fill = this.scene.add.graphics();
       const currentVal = this.statsManager.get(stat);
       const fillW = (currentVal / 100) * HUD.BAR_WIDTH;
-      this.drawFill(fill, barX, MID, fillW, stat);
+      this.drawFill(fill, barX, fillW, stat);
 
-      // Value number — vertically centered, right of bar
-      const value = this.scene.add.text(barX + HUD.BAR_WIDTH + 3, MID,
+      const value = this.scene.add.text(barX + HUD.BAR_WIDTH + 4, 0,
         currentVal.toString(), {
           fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-          color: DesignSystem.hex(iconBgColor),
+          color: DesignSystem.hex(DesignSystem.getStatColor(stat)),
           fontFamily: FONT_FAMILY,
           shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
-        }).setOrigin(0, 0.5);
+        }).setOrigin(0, 0);
 
-      barContainer.add([iconBg, barBg, fill, icon, label, value]);
+      barContainer.add([iconBg, bg, fill, icon, label, value]);
       this.container.add(barContainer);
 
       this.bars.push({
@@ -134,25 +140,19 @@ export class HUD {
     });
   }
 
-  /**
-   * @param midY  vertical center Y within the barContainer coordinate space
-   */
-  private drawFill(g: Phaser.GameObjects.Graphics, x: number, midY: number, w: number, stat: StatType): void {
+  private drawFill(g: Phaser.GameObjects.Graphics, x: number, w: number, stat: StatType): void {
     g.clear();
     if (w <= 0) return;
-    const bh = HUD.BAR_HEIGHT;
-    const fy = midY - bh / 2;
-    // Respect colorblind mode via DesignSystem.statColorSafe
-    const color = DesignSystem.statColorSafe(stat);
+    const color = DesignSystem.getStatColor(stat);
     g.fillStyle(color, 0.85);
-    g.fillRoundedRect(x, fy, Math.max(w, 2), bh, 2);
+    g.fillRoundedRect(x, 1, Math.max(w, 2), HUD.BAR_HEIGHT, 2);
     // Top highlight stripe
     g.fillStyle(0xffffff, 0.18);
-    g.fillRect(x + 1, fy, Math.max(w - 2, 1), 2);
+    g.fillRect(x + 1, 1, Math.max(w - 2, 1), 2);
     // Bright gradient end-cap (right edge glow)
     if (w > 4) {
       g.fillStyle(0xffffff, 0.35);
-      g.fillRoundedRect(x + w - 4, fy, 4, bh, 2);
+      g.fillRoundedRect(x + w - 4, 1, 4, HUD.BAR_HEIGHT, 2);
     }
   }
 
@@ -166,35 +166,15 @@ export class HUD {
     const flashColor = p.amount > 0 ? '#66ff66' : '#ff6666';
     bar.value.setColor(flashColor);
     this.scene.tweens.add({
-      targets: bar.value, scaleX: 1.5, scaleY: 1.5, duration: DesignSystem.dur(150), yoyo: true,
-      onComplete: () => bar.value.setColor(DesignSystem.hex(DesignSystem.statColorSafe(bar.stat))),
+      targets: bar.value, scaleX: 1.5, scaleY: 1.5, duration: 150, yoyo: true,
+      onComplete: () => bar.value.setColor(DesignSystem.hex(DesignSystem.getStatColor(bar.stat))),
     });
 
     if (p.amount !== 0) {
       this.showStatDelta(bar, p.amount);
-      if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
-        const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
-        if (p.amount > 0) audio?.procedural?.playStatGain();
-        else audio?.procedural?.playStatLoss();
-      }
-
-      // Particle burst at the bar fill end-point for visible gain feedback
-      if (p.amount > 0) {
-        const barX = this.container.x + HUD.PADDING + this._barX;
-        const barY = this.container.y + bar.container.y + HUD.ROW_MID;
-        const fillEnd = barX + bar.currentWidth;
-        DesignSystem.particleBurst(this.scene, fillEnd, barY,
-          DesignSystem.statColorSafe(p.stat), 5,
-          { speed: 14, size: 1.5, duration: 400, depth: 102 },
-        );
-      }
-
-      // High burden warning — edge pulse
-      if (p.stat === 'burden' && p.newValue >= 70) {
-        DesignSystem.edgePulse(this.scene, 0xff2200,
-          p.newValue >= 85 ? 0.40 : 0.22, 700,
-        );
-      }
+      const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      if (p.amount > 0) audio?.procedural?.playStatGain();
+      else audio?.procedural?.playStatLoss();
     }
   };
 
@@ -217,12 +197,29 @@ export class HUD {
   private onChapterLoaded = (payload?: { chapter: number; title?: string }) => {
     if (!payload) return;
     this.showLocationCard(payload.chapter, payload.title);
+    // Update chapter badge in HUD panel
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    const ko = gm.language === 'ko';
+    this.chapterBadge.setText(ko ? `${payload.chapter}장` : `Ch.${payload.chapter}`);
+  };
+
+  private onSettingsChanged = () => {
+    // Refresh all bar colors when colorblind mode changes
+    this.bars.forEach(bar => {
+      const color = DesignSystem.getStatColor(bar.stat);
+      const hexColor = DesignSystem.hex(color);
+      bar.icon.setColor(hexColor);
+      bar.label.setColor(hexColor);
+      bar.value.setColor(hexColor);
+      this.drawFill(bar.fill, 44, bar.currentWidth, bar.stat);
+    });
   };
 
   private setupEvents(): void {
     this.eventBus.on(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.on(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
     this.eventBus.on(GameEvent.CHAPTER_CHANGED, this.onChapterLoaded);
+    this.eventBus.on(GameEvent.SETTINGS_CHANGED, this.onSettingsChanged);
   }
 
   /** Show a cinematic location card when entering a new chapter */
@@ -283,27 +280,22 @@ export class HUD {
     });
   }
 
-  private get _barX(): number {
-    const { ICON_SIZE: IS } = HUD;
-    return IS + 2 + 32 + 4; // matches createBars() barX calculation
-  }
-
   private showStatDelta(bar: StatBar, amount: number): void {
     const sign = amount > 0 ? '+' : '';
     const color = amount > 0 ? '#55ff55' : '#ff5555';
     const delta = this.scene.add.text(
-      bar.container.x + this._barX + HUD.BAR_WIDTH + 20,
-      bar.container.y + HUD.ROW_MID,
+      bar.container.x + 44 + HUD.BAR_WIDTH + 18,
+      bar.container.y,
       `${sign}${amount}`,
       {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
         color, fontFamily: FONT_FAMILY, fontStyle: 'bold',
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
       },
-    ).setDepth(101).setScrollFactor(0).setOrigin(0, 0.5);
+    ).setDepth(101).setScrollFactor(0);
 
     this.scene.tweens.add({
-      targets: delta, y: delta.y - 12, alpha: 0, duration: 900,
+      targets: delta, y: delta.y - 10, alpha: 0, duration: 800,
       ease: 'Sine.easeOut',
       onComplete: () => delta.destroy(),
     });
@@ -313,51 +305,40 @@ export class HUD {
     this.bars.forEach(bar => {
       if (Math.abs(bar.currentWidth - bar.targetWidth) > 0.3) {
         bar.currentWidth += (bar.targetWidth - bar.currentWidth) * 0.1;
-        this.drawFill(bar.fill, this._barX, HUD.ROW_MID, bar.currentWidth, bar.stat);
+        this.drawFill(bar.fill, 44, bar.currentWidth, bar.stat);
       }
     });
 
     const burdenBar = this.bars[3];
     const burden = this.statsManager.get('burden');
-    const baseY = HUD.PADDING + 3 * HUD.BAR_GAP;
+    this.burdenGlowGfx.clear();
     if (burdenBar && burden >= 60) {
       const t = this.scene.time.now * 0.004;
+      // Red pulsing glow behind the bar — reuse cached graphics, no allocation
       const glowAlpha = 0.06 + Math.sin(t * 2) * 0.04;
-      burdenBar.fill.setAlpha(0.85);
-      // Reuse a single graphics object instead of creating+destroying every frame.
-      if (!this.burdenGlowGfx) {
-        this.burdenGlowGfx = this.scene.add.graphics().setScrollFactor(0).setDepth(99);
-      }
-      this.burdenGlowGfx.clear();
       this.burdenGlowGfx.fillStyle(0xff2200, glowAlpha);
-      const bh = HUD.BAR_HEIGHT;
       this.burdenGlowGfx.fillRoundedRect(
-        burdenBar.container.x + this._barX,
-        burdenBar.container.y + HUD.ROW_MID - bh / 2 - 1,
-        HUD.BAR_WIDTH + 2, bh + 2, 2,
+        burdenBar.container.x + 44, burdenBar.container.y - 1,
+        HUD.BAR_WIDTH + 2, HUD.BAR_HEIGHT + 2, 2,
       );
       if (burden >= 80) {
         const shake = Math.sin(t * 2) * 0.8;
-        burdenBar.container.y = baseY + shake;
+        burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP + shake;
         burdenBar.fill.setAlpha(0.6 + Math.sin(t * 3) * 0.4);
         burdenBar.icon.setTint(0xff4444);
       } else if (burden >= 70) {
         burdenBar.fill.setAlpha(0.75 + Math.sin(t * 1.5) * 0.25);
-        burdenBar.container.y = baseY;
+        burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
         burdenBar.icon.setTint(0xff8866);
       } else {
         burdenBar.fill.setAlpha(0.8 + Math.sin(t) * 0.2);
-        burdenBar.container.y = baseY;
+        burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
         burdenBar.icon.clearTint();
       }
     } else if (burdenBar) {
       burdenBar.fill.setAlpha(0.85);
-      burdenBar.container.y = baseY;
+      burdenBar.container.y = HUD.PADDING + 3 * HUD.BAR_GAP;
       burdenBar.icon.clearTint();
-      // Hide the glow when burden is below threshold.
-      if (this.burdenGlowGfx) {
-        this.burdenGlowGfx.clear();
-      }
     }
   }
 
@@ -365,8 +346,7 @@ export class HUD {
     this.eventBus.off(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.off(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
     this.eventBus.off(GameEvent.CHAPTER_CHANGED, this.onChapterLoaded);
-    this.burdenGlowGfx?.destroy();
-    this.burdenGlowGfx = null;
+    this.eventBus.off(GameEvent.SETTINGS_CHANGED, this.onSettingsChanged);
     this.container.destroy(true);
   }
 }

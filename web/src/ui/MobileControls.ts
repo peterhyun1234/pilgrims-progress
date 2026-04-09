@@ -27,6 +27,7 @@ export class MobileControls {
   private isVisible = false;
   private contextLabel = 'A';
   private hasShownHint = false;
+  private static readonly HINT_KEY = 'pilgrims_mobile_hint_shown';
 
   private static readonly JOYSTICK_R = TOUCH.JOYSTICK_SIZE / 2;
   private static readonly INNER_R = TOUCH.JOYSTICK_INNER / 2;
@@ -36,6 +37,10 @@ export class MobileControls {
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
     this.container = scene.add.container(0, 0).setDepth(300).setScrollFactor(0);
+    // Restore hint-shown state so it doesn't repeat across sessions
+    try {
+      this.hasShownHint = localStorage.getItem(MobileControls.HINT_KEY) === '1';
+    } catch { /* ignore */ }
 
     this.joystickOuter = this.makeJoystickOuter();
     this.joystickInner = this.makeJoystickInner();
@@ -211,6 +216,7 @@ export class MobileControls {
 
     if (!this.hasShownHint) {
       this.hasShownHint = true;
+      try { localStorage.setItem(MobileControls.HINT_KEY, '1'); } catch { /* ignore */ }
       this.showMovementHint();
     }
   }
@@ -256,6 +262,22 @@ export class MobileControls {
   setActionLabel(label: string): void {
     this.contextLabel = label;
     this.actionLabelText?.setText(label);
+  }
+
+  /** Dims the action button and makes it non-interactive when no action is available */
+  setActionEnabled(enabled: boolean): void {
+    const targetAlpha = enabled ? 0.7 : 0.3;
+    // Only update if the state actually changed to avoid excessive tweening
+    if (Math.abs((this.actionBtn.alpha) - targetAlpha) > 0.05) {
+      this.scene.tweens.add({
+        targets: this.actionBtn, alpha: targetAlpha, duration: 150,
+      });
+    }
+    if (enabled) {
+      this.actionBtnHit.setInteractive();
+    } else {
+      this.actionBtnHit.disableInteractive();
+    }
   }
 
   get virtualInput(): VirtualInput {

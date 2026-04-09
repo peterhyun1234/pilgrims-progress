@@ -491,9 +491,9 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     spawn: { x: 80, y: 280 },
     npcs: [
       {
-        id: 'worldly_wiseman',
+        id: 'worldly_wiseman_ch3',
         nameKo: '세속 현자',
-        nameEn: 'Worldly Wiseman',
+        nameEn: 'Mr. Worldly Wiseman',
         sprite: 'worldly_wiseman',
         x: 300, y: 200,
         chapter: 3,
@@ -517,7 +517,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         type: 'dialogue',
         x: 500, y: 200, width: 40, height: 100,
         triggerOnce: false,
-        data: { npcId: 'worldly_wiseman', knotName: 'worldly_wiseman_warning' },
+        data: { npcId: 'worldly_wiseman_ch3', knotName: 'worldly_wiseman_warning' },
       },
     ],
     mapObjects: [
@@ -530,7 +530,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       },
     ],
     completionRequirements: {
-      requiredNpcs: ['worldly_wiseman'],
+      requiredNpcs: ['worldly_wiseman_ch3'],
     },
   },
   {
@@ -644,6 +644,10 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       requiredNpcs: ['interpreter'],
     },
   },
+  // ─── Chapter 6: The Cross ─────────────────────────────────────────────────
+  // Emotional arc: burden of sin → surrender at the cross → liberation
+  // Player starts at bottom (y:500), walks uphill to the cross (y:80),
+  // triggering the burden_released cutscene, then exits north to Ch7.
   {
     chapter: 6,
     locationName: '십자가',
@@ -653,6 +657,36 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     spawn: { x: 240, y: 500 },
     npcs: [],
     theme: THEMES[6],
+    bgmKey: 'bgm_cross',
+    events: [
+      {
+        id: 'ch6_burden_released',
+        type: 'cutscene',
+        x: 190, y: 60,          // top-center — at the foot of the cross
+        width: 100, height: 100,
+        triggerOnce: true,
+        data: { cutsceneId: 'ch6_burden_released' },
+      },
+    ],
+    exits: [
+      {
+        x: 190, y: 0,            // north edge — only reachable after cutscene
+        width: 100, height: 60,
+        targetChapter: 7,
+      },
+    ],
+    mapObjects: [
+      {
+        id: 'ch6_cross',
+        type: 'sign',
+        x: 220, y: 80,
+        label: '✝',
+        labelEn: '✝',
+      },
+    ],
+    completionRequirements: {
+      requiredEvents: ['ch6_burden_released'],
+    },
   },
 
   // ─── Chapter 7: Beautiful Palace ──────────────────────────────────────────
@@ -706,7 +740,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         x: 1800, y: 280,
         chapter: 7,
         unlockedAt: 'watchful',
-        behavior: 'read',
+        behavior: 'welcome',
       },
       {
         id: 'piety',
@@ -726,6 +760,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         x: 2200, y: 290,
         chapter: 7,
         unlockedAt: 'watchful',
+        behavior: 'welcome',
       },
     ],
     exits: [
@@ -913,6 +948,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         x: 1500, y: 280,
         chapter: 10,
         unlockedAt: 'faithful',
+        behavior: 'judge',
       },
     ],
     exits: [
@@ -1061,6 +1097,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         sprite: 'shining_ones',
         x: 2100, y: 280,
         chapter: 12,
+        behavior: 'angelic',
       },
     ],
     exits: [],

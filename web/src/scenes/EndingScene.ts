@@ -33,25 +33,25 @@ const TIER_THEMES: Record<EndingTier, TierTheme> = {
     titleKo: '겸손한 도착', titleEn: 'A Humble Arrival',
     subtitleKo: '조용한 발걸음으로, 그러나 흔들리지 않는 믿음으로',
     subtitleEn: 'With quiet steps, yet unwavering faith',
-    bgTint: 0xd4a853, lightColor: 0xeedd88, lightAlpha: 0.26,
+    bgTint: 0xddbb66, lightColor: 0xeedd88, lightAlpha: 0.26,
     particleColor: 0xeedd88, particleCount: 25,
-    titleColor: '#d4c080',
+    titleColor: '#eedd88',
   },
   barely: {
     titleKo: '간신히 도착', titleEn: 'Arrived at Last',
     subtitleKo: '지친 발걸음이었으나, 마침내 이른 곳',
     subtitleEn: 'Exhausted, yet the journey is complete',
-    bgTint: 0x4488aa, lightColor: 0xccbb99, lightAlpha: 0.18,
+    bgTint: 0x998866, lightColor: 0xccbb99, lightAlpha: 0.18,
     particleColor: 0xccbb99, particleCount: 15,
-    titleColor: '#88b8cc',
+    titleColor: '#ccbb99',
   },
   grace: {
     titleKo: '은혜의 도착', titleEn: 'Saved by Grace',
     subtitleKo: '넘어질 때마다 손을 내밀어 주신 분이 계셨다',
     subtitleEn: 'Every fall was met by a hand reaching down',
-    bgTint: 0x8866cc, lightColor: 0xddbbff, lightAlpha: 0.28,
+    bgTint: 0xaa88dd, lightColor: 0xddbbff, lightAlpha: 0.28,
     particleColor: 0xddbbff, particleCount: 30,
-    titleColor: '#cc99ff',
+    titleColor: '#ddbbff',
   },
 };
 
@@ -70,6 +70,7 @@ export class EndingScene extends Phaser.Scene {
     this.cameras.main.setBackgroundColor(0x000000);
     this.createStarfield(theme);
     this.createParticles(theme);
+    this.createPilgrimApproach(theme);
     this.runEpilogueSequence(tier, theme);
 
     if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
@@ -104,36 +105,26 @@ export class EndingScene extends Phaser.Scene {
       bg.fillStyle(0xffffff, brightness);
       bg.fillCircle(sx, sy, size);
     }
-    // Holy light beam — wide outer shaft
-    bg.fillStyle(theme.lightColor, theme.lightAlpha * 0.45);
-    bg.fillTriangle(GAME_WIDTH / 2 - 80, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.75, GAME_WIDTH / 2 + 80, 0);
-    // Inner bright core
+    // Holy light beam — wide outer shaft (increased visibility)
+    bg.fillStyle(theme.lightColor, theme.lightAlpha * 0.55);
+    bg.fillTriangle(GAME_WIDTH / 2 - 90, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.8, GAME_WIDTH / 2 + 90, 0);
+    // Mid shaft
     bg.fillStyle(theme.lightColor, theme.lightAlpha);
-    bg.fillTriangle(GAME_WIDTH / 2 - 40, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.6, GAME_WIDTH / 2 + 40, 0);
-    // Tight inner glow
-    bg.fillStyle(theme.lightColor, theme.lightAlpha * 1.3 > 0.6 ? 0.6 : theme.lightAlpha * 1.3);
-    bg.fillTriangle(GAME_WIDTH / 2 - 16, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.4, GAME_WIDTH / 2 + 16, 0);
-    // Tier-specific tint overlay
-    bg.fillStyle(theme.bgTint, 0.06);
+    bg.fillTriangle(GAME_WIDTH / 2 - 50, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.65, GAME_WIDTH / 2 + 50, 0);
+    // Inner bright core
+    bg.fillStyle(theme.lightColor, Math.min(theme.lightAlpha * 1.5, 0.7));
+    bg.fillTriangle(GAME_WIDTH / 2 - 20, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.45, GAME_WIDTH / 2 + 20, 0);
+    // Tight inner hot core
+    bg.fillStyle(0xffffff, Math.min(theme.lightAlpha * 0.8, 0.35));
+    bg.fillTriangle(GAME_WIDTH / 2 - 8, 0, GAME_WIDTH / 2, GAME_HEIGHT * 0.25, GAME_WIDTH / 2 + 8, 0);
+    // Tier-specific tint overlay (0.06 → 0.12 for better visual distinction)
+    bg.fillStyle(theme.bgTint, 0.12);
     bg.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-
-    // Glory tier: radiant rays from center-top
-    if (this.getEndingTier() === 'glory') {
-      for (let r = 0; r < 8; r++) {
-        const angle = (r / 8) * Math.PI * 2 - Math.PI / 2;
-        const rayLength = GAME_HEIGHT * 0.85;
-        const rayW = 12;
-        const startX = GAME_WIDTH / 2;
-        const startY = 0;
-        const endX = startX + Math.cos(angle) * rayLength;
-        const endY = startY + Math.sin(angle) * rayLength;
-        bg.fillStyle(0xffd700, 0.06);
-        bg.fillTriangle(
-          startX - Math.cos(angle + Math.PI / 2) * rayW, startY - Math.sin(angle + Math.PI / 2) * rayW,
-          startX + Math.cos(angle + Math.PI / 2) * rayW, startY + Math.sin(angle + Math.PI / 2) * rayW,
-          endX, endY,
-        );
-      }
+    // Horizon glow at bottom of beam
+    for (let i = 0; i < 5; i++) {
+      const r = 30 + i * 20;
+      bg.fillStyle(theme.lightColor, 0.06 - i * 0.01);
+      bg.fillEllipse(GAME_WIDTH / 2, GAME_HEIGHT * 0.75, r * 2, r * 0.5);
     }
   }
 
@@ -170,15 +161,86 @@ export class EndingScene extends Phaser.Scene {
     });
   }
 
+  private createPilgrimApproach(theme: TierTheme): void {
+    // Pilgrim silhouette walks from bottom-center toward the light beam
+    const gfx = this.add.graphics().setDepth(3);
+    const startX = GAME_WIDTH * 0.35;
+    const startY = GAME_HEIGHT * 0.82;
+    const endX = GAME_WIDTH * 0.5;
+    const endY = GAME_HEIGHT * 0.55;
+    const pilgrim = { t: 0 };
+
+    // Draw ground road
+    gfx.fillStyle(0x1a1430, 0.4);
+    gfx.fillRect(GAME_WIDTH * 0.2, startY - 2, GAME_WIDTH * 0.6, 4);
+    // Road golden shimmer
+    gfx.fillStyle(theme.lightColor, 0.06);
+    gfx.fillRect(GAME_WIDTH * 0.3, startY - 1, GAME_WIDTH * 0.4, 2);
+
+    this.tweens.add({
+      targets: pilgrim,
+      t: 1,
+      duration: 2500,
+      ease: 'Sine.easeIn',
+      onUpdate: () => {
+        gfx.clear();
+        // Ground road
+        gfx.fillStyle(0x1a1430, 0.4);
+        gfx.fillRect(GAME_WIDTH * 0.2, startY - 2, GAME_WIDTH * 0.6, 4);
+        gfx.fillStyle(theme.lightColor, 0.06);
+        gfx.fillRect(GAME_WIDTH * 0.3, startY - 1, GAME_WIDTH * 0.4, 2);
+
+        const px = startX + (endX - startX) * pilgrim.t;
+        const py = startY + (endY - startY) * pilgrim.t;
+        const scale = 1 - pilgrim.t * 0.45; // shrinks as they approach light
+        const alpha = 1 - pilgrim.t * 0.5;  // fades into the light
+
+        // Shadow
+        gfx.fillStyle(0x000000, 0.2 * alpha);
+        gfx.fillEllipse(px, py + 4 * scale, 10 * scale, 3 * scale);
+        // Body
+        gfx.fillStyle(0x0a0520, alpha * 0.9);
+        gfx.fillRect(px - 2 * scale, py - 8 * scale, 4 * scale, 6 * scale);
+        // Head
+        gfx.fillCircle(px, py - 10 * scale, 2.5 * scale);
+        // Staff
+        gfx.fillRect(px + 3 * scale, py - 13 * scale, scale, 15 * scale);
+        // Cloak
+        gfx.fillTriangle(
+          px - 3 * scale, py - 4 * scale,
+          px + 2 * scale, py - 4 * scale,
+          px - 4 * scale, py + 2 * scale,
+        );
+        // Legs
+        const legAnim = Math.sin(pilgrim.t * 40) * 1.5 * scale;
+        gfx.fillRect(px - 2 * scale, py - 3 * scale, scale, 5 * scale + legAnim);
+        gfx.fillRect(px + scale, py - 3 * scale, scale, 5 * scale - legAnim);
+        // Aura brightening near the end
+        if (pilgrim.t > 0.6) {
+          const glowA = (pilgrim.t - 0.6) / 0.4 * 0.3;
+          gfx.fillStyle(theme.lightColor, glowA);
+          gfx.fillCircle(px, py, 14 * scale);
+        }
+      },
+    });
+  }
+
   private runEpilogueSequence(tier: EndingTier, theme: TierTheme): void {
     const ko = this.gameManager.language === 'ko';
 
-    const flash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0xffffff, 1)
+    // Tier-specific opening flash colour (glory=gold, grace=purple, humble=soft gold, barely=silver-white)
+    const flashColors: Record<EndingTier, number> = {
+      glory: 0xffd700,
+      humble: 0xeedd88,
+      barely: 0xffffff,
+      grace: 0xddbbff,
+    };
+    const flash = this.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, flashColors[tier], 1)
       .setDepth(100);
     this.tweens.add({
       targets: flash,
       alpha: 0,
-      duration: 2000,
+      duration: 2200,
       ease: 'Sine.easeIn',
       onComplete: () => {
         flash.destroy();

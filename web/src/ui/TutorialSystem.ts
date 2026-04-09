@@ -10,16 +10,19 @@ interface TutorialStep {
   textEn: string;
   icon: string;
   chapter?: number;
+  /** 'mobile' | 'desktop' | 'first_battle' | undefined (always show) */
   condition?: string;
 }
 
 const TUTORIALS: TutorialStep[] = [
+  // ── Movement ──────────────────────────────────────────────────────────────
   {
     id: 'movement',
     textKo: '방향키 또는 WASD로 이동하세요',
     textEn: 'Use Arrow keys or WASD to move',
     icon: '🎮',
     chapter: 1,
+    condition: 'desktop',
   },
   {
     id: 'movement_mobile',
@@ -29,33 +32,77 @@ const TUTORIALS: TutorialStep[] = [
     chapter: 1,
     condition: 'mobile',
   },
+
+  // ── Interact ───────────────────────────────────────────────────────────────
   {
     id: 'interact',
     textKo: 'NPC 근처에서 E키를 눌러 대화하세요',
     textEn: 'Press E near an NPC to talk',
     icon: '💬',
     chapter: 1,
+    condition: 'desktop',
   },
   {
     id: 'interact_mobile',
-    textKo: 'NPC 근처에서 ! 버튼을 눌러 대화하세요',
-    textEn: 'Tap the ! button near an NPC to talk',
+    textKo: 'NPC 근처에서 ❕ 버튼을 눌러 대화하세요',
+    textEn: 'Tap ❕ near an NPC to talk',
     icon: '💬',
     chapter: 1,
     condition: 'mobile',
   },
+
+  // ── Pause ──────────────────────────────────────────────────────────────────
+  {
+    id: 'pause',
+    textKo: 'ESC 키로 일시정지하세요',
+    textEn: 'Press ESC to pause the game',
+    icon: '⏸',
+    chapter: 1,
+    condition: 'desktop',
+  },
+  {
+    id: 'pause_mobile',
+    textKo: '우측 상단 ❚❚ 버튼으로 일시정지하세요',
+    textEn: 'Tap ❚❚ in the top-right to pause',
+    icon: '⏸',
+    chapter: 1,
+    condition: 'mobile',
+  },
+
+  // ── Inventory ──────────────────────────────────────────────────────────────
   {
     id: 'inventory',
     textKo: 'I키를 눌러 소지품을 확인하세요',
     textEn: 'Press I to open your inventory',
     icon: '📦',
+    condition: 'desktop',
   },
+  {
+    id: 'inventory_mobile',
+    textKo: '가방 아이콘을 눌러 소지품을 확인하세요',
+    textEn: 'Tap the bag icon to open your inventory',
+    icon: '📦',
+    condition: 'mobile',
+  },
+
+  // ── Minimap ────────────────────────────────────────────────────────────────
+  {
+    id: 'minimap',
+    textKo: 'M키로 미니맵을 켜고 끄세요',
+    textEn: 'Press M to toggle the minimap',
+    icon: '🗺',
+    condition: 'desktop',
+  },
+
+  // ── Item pickup (platform-agnostic) ───────────────────────────────────────
   {
     id: 'item_pickup',
     textKo: '빛나는 아이템을 만져 획득하세요',
     textEn: 'Touch glowing items to pick them up',
     icon: '✨',
   },
+
+  // ── Combat ─────────────────────────────────────────────────────────────────
   {
     id: 'combat',
     textKo: '기도, 방어, 스킬로 영적 전투에 임하세요',
@@ -63,6 +110,8 @@ const TUTORIALS: TutorialStep[] = [
     icon: '⚔',
     condition: 'first_battle',
   },
+
+  // ── Stats ──────────────────────────────────────────────────────────────────
   {
     id: 'stats',
     textKo: '선택에 따라 믿음, 용기, 지혜가 변합니다',
@@ -96,13 +145,11 @@ export class TutorialSystem {
     const tutorials = TUTORIALS.filter(t => {
       if (t.chapter !== undefined && t.chapter !== chapter) return false;
       if (this.shownTutorials.has(t.id)) return false;
+      // Platform-specific filtering
       if (t.condition === 'mobile' && !isMobile) return false;
-      if (t.condition === 'mobile' && isMobile) return true;
-      if (t.condition && t.condition !== 'mobile') return false;
-      if (!t.condition && isMobile && t.id.endsWith('_mobile') === false) {
-        const mobileVersion = TUTORIALS.find(mt => mt.id === t.id + '_mobile');
-        if (mobileVersion) return false;
-      }
+      if (t.condition === 'desktop' && isMobile) return false;
+      // Other special conditions (e.g. 'first_battle') are handled via showById
+      if (t.condition && t.condition !== 'mobile' && t.condition !== 'desktop') return false;
       return true;
     });
 
@@ -118,13 +165,24 @@ export class TutorialSystem {
   }
 
   showById(tutorialId: string): void {
-    if (this.shownTutorials.has(tutorialId)) return;
-    const tutorial = TUTORIALS.find(t => t.id === tutorialId);
+    // Prefer platform-specific variant if available
+    let isMobile = false;
+    try {
+      const rm = ServiceLocator.get<ResponsiveManager>(SERVICE_KEYS.RESPONSIVE_MANAGER);
+      isMobile = rm.isTouchDevice;
+    } catch { /* ignore */ }
+
+    const resolvedId = isMobile && TUTORIALS.find(t => t.id === `${tutorialId}_mobile`)
+      ? `${tutorialId}_mobile`
+      : tutorialId;
+
+    if (this.shownTutorials.has(resolvedId)) return;
+    const tutorial = TUTORIALS.find(t => t.id === resolvedId);
     if (!tutorial) return;
 
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     this.showHint(tutorial, gm.language === 'ko');
-    this.shownTutorials.add(tutorialId);
+    this.shownTutorials.add(resolvedId);
     this.saveShown();
   }
 
@@ -133,7 +191,7 @@ export class TutorialSystem {
 
     const text = ko ? tutorial.textKo : tutorial.textEn;
     const container = this.scene.add.container(GAME_WIDTH / 2, GAME_HEIGHT - 24)
-      .setDepth(250).setScrollFactor(0).setAlpha(0);
+      .setDepth(401).setScrollFactor(0).setAlpha(0);
 
     const displayText = `${tutorial.icon} ${text}`;
     const txt = this.scene.add.text(0, 0, displayText,

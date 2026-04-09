@@ -52,6 +52,8 @@ export class OnboardingScene extends Phaser.Scene {
   private embers: Ember[] = [];
   private bgGfx!: Phaser.GameObjects.Graphics;
   private emberGfx!: Phaser.GameObjects.Graphics;
+  private pilgrimGfx!: Phaser.GameObjects.Graphics;
+  private pilgrimPhase = 0;
 
   constructor() {
     super({ key: SCENE_KEYS.ONBOARDING });
@@ -63,9 +65,11 @@ export class OnboardingScene extends Phaser.Scene {
 
     this.bgGfx = this.add.graphics().setDepth(0);
     this.emberGfx = this.add.graphics().setDepth(2);
+    this.pilgrimGfx = this.add.graphics().setDepth(1);
 
     this.buildBackground();
     this.spawnInitialEmbers();
+    this.buildPilgrimFigure();
     this.buildPrologueText();
   }
 
@@ -199,6 +203,91 @@ export class OnboardingScene extends Phaser.Scene {
     });
   }
 
+  // ─── Pilgrim silhouette with burden ─────────────────────────────────
+
+  private buildPilgrimFigure(): void {
+    const W = GAME_WIDTH;
+    const H = GAME_HEIGHT;
+    const horizon = Math.floor(H * 0.62);
+    // Position: left-center, standing at ground level
+    const px = W * 0.22;
+    const py = horizon - 2;
+
+    // Fade in the figure after 2 seconds (when text starts describing him)
+    this.time.delayedCall(2800, () => {
+      this.tweens.add({
+        targets: this.pilgrimGfx,
+        alpha: 1,
+        duration: 1200,
+        ease: 'Sine.easeIn',
+      });
+    });
+    this.pilgrimGfx.setAlpha(0);
+
+    // Draw static figure once; update() adds breathing animation
+    this.drawPilgrimWithBurden(this.pilgrimGfx, px, py, 0);
+  }
+
+  private drawPilgrimWithBurden(g: Phaser.GameObjects.Graphics, x: number, y: number, breathe: number): void {
+    g.clear();
+    const dark = 0x0a0520;
+    const burdenColor = 0x2a1a10;
+    const bookColor = 0x5a3a1a;
+
+    // Ground shadow
+    g.fillStyle(0x000000, 0.3);
+    g.fillEllipse(x, y + 1, 22, 5);
+
+    // Burden (large pack on back, weighing him down) — drawn first (behind body)
+    g.fillStyle(burdenColor, 0.92);
+    g.fillEllipse(x - 7, y - 20 + breathe, 14, 18);
+    g.lineStyle(0.8, 0x4a2a10, 0.6);
+    g.strokeEllipse(x - 7, y - 20 + breathe, 14, 18);
+    // Straps
+    g.lineStyle(1, 0x3a2010, 0.7);
+    g.lineBetween(x - 2, y - 28 + breathe, x - 7, y - 24 + breathe);
+    g.lineBetween(x - 2, y - 20 + breathe, x - 10, y - 18 + breathe);
+
+    // Ragged cloak body — slightly bent forward under burden
+    g.fillStyle(dark, 0.9);
+    g.fillTriangle(x - 5, y, x + 6, y, x + 3, y - 26 + breathe);
+    // Cloak edge (tattered)
+    g.fillStyle(dark, 0.7);
+    g.fillTriangle(x - 5, y, x - 8, y - 5, x - 3, y - 8 + breathe);
+    g.fillTriangle(x + 6, y, x + 9, y - 4, x + 5, y - 8 + breathe);
+
+    // Head (bowed down slightly)
+    g.fillStyle(dark, 0.95);
+    g.fillCircle(x + 2, y - 28 + breathe, 5);
+
+    // Face looking downward
+    g.fillStyle(0x1a0e0e, 0.7);
+    g.fillCircle(x + 1, y - 27 + breathe, 3.5);
+
+    // Book in hand (right side, held open)
+    g.fillStyle(bookColor, 0.85);
+    g.fillRect(x + 6, y - 16 + breathe, 8, 6);
+    // Book pages
+    g.fillStyle(0xddccaa, 0.4);
+    g.fillRect(x + 7, y - 15 + breathe, 3, 4);
+    g.fillRect(x + 11, y - 15 + breathe, 2, 4);
+    // Book spine
+    g.fillStyle(0x7a5a20, 0.6);
+    g.fillRect(x + 9, y - 16 + breathe, 1, 6);
+
+    // Legs (slightly spread, weighed down posture)
+    g.fillStyle(dark, 0.85);
+    g.fillRect(x - 1, y - 5, 3, 7);
+    g.fillRect(x + 3, y - 5, 3, 6);
+    // Feet (simple)
+    g.fillRect(x - 2, y + 1, 4, 2);
+    g.fillRect(x + 3, y + 1, 4, 2);
+
+    // Slight despair aura (dark glow around the figure)
+    g.fillStyle(0x000000, 0.06);
+    g.fillEllipse(x - 2, y - 16 + breathe, 30, 40);
+  }
+
   // ─── Ember particles ────────────────────────────────────────────────
 
   private spawnInitialEmbers(): void {
@@ -241,7 +330,7 @@ export class OnboardingScene extends Phaser.Scene {
       const styleConfig: Record<string, { size: number; color: string; alpha: number }> = {
         dramatic: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.LG, color: '#e8e0d0', alpha: 1 },
         normal: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.BASE, color: '#b0a898', alpha: 0.9 },
-        dim: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.BASE, color: '#9a8a7a', alpha: 0.75 },
+        dim: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.BASE, color: '#b0a090', alpha: 0.80 },
         scripture: { size: ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.LG, color: '#d4a853', alpha: 1 },
       };
       const cfg = styleConfig[line.style] ?? styleConfig.normal;
@@ -314,6 +403,17 @@ export class OnboardingScene extends Phaser.Scene {
     // Occasionally spawn extra embers for variety
     if (Math.random() < 0.08 && this.embers.length < 60) {
       this.embers.push(this.createEmber(false));
+    }
+
+    // Pilgrim breathing animation (slow, labored — under the burden)
+    this.pilgrimPhase += 0.018;
+    const breathe = Math.sin(this.pilgrimPhase) * 0.8;
+    const H = GAME_HEIGHT;
+    const horizon = Math.floor(H * 0.62);
+    const px = GAME_WIDTH * 0.22;
+    const py = horizon - 2;
+    if (this.pilgrimGfx.alpha > 0) {
+      this.drawPilgrimWithBurden(this.pilgrimGfx, px, py, breathe);
     }
   }
 

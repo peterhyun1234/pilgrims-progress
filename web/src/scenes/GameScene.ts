@@ -104,6 +104,12 @@ export class GameScene extends Phaser.Scene {
   private gateHandlers: Array<(p: NpcPhaseChangedPayload | undefined) => void> = [];
   /** Exit-hint cooldown guard. */
   private exitHintCooldown = 0;
+  /** Animated exit arrow overlay (only drawn when chapter is complete). */
+  private exitArrowGfx: Phaser.GameObjects.Graphics | null = null;
+  /** True once we've confirmed chapter requirements are met this chapter. */
+  private chapterComplete = false;
+  /** Incremented each update(); used for frame-throttled draw calls. */
+  private _frameTick = 0;
   /** Cutscene engine for key emotional scenes. */
   private cutsceneEngine!: CutsceneEngine;
   private environmentAnimations!: EnvironmentAnimations;
@@ -458,7 +464,7 @@ export class GameScene extends Phaser.Scene {
 
       const icon = this.add.text(0, 0,
         this.itemSystem.getItemDef(itemEntry.itemId)?.icon ?? '?',
-        { fontSize: '12px' },
+        DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM),
       ).setOrigin(0.5);
 
       c.add([glow, icon]);
@@ -558,6 +564,13 @@ export class GameScene extends Phaser.Scene {
     ).setDepth(500).setScrollFactor(0);
     this.tweens.add({ targets: overlay, alpha: 0.55, duration: 200, ease: 'Sine.easeOut' });
 
+    // Detect platform for help text
+    let isMobile = false;
+    try {
+      const rm = ServiceLocator.get<ResponsiveManager>(SERVICE_KEYS.RESPONSIVE_MANAGER);
+      isMobile = rm.isTouchDevice;
+    } catch { /* ignore */ }
+
     const panel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2).setDepth(501).setScrollFactor(0);
     const bg = DesignSystem.createPanel(this, -110, -80, 220, 200);
 
@@ -570,7 +583,15 @@ export class GameScene extends Phaser.Scene {
     line.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
     line.lineBetween(-60, -42, 60, -42);
 
-    panel.add([bg, title, line]);
+    // Platform-specific shortcut hint at bottom of panel
+    const shortcutHint = isMobile
+      ? (ko ? '❕ NPC 대화  ❚❚ 일시정지' : '❕ Talk  ❚❚ Pause')
+      : (ko ? 'E 대화  I 소지품  M 지도  ESC 일시정지' : 'E Talk  I Inventory  M Map  ESC Pause');
+    const hintText = this.add.text(0, 84, shortcutHint,
+      DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
+    ).setOrigin(0.5);
+
+    panel.add([bg, title, line, hintText]);
 
     const buttons: Phaser.GameObjects.Container[] = [];
     const cleanup = () => {
@@ -688,7 +709,7 @@ export class GameScene extends Phaser.Scene {
     const bubble = this.add.text(npc.sprite.x, npc.sprite.y - 22, '...', {
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
       color: '#9a9a88',
-      fontFamily: 'monospace',
+      fontFamily: DesignSystem.getFontFamily(),
       stroke: '#000000',
       strokeThickness: 2,
     }).setOrigin(0.5).setDepth(22);
@@ -1074,6 +1095,71 @@ export class GameScene extends Phaser.Scene {
     this.eventBus.off(GameEvent.AUTO_SAVE, this.onAutoSave);
   }
 
+  /**
+   * Draws animated gold arrows over exit zones when chapter requirements are met.
+   * Throttled to every other frame — animation is slow enough to be imperceptible.
+   */
+  private updateExitArrows(): void {
+    if (this._frameTick % 2 !== 0) return; // half-rate redraw
+    const config = this.chapterManager.getCurrentConfig();
+    if (!config?.exits?.length) return;
+
+    // Check completion once per chapter (avoid re-checking every frame after confirmed)
+    if (!this.chapterComplete) {
+      if (!config.completionRequirements || this.collectUnmetRequirements(config).length === 0) {
+        this.chapterComplete = true;
+        if (!this.exitArrowGfx) {
+          this.exitArrowGfx = this.add.graphics().setDepth(15);
+        }
+      }
+    }
+
+    if (!this.exitArrowGfx || !this.chapterComplete) return;
+
+    const t = this.time.now * 0.003;
+    const pulse = 0.55 + Math.sin(t * 1.8) * 0.45;         // 0.1 – 1.0
+    const bounce = Math.sin(t * 2.2) * 4;                    // ±4px vertical bob
+    const ringPulse = 0.18 + Math.sin(t * 1.4) * 0.12;      // 0.06 – 0.30
+
+    this.exitArrowGfx.clear();
+
+    config.exits.forEach(exit => {
+      const cx = exit.x + exit.width / 2;
+      const cy = exit.y + exit.height / 2;
+
+      // Expanding glow rings
+      for (let i = 0; i < 3; i++) {
+        const r = 18 + i * 10;
+        const a = ringPulse * (1 - i * 0.3);
+        this.exitArrowGfx!.lineStyle(1.2, 0xd4a853, a);
+        this.exitArrowGfx!.strokeEllipse(cx, cy, r * 2, r * 1.2);
+      }
+
+      // Pulsing fill ellipse
+      this.exitArrowGfx!.fillStyle(0xd4a853, pulse * 0.12);
+      this.exitArrowGfx!.fillEllipse(cx, cy, exit.width + 16, exit.height + 10);
+
+      // Bouncing chevron arrows (two stacked)
+      const arrowY = cy - 20 + bounce;
+      for (let i = 0; i < 2; i++) {
+        const ay = arrowY - i * 8;
+        const alpha = pulse * (1 - i * 0.35);
+        this.exitArrowGfx!.fillStyle(0xffd080, alpha);
+        this.exitArrowGfx!.fillTriangle(
+          cx, ay - 7,
+          cx - 6, ay,
+          cx + 6, ay,
+        );
+      }
+
+      // Sparkle pixels at arrow tip
+      if (Math.sin(t * 4 + 0.5) > 0.6) {
+        this.exitArrowGfx!.fillStyle(0xffffff, 0.8);
+        this.exitArrowGfx!.fillRect(cx - 1, arrowY - 9, 2, 2);
+      }
+    });
+  }
+
   // ── Location title ───────────────────────────────────────────────────────
 
   private showLocationTitle(name: string): void {
@@ -1081,70 +1167,84 @@ export class GameScene extends Phaser.Scene {
 
     const ko = this.gameManager.language === 'ko';
     const chapter = this.gameManager.currentChapter;
-    // Full i18n chapter string e.g. "제7장: 아름다운 궁전" → prefix is "제7장"
+    const chapterConfig = this.chapterManager.getCurrentConfig();
+
+    // Chapter label prefix (e.g. "제7장" or "Chapter 7")
     const fullChapterTitle = this.gameManager.i18n.t(`chapter.${chapter}`);
     const chapterPrefix = fullChapterTitle.split(':')[0].trim();
     const verse = CHAPTER_VERSES[chapter];
 
-    const container = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 10)
+    // Theme-based accent color from chapter config
+    const themeAccent = chapterConfig?.theme?.pathColor ?? COLORS.UI.GOLD;
+
+    // Full-width cinematic panel — slides down from top
+    const panelW = GAME_WIDTH;
+    const panelH = verse ? (ko ? 92 : 80) : 48;
+    const targetY = GAME_HEIGHT / 2;
+    const startY = targetY - panelH - 20; // slides in from just above center
+
+    const container = this.add.container(GAME_WIDTH / 2, startY)
       .setDepth(300).setScrollFactor(0).setAlpha(0);
 
-    const panelW = GAME_WIDTH - 40;
-    // Fixed heights with clear vertical zones: chap label + divider + title + verse + ref
-    const panelH = verse ? (ko ? 86 : 72) : 36;
+    // Dark gradient overlay (2-pass)
     const bg = this.add.graphics();
-    bg.fillStyle(0x000000, 0.82);
+    bg.fillStyle(0x000000, 0.88);
     bg.fillRect(-panelW / 2, -panelH / 2, panelW, panelH);
-    bg.lineStyle(1, COLORS.UI.GOLD, 0.6);
-    bg.strokeRect(-panelW / 2, -panelH / 2, panelW, panelH);
+    // Subtle theme-color tint strip at top
+    bg.fillStyle(themeAccent, 0.06);
+    bg.fillRect(-panelW / 2, -panelH / 2, panelW, 4);
+    // Gold border top + bottom
+    bg.lineStyle(0.8, COLORS.UI.GOLD, 0.45);
+    bg.lineBetween(-panelW / 2, -panelH / 2, panelW / 2, -panelH / 2);
+    bg.lineBetween(-panelW / 2, panelH / 2, panelW / 2, panelH / 2);
 
-    // Decorative top / bottom rule lines (inset slightly)
+    // Decorative inner rule lines
     const line = this.add.graphics();
-    line.lineStyle(0.5, COLORS.UI.GOLD, 0.25);
-    line.lineBetween(-panelW / 2 + 20, -panelH / 2 + 3, panelW / 2 - 20, -panelH / 2 + 3);
-    line.lineBetween(-panelW / 2 + 20, panelH / 2 - 3, panelW / 2 - 20, panelH / 2 - 3);
+    line.lineStyle(0.5, COLORS.UI.GOLD, 0.2);
+    line.lineBetween(-80, -panelH / 2 + 4, 80, -panelH / 2 + 4);
+    line.lineBetween(-80, panelH / 2 - 4, 80, panelH / 2 - 4);
+    // Small corner diamonds
+    [[-panelW / 2 + 8, -panelH / 2 + 8], [panelW / 2 - 8, -panelH / 2 + 8],
+     [-panelW / 2 + 8, panelH / 2 - 8], [panelW / 2 - 8, panelH / 2 - 8]].forEach(([dx, dy]) => {
+      line.fillStyle(COLORS.UI.GOLD, 0.25);
+      line.fillRect(dx - 1, dy - 1, 2, 2);
+    });
 
     container.add([bg, line]);
 
     if (verse) {
-      // Layout: [top=0] chap label (XS) → +13 divider → +6 title (BASE) → +20 verse (XS) → +14 ref (XS)
-      const chapLabel = chapterPrefix;
-      const chapText = this.add.text(0, -panelH / 2 + 8, chapLabel, {
+      const chapText = this.add.text(0, -panelH / 2 + 9, chapterPrefix, {
         fontFamily: DesignSystem.getFontFamily(),
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-        color: '#a09070',
-      }).setOrigin(0.5);
+        color: DesignSystem.hex(themeAccent),
+      }).setOrigin(0.5).setAlpha(0.85);
 
-      // Thin divider under chap label
       const midLine = this.add.graphics();
-      midLine.lineStyle(0.5, COLORS.UI.GOLD, 0.2);
-      midLine.lineBetween(-60, -panelH / 2 + 16, 60, -panelH / 2 + 16);
+      midLine.lineStyle(0.5, COLORS.UI.GOLD, 0.22);
+      midLine.lineBetween(-70, -panelH / 2 + 18, 70, -panelH / 2 + 18);
 
-      // Title — BASE size (not LG to prevent overlap)
       const titleFontSize = ko ? DesignSystem.FONT_SIZE.BASE : DesignSystem.FONT_SIZE.SM;
-      const titleY = -panelH / 2 + (ko ? 28 : 26);
+      const titleY = -panelH / 2 + (ko ? 30 : 28);
       const text = this.add.text(0, titleY, name,
         DesignSystem.goldTextStyle(titleFontSize),
       ).setOrigin(0.5);
 
       const verseText = ko ? verse.ko : verse.en;
       const refText = ko ? verse.refKo : verse.refEn;
-      const verseFontSize = DesignSystem.FONT_SIZE.XS;
-      const vt = this.add.text(0, titleY + (ko ? 18 : 16), `"${verseText}"`, {
+      const vt = this.add.text(0, titleY + (ko ? 20 : 18), `"${verseText}"`, {
         fontFamily: DesignSystem.getFontFamily(),
-        fontSize: `${verseFontSize}px`,
+        fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
         color: '#c8b898',
-        wordWrap: { width: panelW - 60 },
+        wordWrap: { width: panelW - 80 },
         align: 'center',
       }).setOrigin(0.5);
-      const rt = this.add.text(0, panelH / 2 - 9, `— ${refText}`, {
+      const rt = this.add.text(0, panelH / 2 - 8, `— ${refText}`, {
         fontFamily: DesignSystem.getFontFamily(),
-        fontSize: `${verseFontSize}px`,
+        fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
         color: '#888870',
       }).setOrigin(0.5);
       container.add([chapText, midLine, text, vt, rt]);
     } else {
-      // No verse — just the location name centred
       const text = this.add.text(0, 0, name,
         DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.BASE),
       ).setOrigin(0.5);
@@ -1153,16 +1253,21 @@ export class GameScene extends Phaser.Scene {
 
     this.locationTitle = container;
 
-    // Slide in from slightly above, then fade out
-    const targetY = container.y;
-    container.y = targetY - 20;
+    // Slide in from above + fade, hold, then fade + slide down out
     this.tweens.add({
-      targets: container, alpha: 1, y: targetY, duration: 700,
+      targets: container,
+      alpha: 1,
+      y: targetY,
+      duration: 500,
       ease: 'Back.easeOut',
       onComplete: () => {
-        this.time.delayedCall(3500, () => {
+        this.time.delayedCall(3200, () => {
           this.tweens.add({
-            targets: container, alpha: 0, duration: 700, ease: 'Sine.easeIn',
+            targets: container,
+            alpha: 0,
+            y: targetY + panelH / 2 + 10,
+            duration: 450,
+            ease: 'Quad.easeIn',
             onComplete: () => { container.destroy(true); this.locationTitle = null; },
           });
         });
@@ -1301,9 +1406,9 @@ export class GameScene extends Phaser.Scene {
 
         // Check completion requirements
         if (config.completionRequirements) {
-          const blocked = this.checkCompletionRequirements(config);
-          if (blocked) {
-            this.showExitHint();
+          const unmet = this.collectUnmetRequirements(config);
+          if (unmet.length > 0) {
+            this.showExitHint(unmet[0]);
             return;
           }
         }
@@ -1314,43 +1419,80 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private checkCompletionRequirements(config: ChapterConfig): boolean {
+  /**
+   * Returns a list of human-readable unmet requirement messages in the current language.
+   * Empty array means all requirements are met.
+   */
+  private collectUnmetRequirements(config: ChapterConfig): string[] {
     const req = config.completionRequirements;
-    if (!req) return false;
+    if (!req) return [];
 
+    const ko = this.gameManager.language === 'ko';
     const sm = ServiceLocator.get<StatsManager>(SERVICE_KEYS.STATS_MANAGER);
+    const unmet: string[] = [];
 
+    // Required NPC conversations
     for (const npcId of req.requiredNpcs ?? []) {
-      const phase = this.npcStateManager.getPhase(npcId);
-      if (phase !== 'completed') return true;
+      if (this.npcStateManager.getPhase(npcId) !== 'completed') {
+        // Find the NPC's display name from the chapter config
+        const npcConfig = config.npcs.find(n => n.id === npcId);
+        const name = ko
+          ? (npcConfig?.nameKo ?? npcId)
+          : (npcConfig?.nameEn ?? npcId);
+        unmet.push(ko
+          ? `아직 ${name}와(과) 대화하지 않았습니다`
+          : `You have not yet spoken with ${name}`);
+      }
     }
 
+    // Required stat minimums
+    const statLabels: Record<string, { ko: string; en: string }> = {
+      faith:   { ko: '믿음', en: 'Faith' },
+      courage: { ko: '용기', en: 'Courage' },
+      wisdom:  { ko: '지혜', en: 'Wisdom' },
+      burden:  { ko: '짐',   en: 'Burden' },
+    };
     for (const [stat, min] of Object.entries(req.minStats ?? {})) {
-      if (sm.get(stat as import('../core/GameEvents').StatType) < (min ?? 0)) return true;
+      if (sm.get(stat as import('../core/GameEvents').StatType) < (min ?? 0)) {
+        const label = statLabels[stat] ?? { ko: stat, en: stat };
+        unmet.push(ko
+          ? `${label.ko}이(가) 부족합니다 (최소 ${min} 필요)`
+          : `${label.en} is too low (need at least ${min})`);
+      }
     }
 
+    // Required map events
     for (const eventId of req.requiredEvents ?? []) {
-      if (!this.gamePlayState.isEventTriggered(eventId)) return true;
+      if (!this.gamePlayState.isEventTriggered(eventId)) {
+        // Build a friendly label from the event ID (e.g. 'ch6_burden_released' → 'burden released')
+        const readable = eventId.replace(/^ch\d+_/, '').replace(/_/g, ' ');
+        unmet.push(ko
+          ? `아직 이 장소에서 할 일이 남아 있습니다 (${readable})`
+          : `There is still something to do here (${readable})`);
+      }
     }
 
-    return false;
+    return unmet;
   }
 
-  private showExitHint(): void {
+  private showExitHint(message?: string): void {
     this.exitHintCooldown = 4000;
     const ko = this.gameManager.language === 'ko';
-    const msg = ko ? '아직 할 일이 남은 것 같습니다...' : 'Something feels unfinished...';
+    const msg = message ?? (ko ? '아직 할 일이 남은 것 같습니다...' : 'Something feels unfinished...');
+
     const txt = this.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 28, msg, {
       fontFamily: DesignSystem.getFontFamily(),
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-      color: '#a89b8c',
+      color: '#c8b8a0',
       stroke: '#000000',
       strokeThickness: 2,
+      wordWrap: { width: GAME_WIDTH - 24, useAdvancedWrap: true },
+      align: 'center',
     }).setOrigin(0.5).setDepth(400).setScrollFactor(0).setAlpha(0);
 
     this.tweens.add({
-      targets: txt, alpha: 0.85, duration: 400,
-      hold: 2500, yoyo: true, ease: 'Sine.easeInOut',
+      targets: txt, alpha: 0.9, duration: 400,
+      hold: 2800, yoyo: true, ease: 'Sine.easeInOut',
       onComplete: () => txt.destroy(),
     });
   }
@@ -1397,6 +1539,10 @@ export class GameScene extends Phaser.Scene {
     Object.values(this.mapObjectSprites).forEach(s => s.destroy(true));
     this.mapObjectSprites = {};
     this.activeDialogueNpc = null;
+    // Reset chapter-completion state for new chapter
+    this.chapterComplete = false;
+    this.exitArrowGfx?.destroy();
+    this.exitArrowGfx = null;
     // Note: do NOT clear triggeredEvents — they persist globally
 
     const config = this.chapterManager.loadChapter(chapter);
@@ -1443,6 +1589,7 @@ export class GameScene extends Phaser.Scene {
     if (this.gameManager.isState(GameState.PAUSE) ||
         this.gameManager.isState(GameState.INVENTORY)) return;
 
+    this._frameTick++;
     this.updateAmbientParticles();
 
     if (this.gameManager.isState(GameState.DIALOGUE) || this.gameManager.isState(GameState.CUTSCENE)) {
@@ -1462,8 +1609,10 @@ export class GameScene extends Phaser.Scene {
 
       if (this.player.nearbyNPC) {
         this.mobileControls.setActionLabel('!');
+        this.mobileControls.setActionEnabled(true);
       } else {
-        this.mobileControls.setActionLabel('A');
+        this.mobileControls.setActionLabel('·');
+        this.mobileControls.setActionEnabled(false);
       }
     }
 
@@ -1496,13 +1645,13 @@ export class GameScene extends Phaser.Scene {
         if (nx >= camL && nx <= camR && ny >= camT && ny <= camB) {
           npc.sprite.setVisible(true);
           npc.update();
-          // Phase 5C: shimmer effect when player walks within 50px of NPC.
+          // Shimmer effect when player walks within 50px of NPC.
           // Use squared distance to avoid Math.sqrt per-frame.
           // Skip locked NPCs — they have their own gray tint that must not be overwritten.
           const distSq = (nx - playerX) ** 2 + (ny - playerY) ** 2;
           const npcPhase = this.npcStateManager.getPhase(npc.npcId);
           if (npcPhase !== 'locked') {
-            if (distSq < 2500) { // 50² = 2500
+            if (distSq < 2500) {
               const t = this.time.now * 0.003;
               const shimmerAlpha = 0.3 + Math.sin(t + nx * 0.1) * 0.2;
               npc.sprite.setTint(Phaser.Display.Color.GetColor(
@@ -1532,6 +1681,7 @@ export class GameScene extends Phaser.Scene {
     );
     this.checkMapEvents();
     this.checkExits();
+    this.updateExitArrows();
     this.tutorialSystem.checkStuck(this.player.sprite.x, this.player.sprite.y, delta);
     this.updateFaithVignette();
 
