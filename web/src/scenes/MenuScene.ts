@@ -272,17 +272,17 @@ export class MenuScene extends Phaser.Scene {
     });
 
     // Main title with stronger golden glow + drop shadow
-    const title = this.add.text(cx, 42, gm.i18n.t('game.title'), {
+    const title = this.add.text(cx, 40, gm.i18n.t('game.title'), {
       fontSize: `${ko ? DesignSystem.FONT_SIZE.LG : DesignSystem.FONT_SIZE.BASE}px`,
       color: '#f0e8d0',
       fontFamily: DesignSystem.getFontFamily(),
       fontStyle: 'bold',
       shadow: { offsetX: 1, offsetY: 2, color: '#d4a853', blur: 6, stroke: true, fill: true },
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
-    this.tweens.add({ targets: title, alpha: 1, y: 44, duration: 900, delay: 200, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: title, alpha: 1, y: 42, duration: 900, delay: 200, ease: 'Back.easeOut' });
 
-    // Subtitle
-    const subtitle = this.add.text(cx, 57, gm.i18n.t('game.subtitle'), {
+    // Subtitle — keep 20px below title center to avoid Korean glyph overlap
+    const subtitle = this.add.text(cx, 66, gm.i18n.t('game.subtitle'), {
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: subtitle, alpha: 0.7, duration: 700, delay: 500 });
@@ -290,15 +290,15 @@ export class MenuScene extends Phaser.Scene {
     // Ornamental divider
     const divider = this.add.graphics().setDepth(10).setAlpha(0);
     divider.lineStyle(0.5, 0xd4a853, 0.3);
-    divider.lineBetween(cx - 70, 67, cx + 70, 67);
+    divider.lineBetween(cx - 70, 78, cx + 70, 78);
     divider.fillStyle(0xd4a853, 0.5);
-    divider.fillCircle(cx, 67, 1.5);
-    divider.fillCircle(cx - 70, 67, 1);
-    divider.fillCircle(cx + 70, 67, 1);
+    divider.fillCircle(cx, 78, 1.5);
+    divider.fillCircle(cx - 70, 78, 1);
+    divider.fillCircle(cx + 70, 78, 1);
     this.tweens.add({ targets: divider, alpha: 1, duration: 600, delay: 600 });
 
     // — Bible verse —
-    const verse = this.add.text(cx, 78, '"좁은 문으로 들어가라"  마 7:13', {
+    const verse = this.add.text(cx, 90, '"좁은 문으로 들어가라"  마 7:13', {
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#c8b070', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5).setDepth(10).setAlpha(0);
     this.tweens.add({ targets: verse, alpha: 0.9, duration: 800, delay: 1200 });
@@ -609,7 +609,7 @@ export class MenuScene extends Phaser.Scene {
       if (saveData) {
         const chapLabel = ko ? `제${saveData.chapter}장` : `Ch.${saveData.chapter}`;
         const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
-        this.add.text(GAME_WIDTH / 2, continueBtnY + 18, `${chapLabel}  ·  ${faithLabel}`, {
+        this.add.text(GAME_WIDTH / 2, continueBtnY + 18, `${chapLabel} · ${faithLabel}`, {
           fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
         }).setOrigin(0.5).setDepth(12);
         // NOTE: do NOT call setChapter/stats.reset here — GameScene loads proper save state
