@@ -51,7 +51,7 @@ export class MenuScene extends Phaser.Scene {
       const t = i / skyStrips;
       const color = this.lerpColor(0x050310, 0x16082a, t);
       sky.fillStyle(color, 1);
-      sky.fillRect(0, Math.floor(t * HOR), W, Math.ceil(HOR / skyStrips) + (i === skyStrips - 1 ? 8 : 1));
+      sky.fillRect(0, Math.floor(t * HOR), W, Math.ceil(HOR / skyStrips) + 1);
     }
     this.bgLayers.push(sky);
 
@@ -93,7 +93,7 @@ export class MenuScene extends Phaser.Scene {
     const mtFar = this.add.graphics().setDepth(-6);
     for (let x = -20; x < W + 40; x += 30) {
       const h2 = ((x * 31 + 7) * 17) & 0xff;
-      const mh = 25 + (h2 % 32);
+      const mh = 18 + (h2 % 28);
       const mw = 40 + (h2 % 25);
       mtFar.fillStyle(0x0d0520, 0.8);
       mtFar.fillTriangle(x, HOR + 2, x + mw / 2, HOR - mh, x + mw, HOR + 2);
@@ -104,7 +104,7 @@ export class MenuScene extends Phaser.Scene {
     const mtNear = this.add.graphics().setDepth(-5);
     for (let x = -30; x < W + 60; x += 50) {
       const h2 = ((x * 53 + 3) * 23) & 0xff;
-      const mh = 35 + (h2 % 26);
+      const mh = 28 + (h2 % 22);
       const mw = 70 + (h2 % 40);
       mtNear.fillStyle(0x0a031a, 0.95);
       mtNear.fillTriangle(x, HOR + 2, x + mw / 2, HOR - mh, x + mw, HOR + 2);
@@ -120,12 +120,6 @@ export class MenuScene extends Phaser.Scene {
       ground.fillStyle(color, 1);
       ground.fillRect(0, HOR + i * (H - HOR) / groundStrips, W, (H - HOR) / groundStrips + 2);
     }
-    // Horizon blend strip — softens sky/ground seam
-    ground.fillStyle(0x16082a, 0.35);
-    ground.fillRect(0, HOR - 4, W, 12);
-    ground.fillStyle(0x0d0618, 0.25);
-    ground.fillRect(0, HOR, W, 8);
-
     this.bgLayers.push(ground);
 
     // The narrow path — golden winding road to the light
@@ -258,68 +252,59 @@ export class MenuScene extends Phaser.Scene {
     const W = GAME_WIDTH;
     const H = GAME_HEIGHT;
 
-    // — Title area (upper sky zone: y=8 → y=110) —
-    // Stack: cross(16) → 4px → title(18) → 6px → subtitle(11) → 6px → divider → 6px → verse(11)
-    // Heights: 16 + 4 + 18 + 6 + 11 + 6 + 2 + 6 + 11 = 80px total → fits in 8–88
-
-    const CROSS_Y  = 16;
-    const TITLE_Y  = CROSS_Y + 16 + 6;   // 38
-    const SUB_Y    = TITLE_Y + 18 + 5;   // 61
-    const DIV_Y    = SUB_Y  + 11 + 5;    // 77
-    const VERSE_Y  = DIV_Y  + 2  + 6;    // 85
+    // — Title area (upper third) —
 
     // Decorative cross with glow
     const crossGlow = this.add.graphics().setDepth(9);
     crossGlow.fillStyle(0xd4a853, 0.08);
-    crossGlow.fillCircle(cx, CROSS_Y, 18);
+    crossGlow.fillCircle(cx, 22, 22);
     crossGlow.fillStyle(0xd4a853, 0.04);
-    crossGlow.fillCircle(cx, CROSS_Y, 28);
+    crossGlow.fillCircle(cx, 22, 34);
 
-    const cross = this.add.text(cx, CROSS_Y, '✝', {
-      fontSize: '14px', color: '#d4a853', fontFamily: 'serif',
+    const cross = this.add.text(cx, 22, '✝', {
+      fontSize: '16px', color: '#d4a853', fontFamily: 'serif',
       shadow: { offsetX: 0, offsetY: 0, color: '#d4a853', blur: 6, stroke: false, fill: true },
-    }).setOrigin(0.5, 0.5).setAlpha(0).setDepth(10);
+    }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: cross, alpha: 0.7, duration: 1200, ease: 'Quad.easeOut' });
-    this.tweens.add({ targets: cross, y: CROSS_Y + 2, duration: 3500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.tweens.add({
+      targets: cross, y: 24, duration: 3500,
+      yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
 
-    // Main title
-    const title = this.add.text(cx, TITLE_Y - 6, gm.i18n.t('game.title'), {
+    // Main title with stronger golden glow + drop shadow
+    const title = this.add.text(cx, 40, gm.i18n.t('game.title'), {
       fontSize: `${ko ? DesignSystem.FONT_SIZE.LG : DesignSystem.FONT_SIZE.BASE}px`,
       color: '#f0e8d0',
       fontFamily: DesignSystem.getFontFamily(),
       fontStyle: 'bold',
       shadow: { offsetX: 1, offsetY: 2, color: '#d4a853', blur: 6, stroke: true, fill: true },
-    }).setOrigin(0.5, 0.5).setAlpha(0).setDepth(10);
-    this.tweens.add({ targets: title, alpha: 1, y: TITLE_Y, duration: 900, delay: 200, ease: 'Back.easeOut' });
+    }).setOrigin(0.5).setAlpha(0).setDepth(10);
+    this.tweens.add({ targets: title, alpha: 1, y: 42, duration: 900, delay: 200, ease: 'Back.easeOut' });
 
-    // Subtitle
-    const subtitle = this.add.text(cx, SUB_Y, gm.i18n.t('game.subtitle'), {
-      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080',
-      fontFamily: DesignSystem.getFontFamily(),
-      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, stroke: true, fill: true },
-    }).setOrigin(0.5, 0.5).setAlpha(0).setDepth(10);
+    // Subtitle — keep 20px below title center to avoid Korean glyph overlap
+    const subtitle = this.add.text(cx, 66, gm.i18n.t('game.subtitle'), {
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
+    }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: subtitle, alpha: 0.7, duration: 700, delay: 500 });
 
     // Ornamental divider
     const divider = this.add.graphics().setDepth(10).setAlpha(0);
     divider.lineStyle(0.5, 0xd4a853, 0.3);
-    divider.lineBetween(cx - 70, DIV_Y, cx + 70, DIV_Y);
+    divider.lineBetween(cx - 70, 78, cx + 70, 78);
     divider.fillStyle(0xd4a853, 0.5);
-    divider.fillCircle(cx, DIV_Y, 1.5);
-    divider.fillCircle(cx - 70, DIV_Y, 1);
-    divider.fillCircle(cx + 70, DIV_Y, 1);
+    divider.fillCircle(cx, 78, 1.5);
+    divider.fillCircle(cx - 70, 78, 1);
+    divider.fillCircle(cx + 70, 78, 1);
     this.tweens.add({ targets: divider, alpha: 1, duration: 600, delay: 600 });
 
-    // Bible verse
-    const verse = this.add.text(cx, VERSE_Y, '"좁은 문으로 들어가라"  마 7:13', {
-      fontSize: `${DesignSystem.FONT_SIZE.SM}px`, color: '#d4c890',
-      fontFamily: DesignSystem.getFontFamily(),
-      shadow: { offsetX: 1, offsetY: 1, color: '#000000', blur: 2, stroke: true, fill: true },
-    }).setOrigin(0.5, 0.5).setDepth(10).setAlpha(0);
-    this.tweens.add({ targets: verse, alpha: 1.0, duration: 800, delay: 1200 });
+    // — Bible verse —
+    const verse = this.add.text(cx, 90, '"좁은 문으로 들어가라"  마 7:13', {
+      fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#c8b070', fontFamily: DesignSystem.getFontFamily(),
+    }).setOrigin(0.5).setDepth(10).setAlpha(0);
+    this.tweens.add({ targets: verse, alpha: 0.9, duration: 800, delay: 1200 });
 
-    // — Button panel (H*0.60 = clearly below the mountain horizon) —
-    const btnAreaY = Math.round(H * 0.60);
+    // — Button panel (lower section, below horizon) —
+    const btnAreaY = H * 0.58;
     this.buildButtonPanel(cx, btnAreaY, ko);
 
     // — Bottom info bar —
@@ -338,111 +323,82 @@ export class MenuScene extends Phaser.Scene {
 
   private buildButtonPanel(cx: number, topY: number, ko: boolean): void {
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-    const btnW = 164;
-    const btnH = 24;
+    const btnW = 160;
+    const btnH = 32;
     const gap = 8;
 
-    // 3-button layout within remaining screen space (topY → GAME_HEIGHT-6)
-    // New Journey | Continue (+ save subtitle) | Settings
-    const continueY  = topY + btnH + gap;
-    const settingsY  = continueY + btnH + gap;
-    const panelBottom = Math.min(settingsY + btnH / 2 + 10, GAME_HEIGHT - 6);
-    const panelH = panelBottom - (topY - 8);
-
+    // Semi-transparent panel behind buttons
     const panelBg = this.add.graphics().setDepth(10).setAlpha(0);
-    panelBg.fillStyle(0x06031a, 0.88);
-    panelBg.fillRoundedRect(cx - btnW / 2 - 12, topY - 8, btnW + 24, panelH, 6);
-    panelBg.lineStyle(1, 0xd4a853, 0.25);
-    panelBg.strokeRoundedRect(cx - btnW / 2 - 12, topY - 8, btnW + 24, panelH, 6);
-    // Inner gold highlight strip at top of panel
-    panelBg.fillStyle(0xd4a853, 0.06);
-    panelBg.fillRoundedRect(cx - btnW / 2 - 11, topY - 7, btnW + 22, 10, 5);
+    panelBg.fillStyle(0x06031a, 0.85);
+    panelBg.fillRoundedRect(cx - btnW / 2 - 12, topY - 6, btnW + 24, btnH * 3 + gap * 2 + 18, 6);
+    panelBg.lineStyle(0.8, 0xd4a853, 0.18);
+    panelBg.strokeRoundedRect(cx - btnW / 2 - 12, topY - 6, btnW + 24, btnH * 3 + gap * 2 + 18, 6);
     this.tweens.add({ targets: panelBg, alpha: 1, duration: 500, delay: 700 });
 
-    // makeBtn: creates a stylised button container at (cx, y)
-    const makeBtn = (
-      y: number, label: string, cb: () => void,
-      opts?: { accent?: boolean; dim?: boolean; subtitle?: string },
-    ) => {
-      const totalH = opts?.subtitle ? btnH + 11 : btnH;
+    const makeBtn = (y: number, label: string, cb: () => void, opts?: { accent?: boolean; dim?: boolean }) => {
       const c = this.add.container(cx, y).setDepth(11).setAlpha(0);
       this.tweens.add({ targets: c, alpha: opts?.dim ? 0.35 : 1, duration: 400, delay: 800 });
 
       const bg = this.add.graphics();
-      // Use visually distinct, readable colors for each button type
-      // accent (new journey) = warm gold-green; normal = dark navy; both with clear borders
-      const defColor   = opts?.accent ? 0x243818 : 0x1a1530;
-      const hoverColor = opts?.accent ? 0x365428 : 0x282050;
-      const borderColor = opts?.accent ? 0x7acc44 : 0xd4a853;
+      const defColor = opts?.accent ? 0x2a4a2a : 0x110d22;
+      const borderColor = opts?.accent ? 0x4a8a4a : 0xd4a853;
+      bg.fillStyle(defColor, 0.92);
+      bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+      bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.4);
+      bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
 
-      const drawBg = (fill: number, bdr: number, bdrA: number) => {
-        bg.clear();
-        bg.fillStyle(fill, 0.97);
-        bg.fillRoundedRect(-btnW / 2, -totalH / 2, btnW, totalH, 4);
-        bg.lineStyle(1.5, bdr, bdrA);
-        bg.strokeRoundedRect(-btnW / 2, -totalH / 2, btnW, totalH, 4);
-        // Thin inner highlight at top edge
-        bg.fillStyle(0xffffff, opts?.accent ? 0.08 : 0.04);
-        bg.fillRect(-btnW / 2 + 2, -totalH / 2 + 1, btnW - 4, 2);
-      };
-      drawBg(defColor, borderColor, opts?.accent ? 0.9 : 0.55);
-
-      const labelY = opts?.subtitle ? -6 : 0;
-      const txt = this.add.text(0, labelY, label, {
+      const txt = this.add.text(0, 0, label, {
         fontSize: `${DesignSystem.FONT_SIZE.SM}px`,
-        color: opts?.accent ? '#c8ff88' : '#d0c8b8',
+        color: opts?.accent ? '#ccffcc' : '#c8bfaa',
         fontFamily: DesignSystem.getFontFamily(),
         shadow: opts?.accent
-          ? { offsetX: 0, offsetY: 1, color: '#1a4400', blur: 4, stroke: true, fill: true }
-          : { offsetX: 1, offsetY: 1, color: '#000', blur: 2, stroke: true, fill: true },
-      }).setOrigin(0.5, 0.5);
+          ? { offsetX: 0, offsetY: 0, color: '#55ff55', blur: 3, stroke: false, fill: true }
+          : undefined,
+      }).setOrigin(0.5);
 
-      c.add([bg, txt]);
-
-      if (opts?.subtitle) {
-        const sub = this.add.text(0, 7, opts.subtitle, {
-          fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
-          color: '#a09070',
-          fontFamily: DesignSystem.getFontFamily(),
-          shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
-        }).setOrigin(0.5, 0.5);
-        c.add(sub);
-      }
-
-      const hit = this.add.rectangle(0, 0, btnW, totalH, 0, 0)
+      const hit = this.add.rectangle(0, 0, btnW, btnH, 0, 0)
         .setInteractive({ useHandCursor: !opts?.dim });
       hit.on('pointerover', () => {
         if (opts?.dim) return;
-        drawBg(hoverColor, borderColor, 1.0);
-        txt.setColor(opts?.accent ? '#e8ffaa' : '#ede8e0');
-        if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
-          ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER).procedural?.playUIHover();
-        }
+        bg.clear();
+        bg.fillStyle(opts?.accent ? 0x3a6a3a : 0x1e1840, 0.98);
+        bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+        bg.lineStyle(1, borderColor, opts?.accent ? 0.9 : 0.5);
+        bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+        txt.setColor(opts?.accent ? '#aaffaa' : '#e8e0d0');
+        const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+        audio?.procedural?.playUIHover();
       });
       hit.on('pointerout', () => {
-        drawBg(defColor, borderColor, opts?.accent ? 0.9 : 0.55);
-        txt.setColor(opts?.accent ? '#c8ff88' : '#d0c8b8');
+        bg.clear();
+        bg.fillStyle(defColor, 0.92);
+        bg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+        bg.lineStyle(0.8, borderColor, opts?.accent ? 0.6 : 0.4);
+        bg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 4);
+        txt.setColor(opts?.accent ? '#8ad88a' : '#c8bfaa');
       });
       hit.on('pointerdown', () => {
         if (opts?.dim) return;
-        if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
-          ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER).procedural?.playUIClick();
-        }
+        const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+        audio?.procedural?.playUIClick();
         this.tweens.add({ targets: c, scaleX: 0.96, scaleY: 0.96, duration: 60, yoyo: true });
         this.time.delayedCall(80, cb);
       });
-      c.add(hit);
+
+      c.add([bg, txt, hit]);
       return c;
     };
 
     makeBtn(topY, gm.i18n.t('menu.newJourney'), () => this.startNewGame(), { accent: true });
-    this.continueBtn = makeBtn(continueY, gm.i18n.t('menu.continueJourney'), () => this.continueGame(), { dim: true });
-    makeBtn(settingsY, gm.i18n.t('menu.settings'), () => {
+
+    this.continueBtn = makeBtn(topY + btnH + gap, gm.i18n.t('menu.continueJourney'), () => this.continueGame(), { dim: true });
+
+    makeBtn(topY + (btnH + gap) * 2, gm.i18n.t('menu.settings'), () => {
       this.scene.pause();
       this.scene.launch('SettingsScene', { from: 'MenuScene' });
     });
 
-    this.checkSaveExists(continueY, ko);
+    this.checkSaveExists(topY + btnH + gap, ko);
   }
 
   // ── Menu Polish (Phase 4C) ─────────────────────────────────────────────
@@ -478,19 +434,17 @@ export class MenuScene extends Phaser.Scene {
     // Shooting stars — occasionally cross the sky
     this.scheduleShootingStar();
 
-    // Highscore display — placed at horizon line (H*0.45) to avoid button area overlap
-    let stored: string | null = null;
-    try { stored = localStorage.getItem('pp_highscore_faith'); } catch { /* private browsing */ }
+    // Add highscore display if available (Phase 6A)
+    const stored = localStorage.getItem('pp_highscore_faith');
     if (stored) {
       const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
       const ko = gm.language === 'ko';
-      const label = ko ? `✝ 최고 믿음: ${stored}` : `✝ Best Faith: ${stored}`;
-      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.44, label, {
+      const label = ko ? `최고 믿음: ${stored}` : `Best Faith: ${stored}`;
+      this.add.text(GAME_WIDTH / 2, GAME_HEIGHT * 0.45 + 5, label, {
         fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
         color: '#a09060',
         fontFamily: DesignSystem.getFontFamily(),
-        shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 1, stroke: true, fill: true },
-      }).setOrigin(0.5, 0.5).setDepth(10).setAlpha(0.7);
+      }).setOrigin(0.5).setDepth(10).setAlpha(0.75);
     }
   }
 
@@ -636,17 +590,10 @@ export class MenuScene extends Phaser.Scene {
     }
   }
 
-  private async checkSaveExists(_continueBtnY: number, ko: boolean): Promise<void> {
+  private async checkSaveExists(continueBtnY: number, ko: boolean): Promise<void> {
     if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
     const saveManager = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
-
-    let exists = false;
-    try {
-      exists = await saveManager.hasSave();
-    } catch (err) {
-      console.warn('[MenuScene] hasSave() failed:', err);
-      return;
-    }
+    const exists = await saveManager.hasSave();
 
     if (this.continueBtn) {
       this.tweens.add({ targets: this.continueBtn, alpha: exists ? 1 : 0.3, duration: 300 });
@@ -658,27 +605,14 @@ export class MenuScene extends Phaser.Scene {
     }
 
     if (exists) {
-      let saveData: Awaited<ReturnType<typeof saveManager.load>>;
-      try {
-        saveData = await saveManager.load();
-      } catch (err) {
-        console.warn('[MenuScene] load() failed:', err);
-        return;
-      }
-
-      if (saveData && typeof saveData.chapter === 'number' && saveData.stats) {
+      const saveData = await saveManager.load();
+      if (saveData) {
         const chapLabel = ko ? `제${saveData.chapter}장` : `Ch.${saveData.chapter}`;
-        const faith = saveData.stats.faith ?? 0;
-        const faithLabel = ko ? `믿음 ${faith}` : `Faith ${faith}`;
-        const sub = this.add.text(0, 7, `${chapLabel}  ·  ${faithLabel}`, {
-          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09070',
-          fontFamily: DesignSystem.getFontFamily(),
-          shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
-        }).setOrigin(0.5, 0.5);
-        this.continueBtn!.add(sub);
-        // Container layout: [0]=bg, [1]=txt(mainLabel), [2]=hit — shift label up
-        const mainLabel = this.continueBtn!.getAt(1) as Phaser.GameObjects.Text;
-        if (typeof mainLabel?.setY === 'function') mainLabel.setY(-6);
+        const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
+        this.add.text(GAME_WIDTH / 2, continueBtnY + 18, `${chapLabel} · ${faithLabel}`, {
+          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
+        }).setOrigin(0.5).setDepth(12);
+        // NOTE: do NOT call setChapter/stats.reset here — GameScene loads proper save state
       }
     }
   }
@@ -686,34 +620,16 @@ export class MenuScene extends Phaser.Scene {
   private async continueGame(): Promise<void> {
     if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
     const sm = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
-    try {
-      const saveData = await sm.load();
-      if (!saveData) return;
-      await DesignSystem.fadeOut(this, 600);
-      this.scene.start(SCENE_KEYS.GAME);
-    } catch (err) {
-      console.error('[MenuScene] continueGame failed:', err);
-    }
+    const saveData = await sm.load();
+    if (!saveData) return;
+    await DesignSystem.fadeOut(this, 600);
+    this.scene.start(SCENE_KEYS.GAME);
   }
 
   private async startNewGame(): Promise<void> {
-    try {
-      const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
-      gm.newGame();
-      await DesignSystem.fadeOut(this, 600);
-      this.scene.start(SCENE_KEYS.ONBOARDING);
-    } catch (err) {
-      console.error('[MenuScene] startNewGame failed:', err);
-    }
-  }
-
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
-
-  shutdown(): void {
-    // Phaser's time/tweens are auto-cleaned by the scene manager, but calling
-    // stopAll() ensures no stray callbacks fire if the scene is restarted
-    this.time.removeAllEvents();
-    this.tweens.killAll();
-    this.particles = [];
+    const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
+    gm.newGame();
+    await DesignSystem.fadeOut(this, 600);
+    this.scene.start(SCENE_KEYS.ONBOARDING);
   }
 }
