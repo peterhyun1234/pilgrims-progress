@@ -149,7 +149,7 @@ export class PortraitRenderer {
   ): void {
     const eyeSpacing = r * 0.42;
     const eyeY = cy - r * 0.2;   // Higher up relative to head center
-    const eyeR = r * 0.105 * emotion.eyeScale;  // Smaller eyes (was 0.15)
+    const eyeR = r * 0.14 * emotion.eyeScale;
 
     [-1, 1].forEach(side => {
       const ex = cx + side * eyeSpacing;

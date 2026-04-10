@@ -135,7 +135,7 @@ export class DialogueBox {
       this.continuePrompt.setVisible(true);
     });
 
-    this.continuePrompt = this.scene.add.text(bx + bw - 18, by + bh - 16, '▼',
+    this.continuePrompt = this.scene.add.text(bx + bw - 22, by + bh - 26, '▼',
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
     ).setOrigin(0.5).setVisible(false);
     this.scene.tweens.add({
@@ -366,6 +366,7 @@ export class DialogueBox {
 
   private updatePortrait(): void {
     if (this.portraitImage) {
+      this.portraitImage.setVisible(false);
       this.container.remove(this.portraitImage, false);
       this.portraitImage = null;
     }
@@ -601,6 +602,7 @@ export class DialogueBox {
         this.speakerText.setText('');
         this.dialogueText.setText('');
         if (this.portraitImage) {
+          this.portraitImage.setVisible(false);
           this.container.remove(this.portraitImage, false);
           this.portraitImage = null;
         }
