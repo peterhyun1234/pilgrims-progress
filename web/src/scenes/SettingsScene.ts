@@ -111,6 +111,8 @@ export class SettingsScene extends Phaser.Scene {
       gm.language === 'ko' ? 0 : 1,
       (idx) => {
         gm.language = idx === 0 ? 'ko' : 'en';
+        // Restart scene so all labels re-render in the new language
+        this.time.delayedCall(120, () => this.scene.restart({ from: this.fromScene }));
       },
     );
     void langToggle;
