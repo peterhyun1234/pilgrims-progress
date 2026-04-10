@@ -302,8 +302,8 @@ export class MenuScene extends Phaser.Scene {
     divider.fillCircle(cx + 70, 86, 1);
     this.tweens.add({ targets: divider, alpha: 1, duration: 600, delay: 600 });
 
-    // Bible verse — 6px below divider
-    const verse = this.add.text(cx, 98, '"좁은 문으로 들어가라"  마 7:13', {
+    // Bible verse — 6px below divider (fully localised)
+    const verse = this.add.text(cx, 98, gm.i18n.t('menu.verse'), {
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#c8b070', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5).setDepth(10).setAlpha(0);
     this.tweens.add({ targets: verse, alpha: 0.9, duration: 800, delay: 1200 });

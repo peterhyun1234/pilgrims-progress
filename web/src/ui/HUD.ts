@@ -54,11 +54,12 @@ export class HUD {
     const ch = gm.currentChapter;
     const ko = gm.language === 'ko';
     const label = ko ? `${ch}장` : `Ch.${ch}`;
-    this.chapterBadge = this.scene.add.text(171, 4, label, {
-      fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
+    // Place at bottom-right of panel to avoid overlapping stat values
+    this.chapterBadge = this.scene.add.text(176, 76, label, {
+      fontSize: '9px',
       color: '#d4a853',
       fontFamily: FONT_FAMILY,
-    }).setAlpha(0.7).setOrigin(1, 0).setScrollFactor(0).setDepth(101);
+    }).setAlpha(0.65).setOrigin(1, 0.5).setScrollFactor(0).setDepth(101);
     this.container.add(this.chapterBadge);
   }
 
@@ -89,28 +90,28 @@ export class HUD {
       const y = HUD.PADDING + i * HUD.BAR_GAP;
       const barContainer = this.scene.add.container(x, y);
 
-      // Stat icon with distinct colored background
+      // Stat icon — centred within its 11×11 coloured box
       const iconBg = this.scene.add.graphics();
       const iconBgColor = DesignSystem.getStatColor(stat);
       iconBg.fillStyle(iconBgColor, 0.22);
-      iconBg.fillRoundedRect(-1, -1, 11, 11, 2);
+      iconBg.fillRoundedRect(0, 0, 11, 11, 2);
       iconBg.lineStyle(0.5, iconBgColor, 0.4);
-      iconBg.strokeRoundedRect(-1, -1, 11, 11, 2);
+      iconBg.strokeRoundedRect(0, 0, 11, 11, 2);
 
-      const icon = this.scene.add.text(0, 0, DesignSystem.STAT_ICONS[stat], {
+      const icon = this.scene.add.text(5, 5, DesignSystem.STAT_ICONS[stat], {
         fontSize: '9px', color: DesignSystem.hex(DesignSystem.getStatColor(stat)),
         fontFamily: 'serif',
-      }).setOrigin(0, 0);
+      }).setOrigin(0.5, 0.5);  // centred inside the 11×11 box
 
       const labelText = gm.i18n.t(`hud.${stat}`);
-      // Use native 11px for Galmuri11 (KO) so final consonants aren't clipped at 9px
+      // Korean glyphs need SM(13px) so final consonants aren't clipped at XS(11px)
       const labelFontSize = ko ? DesignSystem.FONT_SIZE.SM : DesignSystem.FONT_SIZE.XS;
-      const label = this.scene.add.text(11, 0, labelText, {
+      const label = this.scene.add.text(13, 5, labelText, {
         fontSize: `${labelFontSize}px`,
         color: DesignSystem.hex(DesignSystem.getStatColor(stat)),
         fontFamily: FONT_FAMILY,
         shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
-      }).setOrigin(0, 0);
+      }).setOrigin(0, 0.5);  // vertically centred with icon
 
       const barX = 44;
       const bg = this.scene.add.graphics();
@@ -122,13 +123,14 @@ export class HUD {
       const fillW = (currentVal / 100) * HUD.BAR_WIDTH;
       this.drawFill(fill, barX, fillW, stat);
 
-      const value = this.scene.add.text(barX + HUD.BAR_WIDTH + 4, 0,
+      // Value right-aligned to the panel edge (x=171) so it never overflows
+      const value = this.scene.add.text(171 - HUD.PADDING, 5,
         currentVal.toString(), {
           fontSize: `${DesignSystem.FONT_SIZE.XS}px`,
           color: DesignSystem.hex(DesignSystem.getStatColor(stat)),
           fontFamily: FONT_FAMILY,
           shadow: { offsetX: 1, offsetY: 1, color: '#000', blur: 0, stroke: true, fill: true },
-        }).setOrigin(0, 0);
+        }).setOrigin(1, 0.5);  // right-aligned, vertically centred
 
       barContainer.add([iconBg, bg, fill, icon, label, value]);
       this.container.add(barContainer);
