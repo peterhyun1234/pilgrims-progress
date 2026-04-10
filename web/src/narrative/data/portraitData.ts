@@ -6,6 +6,7 @@ export interface PortraitConfig {
   skinTone: number;
   hairStyle: 'short' | 'long' | 'bald' | 'hooded' | 'wild';
   hairColor: number;
+  beard?: boolean;
   eyeColor: number;
   clothingColor: number;
   clothingAccent: number;
@@ -53,13 +54,14 @@ export const PORTRAIT_CONFIGS: Record<string, PortraitConfig> = {
     id: 'evangelist',
     headShape: 'oval',
     skinTone: 0xd4a878,
-    hairStyle: 'hooded',
-    hairColor: 0x444444,
+    hairStyle: 'bald',
+    hairColor: 0xd8d0c8,     // light gray — used as beard color
+    beard: true,
     eyeColor: 0xd4a853,
-    clothingColor: 0x2a4a2a,
-    clothingAccent: 0xd4a853,
-    accessory: 'scroll',
-    accessoryColor: 0xf5e6d3,
+    clothingColor: 0xd0c8c0,  // light gray robe (matches world sprite)
+    clothingAccent: 0xa8a098,
+    accessory: 'staff',
+    accessoryColor: 0x6a4a20,
     personality: 'wise',
   },
   obstinate: {

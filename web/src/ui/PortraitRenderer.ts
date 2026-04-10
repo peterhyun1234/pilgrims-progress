@@ -47,6 +47,9 @@ export class PortraitRenderer {
     this.drawHair(g, config, cx, cy, headR);
     this.drawEyes(g, config, emotion, cx, cy, headR);
     this.drawMouth(g, config, emotion, cx, cy, headR);
+    if (config.beard) {
+      this.drawBeard(g, config, cx, cy, headR);
+    }
     this.drawAccessory(g, config, cx, cy, headR, size);
     this.drawEmotionEffects(g, emotion, cx, cy, headR, size);
 
@@ -248,6 +251,30 @@ export class PortraitRenderer {
     g.lineBetween(cx - r * 1.2, clothY, cx + r * 1.2, clothY);
   }
 
+  private drawBeard(
+    g: Phaser.GameObjects.Graphics,
+    config: PortraitConfig,
+    cx: number, cy: number, r: number,
+  ): void {
+    const bc = config.hairColor;  // beard color from hairColor field
+    const beardY = cy + r * 0.5;
+    // Main beard mass
+    g.fillStyle(bc, 1);
+    g.fillEllipse(cx, beardY + r * 0.45, r * 1.15, r * 0.85);
+    // Beard sides
+    g.fillEllipse(cx - r * 0.35, beardY + r * 0.3, r * 0.55, r * 0.7);
+    g.fillEllipse(cx + r * 0.35, beardY + r * 0.3, r * 0.55, r * 0.7);
+    // Highlight
+    g.fillStyle(this.lighten(bc, 0.15), 0.55);
+    g.fillEllipse(cx - r * 0.15, beardY + r * 0.2, r * 0.55, r * 0.4);
+    // Depth shadow at bottom
+    g.fillStyle(this.darken(bc, 0.2), 0.45);
+    g.fillEllipse(cx, beardY + r * 0.65, r * 0.75, r * 0.4);
+    // Beard tip
+    g.fillStyle(bc, 1);
+    g.fillEllipse(cx, beardY + r * 0.85, r * 0.35, r * 0.35);
+  }
+
   private drawAccessory(
     g: Phaser.GameObjects.Graphics,
     config: PortraitConfig,
@@ -262,12 +289,25 @@ export class PortraitRenderer {
         g.lineStyle(0.5, 0x8b7355, 0.6);
         g.strokeRoundedRect(cx + r * 0.8, cy + r * 0.3, r * 0.5, r * 0.7, 2);
         break;
-      case 'staff':
-        g.lineStyle(2, config.accessoryColor, 0.9);
-        g.lineBetween(cx + r * 1.3, cy - r, cx + r * 1.3, cy + r * 1.5);
-        g.fillStyle(0xd4a853, 0.7);
-        g.fillCircle(cx + r * 1.3, cy - r, r * 0.15);
+      case 'staff': {
+        const sx = cx + r * 1.15;
+        // Staff shaft (thick)
+        g.lineStyle(3, config.accessoryColor, 0.95);
+        g.lineBetween(sx, cy - r * 1.1, sx, cy + r * 1.6);
+        // Wood grain lighter strip
+        g.lineStyle(1, this.lighten(config.accessoryColor, 0.25), 0.4);
+        g.lineBetween(sx - 1, cy - r * 0.9, sx - 1, cy + r * 1.4);
+        // Dark edge
+        g.lineStyle(1, this.darken(config.accessoryColor, 0.3), 0.3);
+        g.lineBetween(sx + 1, cy - r * 0.9, sx + 1, cy + r * 1.4);
+        // Golden knob at top
+        g.fillStyle(0xd4a853, 0.95);
+        g.fillCircle(sx, cy - r * 1.1, r * 0.22);
+        // Knob highlight
+        g.fillStyle(0xffd080, 0.6);
+        g.fillCircle(sx - r * 0.08, cy - r * 1.17, r * 0.1);
         break;
+      }
       case 'halo':
         g.lineStyle(1.5, config.accessoryColor, 0.6);
         g.strokeEllipse(cx, cy - r * 1.15, r * 1.2, r * 0.3);

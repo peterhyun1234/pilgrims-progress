@@ -27,6 +27,7 @@ export class DialogueBox {
 
   private portraitRenderer: PortraitRenderer;
   private choiceContainers: Phaser.GameObjects.Container[] = [];
+  private choiceHitZones: Phaser.GameObjects.Rectangle[] = [];
   private dimOverlay: Phaser.GameObjects.Rectangle | null = null;
   private choiceKeyHandlers: (() => void)[] = [];
   /** Prevents duplicate choice selection (spam-click guard) */
@@ -44,11 +45,11 @@ export class DialogueBox {
   private advanceHandler: (() => void) | null = null;
 
   private static readonly BOX_W = 430;
-  private static readonly BOX_H = 90;
+  private static readonly BOX_H = 96;
   private static readonly BOX_X = (GAME_WIDTH - 430) / 2;
-  private static readonly BOX_Y = GAME_HEIGHT - 92;
-  private static readonly PORTRAIT_S = 64;
-  private static readonly TEXT_X = 68;
+  private static readonly BOX_Y = GAME_HEIGHT - 98;
+  private static readonly PORTRAIT_S = 72;
+  private static readonly TEXT_X = 88;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -134,8 +135,8 @@ export class DialogueBox {
       this.continuePrompt.setVisible(true);
     });
 
-    this.continuePrompt = this.scene.add.text(bx + bw - 16, by + bh - 14, '▼',
-      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XS),
+    this.continuePrompt = this.scene.add.text(bx + bw - 18, by + bh - 16, '▼',
+      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
     ).setOrigin(0.5).setVisible(false);
     this.scene.tweens.add({
       targets: this.continuePrompt, y: this.continuePrompt.y + 3,
@@ -451,19 +452,32 @@ export class DialogueBox {
         const c = this.scene.add.container(bx + 10, cy + 4).setAlpha(0);
         const w = bw - 20;
 
-        const cbg = this.scene.add.graphics();
-        const defaultColor = choice.isHidden ? 0x2a2040 : COLORS.UI.BUTTON_DEFAULT;
-        const bdrClr = choice.isHidden ? COLORS.UI.GOLD : 0x554433;
-        cbg.fillStyle(defaultColor, 0.93);
-        cbg.fillRoundedRect(0, 0, w, choiceH, 4);
-        cbg.lineStyle(1, bdrClr, 0.6);
-        cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
-
         const isLocked = choice.requiredStat !== undefined
           && (ServiceLocator.get<import('../core/StatsManager').StatsManager>(SERVICE_KEYS.STATS_MANAGER)
             .get(choice.requiredStat as import('../core/GameEvents').StatType) < (choice.requiredValue ?? 0));
+
+        const cbg = this.scene.add.graphics();
+        const defaultColor = choice.isHidden ? 0x2a2040 : COLORS.UI.BUTTON_DEFAULT;
+        const bdrClr = choice.isHidden ? COLORS.UI.GOLD : 0x554433;
+        const drawDefault = () => {
+          cbg.clear();
+          cbg.fillStyle(defaultColor, 0.93);
+          cbg.fillRoundedRect(0, 0, w, choiceH, 4);
+          cbg.lineStyle(1, bdrClr, 0.6);
+          cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
+        };
+        const drawHover = () => {
+          cbg.clear();
+          cbg.fillStyle(COLORS.UI.BUTTON_HOVER, 0.95);
+          cbg.fillRoundedRect(0, 0, w, choiceH, 4);
+          cbg.lineStyle(1.5, COLORS.UI.GOLD, 0.9);
+          cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
+          cbg.fillStyle(COLORS.UI.GOLD, 0.8);
+          cbg.fillRoundedRect(0, 4, 3, choiceH - 8, 1);
+        };
+        drawDefault();
+
         const prefix = isLocked ? '🔒 ' : (choice.isHidden ? '★ ' : `${i + 1}. `);
-        // Locked: more visible muted amber (not nearly-invisible 0x887766)
         const textColor = isLocked ? '#aa9977' : (choice.isHidden ? '#d4a853' : '#d0c8b8');
         const txt = this.scene.add.text(w / 2, choiceH / 2, prefix + choice.text,
           DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, textColor),
@@ -471,39 +485,31 @@ export class DialogueBox {
 
         c.add([cbg, txt]);
 
-        const hz = this.scene.add.rectangle(w / 2, choiceH / 2, w, choiceH, 0, 0)
-          .setInteractive({ useHandCursor: true });
+        // ── Scene-level hit zone (avoids scrollFactor=0 container hit offset bug) ──
+        const hzX = bx + 10 + w / 2;   // screen-space center X
+        const hzY = cy + choiceH / 2;   // screen-space center Y (final position)
+        const hz = this.scene.add.rectangle(hzX, hzY, w, choiceH, 0x000000, 0)
+          .setScrollFactor(0).setDepth(205).setInteractive({ useHandCursor: true });
+
         hz.on('pointerover', () => {
-          cbg.clear();
-          cbg.fillStyle(COLORS.UI.BUTTON_HOVER, 0.95);
-          cbg.fillRoundedRect(0, 0, w, choiceH, 4);
-          cbg.lineStyle(1.5, COLORS.UI.GOLD, 0.9);
-          cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
-          // Left-side gold accent bar on hover
-          cbg.fillStyle(COLORS.UI.GOLD, 0.8);
-          cbg.fillRoundedRect(0, 4, 3, choiceH - 8, 1);
-          // Update text with arrow prefix
-          txt.setText('▶ ' + (isLocked ? '' : '') + txt.text.replace(/^▶ /, ''));
+          if (!isLocked) {
+            drawHover();
+            txt.setText('▶ ' + txt.text.replace(/^▶ /, ''));
+          }
         });
         hz.on('pointerout', () => {
-          cbg.clear();
-          cbg.fillStyle(defaultColor, 0.92);
-          cbg.fillRoundedRect(0, 0, w, choiceH, 4);
-          cbg.lineStyle(1, bdrClr, 0.5);
-          cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
-          // Remove arrow prefix
+          drawDefault();
           txt.setText(txt.text.replace(/^▶ /, ''));
         });
         hz.on('pointerdown', () => {
-          if (this._choiceLocked) return;   // ← spam-click guard
-          if (isLocked) return;             // ← stat-locked choice
+          if (this._choiceLocked || isLocked) return;
           this._choiceLocked = true;
-          // Immediately disable all choice hitboxes visually
           this.choiceContainers.forEach(cc => {
             cc.getAll().forEach(child => {
               if (child instanceof Phaser.GameObjects.Rectangle) child.disableInteractive();
             });
           });
+          this.choiceHitZones.forEach(h => h.disableInteractive());
           this.scene.tweens.add({
             targets: c, scaleX: 1.02, scaleY: 1.02, duration: 50, yoyo: true,
             onComplete: () => {
@@ -512,7 +518,8 @@ export class DialogueBox {
             },
           });
         });
-        c.add(hz);
+
+        this.choiceHitZones.push(hz);
 
         this.scene.tweens.add({
           targets: c, alpha: 1, y: cy, duration: isHeavy ? 350 : 150,
@@ -521,7 +528,6 @@ export class DialogueBox {
         this.choiceContainers.push(c);
         this.container.add(c);
 
-        // Keyboard shortcut: press number key to select
         const keyCode = `ONE TWO THREE FOUR FIVE`.split(' ')[i];
         if (keyCode) {
           const handler = () => {
@@ -538,9 +544,11 @@ export class DialogueBox {
   }
 
   private clearChoices(): void {
-    this._choiceLocked = false;   // ← reset lock for next dialogue
+    this._choiceLocked = false;
     this.choiceContainers.forEach(c => c.destroy(true));
     this.choiceContainers = [];
+    this.choiceHitZones.forEach(h => h.destroy());
+    this.choiceHitZones = [];
     this.hideDimOverlay();
     const keys = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
     this.choiceKeyHandlers.forEach((h, i) => {
@@ -607,9 +615,9 @@ export class DialogueBox {
     const { BOX_X: bx, TEXT_X: tx, BOX_Y: by } = DialogueBox;
     if (this.currentTextEffect === 'shake') {
       this.dialogueText.x = bx + tx + (Math.random() - 0.5) * 1.2;
-      this.dialogueText.y = by + 24 + (Math.random() - 0.5) * 1.2;
+      this.dialogueText.y = by + 20 +(Math.random() - 0.5) * 1.2;
     } else if (this.currentTextEffect === 'wave') {
-      this.dialogueText.y = by + 24 + Math.sin(this.scene.time.now * 0.004) * 1.5;
+      this.dialogueText.y = by + 20 +Math.sin(this.scene.time.now * 0.004) * 1.5;
     }
   }
 
