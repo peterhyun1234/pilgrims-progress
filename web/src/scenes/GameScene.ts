@@ -440,19 +440,45 @@ export class GameScene extends Phaser.Scene {
   // ── Pause button & menu ──────────────────────────────────────────────────
 
   private createPauseButton(): void {
-    const c = this.add.container(GAME_WIDTH - 18, 10).setDepth(200).setScrollFactor(0);
+    // Button: 26×20 box, 6px from right/top edge.
+    const BW = 26, BH = 20, MARGIN = 6;
+    const bx = GAME_WIDTH - MARGIN - BW;  // left  = 448
+    const by = MARGIN;                     // top   =   6
+    const cx = bx + BW / 2;               // centre x = 461
+    const cy = by + BH / 2;               // centre y =  16
+
+    // Visual container (non-interactive, scrollFactor=0 is fine for graphics)
+    const c = this.add.container(bx, by).setDepth(200).setScrollFactor(0);
+
     const bg = this.add.graphics();
-    bg.fillStyle(0x1a1428, 0.5);
-    bg.fillRoundedRect(-12, -8, 24, 16, 3);
-    bg.lineStyle(0.5, 0xd4a853, 0.15);
-    bg.strokeRoundedRect(-12, -8, 24, 16, 3);
-    const txt = this.add.text(0, 0, '❚❚',
-      DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
-    ).setOrigin(0.5);
-    c.add([bg, txt]);
-    const hit = this.add.rectangle(0, 0, 28, 22, 0, 0).setInteractive({ useHandCursor: true });
-    hit.on('pointerdown', () => this.openPauseMenu());
-    c.add(hit);
+    const drawBg = (hover: boolean) => {
+      bg.clear();
+      bg.fillStyle(hover ? 0x2a2040 : 0x1a1428, hover ? 0.85 : 0.65);
+      bg.fillRoundedRect(0, 0, BW, BH, 4);
+      bg.lineStyle(0.8, 0xd4a853, hover ? 0.6 : 0.35);
+      bg.strokeRoundedRect(0, 0, BW, BH, 4);
+    };
+    drawBg(false);
+
+    const bars = this.add.graphics();
+    bars.fillStyle(0xb0a080, 0.85);
+    bars.fillRect(BW / 2 - 5, BH / 2 - 4, 4, 8);
+    bars.fillRect(BW / 2 + 1, BH / 2 - 4, 4, 8);
+
+    c.add([bg, bars]);
+
+    // ⚠ Interactive objects inside scrollFactor=0 containers get wrong hit coords
+    // because Phaser's input system applies the camera offset.
+    // Solution: place the hit zone directly on the scene with setScrollFactor(0).
+    const hit = this.add.rectangle(cx, cy, BW, BH, 0, 0)
+      .setScrollFactor(0)
+      .setDepth(201)
+      .setInteractive({ useHandCursor: true });
+
+    hit.on('pointerover',  () => drawBg(true));
+    hit.on('pointerout',   () => drawBg(false));
+    hit.on('pointerdown',  () => this.openPauseMenu());
+
     this.pauseBtn = c;
   }
 
