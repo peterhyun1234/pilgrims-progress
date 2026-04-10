@@ -82,9 +82,6 @@ export class GameScene extends Phaser.Scene {
   private transitionEffects!: TransitionEffects;
 
   private pauseMenuCleanup: (() => void) | null = null;
-  private kbEsc: (() => void) | null = null;
-  private kbI: (() => void) | null = null;
-  private kbM: (() => void) | null = null;
   private locationTitle: Phaser.GameObjects.Container | null = null;
   private ambientParticles: Phaser.GameObjects.Graphics | null = null;
   private ambientData: { x: number; y: number; vy: number; a: number; s: number; color: number }[] = [];
@@ -100,8 +97,6 @@ export class GameScene extends Phaser.Scene {
   private activeDialogueNpc: NPC | null = null;
   /** Map object containers by objectId. */
   private mapObjectSprites: Record<string, Phaser.GameObjects.Container> = {};
-  /** Anonymous gate-open handlers that must be cleaned up on shutdown. */
-  private gateHandlers: Array<(p: NpcPhaseChangedPayload | undefined) => void> = [];
   /** Exit-hint cooldown guard. */
   private exitHintCooldown = 0;
   /** Animated exit arrow overlay (only drawn when chapter is complete). */
@@ -181,8 +176,8 @@ export class GameScene extends Phaser.Scene {
     // Start chapter-specific ambient soundscape
     if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
       const audioMgr = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
-      audioMgr.ambient?.init(this.gameManager.currentChapter);
-      audioMgr.ambient?.playChapterStinger(this.gameManager.currentChapter);
+      audioMgr.ambient.init(this.gameManager.currentChapter);
+      audioMgr.ambient.playChapterStinger(this.gameManager.currentChapter);
     }
 
     this.player = new Player(this, chapterConfig.spawn.x, chapterConfig.spawn.y);
@@ -203,11 +198,9 @@ export class GameScene extends Phaser.Scene {
 
     this.hud = new HUD(this);
 
-    let tutorialDone = false;
-    try { tutorialDone = !!localStorage.getItem('pp_tutorial_done'); } catch { /* private browsing */ }
-    if (!tutorialDone) {
+    if (!localStorage.getItem('pp_tutorial_done')) {
       new TutorialOverlay(this, () => {
-        try { localStorage.setItem('pp_tutorial_done', '1'); } catch { /* ignore */ }
+        localStorage.setItem('pp_tutorial_done', '1');
       });
     }
 
@@ -271,59 +264,8 @@ export class GameScene extends Phaser.Scene {
 
   // ── Chapter theming ──────────────────────────────────────────────────────
 
-  /** Returns chapter-specific ambient overlay [color, alpha] for camera tint. */
-  private static getChapterAmbientOverlay(chapter: number): [number, number] {
-    const overlays: Record<number, [number, number]> = {
-      1:  [0x3d1000, 0.08],  // City of Destruction: ember orange tint
-      2:  [0x001a00, 0.10],  // Slough of Despond: murky green
-      3:  [0x001a10, 0.05],  // Hill Difficulty: cool green-blue
-      4:  [0x0a0018, 0.07],  // Wicket Gate: deep purple
-      5:  [0x1a0800, 0.06],  // Interpreter's House: warm amber
-      6:  [0x001000, 0.07],  // Valley of Humiliation: dark green
-      7:  [0x080014, 0.12],  // Valley of Death: deep purple-black
-      8:  [0x140000, 0.14],  // Apollyon: deep blood red
-      9:  [0x060006, 0.18],  // Shadow of Death: near-black
-      10: [0x00001a, 0.07],  // Vanity Fair: cold blue city
-      11: [0x0a0010, 0.15],  // Doubting Castle: dark prison
-      12: [0x1a1000, 0.05],  // Celestial City: warm golden
-    };
-    return overlays[chapter] ?? [0x000000, 0];
-  }
-
-  /** Returns chapter-specific vignette darkness level. */
-  private static getChapterVignetteDarkness(chapter: number): number {
-    const levels: Record<number, number> = {
-      1: 0.18, 2: 0.22, 3: 0.10, 4: 0.12,
-      5: 0.08, 6: 0.15, 7: 0.30, 8: 0.28,
-      9: 0.35, 10: 0.14, 11: 0.32, 12: 0.06,
-    };
-    return levels[chapter] ?? 0.12;
-  }
-
   private applyChapterModifiers(config: ChapterConfig): void {
     this.chapterSpeedMod = config.theme.playerSpeedMod ?? 1.0;
-
-    // Chapter-specific ambient color overlay (light tint on camera)
-    const [overlayColor, overlayAlpha] = GameScene.getChapterAmbientOverlay(config.chapter);
-    if (overlayAlpha > 0) {
-      const overlay = this.add.graphics().setDepth(3).setScrollFactor(0);
-      overlay.fillStyle(overlayColor, overlayAlpha);
-      overlay.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
-    }
-
-    // Chapter-specific vignette
-    const vigAlpha = GameScene.getChapterVignetteDarkness(config.chapter);
-    this.vignetteOverlay?.destroy();
-    this.vignetteOverlay = this.add.graphics().setDepth(3).setScrollFactor(0);
-    const vigSteps = 10;
-    for (let i = 0; i < vigSteps; i++) {
-      const t = i / vigSteps;
-      this.vignetteOverlay.fillStyle(0x000000, vigAlpha * (1 - t) * 0.8);
-      this.vignetteOverlay.fillRect(0, 0, GAME_WIDTH, 6 - i * 0.5);
-      this.vignetteOverlay.fillRect(0, GAME_HEIGHT - 6 + i, GAME_WIDTH, 6);
-      this.vignetteOverlay.fillRect(0, 0, 5, GAME_HEIGHT);
-      this.vignetteOverlay.fillRect(GAME_WIDTH - 5, 0, 5, GAME_HEIGHT);
-    }
   }
 
   // ── Companion ─────────────────────────────────────────────────────────────
@@ -381,9 +323,7 @@ export class GameScene extends Phaser.Scene {
         if (!payload || payload.npcId !== targetNpc || payload.phase !== 'completed') return;
         this.openGate(obj.id, c, g);
         this.eventBus.off(GameEvent.NPC_PHASE_CHANGED, handler);
-        this.gateHandlers = this.gateHandlers.filter(h => h !== handler);
       };
-      this.gateHandlers.push(handler);
       this.eventBus.on(GameEvent.NPC_PHASE_CHANGED, handler);
     }
   }
@@ -500,59 +440,71 @@ export class GameScene extends Phaser.Scene {
   // ── Pause button & menu ──────────────────────────────────────────────────
 
   private createPauseButton(): void {
-    const c = this.add.container(GAME_WIDTH - 18, 10).setDepth(200).setScrollFactor(0);
+    // Button: 26×20 box, 6px from right/top edge.
+    const BW = 26, BH = 20, MARGIN = 6;
+    const bx = GAME_WIDTH - MARGIN - BW;  // left  = 448
+    const by = MARGIN;                     // top   =   6
+    const cx = bx + BW / 2;               // centre x = 461
+    const cy = by + BH / 2;               // centre y =  16
+
+    // Visual container (non-interactive, scrollFactor=0 is fine for graphics)
+    const c = this.add.container(bx, by).setDepth(200).setScrollFactor(0);
+
     const bg = this.add.graphics();
-    bg.fillStyle(0x1a1428, 0.5);
-    bg.fillRoundedRect(-12, -8, 24, 16, 3);
-    bg.lineStyle(0.5, 0xd4a853, 0.15);
-    bg.strokeRoundedRect(-12, -8, 24, 16, 3);
-    const txt = this.add.text(0, 0, '❚❚',
-      DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
-    ).setOrigin(0.5);
-    c.add([bg, txt]);
-    const hit = this.add.rectangle(0, 0, 28, 22, 0, 0)
-      .setInteractive({ useHandCursor: true })
-      .setScrollFactor(0);  // must be set before adding to container so hit area uses screen coords
-    hit.on('pointerdown', () => this.openPauseMenu());
-    c.add(hit);
+    const drawBg = (hover: boolean) => {
+      bg.clear();
+      bg.fillStyle(hover ? 0x2a2040 : 0x1a1428, hover ? 0.85 : 0.65);
+      bg.fillRoundedRect(0, 0, BW, BH, 4);
+      bg.lineStyle(0.8, 0xd4a853, hover ? 0.6 : 0.35);
+      bg.strokeRoundedRect(0, 0, BW, BH, 4);
+    };
+    drawBg(false);
+
+    const bars = this.add.graphics();
+    bars.fillStyle(0xb0a080, 0.85);
+    bars.fillRect(BW / 2 - 5, BH / 2 - 4, 4, 8);
+    bars.fillRect(BW / 2 + 1, BH / 2 - 4, 4, 8);
+
+    c.add([bg, bars]);
+
+    // ⚠ Interactive objects inside scrollFactor=0 containers get wrong hit coords
+    // because Phaser's input system applies the camera offset.
+    // Solution: place the hit zone directly on the scene with setScrollFactor(0).
+    const hit = this.add.rectangle(cx, cy, BW, BH, 0, 0)
+      .setScrollFactor(0)
+      .setDepth(201)
+      .setInteractive({ useHandCursor: true });
+
+    hit.on('pointerover',  () => drawBg(true));
+    hit.on('pointerout',   () => drawBg(false));
+    hit.on('pointerdown',  () => this.openPauseMenu());
+
     this.pauseBtn = c;
   }
 
   private setupKeyboardShortcuts(): void {
-    this.kbEsc = () => {
+    this.input.keyboard?.on('keydown-ESC', () => {
       if (this.gameManager.isState(GameState.INVENTORY)) {
         this.inventoryPanel.close();
         return;
       }
-      if (this.gameManager.isState(GameState.DIALOGUE)) {
-        this.eventBus.emit(GameEvent.DIALOGUE_END);
-        return;
-      }
+      if (this.gameManager.isState(GameState.DIALOGUE)) return;
       if (this.gameManager.isState(GameState.PAUSE)) {
         this.closePauseMenu();
         return;
       }
       this.openPauseMenu();
-    };
-    this.kbI = () => {
+    });
+
+    this.input.keyboard?.on('keydown-I', () => {
       if (this.gameManager.isState(GameState.DIALOGUE) || this.gameManager.isState(GameState.PAUSE)) return;
       this.inventoryPanel.toggle();
       this.tutorialSystem.showById('inventory');
-    };
-    this.kbM = () => { this.miniMap.toggle(); };
+    });
 
-    this.input.keyboard?.on('keydown-ESC', this.kbEsc);
-    this.input.keyboard?.on('keydown-I', this.kbI);
-    this.input.keyboard?.on('keydown-M', this.kbM);
-  }
-
-  private removeKeyboardShortcuts(): void {
-    if (this.kbEsc) this.input.keyboard?.off('keydown-ESC', this.kbEsc);
-    if (this.kbI)   this.input.keyboard?.off('keydown-I', this.kbI);
-    if (this.kbM)   this.input.keyboard?.off('keydown-M', this.kbM);
-    this.kbEsc = null;
-    this.kbI   = null;
-    this.kbM   = null;
+    this.input.keyboard?.on('keydown-M', () => {
+      this.miniMap.toggle();
+    });
   }
 
   private openPauseMenu(): void {
@@ -936,12 +888,10 @@ export class GameScene extends Phaser.Scene {
     // Phase 6A: track maxFaith highscore in localStorage
     if (payload.stat === 'faith' && isPositive) {
       const current = payload.newValue;
-      try {
-        const stored = parseInt(localStorage.getItem('pp_highscore_faith') ?? '0', 10);
-        if (current > stored) {
-          localStorage.setItem('pp_highscore_faith', String(current));
-        }
-      } catch { /* private browsing / storage full – non-critical */ }
+      const stored = parseInt(localStorage.getItem('pp_highscore_faith') ?? '0', 10);
+      if (current > stored) {
+        localStorage.setItem('pp_highscore_faith', String(current));
+      }
     }
 
     // Phase 5B: faithGlow effect when faith increases
@@ -1060,6 +1010,7 @@ export class GameScene extends Phaser.Scene {
 
   private setupEvents(): void {
     this.eventBus.on(GameEvent.NPC_INTERACT, this.onNpcInteract);
+    this.eventBus.on('npc_interact', this.onNpcInteract);
     this.eventBus.on(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.on(GameEvent.BIBLE_CARD_COLLECTED, this.onBibleCard);
     this.eventBus.on(GameEvent.CHAPTER_ENTER, this.onChapterEnter);
@@ -1085,6 +1036,7 @@ export class GameScene extends Phaser.Scene {
 
   private cleanupEvents(): void {
     this.eventBus.off(GameEvent.NPC_INTERACT, this.onNpcInteract);
+    this.eventBus.off('npc_interact', this.onNpcInteract);
     this.eventBus.off(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.off(GameEvent.BIBLE_CARD_COLLECTED, this.onBibleCard);
     this.eventBus.off(GameEvent.CHAPTER_ENTER, this.onChapterEnter);
@@ -1551,9 +1503,9 @@ export class GameScene extends Phaser.Scene {
     // Crossfade ambient soundscape to new chapter
     if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
       const audioMgr = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
-      audioMgr.ambient?.crossfadeTo(chapter, 3000);
+      audioMgr.ambient.crossfadeTo(chapter, 3000);
       this.time.delayedCall(1500, () => {
-        audioMgr.ambient?.playChapterStinger(chapter);
+        audioMgr.ambient.playChapterStinger(chapter);
       });
     }
 
@@ -1629,7 +1581,6 @@ export class GameScene extends Phaser.Scene {
     this.dialogueBox.update();
 
     const cam = this.cameras.main;
-    this.tileMapManager.update(cam.scrollX);
     const margin = 64;
     const camL = cam.scrollX - margin;
     const camR = cam.scrollX + cam.width + margin;
@@ -1638,36 +1589,27 @@ export class GameScene extends Phaser.Scene {
     const playerX = this.player.sprite.x;
     const playerY = this.player.sprite.y;
     this.npcs.forEach(npc => {
-      if (!npc?.sprite?.active) return;
-      try {
-        const nx = npc.sprite.x;
-        const ny = npc.sprite.y;
-        if (nx >= camL && nx <= camR && ny >= camT && ny <= camB) {
-          npc.sprite.setVisible(true);
-          npc.update();
-          // Shimmer effect when player walks within 50px of NPC.
-          // Use squared distance to avoid Math.sqrt per-frame.
-          // Skip locked NPCs — they have their own gray tint that must not be overwritten.
-          const distSq = (nx - playerX) ** 2 + (ny - playerY) ** 2;
-          const npcPhase = this.npcStateManager.getPhase(npc.npcId);
-          if (npcPhase !== 'locked') {
-            if (distSq < 2500) {
-              const t = this.time.now * 0.003;
-              const shimmerAlpha = 0.3 + Math.sin(t + nx * 0.1) * 0.2;
-              npc.sprite.setTint(Phaser.Display.Color.GetColor(
-                Math.round(0xff + (0xd4 - 0xff) * shimmerAlpha),
-                Math.round(0xff + (0xa8 - 0xff) * shimmerAlpha),
-                0xff,
-              ));
-            } else {
-              npc.sprite.clearTint();
-            }
-          }
+      const nx = npc.sprite.x;
+      const ny = npc.sprite.y;
+      if (nx >= camL && nx <= camR && ny >= camT && ny <= camB) {
+        npc.sprite.setVisible(true);
+        npc.update();
+        // Phase 5C: shimmer effect when player walks within 50px of NPC
+        // Use squared distance to avoid per-NPC sqrt each frame.
+        const distSq = (nx - playerX) ** 2 + (ny - playerY) ** 2;
+        if (distSq < 2500 /* 50² */) {
+          const t = this.time.now * 0.003;
+          const shimmerAlpha = 0.3 + Math.sin(t + nx * 0.1) * 0.2;
+          npc.sprite.setTint(Phaser.Display.Color.GetColor(
+            Math.round(0xff + (0xd4 - 0xff) * shimmerAlpha),
+            Math.round(0xff + (0xa8 - 0xff) * shimmerAlpha),
+            0xff,
+          ));
         } else {
-          npc.sprite.setVisible(false);
+          npc.sprite.clearTint();
         }
-      } catch (err) {
-        console.warn('[GameScene] NPC update error:', err);
+      } else {
+        npc.sprite.setVisible(false);
       }
     });
 
@@ -1737,11 +1679,7 @@ export class GameScene extends Phaser.Scene {
 
   shutdown(): void {
     this.pauseMenuCleanup?.();
-    // Clean up any outstanding gate handlers (would leak if gate never opened)
-    this.gateHandlers.forEach(h => this.eventBus.off(GameEvent.NPC_PHASE_CHANGED, h));
-    this.gateHandlers = [];
     this.cleanupEvents();
-    this.removeKeyboardShortcuts();
     this.npcStateManager?.destroy();
     this.inputManager?.destroy();
     this.hud?.destroy();
