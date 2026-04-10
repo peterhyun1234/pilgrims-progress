@@ -27,15 +27,13 @@ export class DialogueBox {
 
   private portraitRenderer: PortraitRenderer;
   private choiceContainers: Phaser.GameObjects.Container[] = [];
+  private choiceHitZones: Phaser.GameObjects.Rectangle[] = [];
   private dimOverlay: Phaser.GameObjects.Rectangle | null = null;
-  /** Each entry pairs a key-name with its handler so cleanup is always exact. */
-  private choiceKeyHandlers: Array<{ key: string; fn: () => void }> = [];
+  private choiceKeyHandlers: (() => void)[] = [];
   /** Prevents duplicate choice selection (spam-click guard) */
   private _choiceLocked = false;
 
   private eventBus: EventBus;
-  /** Cached AudioManager reference — resolved once on first use to avoid ServiceLocator lookups in hot path. */
-  private audioManager: AudioManager | null = null;
   private isVisible = false;
   private isTyping = false;
   private fullText = '';
@@ -46,16 +44,12 @@ export class DialogueBox {
   private previousState: GameState = GameState.GAME;
   private advanceHandler: (() => void) | null = null;
 
-  // Dialogue box: full-width minus 8px margins, taller for readability
-  // Layout at 480×270: box is 464×100, positioned 6px from bottom
-  private static readonly BOX_W = 464;
-  private static readonly BOX_H = 100;
-  private static readonly BOX_X = (GAME_WIDTH - 464) / 2;   // 8px side margin
-  private static readonly BOX_Y = GAME_HEIGHT - 106;        // 6px bottom margin → y=164
-  private static readonly PORTRAIT_S = 74;      // portrait: fills ~74% of box height
-  private static readonly PORTRAIT_PAD = 5;     // left pad inside box
-  // TEXT_X = PORTRAIT_PAD + PORTRAIT_S + 8 gap = 87
-  private static readonly TEXT_X = 87;
+  private static readonly BOX_W = 430;
+  private static readonly BOX_H = 96;
+  private static readonly BOX_X = (GAME_WIDTH - 430) / 2;
+  private static readonly BOX_Y = GAME_HEIGHT - 98;
+  private static readonly PORTRAIT_S = 72;
+  private static readonly TEXT_X = 88;
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -115,15 +109,13 @@ export class DialogueBox {
     const fontFamily = DesignSystem.getFontFamily();
 
     // Use Rex BBCodeText for rich inline formatting
-    // Text area: from TEXT_X to right edge with 10px right padding
-    // Top padding = 14px (speaker badge is -12 to 0, so by+14 gives clear start)
-    this.dialogueText = new BBCodeText(this.scene, bx + DialogueBox.TEXT_X, by + 14, '', {
+    this.dialogueText = new BBCodeText(this.scene, bx + DialogueBox.TEXT_X, by + 18, '', {
       fontFamily,
       fontSize: `${dialogueFontSize}px`,
       color: '#e8e0d0',
       wrap: {
         mode: 'word',
-        width: bw - DialogueBox.TEXT_X - 10,
+        width: bw - DialogueBox.TEXT_X - 16,
       },
       lineSpacing: 4,
     });
@@ -135,18 +127,16 @@ export class DialogueBox {
       setTextCallback: (text: string) => text,
     });
     this.textTyping.on('type', () => {
-      if (!this.audioManager && ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
-        this.audioManager = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
-      }
-      this.audioManager?.procedural?.playTypingClick();
+      const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      audio?.procedural?.playTypingClick();
     });
     this.textTyping.on('complete', () => {
       this.isTyping = false;
       this.continuePrompt.setVisible(true);
     });
 
-    this.continuePrompt = this.scene.add.text(bx + bw - 16, by + bh - 14, '▼',
-      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XS),
+    this.continuePrompt = this.scene.add.text(bx + bw - 18, by + bh - 16, '▼',
+      DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
     ).setOrigin(0.5).setVisible(false);
     this.scene.tweens.add({
       targets: this.continuePrompt, y: this.continuePrompt.y + 3,
@@ -160,25 +150,23 @@ export class DialogueBox {
   }
 
   private drawPortraitFrame(borderColor: number): void {
-    const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps, PORTRAIT_PAD: pp } = DialogueBox;
-    const px = bx + pp;
-    const py = by + Math.round((bh - ps) / 2);
+    const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
     this.portraitBg.clear();
-    // Drop shadow
-    this.portraitBg.fillStyle(0x000000, 0.45);
-    this.portraitBg.fillRoundedRect(px + 2, py + 2, ps, ps, 4);
+    // Shadow behind portrait
+    this.portraitBg.fillStyle(0x000000, 0.4);
+    this.portraitBg.fillRoundedRect(bx + 7, by + (bh - ps) / 2 + 2, ps, ps, 4);
     // Portrait background
-    this.portraitBg.fillStyle(0x0e0c18, 0.92);
-    this.portraitBg.fillRoundedRect(px, py, ps, ps, 4);
-    // Colored emotion border
-    this.portraitBg.lineStyle(1.5, borderColor, 0.8);
-    this.portraitBg.strokeRoundedRect(px, py, ps, ps, 4);
-    // Inner subtle gold glow tint
-    this.portraitBg.fillStyle(borderColor, 0.05);
-    this.portraitBg.fillRoundedRect(px + 1, py + 1, ps - 2, ps - 2, 3);
-    // Inner border line
-    this.portraitBg.lineStyle(0.5, borderColor, 0.25);
-    this.portraitBg.strokeRoundedRect(px + 2, py + 2, ps - 4, ps - 4, 3);
+    this.portraitBg.fillStyle(0x0e0c18, 0.85);
+    this.portraitBg.fillRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
+    // Gold border
+    this.portraitBg.lineStyle(1.5, borderColor, 0.75);
+    this.portraitBg.strokeRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
+    // Inner vignette corners (dark gradient effect via corner fills)
+    this.portraitBg.fillStyle(0x000000, 0.2);
+    this.portraitBg.fillRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
+    // Bright inner border
+    this.portraitBg.lineStyle(0.5, borderColor, 0.2);
+    this.portraitBg.strokeRoundedRect(bx + 7, by + (bh - ps) / 2 + 2, ps - 4, ps - 4, 3);
   }
 
   private onDialogueLine = (p: DialogueLinePayload | undefined) => { if (p) this.showLine(p); };
@@ -201,11 +189,6 @@ export class DialogueBox {
     this.scene.input.on('pointerdown', this.advanceHandler);
     this.scene.input.keyboard?.on('keydown-SPACE', this.advanceHandler);
     this.scene.input.keyboard?.on('keydown-ENTER', this.advanceHandler);
-    this.scene.input.keyboard?.on('keydown-ESC', () => {
-      if (!this.isVisible) return;
-      // Force close dialogue on ESC
-      this.eventBus.emit(GameEvent.DIALOGUE_END);
-    });
   }
 
   /**
@@ -383,16 +366,15 @@ export class DialogueBox {
 
   private updatePortrait(): void {
     if (this.portraitImage) {
-      this.portraitImage.setVisible(false);
       this.container.remove(this.portraitImage, false);
       this.portraitImage = null;
     }
 
     if (!this.currentSpeakerId || !PORTRAIT_CONFIGS[this.currentSpeakerId]) {
       if (this.currentSpeakerId && this.scene.textures.exists(this.currentSpeakerId)) {
-        const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps, PORTRAIT_PAD: pp } = DialogueBox;
+        const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
         const sprite = this.scene.add.sprite(
-          bx + pp + ps / 2, by + bh / 2, this.currentSpeakerId, 0,
+          bx + 5 + ps / 2, by + bh / 2, this.currentSpeakerId, 0,
         ).setScale(2.5).setDepth(201);
         this.container.add(sprite);
         this.portraitImage = sprite as unknown as Phaser.GameObjects.RenderTexture;
@@ -400,10 +382,10 @@ export class DialogueBox {
       return;
     }
 
-    const rt = this.portraitRenderer.getPortrait(this.currentSpeakerId, this.emotionState, DialogueBox.PORTRAIT_S);
+    const rt = this.portraitRenderer.getPortrait(this.currentSpeakerId, this.emotionState);
     if (rt) {
-      const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps, PORTRAIT_PAD: pp } = DialogueBox;
-      rt.setPosition(bx + pp, by + Math.round((bh - ps) / 2));
+      const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
+      rt.setPosition(bx + 5, by + (bh - ps) / 2);
       rt.setOrigin(0, 0).setScrollFactor(0);
       rt.setVisible(true).setDepth(201);
       this.container.add(rt);
@@ -416,12 +398,12 @@ export class DialogueBox {
 
     const moodColors: Record<PortraitEmotion, { color: number; alpha: number }> = {
       neutral: { color: 0x1a1428, alpha: 0 },
-      happy: { color: 0xffd700, alpha: 0.12 },
-      angry: { color: 0xff0000, alpha: 0.12 },
-      sad: { color: 0x2244aa, alpha: 0.12 },
+      happy: { color: 0xffd700, alpha: 0.10 },
+      angry: { color: 0xff0000, alpha: 0.10 },
+      sad: { color: 0x2244aa, alpha: 0.10 },
       fearful: { color: 0x440066, alpha: 0.12 },
-      surprised: { color: 0xff8800, alpha: 0.12 },
-      determined: { color: 0x44aa44, alpha: 0.12 },
+      surprised: { color: 0xff8800, alpha: 0.08 },
+      determined: { color: 0x44aa44, alpha: 0.08 },
     };
 
     const mood = moodColors[this.emotionState];
@@ -458,35 +440,44 @@ export class DialogueBox {
     if (isHeavy) this.showDimOverlay();
 
     const { BOX_X: bx, BOX_Y: by, BOX_W: bw } = DialogueBox;
-    const choiceH = 28; // 28px touch target meets accessibility minimum
-    const gap = 4;
+    const choiceH = 28;
+    const gap = 5;
     const total = payload.choices.length * (choiceH + gap);
-    // Start choices just above the dialogue box with a small gap
-    const startY = by - total - 8;
+    const startY = by - total - 6;
 
     payload.choices.forEach((choice, i) => {
       const delay = isHeavy ? (i + 1) * 400 : i * 100;
       this.scene.time.delayedCall(delay, () => {
         const cy = startY + i * (choiceH + gap);
-        // FIX: add directly to scene (not inside scrollFactor-0 container)
-        // so Phaser's hit-test coords match the visual screen position.
-        const c = this.scene.add.container(bx + 10, cy + 4)
-          .setAlpha(0).setScrollFactor(0).setDepth(201);
+        const c = this.scene.add.container(bx + 10, cy + 4).setAlpha(0);
         const w = bw - 20;
-
-        const cbg = this.scene.add.graphics();
-        const defaultColor = choice.isHidden ? 0x2a2040 : COLORS.UI.BUTTON_DEFAULT;
-        const bdrClr = choice.isHidden ? COLORS.UI.GOLD : 0x554433;
-        cbg.fillStyle(defaultColor, 0.93);
-        cbg.fillRoundedRect(0, 0, w, choiceH, 4);
-        cbg.lineStyle(1, bdrClr, 0.6);
-        cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
 
         const isLocked = choice.requiredStat !== undefined
           && (ServiceLocator.get<import('../core/StatsManager').StatsManager>(SERVICE_KEYS.STATS_MANAGER)
             .get(choice.requiredStat as import('../core/GameEvents').StatType) < (choice.requiredValue ?? 0));
+
+        const cbg = this.scene.add.graphics();
+        const defaultColor = choice.isHidden ? 0x2a2040 : COLORS.UI.BUTTON_DEFAULT;
+        const bdrClr = choice.isHidden ? COLORS.UI.GOLD : 0x554433;
+        const drawDefault = () => {
+          cbg.clear();
+          cbg.fillStyle(defaultColor, 0.93);
+          cbg.fillRoundedRect(0, 0, w, choiceH, 4);
+          cbg.lineStyle(1, bdrClr, 0.6);
+          cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
+        };
+        const drawHover = () => {
+          cbg.clear();
+          cbg.fillStyle(COLORS.UI.BUTTON_HOVER, 0.95);
+          cbg.fillRoundedRect(0, 0, w, choiceH, 4);
+          cbg.lineStyle(1.5, COLORS.UI.GOLD, 0.9);
+          cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
+          cbg.fillStyle(COLORS.UI.GOLD, 0.8);
+          cbg.fillRoundedRect(0, 4, 3, choiceH - 8, 1);
+        };
+        drawDefault();
+
         const prefix = isLocked ? '🔒 ' : (choice.isHidden ? '★ ' : `${i + 1}. `);
-        // Locked: more visible muted amber (not nearly-invisible 0x887766)
         const textColor = isLocked ? '#aa9977' : (choice.isHidden ? '#d4a853' : '#d0c8b8');
         const txt = this.scene.add.text(w / 2, choiceH / 2, prefix + choice.text,
           DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, textColor),
@@ -494,39 +485,31 @@ export class DialogueBox {
 
         c.add([cbg, txt]);
 
-        const hz = this.scene.add.rectangle(w / 2, choiceH / 2, w, choiceH, 0, 0)
-          .setInteractive({ useHandCursor: true });
+        // ── Scene-level hit zone (avoids scrollFactor=0 container hit offset bug) ──
+        const hzX = bx + 10 + w / 2;   // screen-space center X
+        const hzY = cy + choiceH / 2;   // screen-space center Y (final position)
+        const hz = this.scene.add.rectangle(hzX, hzY, w, choiceH, 0x000000, 0)
+          .setScrollFactor(0).setDepth(205).setInteractive({ useHandCursor: true });
+
         hz.on('pointerover', () => {
-          cbg.clear();
-          cbg.fillStyle(COLORS.UI.BUTTON_HOVER, 0.95);
-          cbg.fillRoundedRect(0, 0, w, choiceH, 4);
-          cbg.lineStyle(1.5, COLORS.UI.GOLD, 0.9);
-          cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
-          // Left-side gold accent bar on hover
-          cbg.fillStyle(COLORS.UI.GOLD, 0.8);
-          cbg.fillRoundedRect(0, 4, 3, choiceH - 8, 1);
-          // Update text with arrow prefix
-          txt.setText('▶ ' + txt.text.replace(/^▶ /, ''));
+          if (!isLocked) {
+            drawHover();
+            txt.setText('▶ ' + txt.text.replace(/^▶ /, ''));
+          }
         });
         hz.on('pointerout', () => {
-          cbg.clear();
-          cbg.fillStyle(defaultColor, 0.92);
-          cbg.fillRoundedRect(0, 0, w, choiceH, 4);
-          cbg.lineStyle(1, bdrClr, 0.5);
-          cbg.strokeRoundedRect(0, 0, w, choiceH, 4);
-          // Remove arrow prefix
+          drawDefault();
           txt.setText(txt.text.replace(/^▶ /, ''));
         });
         hz.on('pointerdown', () => {
-          if (this._choiceLocked) return;   // ← spam-click guard
-          if (isLocked) return;             // ← stat-locked choice
+          if (this._choiceLocked || isLocked) return;
           this._choiceLocked = true;
-          // Immediately disable all choice hitboxes visually
           this.choiceContainers.forEach(cc => {
             cc.getAll().forEach(child => {
               if (child instanceof Phaser.GameObjects.Rectangle) child.disableInteractive();
             });
           });
+          this.choiceHitZones.forEach(h => h.disableInteractive());
           this.scene.tweens.add({
             targets: c, scaleX: 1.02, scaleY: 1.02, duration: 50, yoyo: true,
             onComplete: () => {
@@ -535,39 +518,41 @@ export class DialogueBox {
             },
           });
         });
-        c.add(hz);
+
+        this.choiceHitZones.push(hz);
 
         this.scene.tweens.add({
           targets: c, alpha: 1, y: cy, duration: isHeavy ? 350 : 150,
           ease: 'Back.easeOut',
         });
         this.choiceContainers.push(c);
-        // NOTE: c is already in the scene display list (scrollFactor 0, depth 201)
-        // Do NOT add to this.container to avoid input coordinate mismatch
+        this.container.add(c);
 
-        // Keyboard shortcut: press number key to select
-        const KEY_NAMES = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'] as const;
-        const keyCode = KEY_NAMES[i];
-        if (keyCode !== undefined) {
-          const fn = () => {
+        const keyCode = `ONE TWO THREE FOUR FIVE`.split(' ')[i];
+        if (keyCode) {
+          const handler = () => {
             if (this.choiceContainers.length === 0) return;
             this.clearChoices();
             this.eventBus.emit(GameEvent.DIALOGUE_CHOICE_SELECTED, choice.index);
           };
-          this.scene.input.keyboard?.on(`keydown-${keyCode}`, fn);
-          this.choiceKeyHandlers.push({ key: keyCode, fn });
+          this.scene.input.keyboard?.on(`keydown-${keyCode}`, handler);
+          this.choiceKeyHandlers.push(handler);
+          (handler as unknown as Record<string, string>).__key = keyCode;
         }
       });
     });
   }
 
   private clearChoices(): void {
-    this._choiceLocked = false;   // ← reset lock for next dialogue
+    this._choiceLocked = false;
     this.choiceContainers.forEach(c => c.destroy(true));
     this.choiceContainers = [];
+    this.choiceHitZones.forEach(h => h.destroy());
+    this.choiceHitZones = [];
     this.hideDimOverlay();
-    this.choiceKeyHandlers.forEach(({ key, fn }) => {
-      this.scene.input.keyboard?.off(`keydown-${key}`, fn);
+    const keys = ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE'];
+    this.choiceKeyHandlers.forEach((h, i) => {
+      this.scene.input.keyboard?.off(`keydown-${keys[i]}`, h);
     });
     this.choiceKeyHandlers = [];
   }
@@ -616,7 +601,6 @@ export class DialogueBox {
         this.speakerText.setText('');
         this.dialogueText.setText('');
         if (this.portraitImage) {
-          this.portraitImage.setVisible(false);
           this.container.remove(this.portraitImage, false);
           this.portraitImage = null;
         }
@@ -629,17 +613,11 @@ export class DialogueBox {
   update(): void {
     if (!this.isVisible) return;
     const { BOX_X: bx, TEXT_X: tx, BOX_Y: by } = DialogueBox;
-    const baseX = bx + tx;
-    const baseY = by + 14;
     if (this.currentTextEffect === 'shake') {
-      this.dialogueText.x = baseX + (Math.random() - 0.5) * 1.2;
-      this.dialogueText.y = baseY + (Math.random() - 0.5) * 1.2;
+      this.dialogueText.x = bx + tx + (Math.random() - 0.5) * 1.2;
+      this.dialogueText.y = by + 20 +(Math.random() - 0.5) * 1.2;
     } else if (this.currentTextEffect === 'wave') {
-      this.dialogueText.y = baseY + Math.sin(this.scene.time.now * 0.004) * 1.5;
-    } else {
-      // Snap back to base position if effect was cleared
-      if (this.dialogueText.x !== baseX) this.dialogueText.x = baseX;
-      if (this.dialogueText.y !== baseY) this.dialogueText.y = baseY;
+      this.dialogueText.y = by + 20 +Math.sin(this.scene.time.now * 0.004) * 1.5;
     }
   }
 
@@ -653,7 +631,6 @@ export class DialogueBox {
       this.scene.input.keyboard?.off('keydown-ENTER', this.advanceHandler);
       this.advanceHandler = null;
     }
-    this.textTyping.removeAllListeners();
     this.textTyping.destroy();
     this.clearChoices();
     this.portraitImage = null;
