@@ -268,8 +268,11 @@ export class EndingScene extends Phaser.Scene {
     // Reserve space at bottom for stats+button (≈55px)
     const BOTTOM_RESERVE = 55;
     const availableH = GAME_HEIGHT - BOTTOM_RESERVE;
+    // Korean glyphs render ~40% taller than pt-size, so line advance must use
+    // the effective rendered height (size × 1.45) rather than pt size.
     const lineSpacing = 4;
-    const totalHeight = epilogueLines.reduce((acc, l) => acc + l.size + lineSpacing, 0);
+    const lineAdvance = (size: number) => Math.ceil(ko ? size * 1.45 : size * 1.1) + lineSpacing;
+    const totalHeight = epilogueLines.reduce((acc, l) => acc + lineAdvance(l.size), 0);
     // Start from top-quarter if content is tall, otherwise centre in available area
     const startY = Math.max(16, (availableH - totalHeight) / 2);
     let delay = 0;
@@ -277,7 +280,7 @@ export class EndingScene extends Phaser.Scene {
 
     epilogueLines.forEach(line => {
       const y = curY;
-      curY += line.size + lineSpacing;
+      curY += lineAdvance(line.size);
       const txt = this.add.text(cx, y, line.text, {
         fontSize: `${line.size}px`,
         color: line.color,

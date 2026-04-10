@@ -45,18 +45,22 @@ export class PreloadScene extends Phaser.Scene {
     const cy = GAME_HEIGHT / 2;
     const barW = 200;
     const barH = 7;
-    const barY = cy + 8;
+    // barY placed below Korean subtitle (which renders ~18px tall at SM font)
+    const barY = cy + 16;
 
-    // Decorative cross
-    this.add.text(cx, cy - 44, '✝', {
+    // Decorative cross — well above title to avoid overlap
+    this.add.text(cx, cy - 60, '✝', {
       fontSize: '14px', color: '#d4a853', fontFamily: 'serif',
     }).setOrigin(0.5).setAlpha(0.7);
 
-    this.add.text(cx, cy - 28, "PILGRIM'S PROGRESS",
+    // English title XL(24px) — bottom at cy-28, clear of cross
+    this.add.text(cx, cy - 40, "PILGRIM'S PROGRESS",
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.XL),
     ).setOrigin(0.5);
 
-    this.add.text(cx, cy - 14, '천로역정',
+    // Korean subtitle SM(13px) — Korean glyphs render ~18px tall;
+    // placed 9px below English title bottom for clear separation
+    this.add.text(cx, cy - 10, '천로역정',
       DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#b0a070'),
     ).setOrigin(0.5);
 

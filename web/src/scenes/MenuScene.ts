@@ -252,53 +252,58 @@ export class MenuScene extends Phaser.Scene {
     const W = GAME_WIDTH;
     const H = GAME_HEIGHT;
 
-    // — Title area (upper third) —
+    // ── Title Area Layout ─────────────────────────────────────────────────
+    // Korean glyphs render ~40% taller than pt-size. All gaps use Korean eff. heights:
+    //   LG(18px) → ~25px  |  XS(11px) → ~15px  |  cross(16px serif) → ~11px
+    //
+    // Centers: cross=14 | title=44 | subtitle=72 | divider=86 | verse=98
+    // ──────────────────────────────────────────────────────────────────────
 
     // Decorative cross with glow
     const crossGlow = this.add.graphics().setDepth(9);
     crossGlow.fillStyle(0xd4a853, 0.08);
-    crossGlow.fillCircle(cx, 22, 22);
+    crossGlow.fillCircle(cx, 14, 22);
     crossGlow.fillStyle(0xd4a853, 0.04);
-    crossGlow.fillCircle(cx, 22, 34);
+    crossGlow.fillCircle(cx, 14, 34);
 
-    const cross = this.add.text(cx, 22, '✝', {
+    const cross = this.add.text(cx, 14, '✝', {
       fontSize: '16px', color: '#d4a853', fontFamily: 'serif',
       shadow: { offsetX: 0, offsetY: 0, color: '#d4a853', blur: 6, stroke: false, fill: true },
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: cross, alpha: 0.7, duration: 1200, ease: 'Quad.easeOut' });
     this.tweens.add({
-      targets: cross, y: 24, duration: 3500,
+      targets: cross, y: 16, duration: 3500,
       yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
     });
 
-    // Main title with stronger golden glow + drop shadow
-    const title = this.add.text(cx, 40, gm.i18n.t('game.title'), {
+    // Main title — cross bottom ~22, Korean title top ~32 → 10px gap
+    const title = this.add.text(cx, 42, gm.i18n.t('game.title'), {
       fontSize: `${ko ? DesignSystem.FONT_SIZE.LG : DesignSystem.FONT_SIZE.BASE}px`,
       color: '#f0e8d0',
       fontFamily: DesignSystem.getFontFamily(),
       fontStyle: 'bold',
       shadow: { offsetX: 1, offsetY: 2, color: '#d4a853', blur: 6, stroke: true, fill: true },
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
-    this.tweens.add({ targets: title, alpha: 1, y: 42, duration: 900, delay: 200, ease: 'Back.easeOut' });
+    this.tweens.add({ targets: title, alpha: 1, y: 44, duration: 900, delay: 200, ease: 'Back.easeOut' });
 
-    // Subtitle — keep 20px below title center to avoid Korean glyph overlap
-    const subtitle = this.add.text(cx, 66, gm.i18n.t('game.subtitle'), {
+    // Subtitle — title bottom ~57, subtitle top ~65 → 8px gap
+    const subtitle = this.add.text(cx, 72, gm.i18n.t('game.subtitle'), {
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5).setAlpha(0).setDepth(10);
     this.tweens.add({ targets: subtitle, alpha: 0.7, duration: 700, delay: 500 });
 
-    // Ornamental divider
+    // Ornamental divider — subtitle bottom ~80, divider at 86 → 6px gap
     const divider = this.add.graphics().setDepth(10).setAlpha(0);
     divider.lineStyle(0.5, 0xd4a853, 0.3);
-    divider.lineBetween(cx - 70, 78, cx + 70, 78);
+    divider.lineBetween(cx - 70, 86, cx + 70, 86);
     divider.fillStyle(0xd4a853, 0.5);
-    divider.fillCircle(cx, 78, 1.5);
-    divider.fillCircle(cx - 70, 78, 1);
-    divider.fillCircle(cx + 70, 78, 1);
+    divider.fillCircle(cx, 86, 1.5);
+    divider.fillCircle(cx - 70, 86, 1);
+    divider.fillCircle(cx + 70, 86, 1);
     this.tweens.add({ targets: divider, alpha: 1, duration: 600, delay: 600 });
 
-    // — Bible verse —
-    const verse = this.add.text(cx, 90, '"좁은 문으로 들어가라"  마 7:13', {
+    // Bible verse — 6px below divider
+    const verse = this.add.text(cx, 98, '"좁은 문으로 들어가라"  마 7:13', {
       fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#c8b070', fontFamily: DesignSystem.getFontFamily(),
     }).setOrigin(0.5).setDepth(10).setAlpha(0);
     this.tweens.add({ targets: verse, alpha: 0.9, duration: 800, delay: 1200 });
@@ -590,7 +595,7 @@ export class MenuScene extends Phaser.Scene {
     }
   }
 
-  private async checkSaveExists(continueBtnY: number, ko: boolean): Promise<void> {
+  private async checkSaveExists(_continueBtnY: number, ko: boolean): Promise<void> {
     if (!ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) return;
     const saveManager = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
     const exists = await saveManager.hasSave();
@@ -606,12 +611,17 @@ export class MenuScene extends Phaser.Scene {
 
     if (exists) {
       const saveData = await saveManager.load();
-      if (saveData) {
+      if (saveData && this.continueBtn) {
         const chapLabel = ko ? `제${saveData.chapter}장` : `Ch.${saveData.chapter}`;
         const faithLabel = ko ? `믿음 ${saveData.stats.faith}` : `Faith ${saveData.stats.faith}`;
-        this.add.text(GAME_WIDTH / 2, continueBtnY + 18, `${chapLabel} · ${faithLabel}`, {
-          fontSize: `${DesignSystem.FONT_SIZE.XS}px`, color: '#a09080', fontFamily: DesignSystem.getFontFamily(),
-        }).setOrigin(0.5).setDepth(12);
+        // Shift the existing label text up so both label + save info fit in the button
+        const labelText = this.continueBtn.list[1] as Phaser.GameObjects.Text;
+        if (labelText) labelText.setY(-9);
+        // Add save info inside the container so it never overlaps adjacent buttons
+        const infoText = this.add.text(0, 10, `${chapLabel} · ${faithLabel}`, {
+          fontSize: '9px', color: '#857060', fontFamily: DesignSystem.getFontFamily(),
+        }).setOrigin(0.5);
+        this.continueBtn.add(infoText);
         // NOTE: do NOT call setChapter/stats.reset here — GameScene loads proper save state
       }
     }
