@@ -357,9 +357,9 @@ export class BattleScene extends Phaser.Scene {
     }).setOrigin(0.5);
     this.enemyContainer.add(nameText);
 
-    // Boss badge
+    // Boss badge — XS(11px) Korean ~15px; name SM(13px) Korean top at -52-9=-61; badge bottom at -68+7=-61 → flush
     if (enemy.isBoss) {
-      const bossBadge = this.add.text(0, -64,
+      const bossBadge = this.add.text(0, -68,
         ko ? '【 BOSS 】' : '【 BOSS 】',
         DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, '#ff4444'),
       ).setOrigin(0.5);
