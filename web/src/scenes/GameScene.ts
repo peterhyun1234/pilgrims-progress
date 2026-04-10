@@ -511,9 +511,11 @@ export class GameScene extends Phaser.Scene {
     if (this.gameManager.isState(GameState.PAUSE)) return;
     this.gameManager.changeState(GameState.PAUSE);
 
-    const overlay = this.add.rectangle(
-      GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0,
-    ).setDepth(500).setScrollFactor(0);
+    const cx = GAME_WIDTH / 2;   // 240
+    const cy = GAME_HEIGHT / 2;  // 135
+
+    const overlay = this.add.rectangle(cx, cy, GAME_WIDTH, GAME_HEIGHT, 0x000000, 0)
+      .setDepth(500).setScrollFactor(0);
     this.tweens.add({ targets: overlay, alpha: 0.55, duration: 200, ease: 'Sine.easeOut' });
 
     // Detect platform for help text
@@ -523,66 +525,104 @@ export class GameScene extends Phaser.Scene {
       isMobile = rm.isTouchDevice;
     } catch { /* ignore */ }
 
-    const panel = this.add.container(GAME_WIDTH / 2, GAME_HEIGHT / 2).setDepth(501).setScrollFactor(0);
-    const bg = DesignSystem.createPanel(this, -110, -80, 220, 200);
-
     const ko = this.gameManager.language === 'ko';
-    const title = this.add.text(0, -58, ko ? '일시정지' : 'Paused',
+
+    // ── Visual panel (non-interactive container) ──────────────────────────
+    // Panel: 220×230, spans relY -100 to +130
+    const panel = this.add.container(cx, cy).setDepth(501).setScrollFactor(0);
+    const panelBg = DesignSystem.createPanel(this, -110, -100, 220, 230);
+
+    const title = this.add.text(0, -78, ko ? '일시정지' : 'Paused',
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.LG),
     ).setOrigin(0.5);
 
     const line = this.add.graphics();
     line.lineStyle(0.5, COLORS.UI.GOLD, 0.3);
-    line.lineBetween(-60, -42, 60, -42);
+    line.lineBetween(-60, -60, 60, -60);
 
-    // Platform-specific shortcut hint at bottom of panel
+    // Shortcut hint at bottom of panel (relY +100, world y=235)
     const shortcutHint = isMobile
       ? (ko ? '❕ NPC 대화  ❚❚ 일시정지' : '❕ Talk  ❚❚ Pause')
       : (ko ? 'E 대화  I 소지품  M 지도  ESC 일시정지' : 'E Talk  I Inventory  M Map  ESC Pause');
-    const hintText = this.add.text(0, 84, shortcutHint,
+    const hintText = this.add.text(0, 100, shortcutHint,
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(0.5);
 
-    panel.add([bg, title, line, hintText]);
+    panel.add([panelBg, title, line, hintText]);
 
-    const buttons: Phaser.GameObjects.Container[] = [];
+    // ── Button layout ─────────────────────────────────────────────────────
+    // Buttons placed at: relY -42, -10, +22, +56  (world y: 93, 125, 157, 191)
+    const BW = 170, BH = 28;
+    const btnRelYs = [-42, -10, 22, 56];
+    const btnLabels = [
+      ko ? '계속하기' : 'Resume',
+      ko ? '설정' : 'Settings',
+      ko ? '전체화면' : 'Fullscreen',
+      ko ? '메인메뉴' : 'Quit to Menu',
+    ];
+    const btnBgColors  = [0x2a4a2a, COLORS.UI.BUTTON_DEFAULT, COLORS.UI.BUTTON_DEFAULT, 0x3a1a1a];
+    const btnHovColors = [0x3a6a3a, COLORS.UI.BUTTON_HOVER,   COLORS.UI.BUTTON_HOVER,   0x5a2a2a];
+
+    // Collect hit zones so we can destroy them on cleanup
+    const hitZones: Phaser.GameObjects.Rectangle[] = [];
+
+    // Draw button visuals inside the panel container (pure graphics, no interaction)
+    const btnGfx = this.add.graphics();
+    panel.add(btnGfx);
+    const drawButtons = (hoverIdx: number) => {
+      btnGfx.clear();
+      btnRelYs.forEach((relY, i) => {
+        const bg   = i === hoverIdx ? btnHovColors[i] : btnBgColors[i];
+        const brd  = i === hoverIdx ? COLORS.UI.GOLD : COLORS.UI.PANEL_BORDER;
+        btnGfx.fillStyle(bg, 0.95);
+        btnGfx.fillRoundedRect(-BW / 2, relY - BH / 2, BW, BH, 4);
+        btnGfx.lineStyle(1.5, brd, 0.7);
+        btnGfx.strokeRoundedRect(-BW / 2, relY - BH / 2, BW, BH, 4);
+      });
+    };
+    drawButtons(-1);
+
+    // Button labels drawn as Text inside panel (no interaction)
+    const textStyle = DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, '#ffffff');
+    btnRelYs.forEach((relY, i) => {
+      const t = this.add.text(0, relY, btnLabels[i], textStyle).setOrigin(0.5);
+      panel.add(t);
+    });
+
     const cleanup = () => {
       overlay.destroy();
       panel.destroy();
-      buttons.forEach(b => b.destroy());
+      hitZones.forEach(h => h.destroy());
       this.pauseMenuCleanup = null;
     };
     this.pauseMenuCleanup = cleanup;
 
-    buttons.push(DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 - 18, 170, 28,
-      ko ? '계속하기' : 'Resume', () => {
-        cleanup();
-        this.gameManager.changeState(GameState.GAME);
-      }, { fontSize: DesignSystem.FONT_SIZE.SM, bgColor: 0x2a4a2a, hoverColor: 0x3a6a3a },
-    ).setDepth(502).setScrollFactor(0));
+    // ── Scene-level hit zones (no container = correct scrollFactor(0) coords) ──
+    const callbacks = [
+      () => { cleanup(); this.gameManager.changeState(GameState.GAME); },
+      () => { cleanup(); this.scene.pause(); this.scene.launch('SettingsScene', { from: 'GameScene' }); },
+      () => { MenuScene.toggleFullscreen(); },
+      async () => { cleanup(); await DesignSystem.fadeOut(this, 400); this.shutdown(); this.scene.start(SCENE_KEYS.MENU); },
+    ];
 
-    buttons.push(DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 16, 170, 28,
-      ko ? '설정' : 'Settings', () => {
-        cleanup();
-        this.scene.pause();
-        this.scene.launch('SettingsScene', { from: 'GameScene' });
-      }, { fontSize: DesignSystem.FONT_SIZE.SM },
-    ).setDepth(502).setScrollFactor(0));
+    btnRelYs.forEach((relY, i) => {
+      const hit = this.add.rectangle(cx, cy + relY, BW, BH, 0x000000, 0)
+        .setScrollFactor(0).setDepth(503).setInteractive({ useHandCursor: true });
 
-    buttons.push(DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 50, 170, 28,
-      ko ? '전체화면' : 'Fullscreen', () => {
-        MenuScene.toggleFullscreen();
-      }, { fontSize: DesignSystem.FONT_SIZE.SM },
-    ).setDepth(502).setScrollFactor(0));
+      hit.on('pointerover', () => {
+        drawButtons(i);
+        this.tweens.add({ targets: panel, scaleX: 1, scaleY: 1, duration: 0 }); // no-op, keep scale
+      });
+      hit.on('pointerout',  () => drawButtons(-1));
+      hit.on('pointerdown', () => {
+        this.tweens.add({
+          targets: panel, scaleX: 0.98, scaleY: 0.98, duration: 50,
+          yoyo: true, ease: 'Sine.easeInOut', onComplete: callbacks[i],
+        });
+      });
 
-    buttons.push(DesignSystem.createButton(this, GAME_WIDTH / 2, GAME_HEIGHT / 2 + 84, 170, 28,
-      ko ? '메인메뉴' : 'Quit to Menu', async () => {
-        cleanup();
-        await DesignSystem.fadeOut(this, 400);
-        this.shutdown();
-        this.scene.start(SCENE_KEYS.MENU);
-      }, { fontSize: DesignSystem.FONT_SIZE.SM, bgColor: 0x3a1a1a, hoverColor: 0x5a2a2a },
-    ).setDepth(502).setScrollFactor(0));
+      hitZones.push(hit);
+    });
   }
 
   private closePauseMenu(): void {
