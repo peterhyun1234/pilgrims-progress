@@ -150,23 +150,30 @@ export class DialogueBox {
   }
 
   private drawPortraitFrame(borderColor: number): void {
-    const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
+    const { BOX_X: bx, BOX_Y: by, PORTRAIT_S: ps } = DialogueBox;
+    // Portrait is centered ON the top border: py is the top-left Y of the frame
+    const px = bx + 6;
+    const py = by - Math.round(ps / 2);   // frame straddles the border line
+
     this.portraitBg.clear();
-    // Shadow behind portrait
-    this.portraitBg.fillStyle(0x000000, 0.4);
-    this.portraitBg.fillRoundedRect(bx + 7, by + (bh - ps) / 2 + 2, ps, ps, 4);
+    // Drop shadow
+    this.portraitBg.fillStyle(0x000000, 0.38);
+    this.portraitBg.fillRoundedRect(px + 2, py + 3, ps, ps, 5);
     // Portrait background
-    this.portraitBg.fillStyle(0x0e0c18, 0.85);
-    this.portraitBg.fillRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
-    // Gold border
-    this.portraitBg.lineStyle(1.5, borderColor, 0.75);
-    this.portraitBg.strokeRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
-    // Inner vignette corners (dark gradient effect via corner fills)
-    this.portraitBg.fillStyle(0x000000, 0.2);
-    this.portraitBg.fillRoundedRect(bx + 5, by + (bh - ps) / 2, ps, ps, 4);
-    // Bright inner border
-    this.portraitBg.lineStyle(0.5, borderColor, 0.2);
-    this.portraitBg.strokeRoundedRect(bx + 7, by + (bh - ps) / 2 + 2, ps - 4, ps - 4, 3);
+    this.portraitBg.fillStyle(0x0e0c18, 0.92);
+    this.portraitBg.fillRoundedRect(px, py, ps, ps, 5);
+    // Colour border
+    this.portraitBg.lineStyle(1.8, borderColor, 0.82);
+    this.portraitBg.strokeRoundedRect(px, py, ps, ps, 5);
+    // Inner highlight ring
+    this.portraitBg.lineStyle(0.6, borderColor, 0.22);
+    this.portraitBg.strokeRoundedRect(px + 2, py + 2, ps - 4, ps - 4, 4);
+  }
+
+  /** Returns the portrait frame top-left X/Y for portrait image placement. */
+  private getPortraitXY(): { px: number; py: number } {
+    const { BOX_X: bx, BOX_Y: by, PORTRAIT_S: ps } = DialogueBox;
+    return { px: bx + 6, py: by - Math.round(ps / 2) };
   }
 
   private onDialogueLine = (p: DialogueLinePayload | undefined) => { if (p) this.showLine(p); };
@@ -239,25 +246,32 @@ export class DialogueBox {
     const hasSpeaker = !!speaker;
     this.speakerBg.clear();
     if (hasSpeaker) {
-      const { BOX_X: bx, BOX_Y: by, TEXT_X: tx } = DialogueBox;
-      const ACCENT = 3;  // left colour strip width
-      const PAD = 8;     // equal left/right padding (after accent)
-      const sw = ACCENT + PAD + this.speakerText.width + PAD;
-      const bx0 = bx + tx - 2;
-      // Personality-tinted pill badge above the dialogue box
+      const { PORTRAIT_S: ps } = DialogueBox;
+      const ACCENT = 3;   // left colour strip width
+      const PAD = 8;      // equal left/right text padding
+      const BH  = 18;     // badge height
+      const sw  = ACCENT + PAD + this.speakerText.width + PAD;
+
+      // Portrait top-left position (centered on border)
+      const { px, py } = this.getPortraitXY();
+      // Badge: horizontally centered over portrait, bottom edge sitting on portrait top
+      const bx0 = px + Math.round((ps - sw) / 2);
+      const bby = py - BH - 2;   // 2px gap above portrait frame
+
+      // Personality-tinted pill badge
       this.speakerBg.fillStyle(0x0e0c18, 0.96);
-      this.speakerBg.fillRoundedRect(bx0, by - 13, sw, 19, 5);
+      this.speakerBg.fillRoundedRect(bx0, bby, sw, BH, 5);
       this.speakerBg.lineStyle(1.2, speakerBadgeColor, 0.85);
-      this.speakerBg.strokeRoundedRect(bx0, by - 13, sw, 19, 5);
-      // Colour accent strip on the left edge of badge
+      this.speakerBg.strokeRoundedRect(bx0, bby, sw, BH, 5);
+      // Left accent strip
       this.speakerBg.fillStyle(speakerBadgeColor, 0.55);
-      this.speakerBg.fillRoundedRect(bx0, by - 13, ACCENT, 19, { tl: 5, bl: 5, tr: 0, br: 0 });
+      this.speakerBg.fillRoundedRect(bx0, bby, ACCENT, BH, { tl: 5, bl: 5, tr: 0, br: 0 });
       // Inner glow
-      this.speakerBg.fillStyle(speakerBadgeColor, 0.06);
-      this.speakerBg.fillRoundedRect(bx0 + 1, by - 12, sw - 2, 17, 4);
-      // Reposition text to sit after accent + left pad, vertically centred
-      this.speakerText.setPosition(bx0 + ACCENT + PAD, by - 4);
-      // Update speaker text color to match badge accent
+      this.speakerBg.fillStyle(speakerBadgeColor, 0.07);
+      this.speakerBg.fillRoundedRect(bx0 + 1, bby + 1, sw - 2, BH - 2, 4);
+      // Text position: after accent + left pad, vertically centered in badge
+      this.speakerText.setPosition(bx0 + ACCENT + PAD, bby + Math.round((BH - this.speakerText.height) / 2));
+      // Text color to match personality
       this.speakerText.setStyle({ color: Phaser.Display.Color.IntegerToColor(speakerBadgeColor).rgba });
     } else {
       this.speakerText.setStyle({ color: '#d4a853' });
@@ -394,8 +408,8 @@ export class DialogueBox {
 
     const rt = this.portraitRenderer.getPortrait(this.currentSpeakerId, this.emotionState);
     if (rt) {
-      const { BOX_X: bx, BOX_Y: by, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
-      rt.setPosition(bx + 5, by + (bh - ps) / 2);
+      const { px, py } = this.getPortraitXY();
+      rt.setPosition(px, py);
       rt.setOrigin(0, 0).setScrollFactor(0);
       rt.setVisible(true).setDepth(201);
       this.container.add(rt);
@@ -442,9 +456,10 @@ export class DialogueBox {
       };
       const pg = personalityGlow[config.personality ?? 'wise'];
       if (pg) {
-        // Soft glow ellipse behind portrait
+        // Soft glow ellipse centered on portrait (which straddles the border)
+        const { px, py } = this.getPortraitXY();
         this.sceneBg.fillStyle(pg.color, pg.alpha);
-        this.sceneBg.fillEllipse(bx + 5 + ps / 2, by + bh / 2, ps * 1.4, ps * 1.2);
+        this.sceneBg.fillEllipse(px + ps / 2, py + ps / 2, ps * 1.5, ps * 1.3);
       }
     }
 
@@ -517,8 +532,12 @@ export class DialogueBox {
         drawDefault();
 
         const prefix = isLocked ? '🔒 ' : (choice.isHidden ? '★ ' : `${i + 1}. `);
+        const hoverPrefix = isLocked ? '🔒 ' : '▶ ';
         const textColor = isLocked ? '#aa9977' : (choice.isHidden ? '#d4a853' : '#d0c8b8');
-        const txt = this.scene.add.text(w / 2, choiceH / 2, prefix + choice.text,
+        // Store the base label so hover prefix doesn't compound
+        const baseLabel = prefix + choice.text;
+        const hoverLabel = hoverPrefix + choice.text;
+        const txt = this.scene.add.text(w / 2, choiceH / 2, baseLabel,
           DesignSystem.textStyle(DesignSystem.FONT_SIZE.SM, textColor),
         ).setOrigin(0.5).setAlpha(isLocked ? 0.5 : 1);
 
@@ -533,12 +552,12 @@ export class DialogueBox {
         hz.on('pointerover', () => {
           if (!isLocked) {
             drawHover();
-            txt.setText('▶ ' + txt.text.replace(/^▶ /, ''));
+            txt.setText(hoverLabel);
           }
         });
         hz.on('pointerout', () => {
           drawDefault();
-          txt.setText(txt.text.replace(/^▶ /, ''));
+          txt.setText(baseLabel);
         });
         hz.on('pointerdown', () => {
           if (this._choiceLocked || isLocked) return;
@@ -653,11 +672,17 @@ export class DialogueBox {
   update(): void {
     if (!this.isVisible) return;
     const { BOX_X: bx, TEXT_X: tx, BOX_Y: by } = DialogueBox;
+    // Baseline matches buildUI() positioning: bx + TEXT_X, by + 18
     if (this.currentTextEffect === 'shake') {
       this.dialogueText.x = bx + tx + (Math.random() - 0.5) * 1.2;
-      this.dialogueText.y = by + 20 +(Math.random() - 0.5) * 1.2;
+      this.dialogueText.y = by + 18 + (Math.random() - 0.5) * 1.2;
     } else if (this.currentTextEffect === 'wave') {
-      this.dialogueText.y = by + 20 +Math.sin(this.scene.time.now * 0.004) * 1.5;
+      this.dialogueText.x = bx + tx;
+      this.dialogueText.y = by + 18 + Math.sin(this.scene.time.now * 0.004) * 1.5;
+    } else {
+      // Restore baseline when effect cleared mid-update
+      this.dialogueText.x = bx + tx;
+      this.dialogueText.y = by + 18;
     }
   }
 
