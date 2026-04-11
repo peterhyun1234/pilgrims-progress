@@ -240,18 +240,23 @@ export class DialogueBox {
     this.speakerBg.clear();
     if (hasSpeaker) {
       const { BOX_X: bx, BOX_Y: by, TEXT_X: tx } = DialogueBox;
-      const sw = this.speakerText.width + 16;
+      const ACCENT = 3;  // left colour strip width
+      const PAD = 8;     // equal left/right padding (after accent)
+      const sw = ACCENT + PAD + this.speakerText.width + PAD;
+      const bx0 = bx + tx - 2;
       // Personality-tinted pill badge above the dialogue box
       this.speakerBg.fillStyle(0x0e0c18, 0.96);
-      this.speakerBg.fillRoundedRect(bx + tx - 2, by - 13, sw, 19, 5);
+      this.speakerBg.fillRoundedRect(bx0, by - 13, sw, 19, 5);
       this.speakerBg.lineStyle(1.2, speakerBadgeColor, 0.85);
-      this.speakerBg.strokeRoundedRect(bx + tx - 2, by - 13, sw, 19, 5);
+      this.speakerBg.strokeRoundedRect(bx0, by - 13, sw, 19, 5);
       // Colour accent strip on the left edge of badge
       this.speakerBg.fillStyle(speakerBadgeColor, 0.55);
-      this.speakerBg.fillRoundedRect(bx + tx - 2, by - 13, 3, 19, { tl: 5, bl: 5, tr: 0, br: 0 });
+      this.speakerBg.fillRoundedRect(bx0, by - 13, ACCENT, 19, { tl: 5, bl: 5, tr: 0, br: 0 });
       // Inner glow
       this.speakerBg.fillStyle(speakerBadgeColor, 0.06);
-      this.speakerBg.fillRoundedRect(bx + tx + 1, by - 12, sw - 5, 17, 4);
+      this.speakerBg.fillRoundedRect(bx0 + 1, by - 12, sw - 2, 17, 4);
+      // Reposition text to sit after accent + left pad, vertically centred
+      this.speakerText.setPosition(bx0 + ACCENT + PAD, by - 4);
       // Update speaker text color to match badge accent
       this.speakerText.setStyle({ color: Phaser.Display.Color.IntegerToColor(speakerBadgeColor).rgba });
     } else {
