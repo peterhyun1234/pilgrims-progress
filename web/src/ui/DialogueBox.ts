@@ -48,8 +48,8 @@ export class DialogueBox {
   private static readonly BOX_H = 96;
   private static readonly BOX_X = (GAME_WIDTH - 430) / 2;
   private static readonly BOX_Y = GAME_HEIGHT - 98;
-  private static readonly PORTRAIT_S = 72;
-  private static readonly TEXT_X = 88;
+  private static readonly PORTRAIT_S = 64;   // matches PortraitRenderer default size
+  private static readonly TEXT_X = 82;       // bx + 8 (left pad) + 64 (portrait) + 10 (gap)
 
   constructor(scene: Phaser.Scene) {
     this.scene = scene;
@@ -100,7 +100,7 @@ export class DialogueBox {
 
     this.speakerBg = this.scene.add.graphics();
 
-    this.speakerText = this.scene.add.text(bx + DialogueBox.TEXT_X + 4, by + 4, '',
+    this.speakerText = this.scene.add.text(bx + DialogueBox.TEXT_X + 4, by + 8, '',
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
     );
 
@@ -151,9 +151,10 @@ export class DialogueBox {
 
   private drawPortraitFrame(borderColor: number): void {
     const { BOX_X: bx, BOX_Y: by, PORTRAIT_S: ps } = DialogueBox;
-    // Portrait sits fully inside the box: 22px top margin leaves room for the speaker badge
-    const px = bx + 6;
-    const py = by + 22;
+    // Portrait fully inside the box, vertically centered with 6px top/bottom margins
+    // Layout: 6px top gap + badge(18) + 2px gap + portrait(64) + 6px bottom gap = 96 (BOX_H)
+    const px = bx + 8;
+    const py = by + 26;   // 6 (top margin) + 18 (badge) + 2 (gap) = 26
 
     this.portraitBg.clear();
     // Drop shadow
@@ -173,7 +174,7 @@ export class DialogueBox {
   /** Returns the portrait frame top-left X/Y for portrait image placement. */
   private getPortraitXY(): { px: number; py: number } {
     const { BOX_X: bx, BOX_Y: by } = DialogueBox;
-    return { px: bx + 6, py: by + 22 };
+    return { px: bx + 8, py: by + 26 };
   }
 
   private onDialogueLine = (p: DialogueLinePayload | undefined) => { if (p) this.showLine(p); };
@@ -406,7 +407,7 @@ export class DialogueBox {
       return;
     }
 
-    const rt = this.portraitRenderer.getPortrait(this.currentSpeakerId, this.emotionState);
+    const rt = this.portraitRenderer.getPortrait(this.currentSpeakerId, this.emotionState, DialogueBox.PORTRAIT_S);
     if (rt) {
       const { px, py } = this.getPortraitXY();
       rt.setPosition(px, py);
