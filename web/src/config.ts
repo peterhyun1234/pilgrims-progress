@@ -2,6 +2,9 @@ export const GAME_WIDTH = 480;
 export const GAME_HEIGHT = 270;
 export const TILE_SIZE = 16;
 
+/** 영어 지원 임시 비활성화 플래그. true이면 언어 선택/설정에서 English 버튼을 숨깁니다. */
+export const ENGLISH_DISABLED = true;
+
 export const STATS = {
   FAITH: { initial: 30, min: 0, max: 100 },
   COURAGE: { initial: 20, min: 0, max: 100 },
