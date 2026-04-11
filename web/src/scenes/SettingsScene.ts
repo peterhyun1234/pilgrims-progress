@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, COLORS } from '../config';
+import { GAME_WIDTH, GAME_HEIGHT, COLORS, ENGLISH_DISABLED } from '../config';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
 import { EventBus } from '../core/EventBus';
@@ -102,20 +102,22 @@ export class SettingsScene extends Phaser.Scene {
     y += 10;
     this.addSectionLabel(cx, y, ko ? '⚙  표시' : '⚙  Display');
 
-    y += 16;
-    this.addRowLabel(panelX + 18, y, gm.i18n.t('settings.language'));
-    // Pill-style toggle for language
-    const langToggle = this.createPillToggle(
-      cx + 70, y + 3,
-      ['한국어', 'English'],
-      gm.language === 'ko' ? 0 : 1,
-      (idx) => {
-        gm.language = idx === 0 ? 'ko' : 'en';
-        // Restart scene so all labels re-render in the new language
-        this.time.delayedCall(120, () => this.scene.restart({ from: this.fromScene }));
-      },
-    );
-    void langToggle;
+    if (!ENGLISH_DISABLED) {
+      y += 16;
+      this.addRowLabel(panelX + 18, y, gm.i18n.t('settings.language'));
+      // Pill-style toggle for language
+      const langToggle = this.createPillToggle(
+        cx + 70, y + 3,
+        ['한국어', 'English'],
+        gm.language === 'ko' ? 0 : 1,
+        (idx) => {
+          gm.language = idx === 0 ? 'ko' : 'en';
+          // Restart scene so all labels re-render in the new language
+          this.time.delayedCall(120, () => this.scene.restart({ from: this.fromScene }));
+        },
+      );
+      void langToggle;
+    }
 
     y += 26;
     this.addRowLabel(panelX + 18, y, gm.i18n.t('settings.reduceMotion'));

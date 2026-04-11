@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS } from '../config';
+import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS, ENGLISH_DISABLED } from '../config';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
 import { EventBus } from '../core/EventBus';
@@ -49,14 +49,22 @@ export class LanguageScene extends Phaser.Scene {
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.SM),
     ).setOrigin(0.5).setDepth(6);
 
-    DesignSystem.createButton(this, cx, cy + 4, 160, 34,
-      '한국어', () => this.selectLanguage('ko'),
-      { fontSize: DesignSystem.FONT_SIZE.BASE },
-    ).setDepth(7);
-    DesignSystem.createButton(this, cx, cy + 42, 160, 34,
-      'English', () => this.selectLanguage('en'),
-      { fontSize: DesignSystem.FONT_SIZE.BASE },
-    ).setDepth(7);
+    if (ENGLISH_DISABLED) {
+      // 영어 비활성화 시 한국어로 자동 진행
+      DesignSystem.createButton(this, cx, cy + 20, 160, 34,
+        '한국어', () => this.selectLanguage('ko'),
+        { fontSize: DesignSystem.FONT_SIZE.BASE },
+      ).setDepth(7);
+    } else {
+      DesignSystem.createButton(this, cx, cy + 4, 160, 34,
+        '한국어', () => this.selectLanguage('ko'),
+        { fontSize: DesignSystem.FONT_SIZE.BASE },
+      ).setDepth(7);
+      DesignSystem.createButton(this, cx, cy + 42, 160, 34,
+        'English', () => this.selectLanguage('en'),
+        { fontSize: DesignSystem.FONT_SIZE.BASE },
+      ).setDepth(7);
+    }
   }
 
   private buildBackground(cx: number, _cy: number): void {
