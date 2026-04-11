@@ -100,7 +100,7 @@ export class DialogueBox {
 
     this.speakerBg = this.scene.add.graphics();
 
-    this.speakerText = this.scene.add.text(bx + DialogueBox.TEXT_X + 4, by - 9, '',
+    this.speakerText = this.scene.add.text(bx + DialogueBox.TEXT_X + 4, by + 4, '',
       DesignSystem.goldTextStyle(DesignSystem.FONT_SIZE.SM),
     );
 
@@ -151,9 +151,9 @@ export class DialogueBox {
 
   private drawPortraitFrame(borderColor: number): void {
     const { BOX_X: bx, BOX_Y: by, PORTRAIT_S: ps } = DialogueBox;
-    // Portrait is centered ON the top border: py is the top-left Y of the frame
+    // Portrait sits fully inside the box: 22px top margin leaves room for the speaker badge
     const px = bx + 6;
-    const py = by - Math.round(ps / 2);   // frame straddles the border line
+    const py = by + 22;
 
     this.portraitBg.clear();
     // Drop shadow
@@ -172,8 +172,8 @@ export class DialogueBox {
 
   /** Returns the portrait frame top-left X/Y for portrait image placement. */
   private getPortraitXY(): { px: number; py: number } {
-    const { BOX_X: bx, BOX_Y: by, PORTRAIT_S: ps } = DialogueBox;
-    return { px: bx + 6, py: by - Math.round(ps / 2) };
+    const { BOX_X: bx, BOX_Y: by } = DialogueBox;
+    return { px: bx + 6, py: by + 22 };
   }
 
   private onDialogueLine = (p: DialogueLinePayload | undefined) => { if (p) this.showLine(p); };
@@ -439,7 +439,7 @@ export class DialogueBox {
     if (mood.alpha > 0) {
       // Full box tint
       this.sceneBg.fillStyle(mood.color, mood.alpha);
-      this.sceneBg.fillRoundedRect(bx, by - 8, bw, bh + 8, 8);
+      this.sceneBg.fillRoundedRect(bx, by, bw, bh, 6);
     }
 
     // Personality-specific portrait frame atmospheric glow
