@@ -305,12 +305,16 @@ export class DialogueBox {
 
   private mapEmotion(raw: string): PortraitEmotion {
     const map: Record<string, PortraitEmotion> = {
-      neutral: 'neutral', happy: 'happy', joyful: 'happy', joy: 'happy',
-      angry: 'angry', anger: 'angry', mad: 'angry',
-      sad: 'sad', sorrow: 'sad', melancholy: 'sad',
+      neutral: 'neutral', calm: 'neutral',
+      happy: 'happy', joyful: 'happy', joy: 'happy', glad: 'happy', grateful: 'happy',
+      angry: 'angry', anger: 'angry', mad: 'angry', furious: 'angry',
+      sad: 'sad', sorrow: 'sad', melancholy: 'sad', grief: 'sad',
       fearful: 'fearful', fear: 'fearful', scared: 'fearful', afraid: 'fearful',
-      surprised: 'surprised', shock: 'surprised',
-      determined: 'determined', resolve: 'determined', brave: 'determined',
+      surprised: 'surprised', shock: 'surprised', astonished: 'surprised',
+      determined: 'determined', brave: 'determined',
+      wince: 'wince', pain: 'wince', burden: 'wince', suffering: 'wince', hurt: 'wince',
+      resolve: 'resolve', courage: 'resolve', strong: 'resolve',
+      awe: 'awe', wonder: 'awe', reverence: 'awe', worship: 'awe', glory: 'awe',
     };
     return map[raw] ?? 'neutral';
   }
@@ -403,21 +407,50 @@ export class DialogueBox {
     this.sceneBg.clear();
 
     const moodColors: Record<PortraitEmotion, { color: number; alpha: number }> = {
-      neutral: { color: 0x1a1428, alpha: 0 },
-      happy: { color: 0xffd700, alpha: 0.10 },
-      angry: { color: 0xff0000, alpha: 0.10 },
-      sad: { color: 0x2244aa, alpha: 0.10 },
-      fearful: { color: 0x440066, alpha: 0.12 },
-      surprised: { color: 0xff8800, alpha: 0.08 },
+      neutral:    { color: 0x1a1428, alpha: 0 },
+      happy:      { color: 0xffd700, alpha: 0.10 },
+      angry:      { color: 0xcc2200, alpha: 0.10 },
+      sad:        { color: 0x2244aa, alpha: 0.10 },
+      fearful:    { color: 0x440066, alpha: 0.12 },
+      surprised:  { color: 0xff8800, alpha: 0.08 },
       determined: { color: 0x44aa44, alpha: 0.08 },
+      wince:      { color: 0x884422, alpha: 0.12 },  // warm red-brown — burden/pain
+      resolve:    { color: 0x4488cc, alpha: 0.09 },  // cool blue — steeled courage
+      awe:        { color: 0xeedd88, alpha: 0.15 },  // golden glow — divine wonder
     };
 
+    const { BOX_X: bx, BOX_Y: by, BOX_W: bw, BOX_H: bh, PORTRAIT_S: ps } = DialogueBox;
     const mood = moodColors[this.emotionState];
+
     if (mood.alpha > 0) {
-      const { BOX_X: bx, BOX_Y: by, BOX_W: bw, BOX_H: bh } = DialogueBox;
+      // Full box tint
       this.sceneBg.fillStyle(mood.color, mood.alpha);
       this.sceneBg.fillRoundedRect(bx, by - 8, bw, bh + 8, 8);
     }
+
+    // Personality-specific portrait frame atmospheric glow
+    const config = PORTRAIT_CONFIGS[this.currentSpeakerId];
+    if (config) {
+      const personalityGlow: Record<string, { color: number; alpha: number }> = {
+        noble:      { color: 0xffd700, alpha: 0.18 },
+        wise:       { color: 0x9b59b6, alpha: 0.14 },
+        kind:       { color: 0x88cc66, alpha: 0.12 },
+        stern:      { color: 0x5577aa, alpha: 0.10 },
+        aggressive: { color: 0xcc3322, alpha: 0.18 },
+        sly:        { color: 0x558844, alpha: 0.10 },
+        timid:      { color: 0x445566, alpha: 0.08 },
+      };
+      const pg = personalityGlow[config.personality ?? 'wise'];
+      if (pg) {
+        // Soft glow ellipse behind portrait
+        this.sceneBg.fillStyle(pg.color, pg.alpha);
+        this.sceneBg.fillEllipse(bx + 5 + ps / 2, by + bh / 2, ps * 1.4, ps * 1.2);
+      }
+    }
+
+    // Redraw portrait frame with personality border color
+    const badgeColor = this.getSpeakerBadgeColor();
+    this.drawPortraitFrame(badgeColor);
   }
 
   private startTyping(): void {

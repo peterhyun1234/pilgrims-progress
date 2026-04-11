@@ -166,17 +166,21 @@ export class CharacterSpriteFactory {
   ): void {
     const cx = ox + SPRITE_SIZE / 2;
 
-    // Animation offsets
+    // Animation offsets — Christian is burdened: heavier step, slight forward lean
     let bobY = 0;
     let legOffset = 0;
     let armSwing = 0;
+    let breathe = 0;  // chest-only breathing independent of head bob
     if (anim === 'idle') {
-      bobY = Math.sin((frame / 4) * Math.PI * 2) * 1.0;  // slightly more pronounced idle bob
+      // Two-frequency idle: slow bob + faster breathing
+      bobY   = Math.sin((frame / 4) * Math.PI * 2) * 1.1;
+      breathe = Math.sin((frame / 2) * Math.PI * 2) * 0.5;  // chest rises/falls
     } else {
       const phase = (frame / 6) * Math.PI * 2;
-      bobY = Math.abs(Math.sin(phase)) * -1.8;            // deeper walk dip
-      legOffset = Math.sin(phase) * 5;                    // wider leg stride
-      armSwing = Math.sin(phase) * 4;                     // fuller arm swing
+      bobY      = Math.abs(Math.sin(phase)) * -2.2;   // heavier dip (burden weight)
+      legOffset = Math.sin(phase) * 5;                // wide stride
+      armSwing  = Math.sin(phase) * 3.5;              // arms compensate for load
+      breathe   = 0;
     }
 
     // === Ground shadow (oval under feet) ===
@@ -256,62 +260,67 @@ export class CharacterSpriteFactory {
     }
 
     // === Torso / Cloak ===
+    // Breathing: chest lifts slightly on inhale (breathe offset shifts torso up)
     const bodyH = 12;
+    const chestY = bodyY - Math.round(breathe);
     // Cloak base — warm brown pilgrim cloak
     g.fillStyle(colors.clothing, 1);
-    g.fillRoundedRect(cx - 6, bodyY, 12, bodyH, 2);
+    g.fillRoundedRect(cx - 6, chestY, 12, bodyH, 2);
     // Cloak fold lines for depth (side views)
     if (dir === 'left' || dir === 'right') {
       g.fillStyle(0x000000, 0.15);
-      g.fillRect(cx - 2, bodyY + 2, 1, bodyH - 4);
-      g.fillRect(cx + 1, bodyY + 3, 1, bodyH - 5);
+      g.fillRect(cx - 2, chestY + 2, 1, bodyH - 4);
+      g.fillRect(cx + 1, chestY + 3, 1, bodyH - 5);
     }
     // Cloak dark sides
     g.fillStyle(this.darken(colors.clothing, 0.7), 0.5);
-    g.fillRect(cx - 6, bodyY, 2, bodyH);
-    g.fillRect(cx + 4, bodyY, 2, bodyH);
+    g.fillRect(cx - 6, chestY, 2, bodyH);
+    g.fillRect(cx + 4, chestY, 2, bodyH);
     // Cloak center highlight strip
     g.fillStyle(0xffffff, 0.07);
-    g.fillRect(cx - 2, bodyY + 1, 4, bodyH - 2);
+    g.fillRect(cx - 2, chestY + 1, 4, bodyH - 2);
     // Belt accent
     g.fillStyle(colors.accent, 1);
-    g.fillRect(cx - 5, bodyY + bodyH - 4, 10, 2);
+    g.fillRect(cx - 5, chestY + bodyH - 4, 10, 2);
     // Belt buckle (gold pixel)
     g.fillStyle(0xffd080, 0.95);
-    g.fillRect(cx - 1, bodyY + bodyH - 4, 2, 2);
+    g.fillRect(cx - 1, chestY + bodyH - 4, 2, 2);
 
     // === Cross badge on chest (front-facing and right-side views) ===
     if (dir === 'down' || dir === 'right') {
       const badgeX = dir === 'right' ? cx + 1 : cx - 1;
-      const badgeY = bodyY + 3;
-      // Subtle gold glow behind cross
-      g.fillStyle(0xffd080, 0.22);
-      g.fillCircle(badgeX, badgeY + 1, 3);
+      const badgeY = chestY + 3;
+      // Pulsing gold glow behind cross (faith aura)
+      g.fillStyle(0xffd080, 0.25 + Math.sin((frame / 4) * Math.PI * 2) * 0.10);
+      g.fillCircle(badgeX, badgeY + 1, 4);
       // Cross — 1px vertical + 1px horizontal
       g.fillStyle(0xffd080, 1);
       g.fillRect(badgeX, badgeY, 1, 3);
       g.fillRect(badgeX - 1, badgeY + 1, 3, 1);
+      // Cross bright center pixel
+      g.fillStyle(0xffffff, 0.7);
+      g.fillRect(badgeX, badgeY + 1, 1, 1);
     }
 
-    // === Arms ===
+    // === Arms (attached to chestY for breathing coherence) ===
     if (dir === 'down' || dir === 'up') {
       g.fillStyle(colors.clothing, 1);
-      g.fillRect(cx - 9, bodyY + 1 + Math.round(armSwing), 3, 8);
-      g.fillRect(cx + 6, bodyY + 1 - Math.round(armSwing), 3, 8);
+      g.fillRect(cx - 9, chestY + 1 + Math.round(armSwing), 3, 8);
+      g.fillRect(cx + 6, chestY + 1 - Math.round(armSwing), 3, 8);
       // Hand skin pixels
       g.fillStyle(colors.skin, 1);
-      g.fillRect(cx - 9, bodyY + 9 + Math.round(armSwing), 3, 2);
-      g.fillRect(cx + 6, bodyY + 9 - Math.round(armSwing), 3, 2);
+      g.fillRect(cx - 9, chestY + 9 + Math.round(armSwing), 3, 2);
+      g.fillRect(cx + 6, chestY + 9 - Math.round(armSwing), 3, 2);
       // Arm shadow line
       g.fillStyle(0x000000, 0.12);
-      g.fillRect(cx - 6, bodyY + 1, 1, 8);
-      g.fillRect(cx + 9, bodyY + 1, 1, 8);
+      g.fillRect(cx - 6, chestY + 1, 1, 8);
+      g.fillRect(cx + 9, chestY + 1, 1, 8);
     } else {
       const armX = dir === 'right' ? cx - 8 : cx + 5;
       g.fillStyle(colors.clothing, 1);
-      g.fillRect(armX, bodyY + 1 + Math.round(armSwing), 3, 8);
+      g.fillRect(armX, chestY + 1 + Math.round(armSwing), 3, 8);
       g.fillStyle(colors.skin, 1);
-      g.fillRect(armX, bodyY + 9 + Math.round(armSwing), 3, 2);
+      g.fillRect(armX, chestY + 9 + Math.round(armSwing), 3, 2);
     }
 
     // === Head ===
@@ -425,55 +434,64 @@ export class CharacterSpriteFactory {
   ): void {
     const cx = ox + SPRITE_SIZE / 2;
 
+    // Evangelist: dignified, minimal movement. Staff plants on alternate steps.
     let bobY = 0;
     let armSwing = 0;
+    let breathe = 0;
+    let staffPlant = 0;  // staff tip y-offset (plants down on each step)
     if (anim === 'idle') {
-      bobY = Math.sin((frame / 4) * Math.PI * 2) * 0.8;
+      bobY    = Math.sin((frame / 4) * Math.PI * 2) * 0.6;  // barely moves — authority
+      breathe = Math.sin((frame / 2) * Math.PI * 2) * 0.4;
     } else {
       const phase = (frame / 6) * Math.PI * 2;
-      bobY = Math.abs(Math.sin(phase)) * -1.4;
-      armSwing = Math.sin(phase) * 3;
+      bobY      = Math.abs(Math.sin(phase)) * -1.3;   // gentle, dignified step
+      armSwing  = Math.sin(phase) * 2;                // minimal arm sway
+      // Staff plants on the ground every other step
+      staffPlant = Math.abs(Math.sin(phase)) * 1.2;
     }
 
     // Shadow
     g.fillStyle(0x000000, 0.3);
     g.fillEllipse(cx, oy + 30, 12, 4);
 
-    // Staff (drawn first — behind body)
+    // Staff (drawn first — behind body) — plants on ground with each step
     const staffX = dir === 'right' ? cx + 10 : cx - 10;
     g.lineStyle(3, 0x6a4a20, 0.9);
-    g.lineBetween(staffX, Math.round(oy + 4 + bobY) - 4, staffX, oy + 29);
+    g.lineBetween(staffX, Math.round(oy + 4 + bobY) - 4, staffX, oy + 29 + Math.round(staffPlant));
     // Staff grain lines
     g.lineStyle(1, 0x8a6a40, 0.3);
-    g.lineBetween(staffX - 1, Math.round(oy + 4 + bobY), staffX - 1, oy + 27);
+    g.lineBetween(staffX - 1, Math.round(oy + 4 + bobY), staffX - 1, oy + 27 + Math.round(staffPlant));
     g.lineStyle(1, 0x4a2a10, 0.25);
-    g.lineBetween(staffX + 1, Math.round(oy + 4 + bobY), staffX + 1, oy + 28);
-    // Staff knob top
+    g.lineBetween(staffX + 1, Math.round(oy + 4 + bobY), staffX + 1, oy + 28 + Math.round(staffPlant));
+    // Staff knob top — golden orb
     g.fillStyle(colors.accessory ?? 0xd4a853, 1);
-    g.fillCircle(staffX, Math.round(oy + 4 + bobY) - 4, 2);
-    g.fillStyle(0xffd080, 0.4);
-    g.fillCircle(staffX - 0.5, Math.round(oy + 4 + bobY) - 5, 1);
+    g.fillCircle(staffX, Math.round(oy + 4 + bobY) - 4, 2.5);
+    g.fillStyle(0xffd080, 0.55);
+    g.fillCircle(staffX - 0.7, Math.round(oy + 4 + bobY) - 5.5, 1.2);
+    g.fillStyle(this.darken(0xd4a853, 0.3), 0.45);
+    g.fillCircle(staffX + 0.7, Math.round(oy + 4 + bobY) - 3, 0.9);
 
     // === Robe (long, narrow, gray-white) ===
     const bodyY = Math.round(oy + 13 + bobY);
+    const chestEv = bodyY - Math.round(breathe);   // breathing chest offset
     const robeColor = 0xd0c8c0;
     const robeDark = this.darken(robeColor, 0.72);
 
-    // Robe body — slightly narrower than generic
+    // Robe body — slightly narrower than generic, breathing chest
     g.fillStyle(robeColor, 1);
-    g.fillRoundedRect(cx - 5, bodyY, 10, 16, 2);
+    g.fillRoundedRect(cx - 5, chestEv, 10, 16, 2);
     // Robe vertical fold lines (3 folds)
     g.fillStyle(robeDark, 0.4);
-    g.fillRect(cx - 3, bodyY + 2, 1, 13);
-    g.fillRect(cx, bodyY + 1, 1, 14);
-    g.fillRect(cx + 2, bodyY + 3, 1, 12);
+    g.fillRect(cx - 3, chestEv + 2, 1, 13);
+    g.fillRect(cx, chestEv + 1, 1, 14);
+    g.fillRect(cx + 2, chestEv + 3, 1, 12);
     // Robe dark sides
     g.fillStyle(robeDark, 0.55);
-    g.fillRect(cx - 5, bodyY, 2, 16);
-    g.fillRect(cx + 3, bodyY, 2, 16);
+    g.fillRect(cx - 5, chestEv, 2, 16);
+    g.fillRect(cx + 3, chestEv, 2, 16);
     // Center highlight
     g.fillStyle(0xffffff, 0.1);
-    g.fillRect(cx - 2, bodyY + 1, 3, 14);
+    g.fillRect(cx - 2, chestEv + 1, 3, 14);
 
     // === Feet (sandal hints at robe hem) ===
     g.fillStyle(0x8a6a50, 1);
@@ -486,19 +504,19 @@ export class CharacterSpriteFactory {
     }
 
     // === Arms ===
-    // Left arm: hangs or slight sway
+    // Left arm: hangs or slight sway — uses chestEv for breathing coherence
     if (dir === 'down' || dir === 'up') {
       g.fillStyle(robeColor, 1);
-      g.fillRect(cx - 8, bodyY + 1 - Math.round(armSwing), 3, 7);
+      g.fillRect(cx - 8, chestEv + 1 - Math.round(armSwing), 3, 7);
       g.fillStyle(colors.skin, 1);
-      g.fillRect(cx - 8, bodyY + 8 - Math.round(armSwing), 3, 2);
+      g.fillRect(cx - 8, chestEv + 8 - Math.round(armSwing), 3, 2);
     }
 
-    // Pointing arm (right arm, extended outward)
+    // Pointing arm (right arm, extended outward) — Evangelist's signature gesture
     if (dir === 'down' || (dir === 'left' && anim !== 'walk') || dir === 'right') {
       g.fillStyle(robeColor, 1);
       const ptArmX = dir === 'left' ? cx - 8 : cx + 5;
-      const ptArmY = bodyY + 1;
+      const ptArmY = chestEv + 1;
       g.fillRect(ptArmX, ptArmY, 3, 5);
       // Forearm extends further out
       g.fillStyle(colors.skin, 1);

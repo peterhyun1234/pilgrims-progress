@@ -27,13 +27,17 @@ export interface EmotionFeatures {
 }
 
 export const EMOTION_FEATURES: Record<PortraitEmotion, EmotionFeatures> = {
-  neutral:    { eyebrowAngle: 0,    eyeScale: 1,   mouthCurve: 0,    mouthOpen: false, blush: false, tearDrop: false, sparkle: false, sweatDrop: false },
-  happy:      { eyebrowAngle: 0.1,  eyeScale: 0.8, mouthCurve: 0.5,  mouthOpen: true,  blush: true,  tearDrop: false, sparkle: true,  sweatDrop: false },
-  angry:      { eyebrowAngle: -0.4, eyeScale: 0.9, mouthCurve: -0.3, mouthOpen: false, blush: false, tearDrop: false, sparkle: false, sweatDrop: false },
-  sad:        { eyebrowAngle: 0.3,  eyeScale: 1.1, mouthCurve: -0.4, mouthOpen: false, blush: false, tearDrop: true,  sparkle: false, sweatDrop: false },
-  fearful:    { eyebrowAngle: 0.3,  eyeScale: 1.3, mouthCurve: -0.2, mouthOpen: true,  blush: false, tearDrop: false, sparkle: false, sweatDrop: true  },
-  surprised:  { eyebrowAngle: 0.4,  eyeScale: 1.4, mouthCurve: 0,    mouthOpen: true,  blush: false, tearDrop: false, sparkle: false, sweatDrop: false },
-  determined: { eyebrowAngle: -0.2, eyeScale: 0.9, mouthCurve: 0.1,  mouthOpen: false, blush: false, tearDrop: false, sparkle: true,  sweatDrop: false },
+  neutral:    { eyebrowAngle: 0,    eyeScale: 1.0, mouthCurve: 0,    mouthOpen: false, blush: false, tearDrop: false, sparkle: false, sweatDrop: false },
+  happy:      { eyebrowAngle: 0.1,  eyeScale: 0.8, mouthCurve: 0.55, mouthOpen: true,  blush: true,  tearDrop: false, sparkle: true,  sweatDrop: false },
+  angry:      { eyebrowAngle: -0.5, eyeScale: 0.9, mouthCurve: -0.3, mouthOpen: false, blush: false, tearDrop: false, sparkle: false, sweatDrop: false },
+  sad:        { eyebrowAngle: 0.35, eyeScale: 1.1, mouthCurve: -0.5, mouthOpen: false, blush: false, tearDrop: true,  sparkle: false, sweatDrop: false },
+  fearful:    { eyebrowAngle: 0.35, eyeScale: 1.4, mouthCurve: -0.2, mouthOpen: true,  blush: false, tearDrop: false, sparkle: false, sweatDrop: true  },
+  surprised:  { eyebrowAngle: 0.45, eyeScale: 1.5, mouthCurve: 0,    mouthOpen: true,  blush: false, tearDrop: false, sparkle: false, sweatDrop: false },
+  determined: { eyebrowAngle: -0.3, eyeScale: 0.88,mouthCurve: 0.1,  mouthOpen: false, blush: false, tearDrop: false, sparkle: true,  sweatDrop: false },
+  // New high-expressivity states
+  wince:      { eyebrowAngle: 0.4,  eyeScale: 0.7, mouthCurve: -0.2, mouthOpen: false, blush: false, tearDrop: false, sparkle: false, sweatDrop: true  },
+  resolve:    { eyebrowAngle: -0.4, eyeScale: 0.85,mouthCurve: 0.15, mouthOpen: false, blush: false, tearDrop: false, sparkle: true,  sweatDrop: false },
+  awe:        { eyebrowAngle: 0.5,  eyeScale: 1.6, mouthCurve: 0,    mouthOpen: true,  blush: true,  tearDrop: false, sparkle: true,  sweatDrop: false },
 };
 
 export const PORTRAIT_CONFIGS: Record<string, PortraitConfig> = {
