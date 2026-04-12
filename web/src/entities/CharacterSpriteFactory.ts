@@ -154,7 +154,8 @@ export class CharacterSpriteFactory {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // CHRISTIAN — detailed pilgrim with burden, hat, cross badge, faith aura
+  // CHRISTIAN — SANABI-quality pilgrim: multi-ring aura, detailed burden sack,
+  //             5-tone skin, textured hat, eye brows/iris/specular, cross badge
   // ─────────────────────────────────────────────────────────────────────────
   private static drawChristian(
     g: Phaser.GameObjects.Graphics,
@@ -166,259 +167,427 @@ export class CharacterSpriteFactory {
   ): void {
     const cx = ox + SPRITE_SIZE / 2;
 
-    // Animation offsets — Christian is burdened: heavier step, slight forward lean
-    let bobY = 0;
-    let legOffset = 0;
-    let armSwing = 0;
-    let breathe = 0;  // chest-only breathing independent of head bob
+    // ── Animation offsets ─────────────────────────────────────────────────
+    let bobY = 0, legOffset = 0, armSwing = 0, breathe = 0, burdenSway = 0;
     if (anim === 'idle') {
-      // Two-frequency idle: slow bob + faster breathing
-      bobY   = Math.sin((frame / 4) * Math.PI * 2) * 1.1;
-      breathe = Math.sin((frame / 2) * Math.PI * 2) * 0.5;  // chest rises/falls
+      bobY      = Math.sin((frame / 4) * Math.PI * 2) * 1.0;
+      breathe   = Math.sin((frame / 2) * Math.PI * 2) * 0.6;  // chest
     } else {
       const phase = (frame / 6) * Math.PI * 2;
-      bobY      = Math.abs(Math.sin(phase)) * -2.2;   // heavier dip (burden weight)
-      legOffset = Math.sin(phase) * 5;                // wide stride
-      armSwing  = Math.sin(phase) * 3.5;              // arms compensate for load
-      breathe   = 0;
+      bobY       = Math.abs(Math.sin(phase)) * -2.5;  // heavy burden dip
+      legOffset  = Math.sin(phase) * 5;
+      armSwing   = Math.sin(phase) * 3;
+      burdenSway = Math.sin(phase) * 1.5;             // sack counter-sways
     }
 
-    // === Ground shadow (oval under feet) ===
-    g.fillStyle(0x000000, 0.35);
-    g.fillEllipse(cx, oy + 29, 14, 4);
-    g.fillStyle(0x000000, 0.12);
-    g.fillEllipse(cx, oy + 29, 20, 6);
+    // ── Color palette — 5-tone skin ramp, 4-tone clothing ─────────────────
+    const skinLight  = this.lighten(colors.skin, 1.22);
+    const skinBase   = colors.skin;
+    const skinShadow = this.darken(colors.skin, 0.72);
+    const skinDeep   = this.darken(colors.skin, 0.55);
+    const clothLight = this.lighten(colors.clothing, 1.18);
+    const clothBase  = colors.clothing;
+    const clothShadow= this.darken(colors.clothing, 0.72);
+    const clothDeep  = this.darken(colors.clothing, 0.54);
 
-    // === Faith aura — pulsing golden glow ===
-    const auraPulse = 0.06 + Math.sin((frame / 4) * Math.PI * 2) * 0.03;
-    g.fillStyle(0xd4a853, auraPulse);
-    g.fillCircle(cx, oy + 16 + bobY, 14);
-    g.fillStyle(0xffd080, auraPulse * 0.6);
-    g.fillCircle(cx, oy + 16 + bobY, 10);
+    // ── Ground shadow ──────────────────────────────────────────────────────
+    g.fillStyle(0x000000, 0.28);
+    g.fillEllipse(cx, oy + 29, 14, 3.5);
+    g.fillStyle(0x000000, 0.09);
+    g.fillEllipse(cx, oy + 29, 22, 6);
 
-    // === Boots ===
+    // ── Faith aura — multi-ring + 8 animated radial spikes ─────────────────
+    const phase4 = (frame / 4) * Math.PI * 2;
+    const rotAngle = phase4 * 0.5;             // slowly rotating spike ring
+    const auraPulse = 0.052 + Math.sin(phase4) * 0.022;
+    const auraY = oy + 16 + bobY;
+    // Three concentric rings: outer diffuse → mid glow → inner bright
+    g.fillStyle(0xffd070, auraPulse * 0.38);
+    g.fillCircle(cx, auraY, 16);
+    g.fillStyle(0xd4a853, auraPulse * 0.78);
+    g.fillCircle(cx, auraY, 11);
+    g.fillStyle(0xffe8a0, auraPulse * 1.3);
+    g.fillCircle(cx, auraY, 7);
+    // 8 radial spike lines (rotate slowly each frame)
+    g.lineStyle(1, 0xffd070, auraPulse * 2.8);
+    for (let i = 0; i < 8; i++) {
+      const a = rotAngle + (i / 8) * Math.PI * 2;
+      g.lineBetween(cx + Math.cos(a) * 8, auraY + Math.sin(a) * 8,
+                    cx + Math.cos(a) * 14, auraY + Math.sin(a) * 14);
+    }
+    // Sparkle pixels at 4 alternate spike tips
+    if (frame % 2 === 0) {
+      g.fillStyle(0xffffff, 0.52);
+      for (let i = 0; i < 4; i++) {
+        const a = rotAngle + (i / 4) * Math.PI * 2 + Math.PI / 8;
+        g.fillRect(Math.round(cx + Math.cos(a) * 13) - 1,
+                   Math.round(auraY + Math.sin(a) * 13) - 1, 2, 2);
+      }
+    }
+
+    // ── Boots — 3-tone leather with toe extension + sole strip ─────────────
     const footY = Math.round(oy + 26 + bobY);
-    const bootColor = 0x3a2510;
-    const bootHighlight = 0x5a3820;
+    const bootBase = 0x3a2510, bootMid = 0x4e3318, bootHigh = 0x6a4820;
     if (dir === 'left' || dir === 'right') {
-      g.fillStyle(bootColor, 1);
-      g.fillRect(cx - 3, footY - 2 + Math.round(legOffset), 4, 5);
-      g.fillRect(cx + 1, footY - 2 - Math.round(legOffset), 4, 5);
-      g.fillStyle(bootHighlight, 0.5);
-      g.fillRect(cx - 3, footY - 2 + Math.round(legOffset), 1, 4);
-      g.fillRect(cx + 1, footY - 2 - Math.round(legOffset), 1, 4);
+      // Back foot
+      g.fillStyle(bootBase, 1);
+      g.fillRect(cx + 1, footY - 2 - Math.round(legOffset), 5, 4);
+      g.fillRect(cx + 1, footY + 1 - Math.round(legOffset), 6, 2);
+      g.fillStyle(bootMid, 0.55);
+      g.fillRect(cx + 1, footY - 2 - Math.round(legOffset), 1, 3);
+      g.fillStyle(bootHigh, 0.38);
+      g.fillRect(cx + 2, footY - 2 - Math.round(legOffset), 1, 1);
+      g.fillStyle(0x1a0d00, 0.75);
+      g.fillRect(cx + 1, footY + 2 - Math.round(legOffset), 6, 1);
+      // Front foot
+      g.fillStyle(bootBase, 1);
+      g.fillRect(cx - 4, footY - 2 + Math.round(legOffset), 5, 4);
+      g.fillRect(cx - 5, footY + 1 + Math.round(legOffset), 6, 2);
+      g.fillStyle(bootMid, 0.55);
+      g.fillRect(cx - 4, footY - 2 + Math.round(legOffset), 1, 3);
+      g.fillStyle(bootHigh, 0.38);
+      g.fillRect(cx - 3, footY - 2 + Math.round(legOffset), 1, 1);
+      g.fillStyle(0x1a0d00, 0.75);
+      g.fillRect(cx - 5, footY + 2 + Math.round(legOffset), 6, 1);
     } else {
-      // Front / back — boots splayed outward
-      g.fillStyle(bootColor, 1);
-      g.fillRect(cx - 6, footY - 2 + Math.round(legOffset), 4, 5);
-      g.fillRect(cx + 2, footY - 2 - Math.round(legOffset), 4, 5);
-      g.fillStyle(bootHighlight, 0.5);
-      g.fillRect(cx - 6, footY - 2 + Math.round(legOffset), 1, 4);
-      g.fillRect(cx + 2, footY - 2 - Math.round(legOffset), 1, 4);
+      const lbx = cx - 7, rbx = cx + 2;
+      g.fillStyle(bootBase, 1);
+      g.fillRect(lbx, footY - 2 + Math.round(legOffset), 5, 4);
+      g.fillRect(lbx, footY + 1 + Math.round(legOffset), 6, 2);
+      g.fillRect(rbx, footY - 2 - Math.round(legOffset), 5, 4);
+      g.fillRect(rbx, footY + 1 - Math.round(legOffset), 6, 2);
+      g.fillStyle(bootMid, 0.50);
+      g.fillRect(lbx, footY - 2 + Math.round(legOffset), 1, 3);
+      g.fillRect(rbx, footY - 2 - Math.round(legOffset), 1, 3);
+      g.fillStyle(bootHigh, 0.30);
+      g.fillRect(lbx + 1, footY - 1 + Math.round(legOffset), 2, 1);
+      g.fillRect(rbx + 1, footY - 1 - Math.round(legOffset), 2, 1);
+      g.fillStyle(0x1a0d00, 0.70);
+      g.fillRect(lbx, footY + 2 + Math.round(legOffset), 6, 1);
+      g.fillRect(rbx, footY + 2 - Math.round(legOffset), 6, 1);
     }
 
-    // === Legs ===
-    const legColor = this.darken(colors.clothing, 0.7);
-    const bodyY = Math.round(oy + 15 + bobY);
+    // ── Legs — with knee highlight + trouser fold crease ───────────────────
+    const bodyY = Math.round(oy + 14 + bobY);
+    const legBase = clothShadow;
+    const legKnee = this.lighten(clothShadow, 1.18);
     if (dir === 'left' || dir === 'right') {
-      g.fillStyle(legColor, 1);
-      g.fillRect(cx - 3, bodyY + 10 + Math.round(legOffset), 3, 4);
-      g.fillRect(cx + 1, bodyY + 10 - Math.round(legOffset), 3, 4);
+      g.fillStyle(legBase, 1);
+      g.fillRect(cx + 1, bodyY + 10 - Math.round(legOffset), 3, 5);
+      g.fillStyle(legKnee, 0.55);
+      g.fillRect(cx + 1, bodyY + 11 - Math.round(legOffset), 2, 1);
+      g.fillStyle(legBase, 1);
+      g.fillRect(cx - 3, bodyY + 10 + Math.round(legOffset), 3, 5);
+      g.fillStyle(legKnee, 0.55);
+      g.fillRect(cx - 3, bodyY + 11 + Math.round(legOffset), 2, 1);
+      g.fillStyle(clothDeep, 0.38);
+      g.fillRect(cx - 3, bodyY + 13 + Math.round(legOffset), 3, 1);
     } else {
-      g.fillStyle(legColor, 1);
-      g.fillRect(cx - 6, bodyY + 10 + Math.round(legOffset), 3, 4);
-      g.fillRect(cx + 2, bodyY + 10 - Math.round(legOffset), 3, 4);
+      g.fillStyle(legBase, 1);
+      g.fillRect(cx - 6, bodyY + 10 + Math.round(legOffset), 3, 5);
+      g.fillRect(cx + 3, bodyY + 10 - Math.round(legOffset), 3, 5);
+      g.fillStyle(legKnee, 0.50);
+      g.fillRect(cx - 6, bodyY + 11 + Math.round(legOffset), 2, 1);
+      g.fillRect(cx + 3, bodyY + 11 - Math.round(legOffset), 2, 1);
     }
 
-    // === Burden/backpack (behind torso for most views) ===
+    // ── Burden sack — 3-tone canvas, wrinkle lines, bulge, braided rope ────
     if (dir !== 'left') {
-      const burdenX = dir === 'right' ? cx - 8 : cx + 1;
-      const burdenW = 9;
-      const burdenH = 11;
-      const burdenY = Math.round(bodyY - 4);
-      // Sack shadow
+      const bx = dir === 'right' ? cx - 9 : cx + 1;
+      const bw = 10, bh = 13;
+      const bsy = Math.round(bodyY - 5 + burdenSway);
+      // Drop shadow
       g.fillStyle(0x000000, 0.28);
-      g.fillRoundedRect(burdenX + 1, burdenY + 1, burdenW, burdenH, 2);
-      // Sack body — weathered tan
+      g.fillRoundedRect(bx + 1, bsy + 2, bw, bh, 2);
+      // Sack — 3-tone layered
+      g.fillStyle(0x9a8060, 1);
+      g.fillRoundedRect(bx, bsy, bw, bh, 2);
       g.fillStyle(0x8b7355, 1);
-      g.fillRoundedRect(burdenX, burdenY, burdenW, burdenH, 2);
-      // Sack highlight (upper-left)
-      g.fillStyle(0xb09870, 0.45);
-      g.fillRoundedRect(burdenX + 1, burdenY + 1, 3, 5, 1);
-      // Sack dark side (right)
-      g.fillStyle(0x000000, 0.18);
-      g.fillRect(burdenX + burdenW - 2, burdenY + 1, 2, burdenH - 2);
-      // Rope tie at top
+      g.fillRoundedRect(bx + 2, bsy + 2, bw - 3, bh - 3, 1);
+      g.fillStyle(0x6a5840, 1);
+      g.fillRect(bx + bw - 3, bsy + 2, 3, bh - 3);
+      // Weight bulge at bottom (sack is heavy — bulges downward)
+      g.fillStyle(0x7a6347, 1);
+      g.fillRoundedRect(bx - 1, bsy + bh - 4, bw + 2, 5, 2);
+      // Wrinkle lines — diagonal cross-hatch
+      g.lineStyle(1, 0x5a4a32, 0.32);
+      g.lineBetween(bx + 2, bsy + 3, bx + 5, bsy + 8);
+      g.lineBetween(bx + 4, bsy + 2, bx + 7, bsy + 7);
+      g.lineStyle(1, 0xb09870, 0.22);
+      g.lineBetween(bx + 1, bsy + 5, bx + 3, bsy + 10);
+      // Specular highlight (upper-left)
+      g.fillStyle(0xffffff, 0.10);
+      g.fillRoundedRect(bx + 1, bsy + 1, 3, 4, 1);
+      // Braided rope top
       g.fillStyle(0x4a3a2a, 1);
-      g.fillRect(burdenX + 2, burdenY, burdenW - 4, 2);
-      // Rope knot pixel
-      g.fillStyle(0x6a5a3a, 1);
-      g.fillRect(burdenX + Math.floor(burdenW / 2) - 1, burdenY, 2, 2);
-      // Strap from shoulder to sack
-      g.lineStyle(1.5, 0x5a4a3a, 0.65);
-      g.lineBetween(cx, bodyY, burdenX + Math.floor(burdenW / 2), burdenY);
+      g.fillRect(bx + 2, bsy - 1, bw - 4, 3);
+      g.fillStyle(0x6a5535, 0.65);
+      g.fillRect(bx + 2, bsy - 1, 2, 1);
+      g.fillRect(bx + 5, bsy,     2, 1);
+      g.fillRect(bx + 3, bsy + 1, 2, 1);
+      // Rope knot bump
+      g.fillStyle(0x7a6040, 1);
+      g.fillRoundedRect(bx + bw / 2 - 2, bsy - 2, 4, 3, 1);
+      g.fillStyle(0x8a7050, 0.75);
+      g.fillRect(bx + bw / 2 - 1, bsy - 2, 2, 1);
+      // Double shoulder strap
+      g.lineStyle(1.5, 0x5a4030, 0.65);
+      g.lineBetween(cx, bodyY + 2, bx + bw / 2 - 1, bsy);
+      g.lineStyle(1, 0x7a6040, 0.45);
+      g.lineBetween(cx + 1, bodyY + 2, bx + bw / 2 + 1, bsy);
     }
 
-    // === Torso / Cloak ===
-    // Breathing: chest lifts slightly on inhale (breathe offset shifts torso up)
+    // ── Torso / Cloak — 4-tone with fold lines + decorative belt ───────────
     const bodyH = 12;
     const chestY = bodyY - Math.round(breathe);
-    // Cloak base — warm brown pilgrim cloak
-    g.fillStyle(colors.clothing, 1);
+    g.fillStyle(clothBase, 1);
     g.fillRoundedRect(cx - 6, chestY, 12, bodyH, 2);
-    // Cloak fold lines for depth (side views)
+    // Light side (left)
+    g.fillStyle(clothLight, 0.22);
+    g.fillRect(cx - 6, chestY, 3, bodyH - 2);
+    // Shadow side (right)
+    g.fillStyle(clothDeep, 0.32);
+    g.fillRect(cx + 3, chestY, 3, bodyH);
+    // Fold lines
     if (dir === 'left' || dir === 'right') {
-      g.fillStyle(0x000000, 0.15);
-      g.fillRect(cx - 2, chestY + 2, 1, bodyH - 4);
-      g.fillRect(cx + 1, chestY + 3, 1, bodyH - 5);
+      g.fillStyle(clothDeep, 0.22);
+      g.fillRect(cx - 1, chestY + 2, 1, bodyH - 4);
+      g.fillRect(cx + 2, chestY + 3, 1, bodyH - 5);
+      g.fillStyle(clothLight, 0.10);
+      g.fillRect(cx, chestY + 1, 1, bodyH - 3);
+    } else {
+      g.fillStyle(clothDeep, 0.28);
+      g.fillRect(cx - 1, chestY, 2, 3);  // V-neck shadow
     }
-    // Cloak dark sides
-    g.fillStyle(this.darken(colors.clothing, 0.7), 0.5);
-    g.fillRect(cx - 6, chestY, 2, bodyH);
-    g.fillRect(cx + 4, chestY, 2, bodyH);
-    // Cloak center highlight strip
-    g.fillStyle(0xffffff, 0.07);
-    g.fillRect(cx - 2, chestY + 1, 4, bodyH - 2);
-    // Belt accent
+    // Belt
     g.fillStyle(colors.accent, 1);
     g.fillRect(cx - 5, chestY + bodyH - 4, 10, 2);
-    // Belt buckle (gold pixel)
-    g.fillStyle(0xffd080, 0.95);
-    g.fillRect(cx - 1, chestY + bodyH - 4, 2, 2);
+    g.fillStyle(clothDeep, 0.45);
+    g.fillRect(cx - 5, chestY + bodyH - 2, 10, 1);
+    // Belt buckle — 4px ornament with inner recess
+    g.fillStyle(0xffd080, 1);
+    g.fillRect(cx - 2, chestY + bodyH - 4, 4, 2);
+    g.fillStyle(0x8b6820, 0.75);
+    g.fillRect(cx - 2, chestY + bodyH - 4, 1, 2);
+    g.fillRect(cx + 1, chestY + bodyH - 4, 1, 2);
+    g.fillStyle(0xffffff, 0.55);
+    g.fillRect(cx - 1, chestY + bodyH - 4, 1, 1);
 
-    // === Cross badge on chest (front-facing and right-side views) ===
+    // ── Cross badge — 3×5 form with radiate light lines ────────────────────
     if (dir === 'down' || dir === 'right') {
-      const badgeX = dir === 'right' ? cx + 1 : cx - 1;
-      const badgeY = chestY + 3;
-      // Pulsing gold glow behind cross (faith aura)
-      g.fillStyle(0xffd080, 0.25 + Math.sin((frame / 4) * Math.PI * 2) * 0.10);
-      g.fillCircle(badgeX, badgeY + 1, 4);
-      // Cross — 1px vertical + 1px horizontal
+      const bx2 = dir === 'right' ? cx + 2 : cx - 1;
+      const by2 = chestY + 2;
+      const glowPulse = 0.18 + Math.sin(phase4) * 0.10;
+      // 4 diagonal light rays
+      g.lineStyle(1, 0xffe880, glowPulse * 1.4);
+      for (const [dx, dy] of [[-1,-1],[1,-1],[-1,1],[1,1]] as [number,number][]) {
+        g.lineBetween(bx2 + 1, by2 + 2, bx2 + 1 + dx * 4, by2 + 2 + dy * 4);
+      }
+      g.fillStyle(0xffd080, glowPulse);
+      g.fillCircle(bx2 + 1, by2 + 2, 5);
+      // Cross — vertical + horizontal bars
       g.fillStyle(0xffd080, 1);
-      g.fillRect(badgeX, badgeY, 1, 3);
-      g.fillRect(badgeX - 1, badgeY + 1, 3, 1);
-      // Cross bright center pixel
-      g.fillStyle(0xffffff, 0.7);
-      g.fillRect(badgeX, badgeY + 1, 1, 1);
+      g.fillRect(bx2 + 1, by2,     1, 5);   // vertical
+      g.fillRect(bx2 - 1, by2 + 1, 5, 1);   // horizontal
+      // Shadow side
+      g.fillStyle(0xa07820, 0.48);
+      g.fillRect(bx2 + 2, by2,     1, 5);
+      g.fillRect(bx2 - 1, by2 + 2, 5, 1);
+      // Bright center pixel
+      g.fillStyle(0xffffff, 0.82);
+      g.fillRect(bx2 + 1, by2 + 1, 1, 1);
     }
 
-    // === Arms (attached to chestY for breathing coherence) ===
+    // ── Arms — with hand detail ─────────────────────────────────────────────
     if (dir === 'down' || dir === 'up') {
-      g.fillStyle(colors.clothing, 1);
+      g.fillStyle(clothBase, 1);
       g.fillRect(cx - 9, chestY + 1 + Math.round(armSwing), 3, 8);
+      g.fillStyle(clothShadow, 0.42);
+      g.fillRect(cx - 7, chestY + 1 + Math.round(armSwing), 1, 8);
+      g.fillStyle(skinBase, 1);
+      g.fillRect(cx - 9, chestY + 9 + Math.round(armSwing), 3, 3);
+      g.fillStyle(skinShadow, 0.50);
+      g.fillRect(cx - 8, chestY + 11 + Math.round(armSwing), 2, 1);
+      g.fillStyle(clothBase, 1);
       g.fillRect(cx + 6, chestY + 1 - Math.round(armSwing), 3, 8);
-      // Hand skin pixels
-      g.fillStyle(colors.skin, 1);
-      g.fillRect(cx - 9, chestY + 9 + Math.round(armSwing), 3, 2);
-      g.fillRect(cx + 6, chestY + 9 - Math.round(armSwing), 3, 2);
-      // Arm shadow line
-      g.fillStyle(0x000000, 0.12);
-      g.fillRect(cx - 6, chestY + 1, 1, 8);
-      g.fillRect(cx + 9, chestY + 1, 1, 8);
+      g.fillStyle(clothShadow, 0.42);
+      g.fillRect(cx + 8, chestY + 1 - Math.round(armSwing), 1, 8);
+      g.fillStyle(skinBase, 1);
+      g.fillRect(cx + 6, chestY + 9 - Math.round(armSwing), 3, 3);
+      g.fillStyle(skinShadow, 0.50);
+      g.fillRect(cx + 6, chestY + 11 - Math.round(armSwing), 2, 1);
     } else {
-      const armX = dir === 'right' ? cx - 8 : cx + 5;
-      g.fillStyle(colors.clothing, 1);
-      g.fillRect(armX, chestY + 1 + Math.round(armSwing), 3, 8);
-      g.fillStyle(colors.skin, 1);
-      g.fillRect(armX, chestY + 9 + Math.round(armSwing), 3, 2);
+      const ax = dir === 'right' ? cx - 8 : cx + 5;
+      g.fillStyle(clothBase, 1);
+      g.fillRect(ax, chestY + 1 + Math.round(armSwing), 3, 8);
+      g.fillStyle(clothShadow, 0.38);
+      g.fillRect(ax + 2, chestY + 1 + Math.round(armSwing), 1, 8);
+      g.fillStyle(skinBase, 1);
+      g.fillRect(ax, chestY + 9 + Math.round(armSwing), 3, 3);
+      g.fillStyle(skinShadow, 0.45);
+      g.fillRect(ax, chestY + 11 + Math.round(armSwing), 2, 1);
     }
 
-    // === Head ===
-    const headY = Math.round(oy + 5 + bobY);
-    // Neck
-    g.fillStyle(colors.skin, 1);
-    g.fillRect(cx - 2, headY + 9, 4, 3);
-
-    // Head pixel-art grid (round-ish shape via fillRect clusters)
-    g.fillStyle(0x111111, 0.85);
-    g.fillRect(cx - 5, headY, 10, 10); // outline pass (slightly large)
-
-    g.fillStyle(colors.skin, 1);
-    g.fillRect(cx - 4, headY, 8, 10);    // main face area
-    g.fillRect(cx - 5, headY + 1, 10, 8); // widen middle rows
-    // Skin shading — subtle right-side shadow
-    g.fillStyle(this.darken(colors.skin, 0.82), 0.4);
-    g.fillRect(cx + 2, headY + 2, 3, 6);
-    // Forehead highlight
-    g.fillStyle(0xffffff, 0.12);
-    g.fillRect(cx - 3, headY + 1, 3, 2);
-
-    // Hair (short pilgrim hair under hat brim — barely visible)
+    // ── Head — 5-tone skin ramp, brows, detailed eyes, nose, burdened mouth ─
+    const headY = Math.round(oy + 4 + bobY);
+    // Neck with shadow
+    g.fillStyle(skinBase, 1);
+    g.fillRect(cx - 2, headY + 10, 4, 3);
+    g.fillStyle(skinShadow, 0.38);
+    g.fillRect(cx + 1, headY + 10, 1, 3);
+    // Head silhouette base
+    g.fillStyle(0x111111, 0.78);
+    g.fillRoundedRect(cx - 5, headY, 10, 11, 2);
+    // Skin base
+    g.fillStyle(skinBase, 1);
+    g.fillRect(cx - 4, headY, 8, 11);
+    g.fillRect(cx - 5, headY + 1, 10, 9);
+    // Forehead key light
+    g.fillStyle(skinLight, 0.42);
+    g.fillRect(cx - 2, headY + 1, 4, 2);
+    // Cheekbone highlights
+    g.fillStyle(skinLight, 0.22);
+    g.fillRect(cx - 3, headY + 5, 2, 2);
+    g.fillRect(cx + 1, headY + 5, 2, 2);
+    // Right-side shadow (rim light from left)
+    g.fillStyle(skinShadow, 0.36);
+    g.fillRect(cx + 2, headY + 2, 3, 7);
+    // Jaw shadow
+    g.fillStyle(skinDeep, 0.28);
+    g.fillRect(cx - 3, headY + 9, 7, 2);
+    // Hair band
     g.fillStyle(colors.hair, 1);
-    g.fillRect(cx - 4, headY, 8, 2);    // top hair band
+    g.fillRect(cx - 4, headY, 8, 2);
 
-    // Eyes (front view)
     if (dir === 'down') {
-      // Left eye white
-      g.fillStyle(0xffffff, 1);
+      // Eyebrows
+      g.fillStyle(colors.hair, 0.82);
+      g.fillRect(cx - 4, headY + 3, 3, 1);
+      g.fillRect(cx + 1, headY + 3, 3, 1);
+      // Burdened brow furrow (inner brow pixel raised)
+      g.fillStyle(skinDeep, 0.35);
+      g.fillRect(cx - 2, headY + 3, 1, 2);
+      g.fillRect(cx + 1, headY + 3, 1, 2);
+      // Eye whites (3×3)
+      g.fillStyle(0xfff8f0, 1);
       g.fillRect(cx - 4, headY + 4, 3, 3);
       g.fillRect(cx + 1, headY + 4, 3, 3);
-      // Pupils
-      g.fillStyle(colors.eye, 1);
-      g.fillRect(cx - 3, headY + 5, 2, 2);
-      g.fillRect(cx + 2, headY + 5, 2, 2);
-      // Eye shine pixel
-      g.fillStyle(0xffffff, 0.8);
-      g.fillRect(cx - 2, headY + 5, 1, 1);
-      g.fillRect(cx + 3, headY + 5, 1, 1);
-      // Small nose dot
-      g.fillStyle(this.darken(colors.skin, 0.78), 0.8);
-      g.fillRect(cx - 1, headY + 7, 1, 1);
-      // Mouth
-      g.fillStyle(this.darken(colors.skin, 0.65), 1);
-      g.fillRect(cx - 1, headY + 8, 3, 1);
+      // Eyelid top shadow
+      g.fillStyle(0x000000, 0.28);
+      g.fillRect(cx - 4, headY + 4, 3, 1);
+      g.fillRect(cx + 1, headY + 4, 3, 1);
+      // Iris (colored)
+      g.fillStyle(colors.eye, 0.88);
+      g.fillRect(cx - 4, headY + 5, 3, 2);
+      g.fillRect(cx + 1, headY + 5, 3, 2);
+      // Pupil (dark center)
+      g.fillStyle(0x111122, 1);
+      g.fillRect(cx - 3, headY + 5, 1, 2);
+      g.fillRect(cx + 2, headY + 5, 1, 2);
+      // Dual specular dots
+      g.fillStyle(0xffffff, 0.88);
+      g.fillRect(cx - 4, headY + 5, 1, 1);   // left eye top-left
+      g.fillRect(cx + 3, headY + 6, 1, 1);   // right eye bottom-right
+      // Eyelash bottom line
+      g.fillStyle(0x000000, 0.22);
+      g.fillRect(cx - 4, headY + 7, 3, 1);
+      g.fillRect(cx + 1, headY + 7, 3, 1);
+      // Nose — tip + nostrils
+      g.fillStyle(skinShadow, 0.65);
+      g.fillRect(cx - 1, headY + 7, 2, 1);
+      g.fillStyle(skinDeep, 0.58);
+      g.fillRect(cx - 2, headY + 8, 1, 1);
+      g.fillRect(cx + 1, headY + 8, 1, 1);
+      // Mouth — burdened slight frown
+      g.fillStyle(skinDeep, 0.78);
+      g.fillRect(cx - 2, headY + 9, 5, 1);
+      // Downturned corners
+      g.fillStyle(skinDeep, 0.55);
+      g.fillRect(cx - 2, headY + 10, 1, 1);
+      g.fillRect(cx + 2, headY + 10, 1, 1);
+
     } else if (dir !== 'up') {
-      // Side-view eye
-      const eyeX = dir === 'right' ? cx + 1 : cx - 4;
-      g.fillStyle(0xffffff, 1);
+      const isR = dir === 'right';
+      const eyeX = isR ? cx + 1 : cx - 4;
+      const eDir = isR ? 1 : 0;
+      // Brow
+      g.fillStyle(colors.hair, 0.78);
+      g.fillRect(eyeX, headY + 3, 3, 1);
+      // Brow furrow dot
+      g.fillStyle(skinDeep, 0.32);
+      g.fillRect(isR ? eyeX : eyeX + 2, headY + 3, 1, 2);
+      // Eye
+      g.fillStyle(0xfff8f0, 1);
       g.fillRect(eyeX, headY + 4, 3, 3);
-      g.fillStyle(colors.eye, 1);
-      g.fillRect(eyeX + (dir === 'right' ? 1 : 0), headY + 5, 2, 2);
-      g.fillStyle(0xffffff, 0.8);
-      g.fillRect(eyeX + (dir === 'right' ? 2 : 0), headY + 5, 1, 1);
-      // Nose bridge pixel
-      g.fillStyle(this.darken(colors.skin, 0.8), 0.7);
-      g.fillRect(dir === 'right' ? cx + 4 : cx - 5, headY + 7, 1, 1);
-      // Mouth
-      const mouthX = dir === 'right' ? cx + 2 : cx - 3;
-      g.fillStyle(this.darken(colors.skin, 0.65), 1);
-      g.fillRect(mouthX, headY + 8, 2, 1);
+      g.fillStyle(0x000000, 0.26);
+      g.fillRect(eyeX, headY + 4, 3, 1);
+      g.fillStyle(colors.eye, 0.88);
+      g.fillRect(eyeX + eDir, headY + 5, 2, 2);
+      g.fillStyle(0x111122, 1);
+      g.fillRect(eyeX + eDir, headY + 5, 1, 2);
+      g.fillStyle(0xffffff, 0.84);
+      g.fillRect(eyeX + (isR ? 2 : 0), headY + 5, 1, 1);
+      // Nose bridge + nostril
+      g.fillStyle(skinShadow, 0.52);
+      g.fillRect(isR ? cx + 4 : cx - 5, headY + 6, 1, 2);
+      g.fillStyle(skinDeep, 0.50);
+      g.fillRect(isR ? cx + 4 : cx - 5, headY + 8, 1, 1);
+      // Mouth — burdened frown
+      const mx = isR ? cx + 2 : cx - 4;
+      g.fillStyle(skinDeep, 0.72);
+      g.fillRect(mx, headY + 9, 3, 1);
+      g.fillStyle(skinDeep, 0.45);
+      g.fillRect(isR ? mx + 2 : mx, headY + 10, 1, 1);
+
     } else {
-      // Back of head — just hair/hat base
+      // Back of head
       g.fillStyle(colors.hair, 1);
       g.fillRect(cx - 4, headY, 8, 6);
+      g.fillStyle(this.darken(colors.hair, 0.72), 0.45);
+      g.fillRect(cx + 1, headY + 1, 3, 5);
     }
 
-    // === Pilgrim Hat (drawn over head) ===
-    const hatColor = colors.accessory ?? 0x7a5c38;
-    const hatDark = this.darken(hatColor, 0.65);
-    // Wide brim
+    // ── Pilgrim Hat — textured crown, 3-tone, hatband ornament ─────────────
+    const hatBase = colors.accessory ?? 0x7a5c38;
+    const hatDark = this.darken(hatBase, 0.58);
+    const hatMid  = this.darken(hatBase, 0.78);
+    const hatHigh = this.lighten(hatBase, 1.18);
+    // Brim
     g.fillStyle(hatDark, 1);
     g.fillRect(cx - 8, headY - 2, 16, 3);
-    // Brim highlight edge (top)
-    g.fillStyle(0xffffff, 0.1);
-    g.fillRect(cx - 8, headY - 2, 16, 1);
-    // Brim shadow (bottom)
-    g.fillStyle(0x000000, 0.2);
-    g.fillRect(cx - 8, headY, 16, 1);
-    // Tall crown
-    g.fillStyle(hatColor, 1);
+    g.fillStyle(hatHigh, 0.16);
+    g.fillRect(cx - 8, headY - 2, 16, 1);          // brim top highlight
+    g.fillStyle(0x000000, 0.20);
+    g.fillRect(cx - 8, headY,     16, 1);           // brim bottom shadow
+    g.fillStyle(0x000000, 0.10);
+    g.fillRect(cx - 7, headY + 1, 14, 1);           // underside depth
+    // Crown
+    g.fillStyle(hatBase, 1);
     g.fillRect(cx - 5, headY - 9, 10, 8);
-    // Crown highlight (left face)
-    g.fillStyle(0xffffff, 0.12);
-    g.fillRect(cx - 5, headY - 9, 2, 7);
-    // Crown dark right side
-    g.fillStyle(0x000000, 0.18);
-    g.fillRect(cx + 4, headY - 9, 1, 7);
-    // Hat band (thin darker stripe)
-    g.fillStyle(hatDark, 0.9);
+    g.fillStyle(hatHigh, 0.20);
+    g.fillRect(cx - 5, headY - 9, 2, 7);            // left light face
+    g.fillStyle(hatHigh, 0.08);
+    g.fillRect(cx - 3, headY - 9, 1, 7);
+    g.fillStyle(hatDark, 0.42);
+    g.fillRect(cx + 3, headY - 9, 2, 7);            // right shadow face
+    g.fillStyle(hatHigh, 0.18);
+    g.fillRect(cx - 4, headY - 9, 8, 1);            // crown top edge highlight
+    // Hatband
+    g.fillStyle(hatDark, 1);
     g.fillRect(cx - 5, headY - 2, 10, 1);
+    g.fillStyle(0xffd080, 0.68);
+    g.fillRect(cx, headY - 2, 2, 1);                // hatband ornament
+    // Crown texture crosshatch (subtle dithering for worn look)
+    g.fillStyle(hatMid, 0.16);
+    for (let i = 0; i < 3; i++) {
+      g.fillRect(cx - 4 + i * 3, headY - 8 + i, 1, 1);
+      g.fillRect(cx - 3 + i * 3, headY - 6 + i, 1, 1);
+    }
 
-    // === Silhouette outline pass — improves background separation ===
-    // Torso outline
-    this.outlineRoundedRect(g, cx - 6, Math.round(oy + 15 + bobY), 12, 12, 2, 0.6);
-    // Head + hat outline (approximate)
-    this.outlineRect(g, cx - 8, headY - 9, 16, 19, 0.45);
+    // ── Silhouette outline pass — strong edge for background separation ─────
+    g.lineStyle(1.2, 0x080510, 0.72);
+    g.strokeRoundedRect(cx - 6, Math.round(oy + 14 + bobY), 12, 13, 2);
+    g.strokeRoundedRect(cx - 5, headY - 9, 10, 20, 1);  // head + hat combined
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -1793,6 +1962,14 @@ export class CharacterSpriteFactory {
     const r = Math.floor(((color >> 16) & 0xff) * factor);
     const g = Math.floor(((color >> 8) & 0xff) * factor);
     const b = Math.floor((color & 0xff) * factor);
+    return (r << 16) | (g << 8) | b;
+  }
+
+  /** Lighten a hex color by factor (1 = original, >1 = brighter, capped at 255) */
+  private static lighten(color: number, factor: number): number {
+    const r = Math.min(255, Math.floor(((color >> 16) & 0xff) * factor));
+    const g = Math.min(255, Math.floor(((color >> 8) & 0xff) * factor));
+    const b = Math.min(255, Math.floor((color & 0xff) * factor));
     return (r << 16) | (g << 8) | b;
   }
 

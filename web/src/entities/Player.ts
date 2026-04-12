@@ -25,23 +25,25 @@ export class Player extends Entity {
   private dustTimer = 0;
   private baseY = 0;
   private hurtTimer = 0;
+  private hurtFlashTimer = 0;
+  private hurtFlashCount = 0;
+  private lastMoveX = 0;
+  private lastMoveY = 0;
+  private idleVariantTimer = 0;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    // Use generated 32×32 sprite if available; lazy-generate if missing
     let texKey: string;
     if (scene.textures.exists('christian_gen')) {
       texKey = 'christian_gen';
     } else if (scene.textures.exists('christian')) {
       texKey = 'christian';
     } else {
-      // Lazy-generate the christian sprite if PreloadScene was skipped
       texKey = CharacterSpriteFactory.generate(scene, 'christian');
     }
     super(scene, x, y, texKey, 0);
     this.baseY = y;
     this.setupEvents();
 
-    // Hitbox sized for gameplay collision (smaller than visual)
     this.sprite.setSize(12, 12).setOffset(10, 18);
     this.sprite.setDepth(10);
 
@@ -69,8 +71,7 @@ export class Player extends Entity {
   };
 
   private setupEvents(): void {
-    const eventBus = EventBus.getInstance();
-    eventBus.on(GameEvent.PLAYER_DAMAGED, this.onDamaged);
+    EventBus.getInstance().on(GameEvent.PLAYER_DAMAGED, this.onDamaged);
   }
 
   override destroy(): void {
@@ -82,9 +83,19 @@ export class Player extends Entity {
   private enterHurt(): void {
     this.fsm.setState(PlayerState.HURT);
     this.sprite.setVelocity(0, 0);
-    this.sprite.setTint(0xff4444);
-    this.hurtTimer = 400;
-    this.squash(0.8, 1.2, 150);
+    this.hurtTimer = 480;
+    this.hurtFlashCount = 0;
+    this.hurtFlashTimer = 0;
+    // Squash — sharper compression than walk (weight of impact)
+    this.squashProfile(0.75, 1.28, 100, 'Bounce.easeOut');
+    // Knock-back micro-jitter based on last movement direction
+    const jx = this.lastMoveX !== 0 ? -Math.sign(this.lastMoveX) * 8 : (Math.random() > 0.5 ? 6 : -6);
+    const jy = this.lastMoveY !== 0 ? -Math.sign(this.lastMoveY) * 4 : -4;
+    this.scene.tweens.add({
+      targets: this.sprite,
+      x: this.sprite.x + jx, y: this.sprite.y + jy,
+      duration: 60, yoyo: true, ease: 'Quad.easeOut',
+    });
   }
 
   enterPray(): void {
@@ -101,10 +112,23 @@ export class Player extends Entity {
   update(input: PlayerInput, delta: number): void {
     const state = this.fsm.current;
 
+    // ── Hurt state: white strobe flash (5 blinks, then clear) ───────────────
     if (state === PlayerState.HURT) {
       this.hurtTimer -= delta;
+      this.hurtFlashTimer -= delta;
+      if (this.hurtFlashTimer <= 0 && this.hurtFlashCount < 6) {
+        this.hurtFlashTimer = 60;
+        this.hurtFlashCount++;
+        // Alternate white → tinted red (SANABI-style hit flash)
+        if (this.hurtFlashCount % 2 === 1) {
+          this.sprite.setTint(0xffffff);
+        } else {
+          this.sprite.setTint(0xff4444);
+        }
+      }
       if (this.hurtTimer <= 0) {
         this.sprite.clearTint();
+        this.sprite.setScale(1, 1);
         this.fsm.setState(PlayerState.IDLE);
       }
       return;
@@ -123,21 +147,26 @@ export class Player extends Entity {
     const isMoving = input.x !== 0 || input.y !== 0;
 
     if (isMoving) {
+      this.lastMoveX = input.x;
+      this.lastMoveY = input.y;
+      this.idleVariantTimer = 0;
       if (!this.wasMoving) {
-        this.squash(0.85, 1.15, 80);
+        // Walk start: anticipation lean (slightly wider, taller before stride)
+        this.squashProfile(1.08, 0.92, 60, 'Sine.easeOut');
       }
       this.fsm.setState(PlayerState.WALK);
       this.motor.update(this.sprite, input.x, input.y, delta);
       this.baseY = this.sprite.y;
-      this.spawnDustParticles(delta);
+      this.spawnDustParticles(delta, input.x, input.y);
     } else {
       if (this.wasMoving) {
-        this.squash(1.1, 0.9, 100);
+        // Walk stop: landing compression + rebound
+        this.squashProfile(1.14, 0.86, 80, 'Bounce.easeOut');
         this.baseY = this.sprite.y;
       }
       this.fsm.setState(PlayerState.IDLE);
       this.sprite.setVelocity(0, 0);
-      this.applyIdleBob();
+      this.applyIdleBob(delta);
     }
     this.wasMoving = isMoving;
 
@@ -153,7 +182,6 @@ export class Player extends Entity {
       this.sprite.body!.velocity.y,
     );
 
-    // Sync ActionAnimations overlay with player FSM state
     const stateMap: Partial<Record<PlayerState, import('./ActionAnimations').PlayerActionState>> = {
       [PlayerState.PRAY]:      'pray',
       [PlayerState.HURT]:      'hurt',
@@ -165,45 +193,87 @@ export class Player extends Entity {
     this.actionAnimations.update(delta);
   }
 
-  private squash(sx: number, sy: number, duration: number): void {
+  /**
+   * Squash-and-stretch with explicit ease and profile control.
+   * sx/sy: target scale. duration: full cycle. ease: easing name.
+   */
+  private squashProfile(sx: number, sy: number, duration: number, ease: string): void {
     this.scene.tweens.add({
       targets: this.sprite,
       scaleX: sx, scaleY: sy,
       duration: duration / 2,
       yoyo: true,
-      ease: 'Sine.easeOut',
+      ease,
+      onComplete: () => {
+        // Snap to 1,1 cleanly after yoyo
+        this.sprite.setScale(1, 1);
+      },
     });
   }
 
-  private applyIdleBob(): void {
+  private applyIdleBob(delta: number): void {
     const t = this.scene.time.now * 0.002;
-    const bob = Math.sin(t) * 0.3;
+    // Primary bob
+    const bob = Math.sin(t) * 0.35;
+    // Secondary sway (weight shift) — slower, half amplitude
+    const sway = Math.sin(t * 0.55) * 0.18;
     this.sprite.y = this.baseY + bob;
+    this.sprite.x = this.sprite.x + sway * 0.05;  // negligible x drift
+
+    // Occasional idle "look around" scale pulse (every ~4s)
+    this.idleVariantTimer += delta;
+    if (this.idleVariantTimer > 4000) {
+      this.idleVariantTimer = 0;
+      // Subtle head-nod: micro squash
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleY: 0.97, scaleX: 1.02,
+        duration: 120, yoyo: true,
+        ease: 'Sine.easeInOut',
+      });
+    }
   }
 
-  private spawnDustParticles(delta: number): void {
+  /**
+   * Spawn directional dust particles on walk, synced by timer.
+   * Particles trail behind movement direction with varied sizes.
+   */
+  private spawnDustParticles(delta: number, dx: number, dy: number): void {
     this.dustTimer += delta;
-    if (this.dustTimer < 220) return;
+    // Threshold ~200ms — roughly 2 steps per second at normal speed
+    if (this.dustTimer < 200) return;
     this.dustTimer = 0;
 
     const px = this.sprite.x;
-    const py = this.sprite.y + 6;
+    const py = this.sprite.y + 7;
+    // Trail offset: dust spawns behind the player's movement direction
+    const trailX = -dx * 3;
+    const trailY = -dy * 2;
 
-    for (let i = 0; i < 2; i++) {
+    const dustColors = [0x9a8870, 0x8a7860, 0xaa9880];
+    const count = 2 + Math.floor(Math.random() * 2);  // 2–3 particles
+
+    for (let i = 0; i < count; i++) {
+      const baseColor = dustColors[Math.floor(Math.random() * dustColors.length)];
+      const radius = 0.8 + Math.random() * 1.5;
       const dust = this.scene.add.circle(
-        px + (Math.random() - 0.5) * 6,
-        py + Math.random() * 2,
-        1 + Math.random() * 1.2,
-        0x888877, 0.3,
+        px + trailX + (Math.random() - 0.5) * 5,
+        py + trailY + Math.random() * 2,
+        radius,
+        baseColor,
+        0.28 + Math.random() * 0.12,
       ).setDepth(8);
 
+      // First: expand outward briefly, then fade + settle
       this.scene.tweens.add({
         targets: dust,
-        y: dust.y - 3 - Math.random() * 3,
-        alpha: 0,
-        scaleX: 0.3,
-        scaleY: 0.3,
-        duration: 350 + Math.random() * 200,
+        y: dust.y - 2 - Math.random() * 4,
+        x: dust.x + (Math.random() - 0.5) * 4,
+        alpha: { from: dust.alpha, to: 0 },
+        scaleX: { from: 1, to: 0.2 + Math.random() * 0.3 },
+        scaleY: { from: 1, to: 0.2 + Math.random() * 0.3 },
+        duration: 280 + Math.random() * 200,
+        ease: 'Sine.easeOut',
         onComplete: () => dust.destroy(),
       });
     }
