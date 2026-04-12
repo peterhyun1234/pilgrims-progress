@@ -246,7 +246,17 @@ export interface QTEResultPayload {
   accuracy: number;
 }
 
-export type PortraitEmotion = 'neutral' | 'happy' | 'angry' | 'sad' | 'fearful' | 'surprised' | 'determined';
+export type PortraitEmotion =
+  | 'neutral'
+  | 'happy'
+  | 'angry'
+  | 'sad'
+  | 'fearful'
+  | 'surprised'
+  | 'determined'
+  | 'wince'    // pain / burden weight
+  | 'resolve'  // courage + determination combined
+  | 'awe';     // wonder / reverence (heaven, cross)
 
 export type NpcPhase = 'locked' | 'available' | 'active' | 'completed' | 'idle';
 

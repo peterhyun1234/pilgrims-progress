@@ -442,6 +442,16 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         data: { enemyId: 'doubt' },
       },
     ],
+    terrainZones: [
+      // Ruined building platforms with elevation (scattered through city)
+      { id: 'ch1_ruin_1', type: 'elevated', x: 350, y: 80, width: 120, height: 60, elevation: 20, tint: 0x443830 },
+      { id: 'ch1_ruin_2', type: 'elevated', x: 820, y: 95, width: 110, height: 55, elevation: 15, tint: 0x443830 },
+      { id: 'ch1_ruin_3', type: 'elevated', x: 1220, y: 80, width: 140, height: 65, elevation: 25, tint: 0x443830 },
+      { id: 'ch1_ruin_4', type: 'elevated', x: 1900, y: 90, width: 120, height: 60, elevation: 18, tint: 0x443830 },
+      // Fire hazard pits (non-walkable craters)
+      { id: 'ch1_fire_1', type: 'pit', x: 1130, y: 115, width: 55, height: 50, walkable: false },
+      { id: 'ch1_fire_2', type: 'pit', x: 1660, y: 125, width: 45, height: 45, walkable: false },
+    ],
     completionRequirements: {
       requiredNpcs: ['evangelist'],
       requiredEvents: ['ch1_battle_doubt'],
@@ -476,6 +486,16 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         triggerOnce: true,
         data: { enemyId: 'despair' },
       },
+    ],
+    terrainZones: [
+      // Swamp bog zones (slows player significantly)
+      { id: 'ch2_bog_1', type: 'water', x: 80, y: 80, width: 220, height: 200, slowFactor: 0.48, tint: 0x1a3a2a },
+      { id: 'ch2_bog_2', type: 'water', x: 330, y: 110, width: 200, height: 170, slowFactor: 0.45, tint: 0x1a3a2a },
+      { id: 'ch2_bog_3', type: 'water', x: 490, y: 80, width: 190, height: 220, slowFactor: 0.48, tint: 0x1a3a2a },
+      // Stepping stone bridges cutting across the bogs
+      { id: 'ch2_bridge_1', type: 'bridge', x: 100, y: 175, width: 110, height: 24 },
+      { id: 'ch2_bridge_2', type: 'bridge', x: 345, y: 200, width: 90, height: 22 },
+      { id: 'ch2_bridge_3', type: 'bridge', x: 510, y: 165, width: 100, height: 22 },
     ],
     completionRequirements: {
       requiredNpcs: ['help'],
@@ -529,6 +549,14 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         labelEn: '→ Easy Road',
       },
     ],
+    terrainZones: [
+      // Left meadow — the true narrow path (bright, slightly elevated)
+      { id: 'ch3_meadow', type: 'elevated', x: 60, y: 75, width: 200, height: 250, elevation: 8, tint: 0x4a6838 },
+      // Right rocky terrain — the false easy path (harder going)
+      { id: 'ch3_rocky_path', type: 'elevated', x: 380, y: 90, width: 180, height: 220, elevation: 5, tint: 0x5a5848, slowFactor: 0.82 },
+      // Hill Difficulty zone at far right (impassable warning area)
+      { id: 'ch3_hill_difficulty', type: 'elevated', x: 520, y: 60, width: 80, height: 280, elevation: 30, tint: 0x3a3028, slowFactor: 0.7 },
+    ],
     completionRequirements: {
       requiredNpcs: ['worldly_wiseman_ch3'],
     },
@@ -574,6 +602,14 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         open: false,
         opensOnNpcComplete: 'goodwill',
       },
+    ],
+    terrainZones: [
+      // Moat surrounding the gate (dangerous water, forces careful approach)
+      { id: 'ch4_moat', type: 'water', x: 280, y: 80, width: 80, height: 240, slowFactor: 0.38, tint: 0x1a2a4a },
+      // Elevated gate approach platform
+      { id: 'ch4_gate_platform', type: 'elevated', x: 340, y: 55, width: 140, height: 290, elevation: 18, tint: 0x524a40 },
+      // Rocky approach path through dangerous terrain
+      { id: 'ch4_rocky_climb', type: 'elevated', x: 120, y: 80, width: 160, height: 240, elevation: 12, tint: 0x606058, slowFactor: 0.88 },
     ],
     completionRequirements: {
       requiredNpcs: ['goodwill'],
@@ -640,6 +676,16 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         data: { npcId: 'interpreter', knotName: 'exhibit_rake', exhibitLabel: '갈퀴', exhibitLabelEn: 'Rake' },
       },
     ],
+    terrainZones: [
+      // Five exhibit alcoves (interior floor zones — warm wood planks)
+      { id: 'ch5_alcove_fire', type: 'interior', x: 40, y: 55, width: 100, height: 100, tint: 0x6a3010 },
+      { id: 'ch5_alcove_water', type: 'interior', x: 175, y: 55, width: 100, height: 100, tint: 0x1a3a6a },
+      { id: 'ch5_alcove_cage', type: 'interior', x: 310, y: 55, width: 100, height: 100, tint: 0x2a2830 },
+      { id: 'ch5_alcove_armored', type: 'interior', x: 75, y: 175, width: 100, height: 100, tint: 0x4a3820 },
+      { id: 'ch5_alcove_rake', type: 'interior', x: 275, y: 175, width: 100, height: 100, tint: 0x3a3010 },
+      // Central hall (warm study interior)
+      { id: 'ch5_main_hall', type: 'interior', x: 120, y: 300, width: 240, height: 120, tint: 0x7a5830 },
+    ],
     completionRequirements: {
       requiredNpcs: ['interpreter'],
     },
@@ -683,6 +729,14 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
         label: '✝',
         labelEn: '✝',
       },
+    ],
+    terrainZones: [
+      // Hillside approaching the cross (elevated, gradual climb)
+      { id: 'ch6_hillside_low', type: 'elevated', x: 80, y: 300, width: 320, height: 200, elevation: 10, tint: 0x6a7858 },
+      { id: 'ch6_hillside_mid', type: 'elevated', x: 120, y: 160, width: 240, height: 140, elevation: 25, tint: 0x7a8868 },
+      { id: 'ch6_hilltop', type: 'elevated', x: 160, y: 60, width: 160, height: 100, elevation: 40, tint: 0x8a9878 },
+      // Sacred ground at the cross (holy ground glow)
+      { id: 'ch6_sacred', type: 'elevated', x: 180, y: 40, width: 120, height: 80, elevation: 50, tint: 0xd4a853 },
     ],
     completionRequirements: {
       requiredEvents: ['ch6_burden_released'],
@@ -833,8 +887,15 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       },
     ],
     terrainZones: [
+      // Volcanic cave atmosphere (entire map)
       { id: 'ch8_descent', type: 'cave', x: 0, y: 0, width: 1200, height: 400, tint: 0x110022 },
+      // Apollyon's battle arena pit (non-walkable abyss surrounding fight zone)
       { id: 'ch8_battle_pit', type: 'pit', x: 480, y: 300, width: 280, height: 100, walkable: false },
+      // Lava flow channels flanking the path
+      { id: 'ch8_lava_1', type: 'pit', x: 0, y: 280, width: 120, height: 120, walkable: false },
+      { id: 'ch8_lava_2', type: 'pit', x: 900, y: 290, width: 100, height: 110, walkable: false },
+      // Narrow elevated path through volcanic terrain
+      { id: 'ch8_ash_path', type: 'elevated', x: 100, y: 140, width: 1000, height: 130, elevation: 10, tint: 0x1a0818, slowFactor: 0.92 },
     ],
     completionRequirements: {
       requiredEvents: ['ch8_boss_apollyon'],

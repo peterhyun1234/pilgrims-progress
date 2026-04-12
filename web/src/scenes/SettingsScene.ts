@@ -251,7 +251,9 @@ export class SettingsScene extends Phaser.Scene {
     const hit = this.add.rectangle(pillW / 2, pillH / 2, pillW, pillH, 0, 0)
       .setInteractive({ useHandCursor: true });
     hit.on('pointerdown', (ptr: Phaser.Input.Pointer) => {
-      idx = ptr.x - (x - pillW) < halfW + container.x ? 0 : 1;
+      // ptr.x is world/screen X; container is at (x - pillW, y)
+      // local offset within container = ptr.x - (x - pillW)
+      idx = ptr.x - (x - pillW) < halfW ? 0 : 1;
       drawThumb(idx);
       labels.forEach((l, i) => l.setColor(i === idx ? '#1a1430' : '#c8c0a0'));
       onChange(idx);

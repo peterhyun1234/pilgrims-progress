@@ -756,6 +756,288 @@ export class TileMapManager {
     if (!this.objectLayer) return;
 
     switch (config.chapter) {
+      case 1: {
+        const W1 = config.mapWidth;
+        const H1 = config.mapHeight;
+        // City of Destruction — burning ruins, oppressive gate, Evangelist light beacon, exit arch
+
+        // Scattered burning debris piles along the 2400-wide map
+        const debrisPx = [420, 760, 1060, 1360, 1680, 2020];
+        for (const dx of debrisPx) {
+          const dh = ((dx * 17 + 7) * 31) & 0xff;
+          const dy = H1 * 0.25 + (dh % Math.round(H1 * 0.45));
+          // Rubble shadow
+          this.objectLayer.fillStyle(0x000000, 0.2);
+          this.objectLayer.fillEllipse(dx + 2, dy + 3, 26 + (dh % 14), 9);
+          // Rubble base
+          this.objectLayer.fillStyle(0x2a2018, 0.75);
+          this.objectLayer.fillEllipse(dx, dy, 24 + (dh % 14), 8 + (dh % 5));
+          // Broken wall fragments
+          this.objectLayer.fillStyle(0x3a3028, 0.65);
+          this.objectLayer.fillRect(dx - 8, dy - 14, 5, 14 + (dh % 8));
+          this.objectLayer.fillRect(dx + 4, dy - 10, 4, 10 + (dh % 6));
+          // Fire glow (every other ruin)
+          if (dh % 2 === 0) {
+            this.objectLayer.fillStyle(0xff2200, 0.10 + (dh % 4) * 0.02);
+            this.objectLayer.fillCircle(dx, dy - 18, 9 + (dh % 5));
+            this.objectLayer.fillStyle(0xff8800, 0.06);
+            this.objectLayer.fillCircle(dx, dy - 25, 6 + (dh % 3));
+            this.objectLayer.fillStyle(0xffcc44, 0.04);
+            this.objectLayer.fillTriangle(dx - 4, dy - 8, dx, dy - 26, dx + 4, dy - 8);
+            // Ember sparks
+            for (let e = 0; e < 3; e++) {
+              const eh = ((dh * (e + 3) * 7) + dx) & 0xff;
+              this.objectLayer.fillStyle(0xff6600, 0.35);
+              this.objectLayer.fillCircle(dx - 6 + (eh % 12), dy - 12 - (eh % 10), 0.8);
+            }
+          }
+          // Crack lines in ground near rubble
+          this.objectLayer.lineStyle(0.6, 0x000000, 0.3);
+          this.objectLayer.lineBetween(dx - 12, dy + 2, dx - 6, dy + 5);
+          this.objectLayer.lineBetween(dx + 8, dy + 3, dx + 14, dy + 1);
+        }
+
+        // Oppressive start-gate archway (city still holds the player)
+        const sg = { x: 140, y: Math.round(H1 / 2) };
+        this.objectLayer.fillStyle(0x000000, 0.25);
+        this.objectLayer.fillRect(sg.x - 24, sg.y - 58, 14, 84);
+        this.objectLayer.fillRect(sg.x + 14, sg.y - 58, 14, 84);
+        this.objectLayer.fillStyle(0x1a1410, 0.88);
+        this.objectLayer.fillRect(sg.x - 22, sg.y - 56, 12, 82);
+        this.objectLayer.fillRect(sg.x + 12, sg.y - 56, 12, 82);
+        this.objectLayer.fillRect(sg.x - 22, sg.y - 56, 46, 9);
+        // Arch crown (dark stone)
+        this.objectLayer.fillStyle(0x100c08, 0.9);
+        this.objectLayer.fillCircle(sg.x + 1, sg.y - 56, 24);
+        // Ominous red glow above gate
+        this.objectLayer.fillStyle(0x660000, 0.07);
+        this.objectLayer.fillCircle(sg.x + 1, sg.y - 42, 32);
+        // Battlement notches on top
+        for (let b = 0; b < 3; b++) {
+          this.objectLayer.fillStyle(0x1a1410, 0.9);
+          this.objectLayer.fillRect(sg.x - 22 + b * 8, sg.y - 66, 5, 10);
+          this.objectLayer.fillRect(sg.x + 12 + b * 8, sg.y - 66, 5, 10);
+        }
+
+        // Evangelist's golden light beacon at x≈280
+        const evX = 280, evY = Math.round(H1 / 2) - 20;
+        this.objectLayer.fillStyle(0xffd700, 0.04);
+        this.objectLayer.fillCircle(evX, evY, 48);
+        this.objectLayer.fillStyle(0xffd700, 0.08);
+        this.objectLayer.fillCircle(evX, evY, 28);
+        this.objectLayer.fillStyle(0xffd700, 0.14);
+        this.objectLayer.fillCircle(evX, evY, 16);
+        // Upward light beam
+        this.objectLayer.fillStyle(0xffd700, 0.04);
+        this.objectLayer.fillTriangle(evX - 12, evY + 8, evX, evY - 60, evX + 12, evY + 8);
+        this.objectLayer.fillStyle(0xffffff, 0.06);
+        this.objectLayer.fillTriangle(evX - 5, evY + 4, evX, evY - 40, evX + 5, evY + 4);
+
+        // Stone road paving toward the exit (eastern half)
+        for (let seg = 0; seg < 8; seg++) {
+          const sx = W1 - 400 + seg * 50;
+          const sy = Math.round(H1 / 2) - 10;
+          const sh = ((seg * 29 + 1) * 17) & 0xff;
+          this.objectLayer.fillStyle(0x8a7a60, 0.28 + seg * 0.03);
+          this.objectLayer.fillRect(sx, sy, 48, 20);
+          this.objectLayer.lineStyle(0.5, 0x000000, 0.1);
+          this.objectLayer.strokeRect(sx, sy, 48, 20);
+          // Road wear marks
+          if (sh % 2 === 0) {
+            this.objectLayer.fillStyle(0x000000, 0.06);
+            this.objectLayer.fillRect(sx + 5, sy + 3, 38, 2);
+          }
+        }
+
+        // Narrow exit gate (the wicket gate direction) at east edge
+        const eg = { x: W1 - 90, y: Math.round(H1 / 2) };
+        this.objectLayer.fillStyle(0x000000, 0.2);
+        this.objectLayer.fillRect(eg.x - 7, eg.y - 64, 13, 86);
+        this.objectLayer.fillRect(eg.x + 28, eg.y - 64, 13, 86);
+        this.objectLayer.fillStyle(0x5a4830, 0.88);
+        this.objectLayer.fillRect(eg.x - 5, eg.y - 62, 10, 84);
+        this.objectLayer.fillRect(eg.x + 30, eg.y - 62, 10, 84);
+        this.objectLayer.fillStyle(0x4a3820, 0.85);
+        this.objectLayer.fillCircle(eg.x + 17, eg.y - 62, 22);
+        // Inviting warm glow around exit
+        this.objectLayer.fillStyle(0xffd700, 0.07);
+        this.objectLayer.fillCircle(eg.x + 17, eg.y - 42, 35);
+        this.objectLayer.fillStyle(0xffd700, 0.12);
+        this.objectLayer.fillCircle(eg.x + 17, eg.y - 42, 18);
+        break;
+      }
+
+      case 2: {
+        const W2 = config.mapWidth;
+        const H2 = config.mapHeight;
+        // Slough of Despond — murky bog, reed clusters, stepping stones, Help's beacon
+
+        // Dark bog water patches scattered across map
+        const bogSeed = [
+          { x: 90, y: 90, rw: 120, rh: 70 },
+          { x: 270, y: 120, rw: 140, rh: 90 },
+          { x: 430, y: 80, rw: 110, rh: 80 },
+          { x: 560, y: 130, rw: 100, rh: 70 },
+          { x: 180, y: 250, rw: 130, rh: 75 },
+          { x: 380, y: 260, rw: 120, rh: 70 },
+        ];
+        for (const b of bogSeed) {
+          // Outer dark water
+          this.objectLayer.fillStyle(0x0a2a1a, 0.35);
+          this.objectLayer.fillEllipse(b.x, b.y, b.rw, b.rh);
+          // Surface sheen
+          this.objectLayer.fillStyle(0x1a4a3a, 0.12);
+          this.objectLayer.fillEllipse(b.x - 10, b.y - 6, Math.round(b.rw * 0.6), Math.round(b.rh * 0.5));
+          // Ripple rings
+          this.objectLayer.lineStyle(0.6, 0x2a5a4a, 0.18);
+          this.objectLayer.strokeEllipse(b.x, b.y, Math.round(b.rw * 0.7), Math.round(b.rh * 0.6));
+        }
+
+        // Reed clusters at bog margins
+        for (let i = 0; i < 14; i++) {
+          const rh = ((i * 67 + 37) * 23) & 0xff;
+          const rx = 60 + (rh % (W2 - 120));
+          const ry = 30 + ((rh * 5) & 0xff) % (H2 - 60);
+          const rCount = 2 + (rh % 3);
+          for (let r = 0; r < rCount; r++) {
+            const rrx = rx + (r - 1) * 4 + ((rh >> (r * 2)) & 3) - 1;
+            // Stem
+            this.objectLayer.fillStyle(0x3a5a2a, 0.55);
+            this.objectLayer.fillRect(rrx, ry - 15, 1, 18);
+            // Reed head (brown capsule)
+            this.objectLayer.fillStyle(0x6a4a20, 0.5);
+            this.objectLayer.fillEllipse(rrx, ry - 20, 3, 7);
+            // Tip highlight
+            this.objectLayer.fillStyle(0xaa8844, 0.2);
+            this.objectLayer.fillCircle(rrx, ry - 23, 1);
+          }
+        }
+
+        // Stepping stone path zigzagging across center
+        const centerY = Math.round(H2 / 2);
+        for (let s = 0; s < 7; s++) {
+          const stX = 80 + s * 80;
+          const stOff = s % 2 === 0 ? -18 : 18;
+          // Shadow
+          this.objectLayer.fillStyle(0x000000, 0.22);
+          this.objectLayer.fillEllipse(stX + 3, centerY + stOff + 3, 28, 12);
+          // Stone body
+          this.objectLayer.fillStyle(0x6a5a48, 0.82);
+          this.objectLayer.fillEllipse(stX, centerY + stOff, 26, 10);
+          // Stone highlight
+          this.objectLayer.fillStyle(0x9a8a78, 0.35);
+          this.objectLayer.fillEllipse(stX - 5, centerY + stOff - 2, 12, 5);
+          // Wet edge line
+          this.objectLayer.lineStyle(0.5, 0x2a4a3a, 0.3);
+          this.objectLayer.strokeEllipse(stX, centerY + stOff, 26, 10);
+        }
+
+        // Mud bubbles on bog surface
+        for (let i = 0; i < 12; i++) {
+          const bh = ((i * 47 + 2) * 19) & 0xff;
+          const bx2 = 60 + (bh % (W2 - 120));
+          const by2 = 40 + ((bh * 3) & 0xff) % (H2 - 80);
+          this.objectLayer.lineStyle(0.8, 0x2a4a3a, 0.2);
+          this.objectLayer.strokeEllipse(bx2, by2, 6 + (bh % 6), 3 + (bh % 3));
+        }
+
+        // Help's golden rescue beacon at x≈360 (NPC position)
+        const hlpX = 360, hlpY = Math.round(H2 / 2) - 22;
+        this.objectLayer.fillStyle(0xffd700, 0.05);
+        this.objectLayer.fillCircle(hlpX, hlpY, 36);
+        this.objectLayer.fillStyle(0xffd700, 0.10);
+        this.objectLayer.fillCircle(hlpX, hlpY, 22);
+        this.objectLayer.fillStyle(0xffd700, 0.18);
+        this.objectLayer.fillCircle(hlpX, hlpY, 13);
+        // Reaching hand visual (arm extending)
+        this.objectLayer.fillStyle(0xe8c8a0, 0.4);
+        this.objectLayer.fillEllipse(hlpX - 16, hlpY + 8, 30, 8);
+        this.objectLayer.fillCircle(hlpX - 28, hlpY + 8, 5);
+        break;
+      }
+
+      case 3: {
+        const W3 = config.mapWidth;
+        const H3 = config.mapHeight;
+        // Worldly Wiseman's Path — meadow vs rocky fork, Hill Difficulty, signpost
+
+        // Left meadow zone (the true narrow path — bright and hopeful)
+        for (let i = 0; i < 22; i++) {
+          const fh = ((i * 79 + 37) * 41) & 0xffff;
+          const fx = 30 + (fh % 200);
+          const fy = 40 + ((fh * 3) & 0xffff) % (H3 - 80);
+          const fCols = [0xffaacc, 0xffeeaa, 0xaaffaa, 0x99ddff, 0xffdd88];
+          this.objectLayer.fillStyle(fCols[fh % fCols.length], 0.38);
+          this.objectLayer.fillCircle(fx, fy, 2.5 + (fh % 2));
+          // Stem
+          this.objectLayer.fillStyle(0x6a9a4a, 0.42);
+          this.objectLayer.fillRect(fx, fy + 2, 1, 4);
+        }
+        // Grass blades in meadow
+        for (let i = 0; i < 30; i++) {
+          const gh = ((i * 53 + 3 * 11) * 29) & 0xffff;
+          const gx2 = 20 + (gh % 240);
+          const gy2 = 40 + ((gh * 5) & 0xffff) % (H3 - 80);
+          this.objectLayer.fillStyle(0x5a8a3a, 0.28);
+          this.objectLayer.fillRect(gx2, gy2 - 6, 1, 7);
+          this.objectLayer.fillRect(gx2 + 3, gy2 - 4, 1, 5);
+        }
+
+        // Fork in road signpost at x≈200
+        const fkX = 200, fkY = Math.round(H3 / 2) - 8;
+        // Post
+        this.objectLayer.fillStyle(0x6b4a20, 0.9);
+        this.objectLayer.fillRect(fkX - 1, fkY - 35, 3, 45);
+        // Left sign (narrow gate — gold, good)
+        this.objectLayer.fillStyle(0xd4a853, 0.88);
+        this.objectLayer.fillRect(fkX - 32, fkY - 34, 30, 10);
+        this.objectLayer.fillTriangle(fkX - 32, fkY - 34, fkX - 38, fkY - 29, fkX - 32, fkY - 24);
+        this.objectLayer.fillStyle(0x8b5a10, 0.5);
+        this.objectLayer.fillRect(fkX - 30, fkY - 32, 26, 2);
+        this.objectLayer.fillRect(fkX - 30, fkY - 28, 20, 2);
+        // Right sign (easy path — muted brown, false)
+        this.objectLayer.fillStyle(0x9a7840, 0.72);
+        this.objectLayer.fillRect(fkX + 3, fkY - 34, 30, 10);
+        this.objectLayer.fillTriangle(fkX + 33, fkY - 34, fkX + 39, fkY - 29, fkX + 33, fkY - 24);
+
+        // Rocky terrain on right half (the false easy path)
+        for (let i = 0; i < 12; i++) {
+          const rh = ((i * 113 + 3 * 7) * 29) & 0xff;
+          const rx = 320 + (rh % 220);
+          const ry = 35 + ((rh * 5) & 0xff) % (H3 - 70);
+          this.objectLayer.fillStyle(0x000000, 0.12);
+          this.objectLayer.fillEllipse(rx + 2, ry + 3, 20 + (rh % 14), 8 + (rh % 5));
+          this.objectLayer.fillStyle(0x555548, 0.52);
+          this.objectLayer.fillEllipse(rx, ry, 18 + (rh % 14), 7 + (rh % 5));
+          this.objectLayer.fillStyle(0x777768, 0.22);
+          this.objectLayer.fillEllipse(rx - 3, ry - 2, 9, 4);
+        }
+
+        // Hill Difficulty looming on the right background
+        const hillX = W3 - 80;
+        const hillY = Math.round(H3 / 2) + 20;
+        // Shadow base
+        this.objectLayer.fillStyle(0x000000, 0.12);
+        this.objectLayer.fillTriangle(hillX - 125, hillY + 45, hillX, hillY - 85, hillX + 125, hillY + 45);
+        // Hill body — two overlapping peaks
+        this.objectLayer.fillStyle(0x2a3018, 0.52);
+        this.objectLayer.fillTriangle(hillX - 120, hillY + 40, hillX, hillY - 82, hillX + 120, hillY + 40);
+        this.objectLayer.fillStyle(0x1e2410, 0.32);
+        this.objectLayer.fillTriangle(hillX - 70, hillY + 40, hillX + 30, hillY - 52, hillX + 120, hillY + 40);
+        // Rocky summit highlight
+        this.objectLayer.fillStyle(0x7a8870, 0.22);
+        this.objectLayer.fillTriangle(hillX - 18, hillY - 58, hillX, hillY - 82, hillX + 18, hillY - 58);
+        // Pine trees on hillside
+        for (let t = 0; t < 4; t++) {
+          const tx = hillX - 80 + t * 35;
+          const ty = hillY - 10 - t * 8;
+          this.objectLayer.fillStyle(0x1a3018, 0.45);
+          this.objectLayer.fillTriangle(tx - 5, ty + 6, tx, ty - 10, tx + 5, ty + 6);
+          this.objectLayer.fillTriangle(tx - 4, ty + 4, tx, ty - 7, tx + 4, ty + 4);
+        }
+        break;
+      }
+
       case 4: {
         const gx = config.mapWidth - 100;
         const gy = 130;
