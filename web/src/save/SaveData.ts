@@ -57,6 +57,9 @@ export interface SaveData {
   npcStates: Record<string, NpcState>;
   mapState: Record<string, MapObjectState>;
   firedTriggers: string[];
+  // v4: player position (restored if chapter matches)
+  playerX?: number;
+  playerY?: number;
 }
 
 export function createDefaultSaveData(): SaveData {

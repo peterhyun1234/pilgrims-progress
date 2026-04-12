@@ -32,6 +32,9 @@ export class GameManager {
   private _colorblindMode: ColorblindType = 'none';
   private _reduceMotion = false;
   readonly i18n: I18n = new I18n();
+  /** Current player world position — updated by GameScene every frame for save system. */
+  playerX = 0;
+  playerY = 0;
 
   constructor() {
     this.eventBus = EventBus.getInstance();
