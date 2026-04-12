@@ -93,6 +93,8 @@ export class GameScene extends Phaser.Scene {
 
   /** Chapter-level ambient speed modifier (e.g. mud in Ch2). */
   private chapterSpeedMod = 1.0;
+  /** Guard: prevents startBattle() from being called while a battle is already running. */
+  private _battleActive = false;
   /** NPC currently in dialogue (used to resume patrol after end). */
   private activeDialogueNpc: NPC | null = null;
   /** Map object containers by objectId. */
@@ -158,9 +160,11 @@ export class GameScene extends Phaser.Scene {
     this.transitionEffects = new TransitionEffects(this);
 
     // ── Restore state from last save ─────────────────────────────────────
+    let _savedForRestore: ReturnType<SaveManager['getLastLoaded']> = null;
     if (ServiceLocator.has(SERVICE_KEYS.SAVE_MANAGER)) {
       const saveManager = ServiceLocator.get<SaveManager>(SERVICE_KEYS.SAVE_MANAGER);
       const saved = saveManager.getLastLoaded();
+      _savedForRestore = saved;
       if (saved) {
         this.npcStateManager.initFromSave(saved.npcStates ?? {}, saved.talkedNpcs ?? {});
         this.inkService.initFromSave(saved.inkState ?? {});
@@ -173,14 +177,27 @@ export class GameScene extends Phaser.Scene {
     const chapterConfig = this.chapterManager.loadChapter(this.gameManager.currentChapter);
     this.environmentAnimations.init(chapterConfig);
 
-    // Start chapter-specific ambient soundscape
+    // Start chapter-specific ambient soundscape + unlock Web Audio on first gesture
     if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
       const audioMgr = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
       audioMgr.ambient.init(this.gameManager.currentChapter);
       audioMgr.ambient.playChapterStinger(this.gameManager.currentChapter);
+      // Browsers block Web Audio until first user gesture — resume on any input
+      const unlockAudio = () => {
+        audioMgr.ambient.resume();
+        this.input.off('pointerdown', unlockAudio);
+        this.input.keyboard?.off('keydown', unlockAudio);
+      };
+      this.input.on('pointerdown', unlockAudio);
+      this.input.keyboard?.on('keydown', unlockAudio);
     }
 
     this.player = new Player(this, chapterConfig.spawn.x, chapterConfig.spawn.y);
+    // Restore mid-chapter position if saved in the same chapter (preserve progress)
+    if (_savedForRestore?.playerX !== undefined && _savedForRestore.playerY !== undefined &&
+        _savedForRestore.playerX > 0 && _savedForRestore.playerY > 0) {
+      this.player.setPosition(_savedForRestore.playerX, _savedForRestore.playerY);
+    }
     this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
     this.cameras.main.setZoom(CAMERA.ZOOM_DEFAULT);
 
@@ -1007,6 +1024,12 @@ export class GameScene extends Phaser.Scene {
 
   private onBattleEnd = () => {
     this.gameManager.changeState(GameState.GAME);
+    // Reset player FSM to IDLE — prevents freeze if player was left in any
+    // non-moveable state (CUTSCENE / INTERACT / HURT) when battle started.
+    this.player?.exitCutscene();
+    // Re-enable physics body in case it was halted by a cutscene or event
+    const body = this.player?.sprite?.body;
+    if (body instanceof Phaser.Physics.Arcade.Body) body.setEnable(true);
   };
 
   private onBurdenReleased = () => {
@@ -1492,11 +1515,14 @@ export class GameScene extends Phaser.Scene {
   // ── Battle ───────────────────────────────────────────────────────────────
 
   private startBattle(enemyId: string): void {
+    if (this._battleActive) return; // prevent double-launch in same frame
+    this._battleActive = true;
     this.scene.pause();
     this.scene.setVisible(false);
     this.scene.launch(SCENE_KEYS.BATTLE, { enemyId });
 
     const battleEndHandler = () => {
+      this._battleActive = false;
       this.eventBus.off(GameEvent.BATTLE_END, battleEndHandler);
       this.scene.setVisible(true);
       this.scene.resume();
@@ -1543,10 +1569,17 @@ export class GameScene extends Phaser.Scene {
     // Crossfade ambient soundscape to new chapter
     if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
       const audioMgr = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      audioMgr.ambient.resume();          // ensure AudioContext is not suspended
       audioMgr.ambient.crossfadeTo(chapter, 3000);
       this.time.delayedCall(1500, () => {
         audioMgr.ambient.playChapterStinger(chapter);
       });
+      // Wire bgmKey: if chapter has a specific BGM track, emit after crossfade settles
+      if (config.bgmKey) {
+        this.time.delayedCall(1200, () => {
+          this.eventBus.emit(GameEvent.BGM_PLAY, { key: config.bgmKey, loop: true });
+        });
+      }
     }
 
     const colliders = this.tileMapManager.getColliders();
@@ -1554,6 +1587,10 @@ export class GameScene extends Phaser.Scene {
       this.physics.add.collider(this.player.sprite, colliders);
     }
 
+    // Reset saved position to 0 so that if the player saves immediately at spawn
+    // and reloads, they don't get placed at the old chapter's exit zone.
+    this.gameManager.playerX = 0;
+    this.gameManager.playerY = 0;
     this.player.setPosition(config.spawn.x, config.spawn.y);
 
     this.initChapterNpcs(config);
@@ -1615,6 +1652,9 @@ export class GameScene extends Phaser.Scene {
     }
 
     this.player.update(input, delta);
+    // Keep GameManager position in sync (read by SaveManager on every SAVE_GAME)
+    this.gameManager.playerX = this.player.sprite.x;
+    this.gameManager.playerY = this.player.sprite.y;
     this.updateCameraLookAhead(input.x, input.y, delta);
     this.interactionZone.update();
     this.hud.update();

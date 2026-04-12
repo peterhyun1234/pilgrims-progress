@@ -62,6 +62,9 @@ export class SaveManager {
         playerName: gm.playerName,
         stats: sm.getAll(),
         hiddenStats: sm.getHidden(),
+        // Save player position so mid-chapter progress is preserved on resume
+        playerX: gm.playerX > 0 ? gm.playerX : base.playerX,
+        playerY: gm.playerY > 0 ? gm.playerY : base.playerY,
         settings: {
           ...base.settings,
           language: gm.language,
