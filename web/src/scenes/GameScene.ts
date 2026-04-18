@@ -198,10 +198,29 @@ export class GameScene extends Phaser.Scene {
         _savedForRestore.playerX > 0 && _savedForRestore.playerY > 0) {
       this.player.setPosition(_savedForRestore.playerX, _savedForRestore.playerY);
     }
+    // ── Camera Y alignment ───────────────────────────────────────────────────
+    // The background is a fixed horizontal-panorama backdrop (scrollFactor 0,0).
+    // Vertical camera movement breaks the illusion because the tile ground drifts
+    // away from the background horizon.  Solution: pin camera Y so the tile ground
+    // always sits exactly at the background's visual horizon line.
+    //
+    // HORIZON_FRAC must match ParallaxBackground.horizonY = GAME_HEIGHT * 0.42
+    const HORIZON_FRAC = 0.42;
+    const groundY = (_savedForRestore?.playerY && _savedForRestore.playerY > 0)
+      ? _savedForRestore.playerY
+      : chapterConfig.spawn.y;
+    const initScrollY = Phaser.Math.Clamp(
+      groundY - Math.round(GAME_HEIGHT * HORIZON_FRAC),
+      0,
+      Math.max(0, chapterConfig.mapHeight - GAME_HEIGHT),
+    );
+    this.cameras.main.scrollY = initScrollY;
+
     this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.06);
     this.cameras.main.setZoom(CAMERA.ZOOM_DEFAULT);
-    // Vertical lerp (0.06) is gentler than horizontal (0.08) to reduce camera
-    // bobbing, which makes the fixed parallax backdrop feel more stable.
+    // Y deadzone ≫ mapHeight → player is always inside it → camera Y never moves.
+    // X deadzone stays tight (DEADZONE_X = 24) for responsive horizontal scrolling.
+    this.cameras.main.setDeadzone(CAMERA.DEADZONE_X, GAME_HEIGHT * 8);
 
     // Setup dynamic lighting for this chapter
     this.lightingManager.setChapterLighting(this.gameManager.currentChapter);
@@ -1601,6 +1620,14 @@ export class GameScene extends Phaser.Scene {
     this.gameManager.playerX = 0;
     this.gameManager.playerY = 0;
     this.player.setPosition(config.spawn.x, config.spawn.y);
+
+    // Re-align camera Y to the new chapter's ground level
+    const newScrollY = Phaser.Math.Clamp(
+      config.spawn.y - Math.round(GAME_HEIGHT * 0.42),
+      0,
+      Math.max(0, config.mapHeight - GAME_HEIGHT),
+    );
+    this.cameras.main.scrollY = newScrollY;
 
     this.initChapterNpcs(config);
     this.interactionZone.setNPCs(this.npcs);
