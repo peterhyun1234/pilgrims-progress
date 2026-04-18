@@ -1528,6 +1528,13 @@ export class GameScene extends Phaser.Scene {
       this.eventBus.off(GameEvent.BATTLE_END, battleEndHandler);
       this.scene.setVisible(true);
       this.scene.resume();
+      // Restore chapter BGM after battle with a gentle fade-in
+      this.time.delayedCall(600, () => {
+        if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+          const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+          audio.bgm.play(this.gameManager.currentChapter, 1500);
+        }
+      });
     };
     this.eventBus.on(GameEvent.BATTLE_END, battleEndHandler);
   }

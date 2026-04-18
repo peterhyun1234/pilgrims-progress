@@ -55,6 +55,12 @@ export class BattleScene extends Phaser.Scene {
 
     this.cameras.main.setBackgroundColor(COLORS.BATTLE.BG);
 
+    // Start battle BGM (chapter 0 = dedicated battle theme)
+    if (ServiceLocator.has(SERVICE_KEYS.AUDIO_MANAGER)) {
+      const audio = ServiceLocator.get<AudioManager>(SERVICE_KEYS.AUDIO_MANAGER);
+      audio.bgm.play(0, 800);
+    }
+
     const enemy = ENEMIES[this.enemyId];
     if (!enemy) {
       this.scene.start(SCENE_KEYS.GAME);

@@ -433,6 +433,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       { x: 2340, y: 80, width: 60, height: 240, targetChapter: 2 },
     ],
     theme: THEMES[1],
+    bgmKey: 'ch1',
     events: [
       {
         id: 'ch1_battle_doubt',
@@ -478,6 +479,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       { x: 660, y: 120, width: 60, height: 80, targetChapter: 3 },
     ],
     theme: THEMES[2],
+    bgmKey: 'ch2',
     events: [
       {
         id: 'ch2_battle_despair',
@@ -523,6 +525,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       { x: 540, y: 140, width: 60, height: 80, targetChapter: 4 },
     ],
     theme: THEMES[3],
+    bgmKey: 'ch3',
     events: [
       {
         id: 'ch3_battle_tempt',
@@ -585,6 +588,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       { x: 420, y: 80, width: 60, height: 80, targetChapter: 5 },
     ],
     theme: THEMES[4],
+    bgmKey: 'ch4',
     events: [
       {
         id: 'ch4_boss_giant_despair',
@@ -638,6 +642,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
       { x: 420, y: 60, width: 60, height: 80, targetChapter: 6 },
     ],
     theme: THEMES[5],
+    bgmKey: 'ch5',
     events: [
       // 5 exhibit zones — each triggers a distinct Ink knot (type:'dialogue', triggerOnce:false so revisitable)
       {
@@ -703,7 +708,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     spawn: { x: 240, y: 500 },
     npcs: [],
     theme: THEMES[6],
-    bgmKey: 'bgm_cross',
+    bgmKey: 'ch6',
     events: [
       {
         id: 'ch6_burden_released',
@@ -753,7 +758,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     mapHeight: 600,
     spawn: { x: 80, y: 300 },
     theme: THEMES[7],
-    bgmKey: 'bgm_palace',
+    bgmKey: 'ch7',
     npcs: [
       {
         id: 'timorous',
@@ -872,7 +877,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     mapHeight: 400,
     spawn: { x: 80, y: 200 },
     theme: THEMES[8],
-    bgmKey: 'bgm_valley',
+    bgmKey: 'ch8',
     npcs: [],
     exits: [
       { x: 1140, y: 80, width: 60, height: 240, targetChapter: 9 },
@@ -912,7 +917,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     mapHeight: 400,
     spawn: { x: 80, y: 200 },
     theme: THEMES[9],
-    bgmKey: 'bgm_shadow',
+    bgmKey: 'ch9',
     npcs: [
       {
         id: 'faithful',
@@ -991,7 +996,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     mapHeight: 600,
     spawn: { x: 80, y: 300 },
     theme: THEMES[10],
-    bgmKey: 'bgm_fair',
+    bgmKey: 'ch10',
     npcs: [
       {
         id: 'faithful',
@@ -1063,7 +1068,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     mapHeight: 800,
     spawn: { x: 400, y: 720 },
     theme: THEMES[11],
-    bgmKey: 'bgm_dungeon',
+    bgmKey: 'ch11',
     npcs: [
       {
         id: 'hopeful',
@@ -1133,7 +1138,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
     mapHeight: 600,
     spawn: { x: 80, y: 300 },
     theme: THEMES[12],
-    bgmKey: 'bgm_celestial',
+    bgmKey: 'ch12',
     npcs: [
       {
         id: 'hopeful',
