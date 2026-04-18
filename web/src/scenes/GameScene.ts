@@ -198,8 +198,10 @@ export class GameScene extends Phaser.Scene {
         _savedForRestore.playerX > 0 && _savedForRestore.playerY > 0) {
       this.player.setPosition(_savedForRestore.playerX, _savedForRestore.playerY);
     }
-    this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.08);
+    this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.06);
     this.cameras.main.setZoom(CAMERA.ZOOM_DEFAULT);
+    // Vertical lerp (0.06) is gentler than horizontal (0.08) to reduce camera
+    // bobbing, which makes the fixed parallax backdrop feel more stable.
 
     // Setup dynamic lighting for this chapter
     this.lightingManager.setChapterLighting(this.gameManager.currentChapter);

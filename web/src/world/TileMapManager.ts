@@ -1,4 +1,4 @@
-import { TILE_SIZE } from '../config';
+import { TILE_SIZE, GAME_HEIGHT } from '../config';
 import { ChapterConfig, ChapterTheme, TerrainZone } from './ChapterData';
 import { ParallaxBackground } from '../ui/ParallaxBackground';
 
@@ -66,7 +66,11 @@ export class TileMapManager {
     this.drawChapterLandmarks(config);
     this.drawTerrainZones(config);
 
-    this.scene.cameras.main.setBounds(0, 0, config.mapWidth, config.mapHeight);
+    // Camera Y bounds: clamp vertical scroll to keep the sky/ground horizon line
+    // consistent on screen. We allow only a small vertical window (±30px beyond
+    // the map's playable region) so the fixed parallax backdrop never shows gaps.
+    const camBoundsH = Math.max(config.mapHeight, GAME_HEIGHT);
+    this.scene.cameras.main.setBounds(0, 0, config.mapWidth, camBoundsH);
     this.scene.physics.world.setBounds(0, 0, config.mapWidth, config.mapHeight);
   }
 

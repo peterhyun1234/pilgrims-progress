@@ -366,20 +366,14 @@ export class BattleScene extends Phaser.Scene {
       this.enemyContainer.add(bossBadge);
     }
 
-    // Enemy HP bar — prominent display with label
-    const ko2 = this.gameManager.language === 'ko';
-    const enemyHpLabel = this.add.text(-55, 38, ko2 ? '생명력' : 'HP',
-      DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, '#ff8888'),
-    );
-    this.enemyContainer.add(enemyHpLabel);
-
+    // Enemy HP bar — single bar with HP text on the right (no label to avoid glyph artifacts)
     const hpBar = DesignSystem.createProgressBar(
-      this, -55, 46, 110, 8, enemy.iconColor, 0x1a0a0a, state.enemyHp / state.enemyMaxHp,
+      this, -55, 42, 110, 8, enemy.iconColor, 0x1a0a0a, state.enemyHp / state.enemyMaxHp,
     );
     this.enemyHpBar = hpBar;
     this.enemyContainer.add([hpBar.bg, hpBar.fill]);
 
-    this.enemyHpText = this.add.text(55, 46, `${state.enemyHp}/${state.enemyMaxHp}`,
+    this.enemyHpText = this.add.text(55, 42, `${state.enemyHp}/${state.enemyMaxHp}`,
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(1, 0);
     this.enemyContainer.add(this.enemyHpText);
@@ -521,20 +515,16 @@ export class BattleScene extends Phaser.Scene {
     ).setOrigin(0.5);
 
     // HP label (prominent)
-    const hpLabel = this.add.text(-55, 6, ko ? '생명력' : 'HP',
-      DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, '#88ccff'),
-    );
-
     const hpBar = DesignSystem.createProgressBar(
-      this, -55, 14, 110, 8, COLORS.STAT.FAITH, 0x1a1a2a, state.playerHp / state.playerMaxHp,
+      this, -55, 8, 110, 8, COLORS.STAT.FAITH, 0x1a1a2a, state.playerHp / state.playerMaxHp,
     );
     this.playerHpBar = hpBar;
 
-    this.playerHpText = this.add.text(55, 14, `${state.playerHp}/${state.playerMaxHp}`,
+    this.playerHpText = this.add.text(55, 8, `${state.playerHp}/${state.playerMaxHp}`,
       DesignSystem.mutedTextStyle(DesignSystem.FONT_SIZE.XS),
     ).setOrigin(1, 0);
 
-    this.playerContainer.add([label, hpLabel, hpBar.bg, hpBar.fill, this.playerHpText]);
+    this.playerContainer.add([label, hpBar.bg, hpBar.fill, this.playerHpText]);
 
     // Idle breathing bob for player
     const baseY = this.playerContainer.y;

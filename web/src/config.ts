@@ -125,7 +125,7 @@ export const TOUCH = {
 
 export const CAMERA = {
   DEADZONE_X: 24,
-  DEADZONE_Y: 16,
+  DEADZONE_Y: 60,  // large Y deadzone — minimises vertical camera drift so fixed sky backdrop stays coherent
   ZOOM_DEFAULT: 1.0,
   ZOOM_DIALOGUE: 1.1,
   ZOOM_CLOSEUP: 1.3,
