@@ -27,6 +27,11 @@ export class MobileControls {
   private isVisible = false;
   private contextLabel = 'A';
   private hasShownHint = false;
+
+  // Stored so they can be removed in destroy()
+  private onPointerDown!: (pointer: Phaser.Input.Pointer) => void;
+  private onPointerMove!: (pointer: Phaser.Input.Pointer) => void;
+  private onPointerUp!: (pointer: Phaser.Input.Pointer) => void;
   private static readonly HINT_KEY = 'pilgrims_mobile_hint_shown';
 
   private static readonly JOYSTICK_R = TOUCH.JOYSTICK_SIZE / 2;
@@ -140,7 +145,7 @@ export class MobileControls {
   private setupInput(): void {
     const halfW = GAME_WIDTH * 0.55;
 
-    this.scene.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+    this.onPointerDown = (pointer: Phaser.Input.Pointer) => {
       if (!this.isVisible || pointer.x > halfW) return;
       this.joystickActive = true;
       this.joystickPointer = pointer.pointerId;
@@ -152,9 +157,9 @@ export class MobileControls {
         targets: [this.joystickOuter, this.joystickInner],
         alpha: 1, duration: 80,
       });
-    });
+    };
 
-    this.scene.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+    this.onPointerMove = (pointer: Phaser.Input.Pointer) => {
       if (!this.joystickActive || pointer.pointerId !== this.joystickPointer) return;
       const dx = pointer.x - this.joystickOrigin.x;
       const dy = pointer.y - this.joystickOrigin.y;
@@ -178,9 +183,9 @@ export class MobileControls {
         this._virtualInput.x = ix / maxDist;
         this._virtualInput.y = iy / maxDist;
       }
-    });
+    };
 
-    const pointerUp = (pointer: Phaser.Input.Pointer) => {
+    this.onPointerUp = (pointer: Phaser.Input.Pointer) => {
       if (!this.joystickActive || pointer.pointerId !== this.joystickPointer) return;
       this.joystickActive = false;
       this.joystickPointer = null;
@@ -191,8 +196,11 @@ export class MobileControls {
         alpha: 0, duration: 200,
       });
     };
-    this.scene.input.on('pointerup', pointerUp);
-    this.scene.input.on('pointerupoutside', pointerUp);
+
+    this.scene.input.on('pointerdown', this.onPointerDown);
+    this.scene.input.on('pointermove', this.onPointerMove);
+    this.scene.input.on('pointerup', this.onPointerUp);
+    this.scene.input.on('pointerupoutside', this.onPointerUp);
   }
 
   private onStateChanged = (state: GameState | undefined) => {
@@ -286,6 +294,10 @@ export class MobileControls {
 
   destroy(): void {
     EventBus.getInstance().off(GameEvent.GAME_STATE_CHANGED, this.onStateChanged);
+    this.scene.input.off('pointerdown', this.onPointerDown);
+    this.scene.input.off('pointermove', this.onPointerMove);
+    this.scene.input.off('pointerup', this.onPointerUp);
+    this.scene.input.off('pointerupoutside', this.onPointerUp);
     this.hintContainer?.destroy(true);
     this.container.destroy(true);
   }
