@@ -3,6 +3,7 @@ import { GAME_WIDTH, GAME_HEIGHT, SCENE_KEYS, COLORS, PLAYER } from '../config';
 import { DesignSystem } from '../ui/DesignSystem';
 import { CharacterSpriteFactory } from '../entities/CharacterSpriteFactory';
 import { AnimationRegistry, DEFAULT_ANIM_SET_32, LEGACY_ANIM_SET_16 } from '../entities/AnimationRegistry';
+import { TILESET_MANIFEST } from '../world/TilesetManifest';
 
 /** Characters that have PortraitConfig and will get generated 32×32 sprites */
 const GENERATED_CHARACTERS = [
@@ -95,6 +96,16 @@ export class PreloadScene extends Phaser.Scene {
 
     // Ink story data — all 12 chapters compiled into a single JSON
     this.load.json('story_ink', 'assets/ink/story.ink.json');
+
+    this.loadTilesets();
+  }
+
+  /** Phase 1: manifest is empty, so this is a no-op. Phase 2+ adds chapter
+   *  tilesets here for the new tileset-aware renderers to consume. */
+  private loadTilesets(): void {
+    for (const entry of Object.values(TILESET_MANIFEST)) {
+      this.load.image(entry.key, entry.png);
+    }
   }
 
   create(): void {

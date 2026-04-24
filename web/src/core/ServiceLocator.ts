@@ -38,4 +38,6 @@ export const SERVICE_KEYS = {
   NPC_STATE_MANAGER: 'NpcStateManager',
   GAMEPLAY_STATE: 'GamePlayState',
   NARRATIVE_DIRECTOR: 'NarrativeDirector',
+  WORLD_RENDERER: 'WorldRenderer',
+  WORLD_CAMERA: 'WorldCamera',
 } as const;

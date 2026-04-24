@@ -8,8 +8,10 @@ import { InputManager } from '../input/InputManager';
 import { Player } from '../entities/Player';
 import { NPC } from '../entities/NPC';
 import { InteractionZone } from '../entities/InteractionZone';
-import { TileMapManager } from '../world/TileMapManager';
 import { ChapterManager } from '../world/ChapterManager';
+import { WorldRendererFactory } from '../world/WorldRendererFactory';
+import { WorldCamera } from '../world/WorldCamera';
+import type { WorldRenderResult } from '../world/WorldRenderer';
 import { InkService } from '../narrative/InkService';
 import { DialogueManager } from '../narrative/DialogueManager';
 import { NarrativeDirector } from '../narrative/NarrativeDirector';
@@ -48,8 +50,9 @@ import { AudioManager } from '../audio/AudioManager';
 
 export class GameScene extends Phaser.Scene {
   private inputManager!: InputManager;
-  private tileMapManager!: TileMapManager;
   private chapterManager!: ChapterManager;
+  private worldResult: WorldRenderResult | null = null;
+  private worldCamera!: WorldCamera;
   private inkService!: InkService;
   private dialogueManager!: DialogueManager;
   private narrativeDirector!: NarrativeDirector;
@@ -138,8 +141,9 @@ export class GameScene extends Phaser.Scene {
     this.npcStateManager = new NpcStateManager(this.eventBus);
     ServiceLocator.register(SERVICE_KEYS.NPC_STATE_MANAGER, this.npcStateManager);
 
-    this.tileMapManager = new TileMapManager(this);
-    this.chapterManager = new ChapterManager(this, this.tileMapManager);
+    this.chapterManager = new ChapterManager(this);
+    this.worldCamera = new WorldCamera(this);
+    ServiceLocator.register(SERVICE_KEYS.WORLD_CAMERA, this.worldCamera);
 
     this.inkService = new InkService(this);
     ServiceLocator.register(SERVICE_KEYS.INK_SERVICE, this.inkService);
@@ -175,6 +179,9 @@ export class GameScene extends Phaser.Scene {
     }
 
     const chapterConfig = this.chapterManager.loadChapter(this.gameManager.currentChapter);
+    const worldRenderer = WorldRendererFactory.create(chapterConfig.perspective);
+    ServiceLocator.register(SERVICE_KEYS.WORLD_RENDERER, worldRenderer);
+    this.worldResult = worldRenderer.build(this, chapterConfig);
     this.environmentAnimations.init(chapterConfig);
 
     // Start chapter-specific ambient soundscape + unlock Web Audio on first gesture
@@ -198,35 +205,16 @@ export class GameScene extends Phaser.Scene {
         _savedForRestore.playerX > 0 && _savedForRestore.playerY > 0) {
       this.player.setPosition(_savedForRestore.playerX, _savedForRestore.playerY);
     }
-    // ── Camera Y alignment ───────────────────────────────────────────────────
-    // The background is a fixed horizontal-panorama backdrop (scrollFactor 0,0).
-    // Vertical camera movement breaks the illusion because the tile ground drifts
-    // away from the background horizon.  Solution: pin camera Y so the tile ground
-    // always sits exactly at the background's visual horizon line.
-    //
-    // HORIZON_FRAC must match ParallaxBackground.horizonY = GAME_HEIGHT * 0.42
-    const HORIZON_FRAC = 0.42;
-    const groundY = (_savedForRestore?.playerY && _savedForRestore.playerY > 0)
-      ? _savedForRestore.playerY
-      : chapterConfig.spawn.y;
-    const initScrollY = Phaser.Math.Clamp(
-      groundY - Math.round(GAME_HEIGHT * HORIZON_FRAC),
-      0,
-      Math.max(0, chapterConfig.mapHeight - GAME_HEIGHT),
-    );
-    this.cameras.main.scrollY = initScrollY;
-
-    this.cameras.main.startFollow(this.player.sprite, true, 0.08, 0.06);
-    this.cameras.main.setZoom(CAMERA.ZOOM_DEFAULT);
-    // Y deadzone ≫ mapHeight → player is always inside it → camera Y never moves.
-    // X deadzone stays tight (DEADZONE_X = 24) for responsive horizontal scrolling.
-    this.cameras.main.setDeadzone(CAMERA.DEADZONE_X, GAME_HEIGHT * 8);
+    this.worldCamera
+      .setMode(chapterConfig.perspective ?? 'legacy')
+      .applyInitialAlignment(chapterConfig, _savedForRestore?.playerY ?? 0)
+      .follow(this.player.sprite);
 
     // Setup dynamic lighting for this chapter
     this.lightingManager.setChapterLighting(this.gameManager.currentChapter);
     this.lightingManager.addFollowLight('player', this.player.sprite, 60, 0xffd4a0, 0.7);
 
-    const colliders = this.tileMapManager.getColliders();
+    const colliders = this.worldResult?.colliders ?? null;
     if (colliders) {
       this.physics.add.collider(this.player.sprite, colliders);
     }
@@ -1592,6 +1580,10 @@ export class GameScene extends Phaser.Scene {
     // Note: do NOT clear triggeredEvents — they persist globally
 
     const config = this.chapterManager.loadChapter(chapter);
+    this.worldResult?.destroy();
+    const worldRenderer = WorldRendererFactory.create(config.perspective);
+    ServiceLocator.register(SERVICE_KEYS.WORLD_RENDERER, worldRenderer);
+    this.worldResult = worldRenderer.build(this, config);
     this.environmentAnimations.init(config);
 
     // Crossfade ambient soundscape to new chapter
@@ -1610,7 +1602,7 @@ export class GameScene extends Phaser.Scene {
       }
     }
 
-    const colliders = this.tileMapManager.getColliders();
+    const colliders = this.worldResult?.colliders ?? null;
     if (colliders) {
       this.physics.add.collider(this.player.sprite, colliders);
     }
@@ -1621,13 +1613,9 @@ export class GameScene extends Phaser.Scene {
     this.gameManager.playerY = 0;
     this.player.setPosition(config.spawn.x, config.spawn.y);
 
-    // Re-align camera Y to the new chapter's ground level
-    const newScrollY = Phaser.Math.Clamp(
-      config.spawn.y - Math.round(GAME_HEIGHT * 0.42),
-      0,
-      Math.max(0, config.mapHeight - GAME_HEIGHT),
-    );
-    this.cameras.main.scrollY = newScrollY;
+    this.worldCamera
+      .setMode(config.perspective ?? 'legacy')
+      .applyInitialAlignment(config, 0);
 
     this.initChapterNpcs(config);
     this.interactionZone.setNPCs(this.npcs);

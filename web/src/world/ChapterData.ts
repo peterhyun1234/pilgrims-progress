@@ -1,5 +1,6 @@
 import { NPCConfig } from '../entities/NPC';
 import { StatType } from '../core/GameEvents';
+import type { PerspectiveMode } from './WorldRenderer';
 
 export interface ChapterTheme {
   groundBase: number;
@@ -82,6 +83,10 @@ export interface ChapterConfig {
   mapObjects?: MapObject[];
   completionRequirements?: CompletionRequirements;
   terrainZones?: TerrainZone[];
+  /** Rendering perspective. Defaults to 'legacy' (current Graphics-primitive
+   *  pipeline). Phase 2+ migrates chapters to 'sideScroll' / 'topDown' /
+   *  'celestial' as their tilesets land. */
+  perspective?: PerspectiveMode;
 }
 
 export interface TerrainZone {

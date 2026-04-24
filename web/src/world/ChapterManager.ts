@@ -1,17 +1,19 @@
-import { TileMapManager } from './TileMapManager';
 import { ChapterConfig, CHAPTER_CONFIGS } from './ChapterData';
 import { NPC } from '../entities/NPC';
 import { ServiceLocator, SERVICE_KEYS } from '../core/ServiceLocator';
 import { GameManager } from '../core/GameManager';
 
+/**
+ * Chapter config lookup + NPC factory. World rendering is no longer triggered
+ * here — `GameScene` drives `WorldRendererFactory` directly so it can pass the
+ * resulting colliders into the camera/physics wiring.
+ */
 export class ChapterManager {
   private scene: Phaser.Scene;
-  private tileMapManager: TileMapManager;
   private currentConfig: ChapterConfig | null = null;
 
-  constructor(scene: Phaser.Scene, tileMapManager: TileMapManager) {
+  constructor(scene: Phaser.Scene) {
     this.scene = scene;
-    this.tileMapManager = tileMapManager;
   }
 
   loadChapter(chapter: number): ChapterConfig {
@@ -21,8 +23,6 @@ export class ChapterManager {
     }
 
     this.currentConfig = config;
-    this.tileMapManager.generateMap(config);
-
     return config;
   }
 

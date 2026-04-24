@@ -47,7 +47,7 @@ export class TileMapManager {
         const isBorder = tx === 0 || ty === 0 || tx === tilesX - 1 || ty === tilesY - 1;
 
         if (isBorder) {
-          this.drawWallTile(x, y, theme);
+          this.drawWallTile(x, y, theme, config.chapter);
           const wall = this.scene.add.rectangle(x + TILE_SIZE / 2, y + TILE_SIZE / 2, TILE_SIZE, TILE_SIZE);
           this.scene.physics.add.existing(wall, true);
           this.colliders!.add(wall);
@@ -538,20 +538,80 @@ export class TileMapManager {
     }
   }
 
-  private drawWallTile(x: number, y: number, theme: ChapterTheme): void {
+  private drawWallTile(x: number, y: number, _theme: ChapterTheme, chapter = 0): void {
     if (!this.groundLayer) return;
+    const hash = ((x * 0xb5297a4d + y * 0x68e31da4) >>> 0) & 0xffff;
 
-    this.groundLayer.fillStyle(theme.wallColor, 1);
-    this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-    this.groundLayer.fillStyle(theme.wallTop, 0.5);
-    this.groundLayer.fillRect(x, y, TILE_SIZE, TILE_SIZE / 3);
-    this.groundLayer.lineStyle(0.5, 0x111111, 0.2);
-    this.groundLayer.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+    // ── Chapter-specific wall materials ──
+    type WallStyle = { front: number; top: number; shadow: number; brick: number };
+    const wallStyles: Record<number, WallStyle> = {
+      1:  { front: 0x6a5a48, top: 0x8a7a68, shadow: 0x2a2018, brick: 0x5a4a38 }, // sandstone ruins
+      2:  { front: 0x3a4a38, top: 0x4a5a48, shadow: 0x1a2a18, brick: 0x2a3a28 }, // mossy bog wall
+      3:  { front: 0x5a5848, top: 0x7a7868, shadow: 0x2a2820, brick: 0x4a4838 }, // rocky cliff face
+      4:  { front: 0xd0b890, top: 0xf0d8b0, shadow: 0x503828, brick: 0xb09870 }, // polished palace marble
+      5:  { front: 0xc8a870, top: 0xe8c890, shadow: 0x483818, brick: 0xa88850 }, // warm stone
+      6:  { front: 0xe8e0d0, top: 0xfff8f0, shadow: 0x786860, brick: 0xd0c8b8 }, // white marble cross
+      7:  { front: 0xb89878, top: 0xd8b898, shadow: 0x483828, brick: 0x987858 }, // palace stone
+      8:  { front: 0x2a1820, top: 0x3a2830, shadow: 0x0a0810, brick: 0x1a1018 }, // volcanic dark
+      9:  { front: 0x181020, top: 0x281828, shadow: 0x080408, brick: 0x100810 }, // shadow valley
+      10: { front: 0x483858, top: 0x685878, shadow: 0x181028, brick: 0x382848 }, // vanity fair
+      11: { front: 0x2c2c38, top: 0x3c3c48, shadow: 0x0c0c18, brick: 0x1c1c28 }, // doubting castle
+      12: { front: 0xe8d8a8, top: 0xfff8d8, shadow: 0x786840, brick: 0xd0c088 }, // celestial gold
+    };
+    const ws = wallStyles[chapter] ?? wallStyles[1];
 
-    const hash = ((x * 11 + y * 7) * 19) & 0xff;
-    if (hash < 30) {
-      this.groundLayer.fillStyle(0x000000, 0.1);
-      this.groundLayer.fillRect(x + (hash % 12), y + ((hash >> 2) % 12), 1, 3 + (hash % 4));
+    const topH = 5; // top-face height (roof/top of wall seen from above)
+    const frontH = TILE_SIZE - topH;
+
+    // 1. Top face (lighter — what you see looking down at the roof/top edge)
+    this.groundLayer.fillStyle(ws.top, 1);
+    this.groundLayer.fillRect(x, y, TILE_SIZE, topH);
+    // Top face highlight strip
+    this.groundLayer.fillStyle(0xffffff, 0.12);
+    this.groundLayer.fillRect(x, y, TILE_SIZE, 1);
+    // Top face right-edge shadow (depth cue)
+    this.groundLayer.fillStyle(0x000000, 0.18);
+    this.groundLayer.fillRect(x + TILE_SIZE - 1, y, 1, topH);
+
+    // 2. Front face (main wall body)
+    this.groundLayer.fillStyle(ws.front, 1);
+    this.groundLayer.fillRect(x, y + topH, TILE_SIZE, frontH);
+
+    // 3. Brick / stone texture on front face (2 rows of offset bricks)
+    const brickH = 4, brickW = 8;
+    for (let row = 0; row < Math.ceil(frontH / brickH); row++) {
+      const offset = row % 2 === 0 ? 0 : brickW / 2;
+      const bh2 = ((hash * (row + 3) * 7) & 0xf) - 7;
+      const bc = ws.brick + (bh2 << 16 | bh2 << 8 | bh2);
+      for (let col = 0; col < Math.ceil(TILE_SIZE / brickW) + 1; col++) {
+        const bx = x + col * brickW - offset;
+        const by = y + topH + row * brickH;
+        if (bx >= x && bx < x + TILE_SIZE) {
+          this.groundLayer.fillStyle(bc & 0xffffff, 0.3);
+          this.groundLayer.fillRect(bx + 1, by + 1, Math.min(brickW - 2, x + TILE_SIZE - bx - 1), brickH - 2);
+        }
+      }
+    }
+
+    // 4. Mortar lines (horizontal grooves between brick rows)
+    this.groundLayer.fillStyle(ws.shadow, 0.45);
+    for (let row = 0; row <= Math.ceil(frontH / brickH); row++) {
+      this.groundLayer.fillRect(x, y + topH + row * brickH, TILE_SIZE, 1);
+    }
+
+    // 5. Right-side shadow (creates 3D depth illusion)
+    this.groundLayer.fillStyle(0x000000, 0.22);
+    this.groundLayer.fillRect(x + TILE_SIZE - 2, y + topH, 2, frontH);
+
+    // 6. Bottom drop shadow (casts onto ground)
+    this.groundLayer.fillStyle(ws.shadow, 0.35);
+    this.groundLayer.fillRect(x, y + TILE_SIZE - 2, TILE_SIZE, 2);
+
+    // 7. Subtle surface variation (cracks, stains)
+    if ((hash & 0xff) < 20) {
+      this.groundLayer.fillStyle(ws.shadow, 0.25);
+      const vy = y + topH + 2 + ((hash >> 4) % (frontH - 4));
+      this.groundLayer.fillRect(x + (hash % (TILE_SIZE - 4)), vy, 2 + (hash & 3), 1);
     }
   }
 
@@ -2236,6 +2296,7 @@ export class TileMapManager {
       this.objectLayer!.fillTriangle(cx, cy - 12, cx - 4, cy - 6, cx + 4, cy - 6);
     });
   }
+
 
   getColliders(): Phaser.Physics.Arcade.StaticGroup | null {
     return this.colliders;
