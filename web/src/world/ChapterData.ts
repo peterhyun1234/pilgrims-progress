@@ -574,6 +574,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   },
   {
     chapter: 4,
+    perspective: 'topDown',
     locationName: '좁은 문',
     locationNameEn: 'The Wicket Gate',
     mapWidth: 480,
