@@ -1,6 +1,7 @@
 import { TILE_SIZE, GAME_HEIGHT } from '../config';
 import { ChapterConfig, ChapterTheme, TerrainZone } from './ChapterData';
 import { ParallaxBackground } from '../ui/ParallaxBackground';
+import { LAYER } from './LayerRegistry';
 
 export class TileMapManager {
   private scene: Phaser.Scene;
@@ -33,11 +34,11 @@ export class TileMapManager {
       this.parallaxBg.init(config.chapter, config.mapWidth);
     }
 
-    this.groundLayer = this.scene.add.graphics().setDepth(0);
-    this.decorLayer = this.scene.add.graphics().setDepth(1);
-    this.terrainZoneLayer = this.scene.add.graphics().setDepth(2);
-    this.objectLayer = this.scene.add.graphics().setDepth(5);
-    this.fogLayer = this.scene.add.graphics().setDepth(4);
+    this.groundLayer = this.scene.add.graphics().setDepth(LAYER.GROUND);
+    this.decorLayer = this.scene.add.graphics().setDepth(LAYER.DECOR);
+    this.terrainZoneLayer = this.scene.add.graphics().setDepth(LAYER.TERRAIN_ZONE);
+    this.objectLayer = this.scene.add.graphics().setDepth(LAYER.OBJECT);
+    this.fogLayer = this.scene.add.graphics().setDepth(LAYER.TILE_FOG);
     this.colliders = this.scene.physics.add.staticGroup();
 
     const theme = config.theme;
