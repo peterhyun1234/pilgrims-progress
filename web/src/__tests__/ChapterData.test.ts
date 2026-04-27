@@ -140,4 +140,33 @@ describe('ChapterData', () => {
       });
     }
   });
+
+  // ─── Perspective field ─────────────────────────────────────────────────────
+  // Catches typos when adding new chapters. Adding a 13th chapter without a
+  // valid perspective will fail typecheck via PerspectiveMode, but a typo
+  // through `as any` would still slip past — this test guards that.
+
+  describe('perspective field', () => {
+    const VALID_PERSPECTIVES = ['legacy', 'sideScroll', 'topDown', 'celestial'];
+
+    for (const config of CHAPTER_CONFIGS) {
+      it(`Ch${config.chapter} has a valid perspective (or undefined → defaults to legacy)`, () => {
+        if (config.perspective !== undefined) {
+          expect(VALID_PERSPECTIVES).toContain(config.perspective);
+        }
+      });
+    }
+
+    it('current perspective distribution matches the rollout plan', () => {
+      const counts = { legacy: 0, sideScroll: 0, topDown: 0, celestial: 0 };
+      for (const c of CHAPTER_CONFIGS) {
+        const p = c.perspective ?? 'legacy';
+        counts[p]++;
+      }
+      // Frozen as of the Phase 2 rollout. Update intentionally if the plan
+      // changes — failing this means a chapter's perspective was edited
+      // without updating the canonical map.
+      expect(counts).toEqual({ legacy: 0, sideScroll: 6, topDown: 5, celestial: 1 });
+    });
+  });
 });
