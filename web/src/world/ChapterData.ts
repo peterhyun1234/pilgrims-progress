@@ -512,6 +512,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   },
   {
     chapter: 3,
+    perspective: 'sideScroll',
     locationName: '세속 현자의 길',
     locationNameEn: "Worldly Wiseman's Path",
     mapWidth: 600,
@@ -760,6 +761,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   // Emotional arc: weight of choice → wrong path frustration → palace relief
   {
     chapter: 7,
+    perspective: 'sideScroll',
     locationName: '아름다운 궁전',
     locationNameEn: 'Beautiful Palace',
     mapWidth: 2400,
