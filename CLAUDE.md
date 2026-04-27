@@ -69,9 +69,22 @@ Three-layer structure under `src/narrative/`:
 
 There are also fallback dialogues in `src/narrative/data/fallbackDialogues.ts` for NPCs without an Ink script — keep those in sync if you add an NPC.
 
-### World generation
+### World rendering — perspective-based renderer interface
 
-`ChapterData.ts` defines the data shape (`ChapterConfig` with theme, NPCs, events, objects). `CHAPTER_CONFIGS` is a static array indexed by chapter number — there is no runtime chapter loader, just lookup. `ChapterManager.loadChapter(n)` calls `TileMapManager.generateMap(config)` to procedurally render the tile map from the theme. To add or modify a chapter, edit `ChapterData.ts`; to change how a theme renders, edit `TileMapManager.ts`.
+Each chapter is rendered through a `WorldRenderer` (`src/world/WorldRenderer.ts`) selected by `ChapterConfig.perspective`:
+
+- `'sideScroll'` (Ch1, 3, 5, 6, 7, 8) → `SideScrollWorldRenderer` — keeps the sky parallax curtain and stacks `HorizonBridge` (`src/world/parallax/`) on top to soften the sky-to-ground seam. Bumps along the horizon vary by `theme.groundType` (grass/rock/cobble/etc.) via `bumpStyleFor`.
+- `'topDown'` (Ch2, 4, 9, 10, 11) → `TopDownWorldRenderer` — passes `skipParallax: true` to `TileMapManager.generateMap`, so there is no sky at all; the camera background is set to `theme.groundBase` so off-map regions blend in.
+- `'celestial'` (Ch12) → `CelestialWorldRenderer` — top-down + a camera-fixed `CelestialLightRays` overlay (depth 8.5, ADD blend, ~3.5s sine pulse via `scene.events.UPDATE` + `scene.time.now`).
+- `'legacy'` (default if perspective is undefined) → `LegacyGraphicsWorldRenderer` — bit-identical to the pre-refactor pipeline (still wraps `TileMapManager` + `ParallaxBackground` directly).
+
+`WorldRendererFactory.create(perspective)` is the single dispatch point. `WorldCamera` (`src/world/WorldCamera.ts`) is the matching per-perspective camera: `'legacy'`/`'sideScroll'` clamp Y to keep the parallax horizon stable; `'topDown'`/`'celestial'` use full XY follow with map bounds. Depth values for new world layers go in `LAYER` (`src/world/LayerRegistry.ts`) — don't sprinkle raw `setDepth(N)` calls.
+
+`ChapterData.ts` defines the data shape (`ChapterConfig` with theme, NPCs, events, perspective). `CHAPTER_CONFIGS` is a static array indexed by chapter number. `ChapterManager.loadChapter(n)` is now just config lookup + NPC factory; `GameScene` drives the renderer directly via `WorldRendererFactory.create(config.perspective).build(scene, config)`. To add a chapter, edit `ChapterData.ts` and pick a `perspective`. To change how a chapter looks, prefer editing the relevant `WorldRenderer` subclass over reaching into `TileMapManager`.
+
+### Tileset pipeline (Phase 2 in flight)
+
+`TILESET_MANIFEST` (`src/world/TilesetManifest.ts`) is a typed registry of per-chapter PNG tilesets that `PreloadScene.loadTilesets()` consumes. The manifest is empty by default — when AI-generated tilesets land, add an entry here and the `WorldRenderer` for that chapter can switch from primitive Graphics to Phaser's `Tilemap` API.
 
 ### Save system
 
