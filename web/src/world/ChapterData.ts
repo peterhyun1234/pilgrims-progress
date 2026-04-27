@@ -628,6 +628,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   },
   {
     chapter: 5,
+    perspective: 'sideScroll',
     locationName: '해석자의 집',
     locationNameEn: "Interpreter's House",
     mapWidth: 480,
@@ -707,6 +708,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   // triggering the burden_released cutscene, then exits north to Ch7.
   {
     chapter: 6,
+    perspective: 'sideScroll',
     locationName: '십자가',
     locationNameEn: 'The Cross',
     mapWidth: 480,
@@ -877,6 +879,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   // Emotional arc: solitary dread → overwhelming Apollyon → hard-won victory
   {
     chapter: 8,
+    perspective: 'sideScroll',
     locationName: '겸손의 골짜기',
     locationNameEn: 'Valley of Humiliation',
     mapWidth: 1200,
