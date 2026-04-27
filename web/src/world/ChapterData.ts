@@ -373,6 +373,7 @@ const THEMES: Record<number, ChapterTheme> = {
 export const CHAPTER_CONFIGS: ChapterConfig[] = [
   {
     chapter: 1,
+    perspective: 'sideScroll',
     locationName: '멸망의 도시',
     locationNameEn: 'City of Destruction',
     mapWidth: 2400,

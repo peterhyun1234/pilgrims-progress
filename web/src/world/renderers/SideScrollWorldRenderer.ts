@@ -2,20 +2,33 @@ import type Phaser from 'phaser';
 import type { ChapterConfig } from '../ChapterData';
 import type { WorldRenderer, WorldRenderResult } from '../WorldRenderer';
 import { LegacyGraphicsWorldRenderer } from './LegacyGraphicsWorldRenderer';
+import { HorizonBridge } from '../parallax/HorizonBridge';
 
 /**
- * Phase 1 stub. Side-scroll chapters (Ch1, 5, 6, 8) will move here in Phase 2+
- * with a real tileset-based ground + a fixed-horizon parallax curtain whose
- * seam-cover layer is no longer hardcoded to `GAME_HEIGHT * 0.42`.
+ * Side-scroll chapters (Ch1, 5, 6, 8). For now this still uses the
+ * `LegacyGraphicsWorldRenderer` for the base tile world + parallax — Phase 3
+ * will swap that for a tileset-based path when AI-generated tiles arrive.
  *
- * Until then, this delegates to `LegacyGraphicsWorldRenderer` so flipping a
- * chapter's `perspective` to `'sideScroll'` still produces a valid world (used
- * by the routing smoke test in the verification plan).
+ * The visible delta vs. legacy is the `HorizonBridge` pass: a layered fix that
+ * hides the seam between the camera-fixed parallax curtain and the camera-
+ * following tile floor (the user's primary visual complaint about the current
+ * map). All other chapters remain on `'legacy'` so this rolls out per-chapter.
  */
 export class SideScrollWorldRenderer implements WorldRenderer {
   private readonly legacy = new LegacyGraphicsWorldRenderer();
 
   build(scene: Phaser.Scene, config: ChapterConfig): WorldRenderResult {
-    return this.legacy.build(scene, config);
+    const base = this.legacy.build(scene, config);
+
+    const horizonBridge = new HorizonBridge(scene);
+    horizonBridge.render(config);
+
+    return {
+      ...base,
+      destroy: () => {
+        horizonBridge.destroy();
+        base.destroy();
+      },
+    };
   }
 }
