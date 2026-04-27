@@ -1,19 +1,30 @@
 import type Phaser from 'phaser';
 import type { ChapterConfig } from '../ChapterData';
 import type { WorldRenderer, WorldRenderResult } from '../WorldRenderer';
-import { LegacyGraphicsWorldRenderer } from './LegacyGraphicsWorldRenderer';
+import { TopDownWorldRenderer } from './TopDownWorldRenderer';
+import { CelestialLightRays } from '../celestial/CelestialLightRays';
 
 /**
- * Phase 1 stub for Ch12 (Celestial City). Phase 3 will extend `TopDownWorldRenderer`
- * with the radiant celestial-light pass already prototyped in
- * `PointLightSystem.case 12`.
- *
- * Delegates to legacy until then.
+ * Ch12 (Celestial City). Top-down base world plus a camera-fixed god-ray
+ * overlay (`CelestialLightRays`). The radiant point lights for Ch12 are
+ * already drawn by `PointLightSystem.case 12`; the rays add the
+ * "heaven-shining-down" effect on top of those.
  */
 export class CelestialWorldRenderer implements WorldRenderer {
-  private readonly legacy = new LegacyGraphicsWorldRenderer();
+  private readonly topDown = new TopDownWorldRenderer();
 
   build(scene: Phaser.Scene, config: ChapterConfig): WorldRenderResult {
-    return this.legacy.build(scene, config);
+    const base = this.topDown.build(scene, config);
+
+    const rays = new CelestialLightRays(scene);
+    rays.render(config);
+
+    return {
+      ...base,
+      destroy: () => {
+        rays.destroy();
+        base.destroy();
+      },
+    };
   }
 }

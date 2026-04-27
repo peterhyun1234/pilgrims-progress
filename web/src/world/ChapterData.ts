@@ -466,6 +466,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   },
   {
     chapter: 2,
+    perspective: 'topDown',
     locationName: '낙심의 늪',
     locationNameEn: 'Slough of Despond',
     mapWidth: 720,
@@ -922,6 +923,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   // Emotional arc: extreme darkness → whispers of fear → Faithful's companionship
   {
     chapter: 9,
+    perspective: 'topDown',
     locationName: '사망의 음침한 골짜기',
     locationNameEn: "Valley of the Shadow of Death",
     mapWidth: 2400,
@@ -1001,6 +1003,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   // Emotional arc: temptation glamour → Faithful's trial → the most painful farewell
   {
     chapter: 10,
+    perspective: 'topDown',
     locationName: '허영의 시장',
     locationNameEn: 'Vanity Fair',
     mapWidth: 2400,
@@ -1073,6 +1076,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   // Emotional arc: imprisonment in despair → promise key revelation → freedom
   {
     chapter: 11,
+    perspective: 'topDown',
     locationName: '의심의 성',
     locationNameEn: 'Doubting Castle',
     mapWidth: 800,
@@ -1143,6 +1147,7 @@ export const CHAPTER_CONFIGS: ChapterConfig[] = [
   // Emotional arc: final trial → river crossing → transcendent joy at the gates
   {
     chapter: 12,
+    perspective: 'celestial',
     locationName: '천성',
     locationNameEn: 'Celestial City',
     mapWidth: 3000,

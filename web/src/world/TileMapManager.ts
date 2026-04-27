@@ -22,12 +22,16 @@ export class TileMapManager {
     this.parallaxBg?.update(scrollX);
   }
 
-  generateMap(config: ChapterConfig): void {
+  generateMap(config: ChapterConfig, options?: { skipParallax?: boolean }): void {
     this.clearMap();
 
-    // Cinematic animated parallax background (Sanabi-quality multi-layer system)
-    this.parallaxBg = new ParallaxBackground(this.scene);
-    this.parallaxBg.init(config.chapter, config.mapWidth);
+    // Cinematic animated parallax background (Sanabi-quality multi-layer system).
+    // Top-down / celestial renderers pass skipParallax: true so the sky curtain
+    // is omitted entirely — the whole viewport becomes ground.
+    if (!options?.skipParallax) {
+      this.parallaxBg = new ParallaxBackground(this.scene);
+      this.parallaxBg.init(config.chapter, config.mapWidth);
+    }
 
     this.groundLayer = this.scene.add.graphics().setDepth(0);
     this.decorLayer = this.scene.add.graphics().setDepth(1);
