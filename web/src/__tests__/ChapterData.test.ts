@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from 'vitest';
 import { CHAPTER_CONFIGS, ChapterConfig } from '../world/ChapterData';
 import { ENEMIES } from '../systems/SkillData';
 import { CUTSCENE_REGISTRY } from '../narrative/data/cutsceneDefinitions';
+import { ITEMS, CHAPTER_ITEMS } from '../systems/ItemData';
 
 describe('ChapterData', () => {
   describe('CHAPTER_CONFIGS array', () => {
@@ -213,6 +214,32 @@ describe('ChapterData', () => {
             expect(ENEMIES[enemyId]).toBeDefined();
           }
         }
+      });
+    }
+  });
+
+  describe('CHAPTER_ITEMS reference real items + are in chapter bounds', () => {
+    for (const [chKey, items] of Object.entries(CHAPTER_ITEMS)) {
+      const chNum = Number(chKey);
+      const config = CHAPTER_CONFIGS.find(c => c.chapter === chNum);
+      it(`Ch${chNum} item drops reference real items in ITEMS and stay in bounds`, () => {
+        // Chapter must exist for the item drop to be reachable
+        expect(config).toBeDefined();
+        if (!config) return;
+        const seenIds = new Set<string>();
+        for (const drop of items) {
+          // Real item def
+          expect(ITEMS[drop.itemId]).toBeDefined();
+          // In bounds
+          expect(drop.x).toBeGreaterThanOrEqual(0);
+          expect(drop.x).toBeLessThanOrEqual(config.mapWidth);
+          expect(drop.y).toBeGreaterThanOrEqual(0);
+          expect(drop.y).toBeLessThanOrEqual(config.mapHeight);
+          seenIds.add(drop.itemId);
+        }
+        // Note: same itemId can appear in multiple chapter drops intentionally
+        // (e.g. wisdom_scroll in both Ch3 and Ch5) — uniqueness within a single
+        // chapter's item drops is also fine; we don't enforce that.
       });
     }
   });
