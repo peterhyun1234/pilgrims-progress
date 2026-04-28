@@ -60,6 +60,34 @@ describe('ChapterData', () => {
     }
   });
 
+  describe('npc spawn positions inside map bounds', () => {
+    for (const config of CHAPTER_CONFIGS) {
+      if (!config.npcs.length) continue;
+      it(`Ch${config.chapter} NPCs spawn inside the map`, () => {
+        for (const npc of config.npcs) {
+          expect(npc.x).toBeGreaterThanOrEqual(0);
+          expect(npc.x).toBeLessThanOrEqual(config.mapWidth);
+          expect(npc.y).toBeGreaterThanOrEqual(0);
+          expect(npc.y).toBeLessThanOrEqual(config.mapHeight);
+        }
+      });
+    }
+  });
+
+  describe('event zone bounds', () => {
+    for (const config of CHAPTER_CONFIGS) {
+      if (!config.events?.length) continue;
+      it(`Ch${config.chapter} event zones stay inside map bounds`, () => {
+        for (const ev of config.events!) {
+          expect(ev.x).toBeGreaterThanOrEqual(0);
+          expect(ev.y).toBeGreaterThanOrEqual(0);
+          expect(ev.x + ev.width).toBeLessThanOrEqual(config.mapWidth);
+          expect(ev.y + ev.height).toBeLessThanOrEqual(config.mapHeight);
+        }
+      });
+    }
+  });
+
   describe('event zone validity', () => {
     for (const config of CHAPTER_CONFIGS) {
       if (!config.events?.length) continue;
