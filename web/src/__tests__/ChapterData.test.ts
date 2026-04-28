@@ -3,6 +3,7 @@ import { CHAPTER_CONFIGS, ChapterConfig } from '../world/ChapterData';
 import { ENEMIES } from '../systems/SkillData';
 import { CUTSCENE_REGISTRY } from '../narrative/data/cutsceneDefinitions';
 import { ITEMS, CHAPTER_ITEMS } from '../systems/ItemData';
+import { CHAPTER_VERSES } from '../narrative/data/bibleVerses';
 
 describe('ChapterData', () => {
   describe('CHAPTER_CONFIGS array', () => {
@@ -214,6 +215,20 @@ describe('ChapterData', () => {
             expect(ENEMIES[enemyId]).toBeDefined();
           }
         }
+      });
+    }
+  });
+
+  describe('CHAPTER_VERSES has a verse for every chapter and refs are non-empty', () => {
+    for (const config of CHAPTER_CONFIGS) {
+      it(`Ch${config.chapter} has a Bible verse with both languages and a reference`, () => {
+        const v = CHAPTER_VERSES[config.chapter];
+        expect(v).toBeDefined();
+        if (!v) return;
+        expect(v.ko).toBeTruthy();
+        expect(v.en).toBeTruthy();
+        expect(v.refKo).toBeTruthy();
+        expect(v.refEn).toBeTruthy();
       });
     }
   });

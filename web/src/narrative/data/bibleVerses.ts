@@ -42,4 +42,46 @@ export const CHAPTER_VERSES: Record<number, BibleVerse> = {
     refKo: '이사야 53:5',
     refEn: 'Isaiah 53:5',
   },
+  7: {
+    // Beautiful Palace — pilgrims rest at the palace gates of beauty
+    ko: '네 눈은 그 영광 중의 왕을 보며 광활한 땅을 바라보리라',
+    en: 'Your eyes will see the king in his beauty and view a land that stretches afar',
+    refKo: '이사야 33:17',
+    refEn: 'Isaiah 33:17',
+  },
+  8: {
+    // Valley of Humiliation — Christian fights Apollyon
+    ko: '그런즉 너희는 하나님께 복종할지어다 마귀를 대적하라 그리하면 너희를 피하리라',
+    en: 'Submit yourselves, then, to God. Resist the devil, and he will flee from you',
+    refKo: '야고보서 4:7',
+    refEn: 'James 4:7',
+  },
+  9: {
+    // Valley of the Shadow of Death — the canonical reference
+    ko: '내가 사망의 음침한 골짜기로 다닐지라도 해를 두려워하지 않을 것은 주께서 나와 함께 하심이라',
+    en: 'Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me',
+    refKo: '시편 23:4',
+    refEn: 'Psalm 23:4',
+  },
+  10: {
+    // Vanity Fair — worldly temptation and Faithful's martyrdom
+    ko: '이 세상이나 세상에 있는 것들을 사랑하지 말라',
+    en: 'Do not love the world or anything in the world',
+    refKo: '요한일서 2:15',
+    refEn: '1 John 2:15',
+  },
+  11: {
+    // Doubting Castle — Hopeful's encouragement, the promise key
+    ko: '소망이 우리를 부끄럽게 하지 아니함은 우리에게 주신 성령으로 말미암아 하나님의 사랑이 우리 마음에 부은 바 됨이니',
+    en: 'Hope does not put us to shame, because God’s love has been poured out into our hearts',
+    refKo: '로마서 5:5',
+    refEn: 'Romans 5:5',
+  },
+  12: {
+    // Celestial City — the Heavenly Jerusalem, journey's end
+    ko: '그들이 이제는 더 나은 본향을 사모하니 곧 하늘에 있는 것이라',
+    en: 'They desire a better country—a heavenly one',
+    refKo: '히브리서 11:16',
+    refEn: 'Hebrews 11:16',
+  },
 };
