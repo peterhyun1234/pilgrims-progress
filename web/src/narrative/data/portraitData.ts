@@ -116,6 +116,23 @@ export const PORTRAIT_CONFIGS: Record<string, PortraitConfig> = {
     accessoryColor: 0x3a2a5a,
     personality: 'sly',
   },
+  // Ch3 reuses Worldly Wiseman with a per-chapter NPC id (`worldly_wiseman_ch3`)
+  // for state isolation from the Ch1 instance. Same visual identity — alias
+  // the portrait config so CharacterSpriteFactory can lazy-generate this id
+  // without falling through to the missing-texture path.
+  worldly_wiseman_ch3: {
+    id: 'worldly_wiseman_ch3',
+    headShape: 'oval',
+    skinTone: 0xe8c8a0,
+    hairStyle: 'short',
+    hairColor: 0x888888,
+    eyeColor: 0x445566,
+    clothingColor: 0x4a3a6a,
+    clothingAccent: 0x8866aa,
+    accessory: 'hat',
+    accessoryColor: 0x3a2a5a,
+    personality: 'sly',
+  },
   goodwill: {
     id: 'goodwill',
     headShape: 'round',

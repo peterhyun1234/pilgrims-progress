@@ -9,8 +9,8 @@ import { TILESET_MANIFEST } from '../world/TilesetManifest';
 const GENERATED_CHARACTERS = [
   // Ch1-6
   'christian', 'evangelist', 'obstinate', 'pliable',
-  'help', 'worldly_wiseman', 'goodwill', 'interpreter',
-  'shining_ones',
+  'help', 'worldly_wiseman', 'worldly_wiseman_ch3',
+  'goodwill', 'interpreter', 'shining_ones',
   // Ch7: Beautiful Palace
   'timorous', 'mistrust', 'watchful', 'prudence', 'piety', 'charity',
   // Ch9-10: Companions
