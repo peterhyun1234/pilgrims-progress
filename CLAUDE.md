@@ -90,6 +90,8 @@ Each chapter is rendered through a `WorldRenderer` (`src/world/WorldRenderer.ts`
 
 `SaveManager` snapshots player position (read from `GameManager.playerX/playerY`, which `GameScene` writes every frame), stats, current chapter, and `InkService.getAllStates()`. `AutoSave` listens to `EventBus` triggers. Persistence is via `localforage` (IndexedDB w/ fallback). New save fields go in `src/save/SaveData.ts` — bump nothing automatically; saved data is user-visible, so plan migrations explicitly.
 
+`SaveManager.save()` uses a single-slot `pendingSave` flag: if a save is requested while another is in flight, the second is queued and runs once the first finishes. Without this, rapid consecutive saves (e.g. dialogue stat changes triggering AUTO_SAVE) would silently drop the latest state. Locked in by `src/__tests__/SaveManager.test.ts` — keep that pattern intact when editing.
+
 ### Audio
 
 `AudioManager` consumes `BGM_PLAY` / `MUSIC_CROSSFADE` / `AMBIENT_CHANGE` events. `ProceduralBGM` generates the chapter-12 score via Web Audio API (no asset files). Use events, not direct calls into the manager, when triggering music from gameplay.
@@ -111,6 +113,8 @@ A single file owns global tunables — read it before introducing new magic numb
 - **Don't call `Date.now()` in update/animation loops** — use `scene.time.now` or `this.time.now`. `Date.now()` is reserved for save timestamps.
 - **Mobile hit zones**: `MobileControls` action button uses `r + 6` (≈42px CSS at zoom:2). Hidden buttons must `disableInteractive()`, especially during dialogue.
 - **Edge-trigger inputs**: NPC interact uses `if (vi.interact) { input.interact = true; vi.interact = false; }` in `GameScene.update()`; keyboard uses `Phaser.Input.Keyboard.JustDown`. Don't introduce level-triggered interact paths.
+- **Battle keyboard shortcuts**: 1=기도/Pray, 2=방어/Defend, 3=스킬/Skill, 4=아이템/Item. Wired in `BattleScene.createActionButtons` via `Phaser.Input.Keyboard.JustDown` on KeyCodes ONE..FOUR, gated by `isAnimating || skillPanel`. Cleanup on scene SHUTDOWN (don't leak the UPDATE listener).
+- **Dialogue advance** uses SPACE/ENTER/click only (`DialogueBox.advanceHandler`). E key is reserved for NPC interact in the world — adding E to dialogue advance would re-trigger interact when dialogue ends.
 
 The full QA checklist (`docs/qa-prompt.md`) is the source of truth for these polish rules.
 
