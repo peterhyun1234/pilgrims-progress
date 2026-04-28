@@ -195,15 +195,31 @@ describe('ChapterData', () => {
     }
   });
 
-  // ─── Map object id uniqueness ──────────────────────────────────────────────
+  // ─── Map object validity ───────────────────────────────────────────────────
 
-  describe('map object id uniqueness per chapter', () => {
+  describe('map object id uniqueness + bounds + opensOnNpcComplete refs', () => {
     for (const config of CHAPTER_CONFIGS) {
       if (!config.mapObjects?.length) continue;
-      it(`Ch${config.chapter} mapObject ids are unique`, () => {
+      it(`Ch${config.chapter} mapObject ids are unique and positions are in bounds`, () => {
         const ids = config.mapObjects!.map(o => o.id);
         const unique = new Set(ids);
         expect(unique.size).toBe(ids.length);
+        for (const obj of config.mapObjects!) {
+          expect(obj.x).toBeGreaterThanOrEqual(0);
+          expect(obj.x).toBeLessThanOrEqual(config.mapWidth);
+          expect(obj.y).toBeGreaterThanOrEqual(0);
+          expect(obj.y).toBeLessThanOrEqual(config.mapHeight);
+        }
+      });
+
+      it(`Ch${config.chapter} opensOnNpcComplete refs name an NPC in this chapter`, () => {
+        const npcIds = new Set(config.npcs.map(n => n.id));
+        for (const obj of config.mapObjects!) {
+          if (obj.opensOnNpcComplete) {
+            // Misnamed gate trigger would silently never open — gameplay block
+            expect(npcIds.has(obj.opensOnNpcComplete)).toBe(true);
+          }
+        }
       });
     }
   });
