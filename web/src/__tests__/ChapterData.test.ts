@@ -74,6 +74,32 @@ describe('ChapterData', () => {
     }
   });
 
+  describe('terrain zone bounds + id uniqueness', () => {
+    for (const config of CHAPTER_CONFIGS) {
+      if (!config.terrainZones?.length) continue;
+      it(`Ch${config.chapter} terrain zones stay inside map and have unique ids`, () => {
+        const ids = new Set<string>();
+        for (const tz of config.terrainZones!) {
+          expect(tz.x).toBeGreaterThanOrEqual(0);
+          expect(tz.y).toBeGreaterThanOrEqual(0);
+          expect(tz.x + tz.width).toBeLessThanOrEqual(config.mapWidth);
+          expect(tz.y + tz.height).toBeLessThanOrEqual(config.mapHeight);
+          expect(tz.width).toBeGreaterThan(0);
+          expect(tz.height).toBeGreaterThan(0);
+          // slowFactor should be in (0, 1] — values >1 would speed the player up
+          // (semantics-mismatch: it's a slow factor, not a speed multiplier)
+          if (tz.slowFactor !== undefined) {
+            expect(tz.slowFactor).toBeGreaterThan(0);
+            expect(tz.slowFactor).toBeLessThanOrEqual(1);
+          }
+          // id uniqueness within the chapter
+          expect(ids.has(tz.id)).toBe(false);
+          ids.add(tz.id);
+        }
+      });
+    }
+  });
+
   describe('event zone bounds', () => {
     for (const config of CHAPTER_CONFIGS) {
       if (!config.events?.length) continue;
