@@ -626,6 +626,28 @@ export class BattleScene extends Phaser.Scene {
       container.add([bg, iconTxt, labelTxt, hit]);
       this.actionMenu.add(container);
     });
+
+    // Keyboard shortcuts 1–4 mirror the action buttons. JustDown so a held
+    // number key fires once per press (no auto-repeat during turn animations).
+    const keyboard = this.input.keyboard;
+    if (keyboard) {
+      const keyCodes = ['ONE', 'TWO', 'THREE', 'FOUR'] as const;
+      const phaserKeys = keyCodes.map(k => keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[k]));
+      const keyboardUpdate = () => {
+        if (this.isAnimating || this.skillPanel) return;
+        for (let i = 0; i < phaserKeys.length && i < actions.length; i++) {
+          if (Phaser.Input.Keyboard.JustDown(phaserKeys[i])) {
+            actions[i].action();
+            break;
+          }
+        }
+      };
+      this.events.on(Phaser.Scenes.Events.UPDATE, keyboardUpdate);
+      this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+        this.events.off(Phaser.Scenes.Events.UPDATE, keyboardUpdate);
+        phaserKeys.forEach(k => keyboard.removeKey(k));
+      });
+    }
   }
 
   private createLogPanel(state: CombatState): void {

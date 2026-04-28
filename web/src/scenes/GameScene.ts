@@ -1082,7 +1082,6 @@ export class GameScene extends Phaser.Scene {
 
   private setupEvents(): void {
     this.eventBus.on(GameEvent.NPC_INTERACT, this.onNpcInteract);
-    this.eventBus.on('npc_interact', this.onNpcInteract);
     this.eventBus.on(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.on(GameEvent.BIBLE_CARD_COLLECTED, this.onBibleCard);
     this.eventBus.on(GameEvent.CHAPTER_ENTER, this.onChapterEnter);
@@ -1108,7 +1107,6 @@ export class GameScene extends Phaser.Scene {
 
   private cleanupEvents(): void {
     this.eventBus.off(GameEvent.NPC_INTERACT, this.onNpcInteract);
-    this.eventBus.off('npc_interact', this.onNpcInteract);
     this.eventBus.off(GameEvent.STAT_CHANGED, this.onStatChanged);
     this.eventBus.off(GameEvent.BIBLE_CARD_COLLECTED, this.onBibleCard);
     this.eventBus.off(GameEvent.CHAPTER_ENTER, this.onChapterEnter);
