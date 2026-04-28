@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
 import { CHAPTER_CONFIGS, ChapterConfig } from '../world/ChapterData';
+import { ENEMIES } from '../systems/SkillData';
+import { CUTSCENE_REGISTRY } from '../narrative/data/cutsceneDefinitions';
 
 describe('ChapterData', () => {
   describe('CHAPTER_CONFIGS array', () => {
@@ -191,6 +193,56 @@ describe('ChapterData', () => {
         const ids = config.npcs.map(n => n.id);
         const unique = new Set(ids);
         expect(unique.size).toBe(ids.length);
+      });
+    }
+  });
+
+  // ─── Cross-system reference integrity ──────────────────────────────────────
+
+  describe('battle event enemyId references real enemy', () => {
+    for (const config of CHAPTER_CONFIGS) {
+      if (!config.events?.length) continue;
+      const battleEvents = config.events.filter(e => e.type === 'battle');
+      if (battleEvents.length === 0) continue;
+      it(`Ch${config.chapter} battle events name a real enemy in ENEMIES`, () => {
+        for (const ev of battleEvents) {
+          const enemyId = ev.data?.enemyId;
+          if (typeof enemyId === 'string') {
+            // Misnamed enemy = player triggers battle, BattleScene loads but
+            // no enemy → silent crash or null deref
+            expect(ENEMIES[enemyId]).toBeDefined();
+          }
+        }
+      });
+    }
+  });
+
+  describe('cutscene references resolve (or are in known-gap list)', () => {
+    // 5 cutscenes are referenced by chapter events but not yet implemented.
+    // GameScene.playCutsceneEvent gracefully no-ops via the `if (!def)` branch
+    // (line ~1383), so missing cutscenes don't crash — they just skip the
+    // story moment silently. This list documents those known gaps so adding
+    // a NEW unreferenced cutscene id still trips the test.
+    const KNOWN_MISSING_CUTSCENES = new Set([
+      'faithful_joins',           // Ch10 — Faithful joining the journey
+      'giant_despair_entrance',   // Ch11 — Giant Despair appears
+      'key_of_promise',           // Ch11 — Promise key revelation
+      'river_crossing',           // Ch12 — crossing the final river
+      'ignorance_turned_away',    // Ch12 — Ignorance's fate
+    ]);
+
+    for (const config of CHAPTER_CONFIGS) {
+      if (!config.events?.length) continue;
+      it(`Ch${config.chapter} cutsceneId / cutsceneBefore refs are registered or known-missing`, () => {
+        for (const ev of config.events!) {
+          const cutsceneId = ev.data?.cutsceneId;
+          const cutsceneBefore = ev.data?.cutsceneBefore;
+          for (const id of [cutsceneId, cutsceneBefore]) {
+            if (typeof id !== 'string') continue;
+            const known = CUTSCENE_REGISTRY[id] !== undefined || KNOWN_MISSING_CUTSCENES.has(id);
+            expect(known, `Cutscene "${id}" is referenced but neither registered nor in KNOWN_MISSING_CUTSCENES list`).toBe(true);
+          }
+        }
       });
     }
   });
