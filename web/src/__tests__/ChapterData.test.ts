@@ -37,11 +37,24 @@ describe('ChapterData', () => {
   describe('exit zone validity', () => {
     for (const config of CHAPTER_CONFIGS) {
       if (!config.exits?.length) continue;
-      it(`Ch${config.chapter} exits have positive dimensions`, () => {
+      it(`Ch${config.chapter} exits have positive dimensions and stay inside map bounds`, () => {
         for (const exit of config.exits!) {
           expect(exit.width).toBeGreaterThan(0);
           expect(exit.height).toBeGreaterThan(0);
           expect(exit.targetChapter).toBeGreaterThan(0);
+          // Exit rect must be reachable — entirely inside the chapter map.
+          // Out-of-bounds exits would silently never trigger.
+          expect(exit.x).toBeGreaterThanOrEqual(0);
+          expect(exit.y).toBeGreaterThanOrEqual(0);
+          expect(exit.x + exit.width).toBeLessThanOrEqual(config.mapWidth);
+          expect(exit.y + exit.height).toBeLessThanOrEqual(config.mapHeight);
+        }
+      });
+
+      it(`Ch${config.chapter} exits target an existing chapter`, () => {
+        const validChapterNumbers = new Set(CHAPTER_CONFIGS.map(c => c.chapter));
+        for (const exit of config.exits!) {
+          expect(validChapterNumbers.has(exit.targetChapter)).toBe(true);
         }
       });
     }
