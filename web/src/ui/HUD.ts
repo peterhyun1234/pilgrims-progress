@@ -252,6 +252,10 @@ export class HUD {
 
   private onChapterLoaded = (payload?: { chapter: number; title?: string }) => {
     if (!payload) return;
+    // Defensive: if the HUD container/text was destroyed (e.g. scene shutdown
+    // mid-event), skip the update. The .active flag is false on destroyed
+    // GameObjects; setText on a dead Text triggers a glTexture null deref.
+    if (!this.chapterBadge?.active) return;
     this.showLocationCard(payload.chapter, payload.title);
     const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
     const ko = gm.language === 'ko';

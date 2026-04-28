@@ -11,6 +11,11 @@ export class SaveManager {
   private static readonly SAVE_KEY = 'pilgrims_progress_save';
   private lastLoaded: SaveData | null = null;
   private saving = false;
+  /** True if a save was requested while another was in flight. The trailing
+   *  save runs once the in-flight one finishes so the latest state is captured
+   *  (was previously dropped silently — concurrent dialogue stat changes could
+   *  lose the most recent values). */
+  private pendingSave = false;
 
   private onSave = () => { void this.save(); };
   private onLoad = () => { void this.load(); };
@@ -37,7 +42,12 @@ export class SaveManager {
   }
 
   async save(): Promise<void> {
-    if (this.saving) return; // Prevent concurrent saves
+    if (this.saving) {
+      // Mark that someone tried to save while we were busy. We'll re-run after
+      // the in-flight save resolves so their state isn't lost.
+      this.pendingSave = true;
+      return;
+    }
     this.saving = true;
     try {
       const gm = ServiceLocator.get<GameManager>(SERVICE_KEYS.GAME_MANAGER);
@@ -104,9 +114,17 @@ export class SaveManager {
       await localforage.setItem(SaveManager.SAVE_KEY, data);
       this.lastLoaded = data;
     } catch (e) {
-      console.error('[SaveManager] save failed:', e);
+      // localforage failures are recoverable (quota, permission). Use warn so
+      // the console isn't flooded with red from auto-save retries.
+      console.warn('[SaveManager] save failed:', e);
     } finally {
       this.saving = false;
+      // If something asked to save while we were busy, run one more pass so the
+      // latest state lands.
+      if (this.pendingSave) {
+        this.pendingSave = false;
+        void this.save();
+      }
     }
   }
 

@@ -86,8 +86,15 @@ export class InkService {
       return sm.get(stat as StatType);
     });
 
-    this.story.BindExternalFunction('hasMet', (_char: string): boolean => {
-      return true;
+    this.story.BindExternalFunction('hasMet', (char: string): boolean => {
+      // Real impl: NpcStateManager.getTalkCount > 0 means we've talked to them at
+      // least once. Was hardcoded `true` — meaning Ink {hasMet('x')} branches
+      // always took the truthy path even before meeting the character.
+      if (ServiceLocator.has(SERVICE_KEYS.NPC_STATE_MANAGER)) {
+        const nsm = ServiceLocator.get<import('../systems/NpcStateManager').NpcStateManager>(SERVICE_KEYS.NPC_STATE_MANAGER);
+        return nsm.getTalkCount(char) > 0;
+      }
+      return false;
     });
 
     this.story.BindExternalFunction('getTalkCount', (npcId: string): number => {
