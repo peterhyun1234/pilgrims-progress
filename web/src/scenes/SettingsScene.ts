@@ -77,7 +77,7 @@ export class SettingsScene extends Phaser.Scene {
 
     // — Audio section label —
     let y = panelY + 44;
-    this.addSectionLabel(cx, y, ko ? '🔊  소리' : '🔊  Audio');
+    this.addSectionLabel(cx, y, ko ? '♪  소리' : '♪  Audio');
 
     // BGM slider
     y += 16;
@@ -100,7 +100,7 @@ export class SettingsScene extends Phaser.Scene {
 
     // — Display / Language section —
     y += 10;
-    this.addSectionLabel(cx, y, ko ? '⚙  표시' : '⚙  Display');
+    this.addSectionLabel(cx, y, ko ? '✦  표시' : '✦  Display');
 
     if (!ENGLISH_DISABLED) {
       y += 16;

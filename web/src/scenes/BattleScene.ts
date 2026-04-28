@@ -354,22 +354,28 @@ export class BattleScene extends Phaser.Scene {
     });
 
     const ko = this.gameManager.language === 'ko';
-    const nameText = this.add.text(0, -52, ko ? enemy.nameKo : enemy.nameEn, {
-      fontSize: `${DesignSystem.FONT_SIZE.BASE}px`,
-      color: '#ffd700',
-      fontFamily: DesignSystem.getFontFamily(),
-      stroke: '#000000',
-      strokeThickness: 2,
-    }).setOrigin(0.5);
-    this.enemyContainer.add(nameText);
+    // Floating name above the enemy sprite. For bosses with a top bar (created
+    // below) the top bar already shows "⚠ name" and the floating label was
+    // sitting at absolute y≈8 which collided with the bar (y=2..14). Skip the
+    // floating name in that case so the bar reads cleanly.
+    const showsBossTopBar = enemy.isBoss && enemy.hp > 50;
+    if (!showsBossTopBar) {
+      const nameText = this.add.text(0, -38, ko ? enemy.nameKo : enemy.nameEn, {
+        fontSize: `${DesignSystem.FONT_SIZE.BASE}px`,
+        color: '#ffd700',
+        fontFamily: DesignSystem.getFontFamily(),
+        stroke: '#000000',
+        strokeThickness: 2,
+      }).setOrigin(0.5);
+      this.enemyContainer.add(nameText);
 
-    // Boss badge — XS(11px) Korean ~15px; name SM(13px) Korean top at -52-9=-61; badge bottom at -68+7=-61 → flush
-    if (enemy.isBoss) {
-      const bossBadge = this.add.text(0, -68,
-        ko ? '【 BOSS 】' : '【 BOSS 】',
-        DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, '#ff4444'),
-      ).setOrigin(0.5);
-      this.enemyContainer.add(bossBadge);
+      if (enemy.isBoss) {
+        const bossBadge = this.add.text(0, -54,
+          ko ? '【 BOSS 】' : '【 BOSS 】',
+          DesignSystem.textStyle(DesignSystem.FONT_SIZE.XS, '#ff4444'),
+        ).setOrigin(0.5);
+        this.enemyContainer.add(bossBadge);
+      }
     }
 
     // Enemy HP bar — single bar with HP text on the right (no label to avoid glyph artifacts)

@@ -388,7 +388,10 @@ export class EndingScene extends Phaser.Scene {
 
     this.time.delayedCall(800, () => {
       const menuLabel = this.gameManager.i18n.t('ending.return');
-      const btnY = Math.min(statsY + 22, GAME_HEIGHT - 18);
+      // Place the button below ALL stat lines plus 14px breathing room so the
+      // 26px button never overlaps the text (previous `statsY + 22` left only
+      // 8px of vertical room and the button clipped the stats line).
+      const btnY = Math.min(statsY + statLines.length * 14 + 14, GAME_HEIGHT - 18);
       const btn = DesignSystem.createButton(
         this, cx, btnY, 150, 26, menuLabel,
         () => {
