@@ -195,6 +195,44 @@ describe('ChapterData', () => {
     }
   });
 
+  // ─── completionRequirements referential integrity ─────────────────────────
+
+  describe('completionRequirements references valid NPCs and events', () => {
+    for (const config of CHAPTER_CONFIGS) {
+      if (!config.completionRequirements) continue;
+      it(`Ch${config.chapter} completionRequirements name real NPCs/events`, () => {
+        const npcIds = new Set(config.npcs.map(n => n.id));
+        const eventIds = new Set((config.events ?? []).map(e => e.id));
+        for (const npcId of config.completionRequirements?.requiredNpcs ?? []) {
+          // Misnamed required NPC = chapter unfinishable
+          expect(npcIds.has(npcId)).toBe(true);
+        }
+        for (const evId of config.completionRequirements?.requiredEvents ?? []) {
+          // Misnamed required event = chapter unfinishable
+          expect(eventIds.has(evId)).toBe(true);
+        }
+      });
+    }
+  });
+
+  // ─── NPC unlockedAt references ─────────────────────────────────────────────
+
+  describe('NPC unlockedAt references existing NPC in same chapter', () => {
+    for (const config of CHAPTER_CONFIGS) {
+      it(`Ch${config.chapter} npc.unlockedAt fields name a chapter-mate NPC`, () => {
+        const npcIds = new Set(config.npcs.map(n => n.id));
+        for (const npc of config.npcs) {
+          if (npc.unlockedAt) {
+            // Misnamed prerequisite = NPC silently never unlocks
+            expect(npcIds.has(npc.unlockedAt)).toBe(true);
+            // No NPC should depend on itself
+            expect(npc.unlockedAt).not.toBe(npc.id);
+          }
+        }
+      });
+    }
+  });
+
   // ─── Map object validity ───────────────────────────────────────────────────
 
   describe('map object id uniqueness + bounds + opensOnNpcComplete refs', () => {
