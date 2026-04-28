@@ -138,4 +138,5 @@ describe('I18n', () => {
       expect(i18n.supportedLanguages).toContain('fr');
     });
   });
+
 });
