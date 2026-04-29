@@ -1,5 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('../config', () => ({
+  STATS: {
+    FAITH:   { initial: 30, min: 0, max: 100 },
+    COURAGE: { initial: 20, min: 0, max: 100 },
+    WISDOM:  { initial: 20, min: 0, max: 100 },
+    BURDEN:  { initial: 60, min: 0, max: 100 },
+  },
+  HIDDEN_STAT_CAPS: { SPIRITUAL_INSIGHT: 100, GRACE_COUNTER: 10 },
+}));
+
 import { characters } from '../narrative/data/characters';
+import { PORTRAIT_CONFIGS } from '../narrative/data/portraitData';
 
 describe('characters metadata', () => {
   it('character ids are unique', () => {
@@ -27,6 +39,12 @@ describe('characters metadata', () => {
         expect(ch).toBeGreaterThanOrEqual(1);
         expect(ch).toBeLessThanOrEqual(12);
       }
+    });
+
+    it(`character "${c.id}" has a matching portrait config`, () => {
+      // Every character in metadata should have visual data so dialogue renders.
+      // (PORTRAIT_CONFIGS is keyed by character id.)
+      expect(PORTRAIT_CONFIGS[c.id], `Character "${c.id}" missing PORTRAIT_CONFIGS entry`).toBeDefined();
     });
   }
 });

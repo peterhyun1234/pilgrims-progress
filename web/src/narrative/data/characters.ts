@@ -55,12 +55,16 @@ export const characters: CharacterData[] = [
     chapter: [2],
   },
   {
-    id: 'worldlywiseman',
+    // id matches PORTRAIT_CONFIGS / PreloadScene's underscore-form. Was
+    // 'worldlywiseman' (no underscore) — typo, would have broken any future
+    // metadata-driven lookup. characters.ts isn't imported anywhere yet but
+    // consistent ids prevent silent breakage when it becomes load-bearing.
+    id: 'worldly_wiseman',
     nameKo: '세상지혜씨',
     nameEn: 'Mr. Worldly Wiseman',
     symbolKo: '세속적 지혜로 신앙의 길에서 벗어나게 유혹하는 자',
     symbolEn: 'One who tempts with worldly wisdom.',
-    sprite: 'worldlywiseman',
+    sprite: 'worldly_wiseman',
     chapter: [3],
   },
   {
