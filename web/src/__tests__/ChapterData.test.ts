@@ -65,6 +65,20 @@ describe('ChapterData', () => {
     }
   });
 
+  describe('npc.chapter field matches the chapter that owns it', () => {
+    for (const config of CHAPTER_CONFIGS) {
+      if (!config.npcs.length) continue;
+      it(`Ch${config.chapter} NPCs have chapter=${config.chapter}`, () => {
+        for (const npc of config.npcs) {
+          // NpcStateManager and NPC behaviour rely on this matching the chapter
+          // they're spawned into. Mismatch could cause unlock state to be
+          // tracked under the wrong chapter.
+          expect(npc.chapter, `NPC "${npc.id}" has chapter=${npc.chapter} but lives in Ch${config.chapter}`).toBe(config.chapter);
+        }
+      });
+    }
+  });
+
   describe('npc spawn positions inside map bounds', () => {
     for (const config of CHAPTER_CONFIGS) {
       if (!config.npcs.length) continue;
